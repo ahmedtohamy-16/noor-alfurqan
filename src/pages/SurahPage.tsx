@@ -1,9 +1,10 @@
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, Play, Pause, Heart, Share2, BookOpen } from "lucide-react";
+import { ArrowRight, Heart, Share2, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { surahs } from "@/data/surahs";
 import Header from "@/components/Header";
+import AudioPlayer from "@/components/AudioPlayer";
 import { useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -34,7 +35,6 @@ const fetchSurah = async (surahNumber: string): Promise<SurahData> => {
 const SurahPage = () => {
   const { surahNumber } = useParams<{ surahNumber: string }>();
   const [favorites, setFavorites] = useState<number[]>([]);
-  const [isPlaying, setIsPlaying] = useState(false);
 
   const surahInfo = surahs.find((s) => s.number === Number(surahNumber));
 
@@ -97,13 +97,6 @@ const SurahPage = () => {
               {surahInfo?.englishNameTranslation} • {surahInfo?.numberOfAyahs} آية
             </p>
           </div>
-          <Button
-            variant={isPlaying ? "default" : "outline"}
-            size="icon"
-            onClick={() => setIsPlaying(!isPlaying)}
-          >
-            {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
-          </Button>
         </div>
 
         {/* Surah Info Card */}
@@ -178,7 +171,7 @@ const SurahPage = () => {
         </div>
 
         {/* Navigation */}
-        <div className="flex items-center justify-between mt-8 gap-4">
+        <div className="flex items-center justify-between mt-8 pb-28 gap-4">
           {Number(surahNumber) > 1 && (
             <Link to={`/surah/${Number(surahNumber) - 1}`}>
               <Button variant="outline" className="gap-2">
@@ -198,6 +191,15 @@ const SurahPage = () => {
           )}
         </div>
       </main>
+
+      {/* Audio Player */}
+      {surah && surahInfo && (
+        <AudioPlayer
+          surahNumber={surah.number}
+          ayahs={surah.ayahs}
+          surahName={surahInfo.name}
+        />
+      )}
     </div>
   );
 };
