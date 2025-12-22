@@ -6,9 +6,11 @@ import { surahs } from "@/data/surahs";
 import Header from "@/components/Header";
 import AudioPlayer from "@/components/AudioPlayer";
 import TafsirDialog from "@/components/TafsirDialog";
-import { useState } from "react";
+import ShareAyahDialog from "@/components/ShareAyahDialog";
+import { useState, useEffect, useCallback } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useFavorites } from "@/hooks/useFavorites";
+import { useReadingProgress } from "@/hooks/useReadingProgress";
 
 interface Ayah {
   number: number;
@@ -37,7 +39,9 @@ const fetchSurah = async (surahNumber: string): Promise<SurahData> => {
 const SurahPage = () => {
   const { surahNumber } = useParams<{ surahNumber: string }>();
   const { addFavorite, removeFavorite, isFavorite } = useFavorites();
+  const { saveProgress } = useReadingProgress();
   const [tafsirAyah, setTafsirAyah] = useState<{ number: number; text: string } | null>(null);
+  const [shareAyah, setShareAyah] = useState<{ number: number; text: string } | null>(null);
 
   const surahInfo = surahs.find((s) => s.number === Number(surahNumber));
 
@@ -46,6 +50,13 @@ const SurahPage = () => {
     queryFn: () => fetchSurah(surahNumber!),
     enabled: !!surahNumber,
   });
+
+  // Auto-save reading progress
+  useEffect(() => {
+    if (surah && surahInfo) {
+      saveProgress(surah.number, 1, surahInfo.name, surah.numberOfAyahs);
+    }
+  }, [surah, surahInfo, saveProgress]);
 
   const toggleFavorite = async (ayah: Ayah, displayText: string) => {
     const surahNum = Number(surahNumber);
@@ -112,6 +123,9 @@ const SurahPage = () => {
                       <Button variant="ghost" size="icon" className="w-8 h-8" onClick={() => toggleFavorite(ayah, displayText)}>
                         <Heart className={`w-4 h-4 ${isAyahFavorite ? "fill-destructive text-destructive" : ""}`} />
                       </Button>
+                      <Button variant="ghost" size="icon" className="w-8 h-8" onClick={() => setShareAyah({ number: ayah.numberInSurah, text: displayText })}>
+                        <Share2 className="w-4 h-4" />
+                      </Button>
                       <Button variant="ghost" size="icon" className="w-8 h-8" onClick={() => setTafsirAyah({ number: ayah.numberInSurah, text: displayText })}>
                         <BookOpen className="w-4 h-4" />
                       </Button>
@@ -133,6 +147,8 @@ const SurahPage = () => {
       {surah && surahInfo && <AudioPlayer surahNumber={surah.number} ayahs={surah.ayahs} surahName={surahInfo.name} />}
       
       {tafsirAyah && <TafsirDialog isOpen={!!tafsirAyah} onClose={() => setTafsirAyah(null)} surahNumber={Number(surahNumber)} ayahNumber={tafsirAyah.number} ayahText={tafsirAyah.text} />}
+      
+      {shareAyah && surahInfo && <ShareAyahDialog isOpen={!!shareAyah} onClose={() => setShareAyah(null)} ayahText={shareAyah.text} surahName={surahInfo.name} ayahNumber={shareAyah.number} />}
     </div>
   );
 };
