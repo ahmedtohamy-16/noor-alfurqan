@@ -34,6 +34,7 @@ interface AudioPlayerProps {
 
 export interface AudioPlayerHandle {
   playSpecificAyah: (ayahIndex: number) => void;
+  playSurahFromStart: () => void;
 }
 
 const AudioPlayer = forwardRef<AudioPlayerHandle, AudioPlayerProps>(
@@ -123,12 +124,18 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, AudioPlayerProps>(
       [ayahs, getAudioUrl]
     );
 
-    // Expose playSpecificAyah to parent component
+    // Expose playSpecificAyah and playSurahFromStart to parent component
     useImperativeHandle(ref, () => ({
       playSpecificAyah: (ayahIndex: number) => {
         setCurrentAyahIndex(ayahIndex);
         setCurrentRepeat(0);
         playAyah(ayahIndex);
+      },
+      playSurahFromStart: () => {
+        setCurrentAyahIndex(0);
+        setRepeatMode("none");
+        setCurrentRepeat(0);
+        playAyah(0);
       },
     }), [playAyah]);
 
