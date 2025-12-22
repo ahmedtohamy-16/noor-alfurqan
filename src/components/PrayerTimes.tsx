@@ -4,6 +4,7 @@ import { Clock, MapPin, RefreshCw } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useUserSettings } from "@/hooks/useUserSettings";
 
 interface PrayerTimesData {
   Fajr: string;
@@ -29,6 +30,13 @@ const prayerNames: { [key: string]: string } = {
   Isha: "العشاء",
 };
 
+// Default location: Makkah
+const DEFAULT_LOCATION: Location = { 
+  latitude: 21.4225, 
+  longitude: 39.8262, 
+  city: "مكة المكرمة" 
+};
+
 const fetchPrayerTimes = async (lat: number, lng: number): Promise<PrayerTimesData> => {
   const date = new Date();
   const dateStr = `${date.getDate()}-${date.getMonth() + 1}-${date.getFullYear()}`;
@@ -41,18 +49,41 @@ const fetchPrayerTimes = async (lat: number, lng: number): Promise<PrayerTimesDa
 };
 
 const PrayerTimes = () => {
+  const { settings } = useUserSettings();
   const [location, setLocation] = useState<Location | null>(null);
-  const [locationError, setLocationError] = useState<string | null>(null);
+  const [locationMessage, setLocationMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    // Try to get saved location first
-    const savedLocation = localStorage.getItem("prayerLocation");
-    if (savedLocation) {
-      setLocation(JSON.parse(savedLocation));
+    // Priority 1: User settings from database/localStorage
+    if (settings.latitude && settings.longitude) {
+      setLocation({
+        latitude: settings.latitude,
+        longitude: settings.longitude,
+        city: settings.city_name || undefined,
+      });
+      if (settings.city_name) {
+        setLocationMessage(settings.city_name);
+      }
       return;
     }
 
-    // Otherwise request location
+    // Priority 2: Saved prayer location in localStorage
+    const savedLocation = localStorage.getItem("prayerLocation");
+    if (savedLocation) {
+      const parsed = JSON.parse(savedLocation);
+      setLocation(parsed);
+      if (parsed.city) {
+        setLocationMessage(parsed.city);
+      }
+      return;
+    }
+
+    // Priority 3: Use default location (Makkah) immediately
+    // Don't wait for geolocation - use default right away for better UX
+    setLocation(DEFAULT_LOCATION);
+    setLocationMessage("مكة المكرمة (افتراضي)");
+
+    // Try to get actual location in background
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -61,17 +92,16 @@ const PrayerTimes = () => {
             longitude: position.coords.longitude,
           };
           setLocation(loc);
+          setLocationMessage("موقعك الحالي");
           localStorage.setItem("prayerLocation", JSON.stringify(loc));
         },
-        (error) => {
-          // Default to Makkah
-          const defaultLoc = { latitude: 21.4225, longitude: 39.8262, city: "مكة المكرمة" };
-          setLocation(defaultLoc);
-          setLocationError("تم استخدام موقع مكة المكرمة كموقع افتراضي");
-        }
+        () => {
+          // Keep using default location - no error message needed
+        },
+        { timeout: 5000, maximumAge: 300000 }
       );
     }
-  }, []);
+  }, [settings.latitude, settings.longitude, settings.city_name]);
 
   const { data: prayerTimes, isLoading, refetch } = useQuery({
     queryKey: ["prayerTimes", location?.latitude, location?.longitude],
@@ -131,10 +161,10 @@ const PrayerTimes = () => {
         </Button>
       </div>
 
-      {locationError && (
+      {locationMessage && (
         <div className="flex items-center gap-1 text-xs text-muted-foreground mb-3">
           <MapPin className="w-3 h-3" />
-          <span>{locationError}</span>
+          <span>{locationMessage}</span>
         </div>
       )}
 

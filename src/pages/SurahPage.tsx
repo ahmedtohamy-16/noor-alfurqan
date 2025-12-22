@@ -1,10 +1,10 @@
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, BookOpen } from "lucide-react";
+import { ArrowRight, BookOpen, Headphones } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { surahs } from "@/data/surahs";
 import Header from "@/components/Header";
-import AudioPlayer from "@/components/AudioPlayer";
+import AudioPlayer, { type AudioPlayerHandle } from "@/components/AudioPlayer";
 import TafsirDialog from "@/components/TafsirDialog";
 import ShareAyahDialog from "@/components/ShareAyahDialog";
 import AyahOptionsMenu from "@/components/AyahOptionsMenu";
@@ -43,7 +43,7 @@ const SurahPage = () => {
   const { saveProgress } = useReadingProgress();
   const [tafsirAyah, setTafsirAyah] = useState<{ number: number; text: string } | null>(null);
   const [shareAyah, setShareAyah] = useState<{ number: number; text: string } | null>(null);
-  const audioPlayerRef = useRef<{ playSpecificAyah: (ayahIndex: number) => void } | null>(null);
+  const audioPlayerRef = useRef<AudioPlayerHandle | null>(null);
 
   const surahInfo = surahs.find((s) => s.number === Number(surahNumber));
 
@@ -72,6 +72,12 @@ const SurahPage = () => {
   const playSpecificAyah = useCallback((ayahIndex: number) => {
     if (audioPlayerRef.current) {
       audioPlayerRef.current.playSpecificAyah(ayahIndex);
+    }
+  }, []);
+
+  const playSurahFromStart = useCallback(() => {
+    if (audioPlayerRef.current) {
+      audioPlayerRef.current.playSurahFromStart();
     }
   }, []);
 
@@ -105,9 +111,19 @@ const SurahPage = () => {
         </div>
 
         <div className="bg-gradient-to-br from-primary/10 to-accent/10 rounded-2xl p-6 mb-8 text-center">
-          <div className="inline-flex items-center gap-2 bg-background/80 backdrop-blur-sm px-4 py-2 rounded-full mb-4">
-            <BookOpen className="w-4 h-4 text-primary" />
-            <span className="text-sm text-muted-foreground">{surahInfo?.revelationType === "Meccan" ? "سورة مكية" : "سورة مدنية"}</span>
+          <div className="flex flex-wrap items-center justify-center gap-3 mb-4">
+            <div className="inline-flex items-center gap-2 bg-background/80 backdrop-blur-sm px-4 py-2 rounded-full">
+              <BookOpen className="w-4 h-4 text-primary" />
+              <span className="text-sm text-muted-foreground">{surahInfo?.revelationType === "Meccan" ? "سورة مكية" : "سورة مدنية"}</span>
+            </div>
+            <Button 
+              onClick={playSurahFromStart}
+              className="gap-2 rounded-full"
+              size="sm"
+            >
+              <Headphones className="w-4 h-4" />
+              استمع للسورة كاملة
+            </Button>
           </div>
           {surahNumber !== "9" && <p className="text-2xl md:text-3xl font-quran text-foreground">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</p>}
         </div>
