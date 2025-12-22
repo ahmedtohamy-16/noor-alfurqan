@@ -50,8 +50,7 @@ const AuthPage = () => {
           },
         });
         if (error) throw error;
-        toast.success("تم إنشاء الحساب بنجاح");
-        navigate("/");
+        toast.success("تم إرسال رابط التأكيد إلى بريدك الإلكتروني. يرجى التحقق من صندوق الوارد");
       }
     } catch (error: any) {
       console.error("Auth error:", error);

@@ -1,13 +1,14 @@
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, Heart, Share2, BookOpen } from "lucide-react";
+import { ArrowRight, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { surahs } from "@/data/surahs";
 import Header from "@/components/Header";
 import AudioPlayer from "@/components/AudioPlayer";
 import TafsirDialog from "@/components/TafsirDialog";
 import ShareAyahDialog from "@/components/ShareAyahDialog";
-import { useState, useEffect, useCallback } from "react";
+import AyahOptionsMenu from "@/components/AyahOptionsMenu";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useReadingProgress } from "@/hooks/useReadingProgress";
@@ -42,6 +43,7 @@ const SurahPage = () => {
   const { saveProgress } = useReadingProgress();
   const [tafsirAyah, setTafsirAyah] = useState<{ number: number; text: string } | null>(null);
   const [shareAyah, setShareAyah] = useState<{ number: number; text: string } | null>(null);
+  const audioPlayerRef = useRef<{ playSpecificAyah: (ayahIndex: number) => void } | null>(null);
 
   const surahInfo = surahs.find((s) => s.number === Number(surahNumber));
 
@@ -67,6 +69,12 @@ const SurahPage = () => {
     }
   };
 
+  const playSpecificAyah = useCallback((ayahIndex: number) => {
+    if (audioPlayerRef.current) {
+      audioPlayerRef.current.playSpecificAyah(ayahIndex);
+    }
+  }, []);
+
   const convertToArabicNumber = (num: number): string => {
     const arabicNumbers = ["٠", "١", "٢", "٣", "٤", "٥", "٦", "٧", "٨", "٩"];
     return num.toString().split("").map((digit) => arabicNumbers[parseInt(digit)]).join("");
@@ -89,7 +97,7 @@ const SurahPage = () => {
       <Header />
       <main className="container mx-auto px-4 py-6 arabic-ui">
         <div className="flex items-center gap-4 mb-6">
-          <Link to="/"><Button variant="ghost" size="icon"><ArrowRight className="w-5 h-5" /></Button></Link>
+          <Link to="/quran"><Button variant="ghost" size="icon"><ArrowRight className="w-5 h-5" /></Button></Link>
           <div className="flex-1">
             <h1 className="text-2xl md:text-3xl font-bold text-foreground font-quran">{surahInfo?.name}</h1>
             <p className="text-muted-foreground text-sm">{surahInfo?.englishNameTranslation} • {surahInfo?.numberOfAyahs} آية</p>
@@ -109,26 +117,32 @@ const SurahPage = () => {
             <div className="space-y-6">{[...Array(10)].map((_, i) => (<div key={i} className="space-y-2"><Skeleton className="h-8 w-full" /><Skeleton className="h-8 w-3/4" /></div>))}</div>
           ) : (
             <div className="quran-text text-xl md:text-2xl lg:text-3xl leading-loose">
-              {surah?.ayahs.map((ayah) => {
+              {surah?.ayahs.map((ayah, index) => {
                 let displayText = ayah.text;
                 if (ayah.numberInSurah === 1 && Number(surahNumber) !== 1 && Number(surahNumber) !== 9) {
                   displayText = ayah.text.replace(/^بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ\s*/, "");
                 }
                 const isAyahFavorite = isFavorite(Number(surahNumber), ayah.numberInSurah);
+                
                 return (
-                  <span key={ayah.number} className="group relative inline">
-                    <span className="hover:bg-accent/10 rounded px-1 transition-colors cursor-pointer">{displayText}</span>
-                    <span className="inline-flex items-center justify-center w-8 h-8 mx-1 text-sm bg-primary/10 text-primary rounded-full font-arabic align-middle">{convertToArabicNumber(ayah.numberInSurah)}</span>
-                    <span className="hidden group-hover:inline-flex absolute top-0 left-0 -translate-x-full gap-1 bg-card shadow-lg rounded-lg p-1 border border-border z-10">
-                      <Button variant="ghost" size="icon" className="w-8 h-8" onClick={() => toggleFavorite(ayah, displayText)}>
-                        <Heart className={`w-4 h-4 ${isAyahFavorite ? "fill-destructive text-destructive" : ""}`} />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="w-8 h-8" onClick={() => setShareAyah({ number: ayah.numberInSurah, text: displayText })}>
-                        <Share2 className="w-4 h-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="w-8 h-8" onClick={() => setTafsirAyah({ number: ayah.numberInSurah, text: displayText })}>
-                        <BookOpen className="w-4 h-4" />
-                      </Button>
+                  <span key={ayah.number} className="inline">
+                    <AyahOptionsMenu
+                      ayahNumber={ayah.numberInSurah}
+                      ayahText={displayText}
+                      surahNumber={Number(surahNumber)}
+                      surahName={surahInfo?.name || ""}
+                      isFavorite={isAyahFavorite}
+                      onToggleFavorite={() => toggleFavorite(ayah, displayText)}
+                      onOpenTafsir={() => setTafsirAyah({ number: ayah.numberInSurah, text: displayText })}
+                      onOpenShare={() => setShareAyah({ number: ayah.numberInSurah, text: displayText })}
+                      onPlayAyah={() => playSpecificAyah(index)}
+                    >
+                      <span className="hover:bg-accent/10 rounded px-1 transition-colors cursor-pointer">
+                        {displayText}
+                      </span>
+                    </AyahOptionsMenu>
+                    <span className="inline-flex items-center justify-center w-8 h-8 mx-1 text-sm bg-primary/10 text-primary rounded-full font-arabic align-middle">
+                      {convertToArabicNumber(ayah.numberInSurah)}
                     </span>
                   </span>
                 );
@@ -144,7 +158,7 @@ const SurahPage = () => {
         </div>
       </main>
 
-      {surah && surahInfo && <AudioPlayer surahNumber={surah.number} ayahs={surah.ayahs} surahName={surahInfo.name} />}
+      {surah && surahInfo && <AudioPlayer ref={audioPlayerRef} surahNumber={surah.number} ayahs={surah.ayahs} surahName={surahInfo.name} />}
       
       {tafsirAyah && <TafsirDialog isOpen={!!tafsirAyah} onClose={() => setTafsirAyah(null)} surahNumber={Number(surahNumber)} ayahNumber={tafsirAyah.number} ayahText={tafsirAyah.text} />}
       
