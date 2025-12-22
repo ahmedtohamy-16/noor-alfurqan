@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Book, Search, Heart, Clock, Settings } from "lucide-react";
+import { Book, Search, Heart, Clock, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const BottomNavigation = () => {
@@ -8,9 +8,9 @@ const BottomNavigation = () => {
   const navItems = [
     { icon: Book, label: "القرآن", path: "/quran" },
     { icon: Search, label: "بحث", path: "/search" },
+    { icon: RotateCcw, label: "التسبيح", path: "/tasbih" },
     { icon: Heart, label: "المفضلة", path: "/favorites" },
     { icon: Clock, label: "الصلاة", path: "/prayer-times" },
-    { icon: Settings, label: "الإعدادات", path: "/settings" },
   ];
 
   const isActive = (path: string) => {

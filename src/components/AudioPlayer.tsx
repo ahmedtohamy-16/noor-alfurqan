@@ -31,6 +31,7 @@ interface AudioPlayerProps {
   surahNumber: number;
   ayahs: { number: number; numberInSurah: number; text: string }[];
   surahName: string;
+  onAyahChange?: (ayahIndex: number) => void;
 }
 
 export interface AudioPlayerHandle {
@@ -39,7 +40,7 @@ export interface AudioPlayerHandle {
 }
 
 const AudioPlayer = forwardRef<AudioPlayerHandle, AudioPlayerProps>(
-  ({ surahNumber, ayahs, surahName }, ref) => {
+  ({ surahNumber, ayahs, surahName, onAyahChange }, ref) => {
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentAyahIndex, setCurrentAyahIndex] = useState(0);
     const [progress, setProgress] = useState(0);
@@ -110,6 +111,9 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, AudioPlayerProps>(
         if (!ayahs[index]) return;
 
         setIsLoading(true);
+        setCurrentAyahIndex(index);
+        onAyahChange?.(index);
+        
         const ayah = ayahs[index];
         const url = getAudioUrl(ayah.number);
 
@@ -125,7 +129,7 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, AudioPlayerProps>(
         }
         setIsLoading(false);
       },
-      [ayahs, getAudioUrl]
+      [ayahs, getAudioUrl, onAyahChange]
     );
 
     // Expose playSpecificAyah and playSurahFromStart to parent component
