@@ -14,6 +14,10 @@ import ProfilePage from "./pages/ProfilePage";
 import KhatmahPage from "./pages/KhatmahPage";
 import AuthPage from "./pages/AuthPage";
 import SettingsPage from "./pages/SettingsPage";
+import MushafPage from "./pages/MushafPage";
+import PrayerTimesPage from "./pages/PrayerTimesPage";
+import ReadingStatsPage from "./pages/ReadingStatsPage";
+import DailyWirdPage from "./pages/DailyWirdPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,6 +40,10 @@ const App = () => (
               <Route path="/khatmah" element={<KhatmahPage />} />
               <Route path="/auth" element={<AuthPage />} />
               <Route path="/settings" element={<SettingsPage />} />
+              <Route path="/mushaf" element={<MushafPage />} />
+              <Route path="/prayer-times" element={<PrayerTimesPage />} />
+              <Route path="/reading-stats" element={<ReadingStatsPage />} />
+              <Route path="/daily-wird" element={<DailyWirdPage />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
