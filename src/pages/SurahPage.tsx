@@ -68,6 +68,7 @@ const SurahPage = () => {
     fontSize: 24,
     lineHeight: 2,
     theme: "simple",
+    fontFamily: "Amiri",
     showTranslation: true,
   });
   const [currentPlayingAyah, setCurrentPlayingAyah] = useState<number | null>(null);
