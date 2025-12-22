@@ -129,20 +129,28 @@ const SurahPage = () => {
             </div>
           ) : (
             <div className="quran-text text-xl md:text-2xl lg:text-3xl leading-loose">
-              {surah?.ayahs.map((ayah, index) => (
-                <span
-                  key={ayah.number}
-                  className="group relative inline"
-                >
-                  {/* Ayah Text */}
-                  <span className="hover:bg-accent/10 rounded px-1 transition-colors cursor-pointer">
-                    {ayah.text}
-                  </span>
-                  
-                  {/* Ayah Number */}
-                  <span className="inline-flex items-center justify-center w-8 h-8 mx-1 text-sm bg-primary/10 text-primary rounded-full font-arabic align-middle">
-                    {convertToArabicNumber(ayah.numberInSurah)}
-                  </span>
+              {surah?.ayahs.map((ayah, index) => {
+                // Remove Bismillah from first ayah of surahs except Al-Fatihah (1) and At-Tawbah (9)
+                let displayText = ayah.text;
+                if (ayah.numberInSurah === 1 && Number(surahNumber) !== 1 && Number(surahNumber) !== 9) {
+                  // Remove Bismillah prefix from the text
+                  displayText = ayah.text.replace(/^بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ\s*/, "");
+                }
+                
+                return (
+                  <span
+                    key={ayah.number}
+                    className="group relative inline"
+                  >
+                    {/* Ayah Text */}
+                    <span className="hover:bg-accent/10 rounded px-1 transition-colors cursor-pointer">
+                      {displayText}
+                    </span>
+                    
+                    {/* Ayah Number */}
+                    <span className="inline-flex items-center justify-center w-8 h-8 mx-1 text-sm bg-primary/10 text-primary rounded-full font-arabic align-middle">
+                      {convertToArabicNumber(ayah.numberInSurah)}
+                    </span>
 
                   {/* Hover Actions */}
                   <span className="hidden group-hover:inline-flex absolute top-0 left-0 -translate-x-full gap-1 bg-card shadow-lg rounded-lg p-1 border border-border z-10">
@@ -163,9 +171,10 @@ const SurahPage = () => {
                     <Button variant="ghost" size="icon" className="w-8 h-8">
                       <Share2 className="w-4 h-4" />
                     </Button>
+                    </span>
                   </span>
-                </span>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
