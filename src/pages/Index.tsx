@@ -6,6 +6,7 @@ import Header from "@/components/Header";
 import PrayerTimes from "@/components/PrayerTimes";
 import DailyWirdCard from "@/components/DailyWirdCard";
 import LastReadCard from "@/components/LastReadCard";
+import ReadingStatsCard from "@/components/ReadingStatsCard";
 import { useReadingProgress } from "@/hooks/useReadingProgress";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -74,9 +75,10 @@ const Index = () => {
 
       <main className="container mx-auto px-4 py-8 arabic-ui">
         {/* Quick Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           <PrayerTimes />
           <DailyWirdCard />
+          <ReadingStatsCard />
           {lastRead ? (
             <LastReadCard
               surahName={lastRead.surah_name}
