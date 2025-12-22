@@ -1,11 +1,14 @@
-import { Heart } from "lucide-react";
+import { Heart, Trash2, BookOpen } from "lucide-react";
+import { Link } from "react-router-dom";
 import Header from "@/components/Header";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useFavorites } from "@/hooks/useFavorites";
+import { useAuth } from "@/hooks/useAuth";
 
 const FavoritesPage = () => {
-  // Mock favorites - would come from localStorage or backend
-  const favorites: { surahNumber: number; surahName: string; ayahNumber: number; text: string }[] = [];
+  const { user } = useAuth();
+  const { favorites, isLoading, removeFavorite } = useFavorites();
 
   return (
     <div className="min-h-screen bg-background">
@@ -16,7 +19,28 @@ const FavoritesPage = () => {
           الآيات المفضلة
         </h1>
 
-        {favorites.length === 0 ? (
+        {!user ? (
+          <div className="text-center py-16">
+            <div className="w-24 h-24 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+              <Heart className="w-10 h-10 text-muted-foreground" />
+            </div>
+            <h2 className="text-xl font-bold text-foreground mb-2">
+              سجل دخولك لعرض المفضلة
+            </h2>
+            <p className="text-muted-foreground mb-6">
+              يجب تسجيل الدخول لحفظ وعرض الآيات المفضلة
+            </p>
+            <Link to="/auth">
+              <Button>تسجيل الدخول</Button>
+            </Link>
+          </div>
+        ) : isLoading ? (
+          <div className="max-w-2xl mx-auto space-y-4">
+            {[...Array(3)].map((_, i) => (
+              <Skeleton key={i} className="h-32 rounded-xl" />
+            ))}
+          </div>
+        ) : favorites.length === 0 ? (
           <div className="text-center py-16">
             <div className="w-24 h-24 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
               <Heart className="w-10 h-10 text-muted-foreground" />
@@ -33,21 +57,32 @@ const FavoritesPage = () => {
           </div>
         ) : (
           <div className="max-w-2xl mx-auto space-y-4">
-            {favorites.map((fav, index) => (
+            {favorites.map((fav) => (
               <div
-                key={index}
-                className="bg-card border border-border rounded-xl p-4"
+                key={fav.id}
+                className="bg-card border border-border rounded-xl p-4 group hover:border-primary/30 transition-colors"
               >
-                <div className="flex items-start justify-between mb-2">
-                  <span className="text-sm text-muted-foreground">
-                    {fav.surahName} - الآية {fav.ayahNumber}
-                  </span>
-                  <Button variant="ghost" size="icon" className="w-8 h-8">
-                    <Heart className="w-4 h-4 fill-destructive text-destructive" />
+                <div className="flex items-start justify-between mb-3">
+                  <Link
+                    to={`/surah/${fav.surah_number}`}
+                    className="flex items-center gap-2 text-primary hover:underline"
+                  >
+                    <BookOpen className="w-4 h-4" />
+                    <span className="text-sm font-medium">
+                      {fav.surah_name} - الآية {fav.ayah_number}
+                    </span>
+                  </Link>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="w-8 h-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                    onClick={() => removeFavorite(fav.surah_number, fav.ayah_number)}
+                  >
+                    <Trash2 className="w-4 h-4" />
                   </Button>
                 </div>
-                <p className="text-lg font-quran text-foreground leading-relaxed">
-                  {fav.text}
+                <p className="text-lg font-quran text-foreground leading-relaxed text-center">
+                  {fav.ayah_text}
                 </p>
               </div>
             ))}

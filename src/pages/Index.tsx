@@ -3,9 +3,9 @@ import Header from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
 import SurahCard from "@/components/SurahCard";
 import LastReadCard from "@/components/LastReadCard";
+import PrayerTimes from "@/components/PrayerTimes";
 import { surahs } from "@/data/surahs";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Index = () => {
   const [filter, setFilter] = useState<"all" | "meccan" | "medinan">("all");
@@ -30,11 +30,10 @@ const Index = () => {
       <HeroSection />
 
       <main className="container mx-auto px-4 py-8 arabic-ui">
-        {/* Last Read Section */}
-        <section className="mb-12">
-          <div className="max-w-md">
-            <LastReadCard {...lastRead} />
-          </div>
+        {/* Prayer Times & Last Read Section */}
+        <section className="mb-12 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <PrayerTimes />
+          <LastReadCard {...lastRead} />
         </section>
 
         {/* Surah Index Section */}
@@ -63,7 +62,7 @@ const Index = () => {
       <footer className="bg-card border-t border-border py-8 mt-12">
         <div className="container mx-auto px-4 text-center arabic-ui">
           <p className="text-muted-foreground">
-            نور القرآن - تطبيق لقراءة القرآن الكريم
+            نور الفرقان - تطبيق لقراءة القرآن الكريم
           </p>
           <p className="text-sm text-muted-foreground mt-2">
             جميع الحقوق محفوظة © {new Date().getFullYear()}

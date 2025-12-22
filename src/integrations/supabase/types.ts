@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      favorites: {
+        Row: {
+          ayah_number: number
+          ayah_text: string
+          created_at: string
+          id: string
+          surah_name: string
+          surah_number: number
+          user_id: string
+        }
+        Insert: {
+          ayah_number: number
+          ayah_text: string
+          created_at?: string
+          id?: string
+          surah_name: string
+          surah_number: number
+          user_id: string
+        }
+        Update: {
+          ayah_number?: number
+          ayah_text?: string
+          created_at?: string
+          id?: string
+          surah_name?: string
+          surah_number?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       khatmah_participants: {
         Row: {
           assigned_juz: number
