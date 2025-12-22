@@ -1,18 +1,21 @@
 import { Link, useLocation } from "react-router-dom";
-import { Book, Search, Heart, User, Menu, Users } from "lucide-react";
+import { Book, Search, Heart, Settings, Menu, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import ThemeToggle from "./ThemeToggle";
+import { useAuth } from "@/hooks/useAuth";
 
 const Header = () => {
   const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { user } = useAuth();
 
   const navLinks = [
     { path: "/", label: "الرئيسية", icon: Book },
     { path: "/search", label: "البحث", icon: Search },
     { path: "/khatmah", label: "الختمة", icon: Users },
     { path: "/favorites", label: "المفضلة", icon: Heart },
-    { path: "/profile", label: "حسابي", icon: User },
+    { path: "/settings", label: "الإعدادات", icon: Settings },
   ];
 
   return (
@@ -25,7 +28,7 @@ const Header = () => {
               <span className="text-primary-foreground font-quran text-lg">ن</span>
             </div>
             <span className="font-arabic font-bold text-xl text-foreground hidden sm:block">
-              نور القرآن
+              نور الفرقان
             </span>
           </Link>
 
@@ -47,17 +50,27 @@ const Header = () => {
                 </Link>
               );
             })}
+            <ThemeToggle />
+            {!user && (
+              <Link to="/auth">
+                <Button size="sm" variant="outline">
+                  دخول
+                </Button>
+              </Link>
+            )}
           </nav>
 
-          {/* Mobile Menu Button */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="md:hidden"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-          >
-            <Menu className="w-5 h-5" />
-          </Button>
+          {/* Mobile Actions */}
+          <div className="flex items-center gap-2 md:hidden">
+            <ThemeToggle />
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+            >
+              <Menu className="w-5 h-5" />
+            </Button>
+          </div>
         </div>
 
         {/* Mobile Navigation */}
@@ -83,6 +96,13 @@ const Header = () => {
                   </Link>
                 );
               })}
+              {!user && (
+                <Link to="/auth" onClick={() => setIsMenuOpen(false)}>
+                  <Button variant="outline" className="w-full">
+                    تسجيل الدخول
+                  </Button>
+                </Link>
+              )}
             </div>
           </nav>
         )}
