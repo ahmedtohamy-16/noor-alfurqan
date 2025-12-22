@@ -1,4 +1,4 @@
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, BookOpen, Headphones, Settings2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -58,6 +58,8 @@ const fetchTranslation = async (surahNumber: string, edition: string): Promise<A
 
 const SurahPage = () => {
   const { surahNumber } = useParams<{ surahNumber: string }>();
+  const [searchParams] = useSearchParams();
+  const highlightAyah = searchParams.get("ayah");
   const { addFavorite, removeFavorite, isFavorite } = useFavorites();
   const { saveProgress } = useReadingProgress();
   const { incrementPage } = useReadingStats();
@@ -73,6 +75,7 @@ const SurahPage = () => {
   });
   const [currentPlayingAyah, setCurrentPlayingAyah] = useState<number | null>(null);
   const audioPlayerRef = useRef<AudioPlayerHandle | null>(null);
+  const ayahRefs = useRef<{ [key: number]: HTMLSpanElement | null }>({});
 
   const surahInfo = surahs.find((s) => s.number === Number(surahNumber));
 
@@ -96,6 +99,23 @@ const SurahPage = () => {
     }
   }, [surah?.number]); // Only trigger on surah change
 
+  // Scroll to highlighted ayah from favorites
+  useEffect(() => {
+    if (highlightAyah && surah) {
+      const ayahNum = parseInt(highlightAyah);
+      const ayahIndex = surah.ayahs.findIndex(a => a.numberInSurah === ayahNum);
+      if (ayahIndex !== -1) {
+        setCurrentPlayingAyah(ayahIndex);
+        setTimeout(() => {
+          const element = ayahRefs.current[ayahNum];
+          if (element) {
+            element.scrollIntoView({ behavior: "smooth", block: "center" });
+          }
+        }, 500);
+      }
+    }
+  }, [highlightAyah, surah]);
+
   const toggleFavorite = async (ayah: Ayah, displayText: string) => {
     const surahNum = Number(surahNumber);
     if (isFavorite(surahNum, ayah.numberInSurah)) {
@@ -104,6 +124,20 @@ const SurahPage = () => {
       await addFavorite(surahNum, surahInfo?.name || "", ayah.numberInSurah, displayText);
     }
   };
+
+  const handleAyahChange = useCallback((ayahIndex: number) => {
+    setCurrentPlayingAyah(ayahIndex);
+    // Scroll to current ayah
+    if (surah?.ayahs[ayahIndex]) {
+      const ayahNum = surah.ayahs[ayahIndex].numberInSurah;
+      setTimeout(() => {
+        const element = ayahRefs.current[ayahNum];
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      }, 100);
+    }
+  }, [surah]);
 
   const playSpecificAyah = useCallback((ayahIndex: number) => {
     if (audioPlayerRef.current) {
@@ -243,7 +277,11 @@ const SurahPage = () => {
                 const isCurrentlyPlaying = currentPlayingAyah === index;
                 
                 return (
-                  <span key={ayah.number} className="inline">
+                  <span 
+                    key={ayah.number} 
+                    className="inline"
+                    ref={(el) => { ayahRefs.current[ayah.numberInSurah] = el; }}
+                  >
                     <AyahOptionsMenu
                       ayahNumber={ayah.numberInSurah}
                       ayahText={displayText}
@@ -258,7 +296,7 @@ const SurahPage = () => {
                       <span 
                         className={cn(
                           "rounded px-1 transition-all duration-300 cursor-pointer",
-                          isCurrentlyPlaying 
+                          isCurrentlyPlaying || (highlightAyah && parseInt(highlightAyah) === ayah.numberInSurah)
                             ? "bg-primary/20 text-primary ring-2 ring-primary/30" 
                             : "hover:bg-accent/10"
                         )}
@@ -294,6 +332,7 @@ const SurahPage = () => {
           surahNumber={surah.number} 
           ayahs={surah.ayahs} 
           surahName={surahInfo.name}
+          onAyahChange={handleAyahChange}
         />
       )}
       

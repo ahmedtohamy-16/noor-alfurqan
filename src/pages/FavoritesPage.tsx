@@ -64,7 +64,7 @@ const FavoritesPage = () => {
               >
                 <div className="flex items-start justify-between mb-3">
                   <Link
-                    to={`/surah/${fav.surah_number}`}
+                    to={`/surah/${fav.surah_number}?ayah=${fav.ayah_number}`}
                     className="flex items-center gap-2 text-primary hover:underline"
                   >
                     <BookOpen className="w-4 h-4" />
