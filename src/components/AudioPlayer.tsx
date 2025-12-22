@@ -9,6 +9,8 @@ import {
   ChevronUp,
   ChevronDown,
   User,
+  Repeat,
+  Repeat1,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -21,6 +23,8 @@ import {
 } from "@/components/ui/select";
 import { reciters, type Reciter } from "@/data/reciters";
 import { cn } from "@/lib/utils";
+
+type RepeatMode = "none" | "single" | "range";
 
 interface AudioPlayerProps {
   surahNumber: number;
@@ -38,6 +42,13 @@ const AudioPlayer = ({ surahNumber, ayahs, surahName }: AudioPlayerProps) => {
   const [selectedReciter, setSelectedReciter] = useState<Reciter>(reciters[0]);
   const [isExpanded, setIsExpanded] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Repeat functionality
+  const [repeatMode, setRepeatMode] = useState<RepeatMode>("none");
+  const [repeatCount, setRepeatCount] = useState(1);
+  const [currentRepeat, setCurrentRepeat] = useState(0);
+  const [rangeStart, setRangeStart] = useState(1);
+  const [rangeEnd, setRangeEnd] = useState(1);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -61,7 +72,8 @@ const AudioPlayer = ({ surahNumber, ayahs, surahName }: AudioPlayerProps) => {
     setCurrentAyahIndex(0);
     setIsPlaying(false);
     setProgress(0);
-  }, [surahNumber, selectedReciter.id]);
+    setRangeEnd(ayahs.length);
+  }, [surahNumber, selectedReciter.id, ayahs.length]);
 
   const playAyah = useCallback(
     async (index: number) => {
@@ -106,6 +118,7 @@ const AudioPlayer = ({ surahNumber, ayahs, surahName }: AudioPlayerProps) => {
     if (currentAyahIndex < ayahs.length - 1) {
       const nextIndex = currentAyahIndex + 1;
       setCurrentAyahIndex(nextIndex);
+      setCurrentRepeat(0);
       if (isPlaying) {
         playAyah(nextIndex);
       }
@@ -116,6 +129,7 @@ const AudioPlayer = ({ surahNumber, ayahs, surahName }: AudioPlayerProps) => {
     if (currentAyahIndex > 0) {
       const prevIndex = currentAyahIndex - 1;
       setCurrentAyahIndex(prevIndex);
+      setCurrentRepeat(0);
       if (isPlaying) {
         playAyah(prevIndex);
       }
@@ -130,13 +144,54 @@ const AudioPlayer = ({ surahNumber, ayahs, surahName }: AudioPlayerProps) => {
   };
 
   const handleEnded = () => {
-    if (currentAyahIndex < ayahs.length - 1) {
-      const nextIndex = currentAyahIndex + 1;
-      setCurrentAyahIndex(nextIndex);
-      playAyah(nextIndex);
+    // Handle repeat logic
+    if (repeatMode === "single") {
+      if (currentRepeat < repeatCount - 1) {
+        setCurrentRepeat((prev) => prev + 1);
+        playAyah(currentAyahIndex);
+        return;
+      } else {
+        setCurrentRepeat(0);
+        // Move to next ayah after completing repeats
+        if (currentAyahIndex < ayahs.length - 1) {
+          const nextIndex = currentAyahIndex + 1;
+          setCurrentAyahIndex(nextIndex);
+          playAyah(nextIndex);
+        } else {
+          setIsPlaying(false);
+          setCurrentAyahIndex(0);
+        }
+      }
+    } else if (repeatMode === "range") {
+      const rangeStartIndex = rangeStart - 1;
+      const rangeEndIndex = rangeEnd - 1;
+      
+      if (currentAyahIndex < rangeEndIndex) {
+        const nextIndex = currentAyahIndex + 1;
+        setCurrentAyahIndex(nextIndex);
+        playAyah(nextIndex);
+      } else {
+        // End of range, check repeat count
+        if (currentRepeat < repeatCount - 1) {
+          setCurrentRepeat((prev) => prev + 1);
+          setCurrentAyahIndex(rangeStartIndex);
+          playAyah(rangeStartIndex);
+        } else {
+          setCurrentRepeat(0);
+          setIsPlaying(false);
+          setCurrentAyahIndex(rangeStartIndex);
+        }
+      }
     } else {
-      setIsPlaying(false);
-      setCurrentAyahIndex(0);
+      // Normal playback
+      if (currentAyahIndex < ayahs.length - 1) {
+        const nextIndex = currentAyahIndex + 1;
+        setCurrentAyahIndex(nextIndex);
+        playAyah(nextIndex);
+      } else {
+        setIsPlaying(false);
+        setCurrentAyahIndex(0);
+      }
     }
   };
 
@@ -164,6 +219,28 @@ const AudioPlayer = ({ surahNumber, ayahs, surahName }: AudioPlayerProps) => {
         audioRef.current.src = "";
       }
     }
+  };
+
+  const cycleRepeatMode = () => {
+    if (repeatMode === "none") {
+      setRepeatMode("single");
+    } else if (repeatMode === "single") {
+      setRepeatMode("range");
+      setRangeStart(currentAyah?.numberInSurah || 1);
+      setRangeEnd(Math.min((currentAyah?.numberInSurah || 1) + 2, ayahs.length));
+    } else {
+      setRepeatMode("none");
+      setCurrentRepeat(0);
+    }
+  };
+
+  const convertToArabicNumber = (num: number): string => {
+    const arabicNumbers = ["٠", "١", "٢", "٣", "٤", "٥", "٦", "٧", "٨", "٩"];
+    return num
+      .toString()
+      .split("")
+      .map((digit) => arabicNumbers[parseInt(digit)])
+      .join("");
   };
 
   return (
@@ -220,6 +297,93 @@ const AudioPlayer = ({ surahNumber, ayahs, surahName }: AudioPlayerProps) => {
                 </Select>
               </div>
 
+              {/* Repeat Controls */}
+              <div className="flex flex-wrap items-center gap-3">
+                <Button
+                  variant={repeatMode !== "none" ? "default" : "outline"}
+                  size="sm"
+                  onClick={cycleRepeatMode}
+                  className="gap-2"
+                >
+                  {repeatMode === "single" ? (
+                    <Repeat1 className="w-4 h-4" />
+                  ) : (
+                    <Repeat className="w-4 h-4" />
+                  )}
+                  {repeatMode === "none" && "تكرار"}
+                  {repeatMode === "single" && "تكرار آية"}
+                  {repeatMode === "range" && "تكرار مجموعة"}
+                </Button>
+
+                {repeatMode !== "none" && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground">عدد التكرار:</span>
+                    <Select
+                      value={repeatCount.toString()}
+                      onValueChange={(val) => setRepeatCount(parseInt(val))}
+                    >
+                      <SelectTrigger className="w-20">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {[1, 2, 3, 5, 7, 10, 15, 20].map((num) => (
+                          <SelectItem key={num} value={num.toString()}>
+                            {convertToArabicNumber(num)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                {repeatMode === "range" && (
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-sm text-muted-foreground">من آية:</span>
+                    <Select
+                      value={rangeStart.toString()}
+                      onValueChange={(val) => {
+                        const start = parseInt(val);
+                        setRangeStart(start);
+                        if (start > rangeEnd) setRangeEnd(start);
+                      }}
+                    >
+                      <SelectTrigger className="w-20">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {ayahs.map((_, i) => (
+                          <SelectItem key={i + 1} value={(i + 1).toString()}>
+                            {convertToArabicNumber(i + 1)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <span className="text-sm text-muted-foreground">إلى آية:</span>
+                    <Select
+                      value={rangeEnd.toString()}
+                      onValueChange={(val) => setRangeEnd(parseInt(val))}
+                    >
+                      <SelectTrigger className="w-20">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {ayahs.slice(rangeStart - 1).map((_, i) => (
+                          <SelectItem key={rangeStart + i} value={(rangeStart + i).toString()}>
+                            {convertToArabicNumber(rangeStart + i)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                {repeatMode !== "none" && currentRepeat > 0 && (
+                  <span className="text-sm text-primary font-medium">
+                    التكرار {convertToArabicNumber(currentRepeat + 1)} من {convertToArabicNumber(repeatCount)}
+                  </span>
+                )}
+              </div>
+
               {/* Volume Control */}
               <div className="flex items-center gap-3">
                 <Button
@@ -253,7 +417,7 @@ const AudioPlayer = ({ surahNumber, ayahs, surahName }: AudioPlayerProps) => {
               {currentAyah && (
                 <div className="bg-muted/50 rounded-lg p-3">
                   <p className="text-sm text-muted-foreground mb-1">
-                    الآية {currentAyah.numberInSurah}
+                    الآية {convertToArabicNumber(currentAyah.numberInSurah)}
                   </p>
                   <p className="font-quran text-lg leading-relaxed line-clamp-2">
                     {currentAyah.text}
@@ -272,12 +436,28 @@ const AudioPlayer = ({ surahNumber, ayahs, surahName }: AudioPlayerProps) => {
               </p>
               <p className="text-sm text-muted-foreground">
                 {selectedReciter.nameArabic} • الآية{" "}
-                {currentAyah?.numberInSurah || 1} من {ayahs.length}
+                {currentAyah ? convertToArabicNumber(currentAyah.numberInSurah) : "١"} من {convertToArabicNumber(ayahs.length)}
               </p>
             </div>
 
             {/* Controls */}
             <div className="flex items-center gap-2">
+              {/* Repeat indicator */}
+              {repeatMode !== "none" && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={cycleRepeatMode}
+                  className="text-primary"
+                >
+                  {repeatMode === "single" ? (
+                    <Repeat1 className="w-5 h-5" />
+                  ) : (
+                    <Repeat className="w-5 h-5" />
+                  )}
+                </Button>
+              )}
+
               <Button
                 variant="ghost"
                 size="icon"

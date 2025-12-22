@@ -14,13 +14,101 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      khatmah_participants: {
+        Row: {
+          assigned_juz: number
+          completed_at: string | null
+          created_at: string | null
+          id: string
+          is_completed: boolean | null
+          khatmah_id: string
+          user_id: string
+        }
+        Insert: {
+          assigned_juz: number
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          is_completed?: boolean | null
+          khatmah_id: string
+          user_id: string
+        }
+        Update: {
+          assigned_juz?: number
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          is_completed?: boolean | null
+          khatmah_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "khatmah_participants_khatmah_id_fkey"
+            columns: ["khatmah_id"]
+            isOneToOne: false
+            referencedRelation: "khatmahs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      khatmahs: {
+        Row: {
+          created_at: string | null
+          created_by: string
+          id: string
+          invite_code: string
+          is_completed: boolean | null
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by: string
+          id?: string
+          invite_code: string
+          is_completed?: boolean | null
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string
+          id?: string
+          invite_code?: string
+          is_completed?: boolean | null
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          id: string
+          username: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string | null
+          id: string
+          username?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string | null
+          id?: string
+          username?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      generate_invite_code: { Args: never; Returns: string }
     }
     Enums: {
       [_ in never]: never
