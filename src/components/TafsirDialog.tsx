@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { BookOpen, X } from "lucide-react";
+import { BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -29,6 +29,12 @@ interface TafsirDialogProps {
 const tafsirOptions = [
   { id: "ar.muyassar", name: "التفسير الميسر" },
   { id: "ar.jalalayn", name: "تفسير الجلالين" },
+  { id: "ar.miqbas", name: "تنوير المقباس" },
+  { id: "ar.qurtubi", name: "تفسير القرطبي" },
+  { id: "ar.kathir", name: "تفسير ابن كثير" },
+  { id: "ar.tabari", name: "تفسير الطبري" },
+  { id: "ar.baghawi", name: "تفسير البغوي" },
+  { id: "ar.saddi", name: "تفسير السعدي" },
 ];
 
 const fetchTafsir = async (
@@ -52,10 +58,11 @@ const TafsirDialog = ({
 }: TafsirDialogProps) => {
   const [selectedTafsir, setSelectedTafsir] = useState(tafsirOptions[0].id);
 
-  const { data: tafsir, isLoading } = useQuery({
+  const { data: tafsir, isLoading, error } = useQuery({
     queryKey: ["tafsir", surahNumber, ayahNumber, selectedTafsir],
     queryFn: () => fetchTafsir(surahNumber, ayahNumber, selectedTafsir),
     enabled: isOpen,
+    retry: 1,
   });
 
   return (
@@ -99,6 +106,10 @@ const TafsirDialog = ({
               <Skeleton className="h-4 w-full" />
               <Skeleton className="h-4 w-3/4" />
             </div>
+          ) : error ? (
+            <p className="text-muted-foreground text-center py-8">
+              هذا التفسير غير متاح حالياً لهذه الآية
+            </p>
           ) : (
             <p className="text-foreground leading-relaxed text-base">
               {tafsir?.text || "لا يوجد تفسير متاح لهذه الآية"}

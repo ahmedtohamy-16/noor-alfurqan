@@ -49,6 +49,54 @@ export const reciters: Reciter[] = [
     nameArabic: "ماهر المعيقلي",
     server: "https://cdn.islamic.network/quran/audio/128/ar.mahermuaiqly",
   },
+  {
+    id: "ar.hani_rifai",
+    name: "Hani Ar-Rifai",
+    nameArabic: "هاني الرفاعي",
+    server: "https://cdn.islamic.network/quran/audio/128/ar.hanirifai",
+  },
+  {
+    id: "ar.ayyoub",
+    name: "Muhammad Ayyoub",
+    nameArabic: "محمد أيوب",
+    server: "https://cdn.islamic.network/quran/audio/128/ar.muhammadayyoub",
+  },
+  {
+    id: "ar.parhizgar",
+    name: "Ibrahim Al-Akhdar",
+    nameArabic: "إبراهيم الأخضر",
+    server: "https://cdn.islamic.network/quran/audio/128/ar.ibrahimakhdar",
+  },
+  {
+    id: "ar.shuraym",
+    name: "Saud Al-Shuraym",
+    nameArabic: "سعود الشريم",
+    server: "https://cdn.islamic.network/quran/audio/128/ar.shuraym",
+  },
+  {
+    id: "ar.ahmedajamy",
+    name: "Ahmed Al-Ajamy",
+    nameArabic: "أحمد العجمي",
+    server: "https://cdn.islamic.network/quran/audio/128/ar.ahmedajamy",
+  },
+  {
+    id: "ar.alialhuthaify",
+    name: "Ali Al-Huthaify",
+    nameArabic: "علي الحذيفي",
+    server: "https://cdn.islamic.network/quran/audio/128/ar.alialhuthaify",
+  },
+  {
+    id: "ar.abdulbari",
+    name: "Abdullah Basfar",
+    nameArabic: "عبد الله بصفر",
+    server: "https://cdn.islamic.network/quran/audio/128/ar.abdullahbasfar",
+  },
+  {
+    id: "ar.abdullahawwad",
+    name: "Abdullah Awwad Al-Juhani",
+    nameArabic: "عبد الله عواد الجهني",
+    server: "https://cdn.islamic.network/quran/audio/128/ar.abdullahawwad",
+  },
 ];
 
 export const getReciterById = (id: string): Reciter | undefined => {

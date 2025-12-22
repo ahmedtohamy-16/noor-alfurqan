@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      daily_wird: {
+        Row: {
+          completed_pages: number | null
+          created_at: string | null
+          id: string
+          is_completed: boolean | null
+          target_date: string | null
+          target_pages: number | null
+          user_id: string
+        }
+        Insert: {
+          completed_pages?: number | null
+          created_at?: string | null
+          id?: string
+          is_completed?: boolean | null
+          target_date?: string | null
+          target_pages?: number | null
+          user_id: string
+        }
+        Update: {
+          completed_pages?: number | null
+          created_at?: string | null
+          id?: string
+          is_completed?: boolean | null
+          target_date?: string | null
+          target_pages?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       favorites: {
         Row: {
           ayah_number: number
@@ -115,21 +145,102 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          city_name: string | null
           created_at: string | null
           id: string
+          latitude: number | null
+          longitude: number | null
           username: string | null
         }
         Insert: {
           avatar_url?: string | null
+          city_name?: string | null
           created_at?: string | null
           id: string
+          latitude?: number | null
+          longitude?: number | null
           username?: string | null
         }
         Update: {
           avatar_url?: string | null
+          city_name?: string | null
           created_at?: string | null
           id?: string
+          latitude?: number | null
+          longitude?: number | null
           username?: string | null
+        }
+        Relationships: []
+      }
+      reading_progress: {
+        Row: {
+          ayah_number: number
+          created_at: string | null
+          id: string
+          last_read_at: string | null
+          progress_percentage: number | null
+          surah_name: string
+          surah_number: number
+          user_id: string
+        }
+        Insert: {
+          ayah_number: number
+          created_at?: string | null
+          id?: string
+          last_read_at?: string | null
+          progress_percentage?: number | null
+          surah_name: string
+          surah_number: number
+          user_id: string
+        }
+        Update: {
+          ayah_number?: number
+          created_at?: string | null
+          id?: string
+          last_read_at?: string | null
+          progress_percentage?: number | null
+          surah_name?: string
+          surah_number?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_settings: {
+        Row: {
+          city_name: string | null
+          created_at: string | null
+          daily_wird_enabled: boolean | null
+          daily_wird_time: string | null
+          id: string
+          latitude: number | null
+          longitude: number | null
+          notifications_enabled: boolean | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          city_name?: string | null
+          created_at?: string | null
+          daily_wird_enabled?: boolean | null
+          daily_wird_time?: string | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          notifications_enabled?: boolean | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          city_name?: string | null
+          created_at?: string | null
+          daily_wird_enabled?: boolean | null
+          daily_wird_time?: string | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          notifications_enabled?: boolean | null
+          updated_at?: string | null
+          user_id?: string
         }
         Relationships: []
       }
