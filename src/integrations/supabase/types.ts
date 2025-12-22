@@ -205,6 +205,72 @@ export type Database = {
         }
         Relationships: []
       }
+      tasbih_stats: {
+        Row: {
+          count: number | null
+          created_at: string | null
+          dhikr_type: string | null
+          id: string
+          session_date: string | null
+          user_id: string
+        }
+        Insert: {
+          count?: number | null
+          created_at?: string | null
+          dhikr_type?: string | null
+          id?: string
+          session_date?: string | null
+          user_id: string
+        }
+        Update: {
+          count?: number | null
+          created_at?: string | null
+          dhikr_type?: string | null
+          id?: string
+          session_date?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_reading_settings: {
+        Row: {
+          created_at: string | null
+          font_family: string | null
+          font_size: number | null
+          id: string
+          line_height: number | null
+          selected_translation: string | null
+          show_translation: boolean | null
+          theme: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          font_family?: string | null
+          font_size?: number | null
+          id?: string
+          line_height?: number | null
+          selected_translation?: string | null
+          show_translation?: boolean | null
+          theme?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          font_family?: string | null
+          font_size?: number | null
+          id?: string
+          line_height?: number | null
+          selected_translation?: string | null
+          show_translation?: boolean | null
+          theme?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_settings: {
         Row: {
           city_name: string | null
