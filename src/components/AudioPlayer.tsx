@@ -25,6 +25,7 @@ import { reciters, type Reciter } from "@/data/reciters";
 import { cn } from "@/lib/utils";
 
 type RepeatMode = "none" | "single" | "range";
+type PlayMode = "single" | "surah" | "juz";
 
 interface AudioPlayerProps {
   surahNumber: number;
@@ -33,7 +34,7 @@ interface AudioPlayerProps {
 }
 
 export interface AudioPlayerHandle {
-  playSpecificAyah: (ayahIndex: number) => void;
+  playSpecificAyah: (ayahIndex: number, mode?: PlayMode) => void;
   playSurahFromStart: () => void;
 }
 
@@ -55,6 +56,9 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, AudioPlayerProps>(
     const [currentRepeat, setCurrentRepeat] = useState(0);
     const [rangeStart, setRangeStart] = useState(1);
     const [rangeEnd, setRangeEnd] = useState(1);
+
+    // Play mode: single (only current ayah), surah (to end of surah), juz (to end of juz)
+    const [playMode, setPlayMode] = useState<PlayMode>("surah");
 
     const audioRef = useRef<HTMLAudioElement | null>(null);
     const wasPlayingRef = useRef(false);
@@ -126,18 +130,20 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, AudioPlayerProps>(
 
     // Expose playSpecificAyah and playSurahFromStart to parent component
     useImperativeHandle(ref, () => ({
-      playSpecificAyah: (ayahIndex: number) => {
+      playSpecificAyah: (ayahIndex: number, mode: PlayMode = playMode) => {
+        setPlayMode(mode);
         setCurrentAyahIndex(ayahIndex);
         setCurrentRepeat(0);
         playAyah(ayahIndex);
       },
       playSurahFromStart: () => {
+        setPlayMode("surah");
         setCurrentAyahIndex(0);
         setRepeatMode("none");
         setCurrentRepeat(0);
         playAyah(0);
       },
-    }), [playAyah]);
+    }), [playAyah, playMode]);
 
     const handlePlayPause = () => {
       if (!audioRef.current) return;
@@ -193,6 +199,11 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, AudioPlayerProps>(
           return;
         } else {
           setCurrentRepeat(0);
+          // After repeat, check play mode
+          if (playMode === "single") {
+            setIsPlaying(false);
+            return;
+          }
           // Move to next ayah after completing repeats
           if (currentAyahIndex < ayahs.length - 1) {
             const nextIndex = currentAyahIndex + 1;
@@ -224,7 +235,14 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, AudioPlayerProps>(
           }
         }
       } else {
-        // Normal playback
+        // Normal playback - check play mode
+        if (playMode === "single") {
+          // Only play the single ayah
+          setIsPlaying(false);
+          return;
+        }
+        
+        // Continue to next ayah (surah mode)
         if (currentAyahIndex < ayahs.length - 1) {
           const nextIndex = currentAyahIndex + 1;
           setCurrentAyahIndex(nextIndex);
@@ -344,6 +362,20 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, AudioPlayerProps>(
                           {reciter.nameArabic}
                         </SelectItem>
                       ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Play Mode Selection */}
+                <div className="flex items-center gap-3 mb-3">
+                  <span className="text-sm text-muted-foreground">وضع التشغيل:</span>
+                  <Select value={playMode} onValueChange={(v) => setPlayMode(v as PlayMode)}>
+                    <SelectTrigger className="w-40">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="single">آية واحدة فقط</SelectItem>
+                      <SelectItem value="surah">إلى نهاية السورة</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
