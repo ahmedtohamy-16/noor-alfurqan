@@ -37,12 +37,12 @@ const DEFAULT_LOCATION: Location = {
   city: "مكة المكرمة" 
 };
 
-const fetchPrayerTimes = async (lat: number, lng: number): Promise<PrayerTimesData> => {
+const fetchPrayerTimes = async (lat: number, lng: number, method: number = 4): Promise<PrayerTimesData> => {
   const date = new Date();
   const dateStr = `${date.getDate()}-${date.getMonth() + 1}-${date.getFullYear()}`;
   
   const response = await fetch(
-    `https://api.aladhan.com/v1/timings/${dateStr}?latitude=${lat}&longitude=${lng}&method=4`
+    `https://api.aladhan.com/v1/timings/${dateStr}?latitude=${lat}&longitude=${lng}&method=${method}`
   );
   const data = await response.json();
   return data.data.timings;
@@ -65,8 +65,8 @@ const PrayerTimesCompact = () => {
   }, [settings.latitude, settings.longitude, settings.city_name]);
 
   const { data: prayerTimes, isLoading } = useQuery({
-    queryKey: ["prayerTimesCompact", location?.latitude, location?.longitude],
-    queryFn: () => fetchPrayerTimes(location!.latitude, location!.longitude),
+    queryKey: ["prayerTimesCompact", location?.latitude, location?.longitude, settings.prayer_method],
+    queryFn: () => fetchPrayerTimes(location!.latitude, location!.longitude, settings.prayer_method || 4),
     enabled: !!location,
     staleTime: 1000 * 60 * 60,
   });

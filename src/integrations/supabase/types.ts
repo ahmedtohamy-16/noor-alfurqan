@@ -507,6 +507,7 @@ export type Database = {
           latitude: number | null
           longitude: number | null
           notifications_enabled: boolean | null
+          prayer_method: number | null
           updated_at: string | null
           user_id: string
         }
@@ -520,6 +521,7 @@ export type Database = {
           latitude?: number | null
           longitude?: number | null
           notifications_enabled?: boolean | null
+          prayer_method?: number | null
           updated_at?: string | null
           user_id: string
         }
@@ -533,6 +535,7 @@ export type Database = {
           latitude?: number | null
           longitude?: number | null
           notifications_enabled?: boolean | null
+          prayer_method?: number | null
           updated_at?: string | null
           user_id?: string
         }
