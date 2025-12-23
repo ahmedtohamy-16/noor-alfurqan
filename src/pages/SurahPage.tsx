@@ -269,8 +269,14 @@ const SurahPage = () => {
             >
               {surah?.ayahs.map((ayah, index) => {
                 let displayText = ayah.text;
+                // Remove Bismillah from first ayah for all surahs except Al-Fatiha (1) and At-Tawbah (9)
                 if (ayah.numberInSurah === 1 && Number(surahNumber) !== 1 && Number(surahNumber) !== 9) {
-                  displayText = ayah.text.replace(/^بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ\s*/, "");
+                  // Remove multiple variants of Bismillah
+                  displayText = displayText
+                    .replace(/^بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ\s*/u, "")
+                    .replace(/^بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ\s*/u, "")
+                    .replace(/^بسم الله الرحمن الرحيم\s*/u, "")
+                    .trim();
                 }
                 const isAyahFavorite = isFavorite(Number(surahNumber), ayah.numberInSurah);
                 const translatedText = translationData?.find(t => t.numberInSurah === ayah.numberInSurah)?.text;
