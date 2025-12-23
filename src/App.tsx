@@ -15,6 +15,7 @@ import FavoritesPage from "./pages/FavoritesPage";
 import SearchPage from "./pages/SearchPage";
 import KhatmahPage from "./pages/KhatmahPage";
 import AuthPage from "./pages/AuthPage";
+import VerifyOtpPage from "./pages/VerifyOtpPage";
 import ProfilePage from "./pages/ProfilePage";
 import SettingsPage from "./pages/SettingsPage";
 import PrayerTimesPage from "./pages/PrayerTimesPage";
@@ -44,6 +45,7 @@ const App = () => (
                 <Route path="/search" element={<SearchPage />} />
                 <Route path="/khatmah" element={<KhatmahPage />} />
                 <Route path="/auth" element={<AuthPage />} />
+                <Route path="/verify-otp" element={<VerifyOtpPage />} />
                 <Route path="/profile" element={<ProfilePage />} />
                 <Route path="/settings" element={<SettingsPage />} />
                 <Route path="/prayer-times" element={<PrayerTimesPage />} />

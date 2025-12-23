@@ -41,8 +41,13 @@ export const useFavorites = () => {
   };
 
   useEffect(() => {
-    fetchFavorites();
-  }, [user]);
+    if (user) {
+      fetchFavorites();
+    } else {
+      setFavorites([]);
+      setIsLoading(false);
+    }
+  }, [user?.id]);
 
   const addFavorite = async (
     surahNumber: number,

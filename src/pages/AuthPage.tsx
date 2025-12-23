@@ -38,19 +38,18 @@ const AuthPage = () => {
         toast.success("تم تسجيل الدخول بنجاح");
         navigate("/");
       } else {
-        const redirectUrl = `${window.location.origin}/`;
         const { error } = await supabase.auth.signUp({
           email,
           password,
           options: {
-            emailRedirectTo: redirectUrl,
             data: {
               username: username || email.split("@")[0],
             },
           },
         });
         if (error) throw error;
-        toast.success("تم إرسال رابط التأكيد إلى بريدك الإلكتروني. يرجى التحقق من صندوق الوارد");
+        toast.success("تم إرسال رمز التحقق إلى بريدك الإلكتروني");
+        navigate("/verify-otp", { state: { email } });
       }
     } catch (error: any) {
       console.error("Auth error:", error);
