@@ -10,6 +10,7 @@ interface UserSettings {
   notifications_enabled: boolean;
   daily_wird_enabled: boolean;
   daily_wird_time: string;
+  prayer_method: number;
 }
 
 const defaultSettings: UserSettings = {
@@ -19,6 +20,7 @@ const defaultSettings: UserSettings = {
   notifications_enabled: false,
   daily_wird_enabled: false,
   daily_wird_time: "06:00:00",
+  prayer_method: 4, // Default: Umm Al-Qura
 };
 
 export const useUserSettings = () => {
@@ -61,6 +63,7 @@ export const useUserSettings = () => {
           notifications_enabled: data.notifications_enabled || false,
           daily_wird_enabled: data.daily_wird_enabled || false,
           daily_wird_time: data.daily_wird_time || "06:00:00",
+          prayer_method: data.prayer_method || 4,
         });
       }
     } catch (error) {
