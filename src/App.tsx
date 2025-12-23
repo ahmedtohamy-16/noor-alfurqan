@@ -21,14 +21,15 @@ import PrayerTimesPage from "./pages/PrayerTimesPage";
 import ReadingStatsPage from "./pages/ReadingStatsPage";
 import DailyWirdPage from "./pages/DailyWirdPage";
 import TasbihPage from "./pages/TasbihPage";
+import AzkarPage from "./pages/AzkarPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <ThemeProvider>
-      <AuthProvider>
+    <AuthProvider>
+      <ThemeProvider>
         <ReadingSettingsProvider>
           <TooltipProvider>
             <Toaster />
@@ -49,14 +50,15 @@ const App = () => (
                 <Route path="/reading-stats" element={<ReadingStatsPage />} />
                 <Route path="/daily-wird" element={<DailyWirdPage />} />
                 <Route path="/tasbih" element={<TasbihPage />} />
+                <Route path="/azkar" element={<AzkarPage />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
               <BottomNavigation />
             </BrowserRouter>
           </TooltipProvider>
         </ReadingSettingsProvider>
-      </AuthProvider>
-    </ThemeProvider>
+      </ThemeProvider>
+    </AuthProvider>
   </QueryClientProvider>
 );
 

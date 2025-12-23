@@ -1,21 +1,24 @@
 import { Link, useLocation } from "react-router-dom";
-import { Book, Search, Heart, Clock, RotateCcw } from "lucide-react";
+import { Book, Home, Heart, Clock, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const BottomNavigation = () => {
   const location = useLocation();
 
   const navItems = [
-    { icon: Book, label: "القرآن", path: "/quran" },
-    { icon: Search, label: "بحث", path: "/search" },
-    { icon: RotateCcw, label: "التسبيح", path: "/tasbih" },
-    { icon: Heart, label: "المفضلة", path: "/favorites" },
     { icon: Clock, label: "الصلاة", path: "/prayer-times" },
+    { icon: Heart, label: "المفضلة", path: "/favorites" },
+    { icon: RotateCcw, label: "التسبيح", path: "/tasbih" },
+    { icon: Book, label: "القرآن", path: "/quran" },
+    { icon: Home, label: "الرئيسية", path: "/" },
   ];
 
   const isActive = (path: string) => {
     if (path === "/quran") {
       return location.pathname === "/quran" || location.pathname.startsWith("/surah");
+    }
+    if (path === "/") {
+      return location.pathname === "/";
     }
     return location.pathname === path;
   };
