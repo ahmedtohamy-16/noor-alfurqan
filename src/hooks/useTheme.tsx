@@ -1,6 +1,5 @@
 import { useState, useEffect, createContext, useContext, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "./useAuth";
 
 type Theme = "light" | "dark";
 
@@ -13,28 +12,47 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider = ({ children }: { children: ReactNode }) => {
-  const { user } = useAuth();
   const [theme, setThemeState] = useState<Theme>(() => {
     const stored = localStorage.getItem("theme");
     if (stored === "dark" || stored === "light") return stored;
     return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
   });
+  const [userId, setUserId] = useState<string | null>(null);
 
-  // Load theme from database when user logs in
+  // Listen for auth state changes
   useEffect(() => {
-    if (user) {
-      loadThemeFromDB();
-    }
-  }, [user]);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        const newUserId = session?.user?.id ?? null;
+        setUserId(newUserId);
+        
+        // Load theme from DB when user logs in
+        if (newUserId) {
+          setTimeout(() => {
+            loadThemeFromDB(newUserId);
+          }, 0);
+        }
+      }
+    );
 
-  const loadThemeFromDB = async () => {
-    if (!user) return;
-    
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      const existingUserId = session?.user?.id ?? null;
+      setUserId(existingUserId);
+      if (existingUserId) {
+        loadThemeFromDB(existingUserId);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const loadThemeFromDB = async (uid: string) => {
     try {
       const { data, error } = await supabase
         .from("user_settings")
         .select("dark_mode")
-        .eq("user_id", user.id)
+        .eq("user_id", uid)
         .single();
       
       if (error && error.code !== "PGRST116") {
@@ -53,13 +71,13 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const saveThemeToDB = async (newTheme: Theme) => {
-    if (!user) return;
+    if (!userId) return;
     
     try {
       await supabase
         .from("user_settings")
         .upsert({
-          user_id: user.id,
+          user_id: userId,
           dark_mode: newTheme === "dark",
           updated_at: new Date().toISOString(),
         }, { onConflict: "user_id" });
