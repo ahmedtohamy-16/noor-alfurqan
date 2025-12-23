@@ -124,51 +124,22 @@ const KhatmahPage = () => {
     },
   });
 
-  // Join khatmah mutation
+  // Join khatmah mutation using secure RPC function
   const joinKhatmah = useMutation({
     mutationFn: async (code: string) => {
-      // Find khatmah by code
-      const { data: khatmah, error: findError } = await supabase
-        .from("khatmahs")
-        .select("id")
-        .eq("invite_code", code.toUpperCase())
-        .single();
-
-      if (findError || !khatmah) throw new Error("كود الدعوة غير صحيح");
-
-      // Check existing participants count
-      const { data: participants } = await supabase
-        .from("khatmah_participants")
-        .select("assigned_juz")
-        .eq("khatmah_id", khatmah.id);
-
-      const takenJuzs = new Set(participants?.map((p) => p.assigned_juz) || []);
-      
-      // Find first available juz
-      let availableJuz = null;
-      for (let i = 1; i <= 30; i++) {
-        if (!takenJuzs.has(i)) {
-          availableJuz = i;
-          break;
-        }
-      }
-
-      if (!availableJuz) throw new Error("الختمة مكتملة");
-
-      const { error } = await supabase.from("khatmah_participants").insert({
-        khatmah_id: khatmah.id,
-        user_id: user!.id,
-        assigned_juz: availableJuz,
+      const { data, error } = await supabase.rpc("join_khatmah_by_code", {
+        p_invite_code: code,
       });
 
-      if (error) {
-        if (error.code === "23505") {
-          throw new Error("أنت مشارك بالفعل في هذه الختمة");
-        }
-        throw error;
+      if (error) throw error;
+
+      const result = data as { success: boolean; error?: string; khatmah_id?: string; assigned_juz?: number };
+      
+      if (!result.success) {
+        throw new Error(result.error || "حدث خطأ");
       }
 
-      return khatmah;
+      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["khatmahs"] });

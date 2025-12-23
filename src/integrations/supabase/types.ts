@@ -544,6 +544,7 @@ export type Database = {
     }
     Functions: {
       generate_invite_code: { Args: never; Returns: string }
+      join_khatmah_by_code: { Args: { p_invite_code: string }; Returns: Json }
     }
     Enums: {
       [_ in never]: never
