@@ -56,6 +56,124 @@ export type Database = {
         }
         Relationships: []
       }
+      azkar: {
+        Row: {
+          category_id: string | null
+          created_at: string
+          display_order: number | null
+          id: string
+          reference: string | null
+          repeat_count: number | null
+          text: string
+        }
+        Insert: {
+          category_id?: string | null
+          created_at?: string
+          display_order?: number | null
+          id?: string
+          reference?: string | null
+          repeat_count?: number | null
+          text: string
+        }
+        Update: {
+          category_id?: string | null
+          created_at?: string
+          display_order?: number | null
+          id?: string
+          reference?: string | null
+          repeat_count?: number | null
+          text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "azkar_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "azkar_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      azkar_categories: {
+        Row: {
+          created_at: string
+          display_order: number | null
+          icon: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number | null
+          icon?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number | null
+          icon?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      cities: {
+        Row: {
+          country_id: string | null
+          id: string
+          latitude: number
+          longitude: number
+          name_ar: string
+          name_en: string
+        }
+        Insert: {
+          country_id?: string | null
+          id?: string
+          latitude: number
+          longitude: number
+          name_ar: string
+          name_en: string
+        }
+        Update: {
+          country_id?: string | null
+          id?: string
+          latitude?: number
+          longitude?: number
+          name_ar?: string
+          name_en?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cities_country_id_fkey"
+            columns: ["country_id"]
+            isOneToOne: false
+            referencedRelation: "countries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      countries: {
+        Row: {
+          code: string
+          id: string
+          name_ar: string
+          name_en: string
+        }
+        Insert: {
+          code: string
+          id?: string
+          name_ar: string
+          name_en: string
+        }
+        Update: {
+          code?: string
+          id?: string
+          name_ar?: string
+          name_en?: string
+        }
+        Relationships: []
+      }
       daily_wird: {
         Row: {
           completed_pages: number | null
@@ -304,6 +422,41 @@ export type Database = {
         }
         Relationships: []
       }
+      user_azkar_progress: {
+        Row: {
+          azkar_id: string | null
+          completed_count: number | null
+          created_at: string
+          id: string
+          progress_date: string | null
+          user_id: string
+        }
+        Insert: {
+          azkar_id?: string | null
+          completed_count?: number | null
+          created_at?: string
+          id?: string
+          progress_date?: string | null
+          user_id: string
+        }
+        Update: {
+          azkar_id?: string | null
+          completed_count?: number | null
+          created_at?: string
+          id?: string
+          progress_date?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_azkar_progress_azkar_id_fkey"
+            columns: ["azkar_id"]
+            isOneToOne: false
+            referencedRelation: "azkar"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_reading_settings: {
         Row: {
           created_at: string | null
@@ -349,6 +502,7 @@ export type Database = {
           created_at: string | null
           daily_wird_enabled: boolean | null
           daily_wird_time: string | null
+          dark_mode: boolean | null
           id: string
           latitude: number | null
           longitude: number | null
@@ -361,6 +515,7 @@ export type Database = {
           created_at?: string | null
           daily_wird_enabled?: boolean | null
           daily_wird_time?: string | null
+          dark_mode?: boolean | null
           id?: string
           latitude?: number | null
           longitude?: number | null
@@ -373,6 +528,7 @@ export type Database = {
           created_at?: string | null
           daily_wird_enabled?: boolean | null
           daily_wird_time?: string | null
+          dark_mode?: boolean | null
           id?: string
           latitude?: number | null
           longitude?: number | null
