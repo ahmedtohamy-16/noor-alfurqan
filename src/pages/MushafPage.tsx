@@ -178,8 +178,9 @@ const MushafPage = () => {
                           سورة {surah.name.replace("سُورَةُ ", "")}
                         </h2>
                       </div>
-                      {surah.number !== 9 && surah.ayahs[0].numberInSurah === 1 && (
-                        <p className="text-xl md:text-2xl font-quran text-foreground/90">
+                      {/* Show Bismillah separately only for surahs other than At-Tawbah (9) and Al-Fatiha (1) */}
+                      {surah.number !== 9 && surah.number !== 1 && (
+                        <p className="text-xl md:text-2xl font-quran text-foreground/90 mb-4">
                           بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
                         </p>
                       )}
@@ -190,9 +191,10 @@ const MushafPage = () => {
                   <div className="quran-text text-xl md:text-2xl leading-[2.5] text-center">
                     {surah.ayahs.map((ayah) => {
                       let displayText = ayah.text;
-                      // Remove Bismillah from first ayah if not Al-Fatiha or At-Tawbah
-                      if (ayah.numberInSurah === 1 && surah.number !== 1 && surah.number !== 9) {
-                        displayText = ayah.text.replace(/^بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ\s*/, "");
+                      // Remove Bismillah from first ayah for all surahs except Al-Fatiha
+                      // This prevents duplication since we show Bismillah separately above
+                      if (ayah.numberInSurah === 1 && surah.number !== 1) {
+                        displayText = ayah.text.replace(/^بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ\s*/, "").trim();
                       }
                       
                       return (

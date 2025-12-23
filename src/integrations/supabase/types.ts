@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_users: {
+        Row: {
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      app_settings: {
+        Row: {
+          id: string
+          key: string
+          updated_at: string
+          updated_by: string | null
+          value: string | null
+        }
+        Insert: {
+          id?: string
+          key: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: string | null
+        }
+        Update: {
+          id?: string
+          key?: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: string | null
+        }
+        Relationships: []
+      }
       daily_wird: {
         Row: {
           completed_pages: number | null
@@ -201,6 +243,36 @@ export type Database = {
           progress_percentage?: number | null
           surah_name?: string
           surah_number?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      reading_sessions: {
+        Row: {
+          created_at: string
+          duration_minutes: number | null
+          end_page: number
+          id: string
+          session_date: string
+          start_page: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          duration_minutes?: number | null
+          end_page: number
+          id?: string
+          session_date?: string
+          start_page: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          duration_minutes?: number | null
+          end_page?: number
+          id?: string
+          session_date?: string
+          start_page?: number
           user_id?: string
         }
         Relationships: []
