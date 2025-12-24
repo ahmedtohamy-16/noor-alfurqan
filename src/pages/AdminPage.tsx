@@ -122,7 +122,7 @@ const AdminPage = () => {
   const fetchStats = async () => {
     const { data, error } = await supabase.rpc("get_usage_stats");
     if (!error && data) {
-      setStats(data as UsageStats);
+      setStats(data as unknown as UsageStats);
     }
   };
 
