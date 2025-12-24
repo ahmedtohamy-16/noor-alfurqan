@@ -11,6 +11,7 @@ interface UserSettings {
   daily_wird_enabled: boolean;
   daily_wird_time: string;
   prayer_method: number;
+  prayer_reminder_minutes: number;
 }
 
 const defaultSettings: UserSettings = {
@@ -21,6 +22,7 @@ const defaultSettings: UserSettings = {
   daily_wird_enabled: false,
   daily_wird_time: "06:00:00",
   prayer_method: 4, // Default: Umm Al-Qura
+  prayer_reminder_minutes: 15,
 };
 
 export const useUserSettings = () => {
@@ -64,6 +66,7 @@ export const useUserSettings = () => {
           daily_wird_enabled: data.daily_wird_enabled || false,
           daily_wird_time: data.daily_wird_time || "06:00:00",
           prayer_method: data.prayer_method || 4,
+          prayer_reminder_minutes: data.prayer_reminder_minutes || 15,
         });
       }
     } catch (error) {
