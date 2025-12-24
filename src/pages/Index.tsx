@@ -3,7 +3,7 @@ import { Book, Clock, Star, Users, Search, ChevronLeft, BookOpen, BarChart3, Tar
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/Header";
-import PrayerTimesCompact from "@/components/PrayerTimesCompact";
+import NextPrayerWidget from "@/components/NextPrayerWidget";
 import { useReadingProgress } from "@/hooks/useReadingProgress";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -107,9 +107,9 @@ const Index = () => {
       </section>
 
       <main className="container mx-auto px-4 py-8 arabic-ui">
-        {/* Prayer Times - Full Width at Top */}
+        {/* Next Prayer Widget */}
         <section className="mb-8">
-          <PrayerTimesCompact />
+          <NextPrayerWidget />
         </section>
 
         {/* Last Read Card */}

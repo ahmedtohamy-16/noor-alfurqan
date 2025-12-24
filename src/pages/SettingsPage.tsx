@@ -1,38 +1,46 @@
-import { ArrowRight, Moon, Sun, LogOut, User, MapPin, Bell, BellOff, Clock } from "lucide-react";
+import { ArrowRight, Moon, Sun, LogOut, User, Bell, BellOff, Clock, Headphones, Shield } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import Header from "@/components/Header";
-import LocationSettings from "@/components/LocationSettings";
+import ReciterSelector from "@/components/ReciterSelector";
+import PrayerNotificationSettings from "@/components/PrayerNotificationSettings";
 import { useTheme } from "@/hooks/useTheme";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserSettings } from "@/hooks/useUserSettings";
-import { useNotifications } from "@/hooks/useNotifications";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 const SettingsPage = () => {
   const { theme, toggleTheme } = useTheme();
   const { user, signOut } = useAuth();
   const { settings, updateSettings } = useUserSettings();
-  const { permission, isEnabled, requestPermission, disableNotifications } = useNotifications();
   const navigate = useNavigate();
   const [wirdTime, setWirdTime] = useState(settings.daily_wird_time?.slice(0, 5) || "06:00");
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    checkAdminStatus();
+  }, [user]);
+
+  const checkAdminStatus = async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .eq("role", "admin")
+      .single();
+    setIsAdmin(!!data);
+  };
 
   const handleSignOut = async () => {
     await signOut();
     toast.success("تم تسجيل الخروج بنجاح");
     navigate("/");
-  };
-
-  const handleNotificationToggle = async () => {
-    if (isEnabled) {
-      await disableNotifications();
-    } else {
-      await requestPermission();
-    }
   };
 
   const handleWirdTimeChange = async (time: string) => {
@@ -46,7 +54,7 @@ const SettingsPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-20">
       <Header />
 
       <main className="container mx-auto px-4 py-8 arabic-ui">
@@ -84,32 +92,8 @@ const SettingsPage = () => {
             </div>
           </Card>
 
-          {/* Notifications */}
-          <Card className="p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                {isEnabled ? (
-                  <Bell className="w-5 h-5 text-primary" />
-                ) : (
-                  <BellOff className="w-5 h-5 text-muted-foreground" />
-                )}
-                <div>
-                  <p className="font-medium text-foreground">الإشعارات</p>
-                  <p className="text-sm text-muted-foreground">
-                    {permission === "denied" 
-                      ? "تم رفض الإشعارات من إعدادات المتصفح"
-                      : "تلقي تذكيرات بمواقيت الصلاة والورد اليومي"
-                    }
-                  </p>
-                </div>
-              </div>
-              <Switch
-                checked={isEnabled}
-                onCheckedChange={handleNotificationToggle}
-                disabled={permission === "denied"}
-              />
-            </div>
-          </Card>
+          {/* Prayer Notifications */}
+          <PrayerNotificationSettings />
 
           {/* Daily Wird Settings */}
           <Card className="p-4 space-y-4">
@@ -142,22 +126,8 @@ const SettingsPage = () => {
             )}
           </Card>
 
-          {/* Location Settings */}
-          <Card className="p-4">
-            <div className="flex items-center gap-3 mb-4">
-              <MapPin className="w-5 h-5 text-primary" />
-              <div>
-                <p className="font-medium text-foreground">الموقع الجغرافي</p>
-                <p className="text-sm text-muted-foreground">
-                  {settings.city_name 
-                    ? `الموقع الحالي: ${settings.city_name}`
-                    : "لتحديد مواقيت الصلاة بدقة"
-                  }
-                </p>
-              </div>
-            </div>
-            <LocationSettings />
-          </Card>
+          {/* Reciter Selector */}
+          <ReciterSelector />
 
           {/* User Account */}
           {user ? (
@@ -192,6 +162,24 @@ const SettingsPage = () => {
                   <Button size="sm">دخول</Button>
                 </Link>
               </div>
+            </Card>
+          )}
+
+          {/* Admin Panel Link */}
+          {isAdmin && (
+            <Card className="p-4">
+              <Link to="/admin" className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Shield className="w-5 h-5 text-primary" />
+                  <div>
+                    <p className="font-medium text-foreground">لوحة الإدارة</p>
+                    <p className="text-sm text-muted-foreground">
+                      إدارة المستخدمين والإعدادات
+                    </p>
+                  </div>
+                </div>
+                <ArrowRight className="w-5 h-5 text-muted-foreground rotate-180" />
+              </Link>
             </Card>
           )}
 
