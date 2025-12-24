@@ -2,11 +2,14 @@ import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { 
   Clock, MapPin, RefreshCw, Sun, Moon, Sunrise, Sunset, 
-  ChevronRight, ChevronLeft, Calendar, Settings2
+  ChevronRight, ChevronLeft, Calendar, Settings2, CalendarDays
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import MonthlyCalendar from "@/components/MonthlyCalendar";
+import PrayerNotificationSettings from "@/components/PrayerNotificationSettings";
 import {
   Select,
   SelectContent,
@@ -24,6 +27,7 @@ import {
 } from "@/components/ui/sheet";
 import Header from "@/components/Header";
 import { useUserSettings } from "@/hooks/useUserSettings";
+import { usePrayerNotifications } from "@/hooks/usePrayerNotifications";
 import { toast } from "sonner";
 import { format, addDays, subDays, isToday, isTomorrow, isYesterday } from "date-fns";
 import { ar } from "date-fns/locale";
@@ -163,6 +167,9 @@ const PrayerTimesPage = () => {
   const prayerTimes = data?.timings;
   const hijriDate = data?.hijri;
 
+  // Schedule prayer notifications with adhan
+  usePrayerNotifications(prayerTimes ?? null);
+
   const handleRequestLocation = async () => {
     setIsRequestingLocation(true);
     try {
@@ -255,9 +262,9 @@ const PrayerTimesPage = () => {
 
       <main className="container mx-auto px-4 py-8 arabic-ui">
         {/* Header with Settings */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-1">
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-1">
               مواقيت الصلاة
             </h1>
             {hijriDate && (
@@ -324,128 +331,151 @@ const PrayerTimesPage = () => {
                 </div>
               </div>
             </SheetContent>
-          </Sheet>
+        </Sheet>
         </div>
 
-        {/* Date Navigation */}
-        <Card className="p-4 mb-6">
-          <div className="flex items-center justify-between">
-            <Button variant="ghost" size="icon" onClick={goToNextDay}>
-              <ChevronRight className="w-5 h-5" />
-            </Button>
-            
-            <div className="text-center flex-1">
-              <div className="flex items-center justify-center gap-2 mb-1">
-                <Calendar className="w-4 h-4 text-primary" />
-                <span className="font-bold text-lg text-foreground">{getDateLabel()}</span>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                {format(selectedDate, "d MMMM yyyy", { locale: ar })}
-              </p>
-              {!isToday(selectedDate) && (
-                <Button 
-                  variant="link" 
-                  size="sm" 
-                  className="text-primary mt-1 h-auto p-0"
-                  onClick={goToToday}
-                >
-                  العودة لليوم
+        {/* Tabs for Daily vs Monthly view */}
+        <Tabs defaultValue="daily" className="mb-6">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="daily" className="flex items-center gap-2">
+              <Clock className="w-4 h-4" />
+              <span>اليوم</span>
+            </TabsTrigger>
+            <TabsTrigger value="monthly" className="flex items-center gap-2">
+              <CalendarDays className="w-4 h-4" />
+              <span>التقويم الشهري</span>
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="daily" className="mt-4 space-y-4">
+            {/* Date Navigation */}
+            <Card className="p-4">
+              <div className="flex items-center justify-between">
+                <Button variant="ghost" size="icon" onClick={goToNextDay}>
+                  <ChevronRight className="w-5 h-5" />
                 </Button>
+                
+                <div className="text-center flex-1">
+                  <div className="flex items-center justify-center gap-2 mb-1">
+                    <Calendar className="w-4 h-4 text-primary" />
+                    <span className="font-bold text-lg text-foreground">{getDateLabel()}</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    {format(selectedDate, "d MMMM yyyy", { locale: ar })}
+                  </p>
+                  {!isToday(selectedDate) && (
+                    <Button 
+                      variant="link" 
+                      size="sm" 
+                      className="text-primary mt-1 h-auto p-0"
+                      onClick={goToToday}
+                    >
+                      العودة لليوم
+                    </Button>
+                  )}
+                </div>
+                
+                <Button variant="ghost" size="icon" onClick={goToPreviousDay}>
+                  <ChevronLeft className="w-5 h-5" />
+                </Button>
+              </div>
+            </Card>
+
+            {/* Location Card */}
+            <Card className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
+                    <MapPin className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-foreground">
+                      {location?.city || "مكة المكرمة"}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {calculationMethods.find(m => m.id === calculationMethod)?.name || "جامعة أم القرى"}
+                    </p>
+                  </div>
+                </div>
+                <Button variant="ghost" size="icon" onClick={() => refetch()}>
+                  <RefreshCw className="w-4 h-4" />
+                </Button>
+              </div>
+            </Card>
+
+            {/* Next Prayer Highlight - Only show for today */}
+            {prayerTimes && nextPrayer && isToday(selectedDate) && (
+              <Card className="p-6 bg-gradient-to-br from-primary/10 to-accent/10 border-primary/20">
+                <div className="text-center">
+                  <p className="text-muted-foreground mb-2">الصلاة القادمة</p>
+                  <h2 className="text-4xl font-bold text-primary mb-2">
+                    {prayers.find(p => p.key === nextPrayer)?.name}
+                  </h2>
+                  <p className="text-2xl font-bold text-foreground mb-2">
+                    {prayerTimes[nextPrayer as keyof PrayerTimesData]}
+                  </p>
+                  <p className="text-muted-foreground">
+                    متبقي {getTimeUntilNextPrayer()}
+                  </p>
+                </div>
+              </Card>
+            )}
+
+            {/* Prayer Times List */}
+            <div className="grid gap-3">
+              {isLoading ? (
+                [...Array(6)].map((_, i) => (
+                  <Skeleton key={i} className="h-20 rounded-xl" />
+                ))
+              ) : (
+                prayers.map((prayer) => {
+                  const Icon = prayer.icon;
+                  const isNext = nextPrayer === prayer.key && isToday(selectedDate);
+                  const time = prayerTimes?.[prayer.key as keyof PrayerTimesData];
+                  
+                  return (
+                    <Card
+                      key={prayer.key}
+                      className={`p-4 transition-all ${
+                        isNext 
+                          ? "bg-primary text-primary-foreground shadow-lg scale-[1.02]" 
+                          : "hover:shadow-md"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                            isNext ? "bg-primary-foreground/20" : "bg-primary/10"
+                          }`}>
+                            <Icon className={`w-6 h-6 ${isNext ? "text-primary-foreground" : "text-primary"}`} />
+                          </div>
+                          <div>
+                            <h3 className={`text-lg font-bold ${isNext ? "" : "text-foreground"}`}>
+                              {prayer.name}
+                            </h3>
+                            <p className={`text-sm ${isNext ? "text-primary-foreground/80" : "text-muted-foreground"}`}>
+                              {prayer.description}
+                            </p>
+                          </div>
+                        </div>
+                        <div className={`text-2xl font-bold ${isNext ? "" : "text-foreground"}`}>
+                          {time || "--:--"}
+                        </div>
+                      </div>
+                    </Card>
+                  );
+                })
               )}
             </div>
-            
-            <Button variant="ghost" size="icon" onClick={goToPreviousDay}>
-              <ChevronLeft className="w-5 h-5" />
-            </Button>
-          </div>
-        </Card>
 
-        {/* Location Card */}
-        <Card className="p-4 mb-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
-                <MapPin className="w-5 h-5 text-primary" />
-              </div>
-              <div>
-                <p className="font-medium text-foreground">
-                  {location?.city || "مكة المكرمة"}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {calculationMethods.find(m => m.id === calculationMethod)?.name || "جامعة أم القرى"}
-                </p>
-              </div>
-            </div>
-            <Button variant="ghost" size="icon" onClick={() => refetch()}>
-              <RefreshCw className="w-4 h-4" />
-            </Button>
-          </div>
-        </Card>
+            {/* Notification Settings */}
+            <PrayerNotificationSettings />
+          </TabsContent>
 
-        {/* Next Prayer Highlight - Only show for today */}
-        {prayerTimes && nextPrayer && isToday(selectedDate) && (
-          <Card className="p-6 mb-6 bg-gradient-to-br from-primary/10 to-accent/10 border-primary/20">
-            <div className="text-center">
-              <p className="text-muted-foreground mb-2">الصلاة القادمة</p>
-              <h2 className="text-4xl font-bold text-primary mb-2">
-                {prayers.find(p => p.key === nextPrayer)?.name}
-              </h2>
-              <p className="text-2xl font-bold text-foreground mb-2">
-                {prayerTimes[nextPrayer as keyof PrayerTimesData]}
-              </p>
-              <p className="text-muted-foreground">
-                متبقي {getTimeUntilNextPrayer()}
-              </p>
-            </div>
-          </Card>
-        )}
-
-        {/* Prayer Times List */}
-        <div className="grid gap-3">
-          {isLoading ? (
-            [...Array(6)].map((_, i) => (
-              <Skeleton key={i} className="h-20 rounded-xl" />
-            ))
-          ) : (
-            prayers.map((prayer) => {
-              const Icon = prayer.icon;
-              const isNext = nextPrayer === prayer.key && isToday(selectedDate);
-              const time = prayerTimes?.[prayer.key as keyof PrayerTimesData];
-              
-              return (
-                <Card
-                  key={prayer.key}
-                  className={`p-4 transition-all ${
-                    isNext 
-                      ? "bg-primary text-primary-foreground shadow-lg scale-[1.02]" 
-                      : "hover:shadow-md"
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                        isNext ? "bg-primary-foreground/20" : "bg-primary/10"
-                      }`}>
-                        <Icon className={`w-6 h-6 ${isNext ? "text-primary-foreground" : "text-primary"}`} />
-                      </div>
-                      <div>
-                        <h3 className={`text-lg font-bold ${isNext ? "" : "text-foreground"}`}>
-                          {prayer.name}
-                        </h3>
-                        <p className={`text-sm ${isNext ? "text-primary-foreground/80" : "text-muted-foreground"}`}>
-                          {prayer.description}
-                        </p>
-                      </div>
-                    </div>
-                    <div className={`text-2xl font-bold ${isNext ? "" : "text-foreground"}`}>
-                      {time || "--:--"}
-                    </div>
-                  </div>
-                </Card>
-              );
-            })
-          )}
-        </div>
+          <TabsContent value="monthly" className="mt-4">
+            <MonthlyCalendar />
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   );
