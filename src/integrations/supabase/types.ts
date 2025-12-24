@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_messages: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_broadcast: boolean | null
+          is_read: boolean | null
+          message: string
+          recipient_id: string | null
+          sender_id: string
+          subject: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_broadcast?: boolean | null
+          is_read?: boolean | null
+          message: string
+          recipient_id?: string | null
+          sender_id: string
+          subject: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_broadcast?: boolean | null
+          is_read?: boolean | null
+          message?: string
+          recipient_id?: string | null
+          sender_id?: string
+          subject?: string
+        }
+        Relationships: []
+      }
       admin_users: {
         Row: {
           created_at: string
@@ -115,6 +148,30 @@ export type Database = {
           icon?: string | null
           id?: string
           name?: string
+        }
+        Relationships: []
+      }
+      blocked_users: {
+        Row: {
+          blocked_at: string | null
+          blocked_by: string
+          id: string
+          reason: string | null
+          user_id: string
+        }
+        Insert: {
+          blocked_at?: string | null
+          blocked_by: string
+          id?: string
+          reason?: string | null
+          user_id: string
+        }
+        Update: {
+          blocked_at?: string | null
+          blocked_by?: string
+          id?: string
+          reason?: string | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -308,6 +365,7 @@ export type Database = {
           city_name: string | null
           created_at: string | null
           id: string
+          is_blocked: boolean | null
           latitude: number | null
           longitude: number | null
           username: string | null
@@ -317,6 +375,7 @@ export type Database = {
           city_name?: string | null
           created_at?: string | null
           id: string
+          is_blocked?: boolean | null
           latitude?: number | null
           longitude?: number | null
           username?: string | null
@@ -326,9 +385,37 @@ export type Database = {
           city_name?: string | null
           created_at?: string | null
           id?: string
+          is_blocked?: boolean | null
           latitude?: number | null
           longitude?: number | null
           username?: string | null
+        }
+        Relationships: []
+      }
+      push_subscriptions: {
+        Row: {
+          created_at: string | null
+          device_info: Json | null
+          fcm_token: string
+          id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          device_info?: Json | null
+          fcm_token: string
+          id?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          device_info?: Json | null
+          fcm_token?: string
+          id?: string
+          updated_at?: string | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -464,6 +551,7 @@ export type Database = {
           font_size: number | null
           id: string
           line_height: number | null
+          selected_reciter: string | null
           selected_translation: string | null
           show_translation: boolean | null
           theme: string | null
@@ -476,6 +564,7 @@ export type Database = {
           font_size?: number | null
           id?: string
           line_height?: number | null
+          selected_reciter?: string | null
           selected_translation?: string | null
           show_translation?: boolean | null
           theme?: string | null
@@ -488,10 +577,32 @@ export type Database = {
           font_size?: number | null
           id?: string
           line_height?: number | null
+          selected_reciter?: string | null
           selected_translation?: string | null
           show_translation?: boolean | null
           theme?: string | null
           updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
         }
         Relationships: []
@@ -508,6 +619,7 @@ export type Database = {
           longitude: number | null
           notifications_enabled: boolean | null
           prayer_method: number | null
+          prayer_reminder_minutes: number | null
           updated_at: string | null
           user_id: string
         }
@@ -522,6 +634,7 @@ export type Database = {
           longitude?: number | null
           notifications_enabled?: boolean | null
           prayer_method?: number | null
+          prayer_reminder_minutes?: number | null
           updated_at?: string | null
           user_id: string
         }
@@ -536,6 +649,7 @@ export type Database = {
           longitude?: number | null
           notifications_enabled?: boolean | null
           prayer_method?: number | null
+          prayer_reminder_minutes?: number | null
           updated_at?: string | null
           user_id?: string
         }
@@ -547,10 +661,18 @@ export type Database = {
     }
     Functions: {
       generate_invite_code: { Args: never; Returns: string }
+      get_usage_stats: { Args: never; Returns: Json }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       join_khatmah_by_code: { Args: { p_invite_code: string }; Returns: Json }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "moderator" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -677,6 +799,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "moderator", "user"],
+    },
   },
 } as const

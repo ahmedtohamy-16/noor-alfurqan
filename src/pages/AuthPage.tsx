@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Mail, Lock, User, ArrowRight, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,7 +14,6 @@ const AuthPage = () => {
   const [username, setUsername] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const location = useLocation();
   const { user } = useAuth();
 
   // Redirect if already logged in
@@ -38,6 +37,7 @@ const AuthPage = () => {
         toast.success("تم تسجيل الدخول بنجاح");
         navigate("/");
       } else {
+        // Sign up with OTP
         const { error } = await supabase.auth.signUp({
           email,
           password,
@@ -45,6 +45,7 @@ const AuthPage = () => {
             data: {
               username: username || email.split("@")[0],
             },
+            emailRedirectTo: window.location.origin,
           },
         });
         if (error) throw error;
