@@ -1,3 +1,22 @@
+export interface QuranVerse {
+  arabic: string;
+  translation?: string;
+  reference: string;
+}
+
+export interface Hadith {
+  text: string;
+  source: string;
+}
+
+export interface ExtendedStory {
+  title: string;
+  content: string;
+  lessons: string[];
+  quranVerses?: QuranVerse[];
+  hadiths?: Hadith[];
+}
+
 export interface ProphetStory {
   id: string;
   name: {
@@ -11,11 +30,7 @@ export interface ProphetStory {
   era: string;
   order: number;
   stories: {
-    [language: string]: {
-      title: string;
-      content: string;
-      lessons: string[];
-    };
+    [language: string]: ExtendedStory;
   };
 }
 
@@ -55,20 +70,51 @@ export const prophetStories: ProphetStory[] = [
     stories: {
       ar: {
         title: 'قصة آدم عليه السلام - أبو البشر',
-        content: `آدم عليه السلام هو أول إنسان خلقه الله تعالى، وهو أبو البشرية جمعاء. خلقه الله من طين ثم نفخ فيه من روحه.
+        content: `آدم عليه السلام هو أول إنسان خلقه الله تعالى، وهو أبو البشرية جمعاء. خلقه الله من طين ثم نفخ فيه من روحه. كان خلق آدم آية من آيات الله العظيمة، إذ صوّره بيده سبحانه وتعالى ونفخ فيه من روحه، فكان ذلك تكريماً عظيماً لهذا المخلوق الذي جعله الله خليفةً في الأرض.
 
-أمر الله الملائكة بالسجود لآدم تكريماً له، فسجدوا جميعاً إلا إبليس أبى واستكبر وكان من الكافرين. قال إبليس: "أنا خير منه خلقتني من نار وخلقته من طين".
+أمر الله الملائكة بالسجود لآدم تكريماً له، فسجدوا جميعاً إلا إبليس أبى واستكبر وكان من الكافرين. قال إبليس متكبراً: "أنا خير منه خلقتني من نار وخلقته من طين"، فكان هذا الكبر سبب طرده من رحمة الله. وهنا تتجلى خطورة الكبر الذي يحجب صاحبه عن رؤية الحق ويؤدي به إلى الهلاك.
 
-أسكن الله آدم وزوجته حواء الجنة، وأباح لهما كل ما فيها إلا شجرة واحدة نهاهما عن الاقتراب منها. لكن الشيطان وسوس لهما وأغواهما حتى أكلا من الشجرة.
+أسكن الله آدم وزوجته حواء الجنة، وأباح لهما كل ما فيها من نعيم وخيرات، إلا شجرة واحدة نهاهما عن الاقتراب منها ابتلاءً لهما. كانت الجنة مكاناً عظيماً فيه ما لا عين رأت ولا أذن سمعت ولا خطر على قلب بشر، وكان آدم وحواء في نعيم دائم.
 
-عندما أكلا من الشجرة، بدت لهما سوآتهما، فأخذا يخصفان عليهما من ورق الجنة. عاتبهما الله على ما فعلا، فتابا إلى الله واستغفراه.
+لكن الشيطان لم ييأس من إغوائهما، فوسوس لهما وأغراهما بالخلود والملك الذي لا يبلى، حتى أكلا من الشجرة المحرمة. عندما أكلا منها، بدت لهما سوآتهما، فأخذا يخصفان عليهما من ورق الجنة ستراً لأنفسهما. عاتبهما الله على ما فعلا، فأدركا خطيئتهما وندما ندماً شديداً، وتابا إلى الله واستغفراه، فتاب الله عليهما إنه هو التواب الرحيم.
 
-أنزل الله آدم وحواء إلى الأرض ليعمراها، وجعل ذريتهما خلفاء في الأرض. علّم الله آدم الأسماء كلها، وجعله أول نبي على وجه الأرض.`,
+أنزل الله آدم وحواء إلى الأرض ليعمراها، وجعل ذريتهما خلفاء في الأرض يعبدون الله ويعمرون الكون. علّم الله آدم الأسماء كلها، الأسماء التي لا يعلمها إلا الله، فعرضها على الملائكة فلم يستطيعوا معرفتها، وهذا يدل على تكريم الله لآدم بالعلم. وجعله أول نبي على وجه الأرض، يدعو ذريته إلى عبادة الله وحده.
+
+عاش آدم عليه السلام على الأرض زمناً طويلاً، يعلّم أبناءه التوحيد والعبادة، ويحذرهم من عدوهم إبليس. وقد ورد في الأثر أن آدم عاش ألف سنة، وكان يرشد ذريته إلى طريق الحق والصواب.`,
         lessons: [
-          'التوبة تمحو الذنوب مهما عظمت',
-          'الكبر سبب هلاك إبليس',
-          'طاعة الله واجبة في كل الأحوال',
-          'الإنسان معرض للخطأ لكن عليه التوبة',
+          'التوبة تمحو الذنوب مهما عظمت، فباب التوبة مفتوح دائماً',
+          'الكبر سبب هلاك إبليس، فهو أول ذنب عُصي الله به',
+          'طاعة الله واجبة في كل الأحوال، والابتعاد عن ما نهى عنه',
+          'الإنسان معرض للخطأ لكن عليه التوبة والاستغفار',
+          'العلم تكريم من الله للإنسان ويرفع درجته',
+          'الشيطان عدو للإنسان يسعى دائماً لإغوائه',
+        ],
+        quranVerses: [
+          {
+            arabic: 'وَإِذْ قَالَ رَبُّكَ لِلْمَلَائِكَةِ إِنِّي جَاعِلٌ فِي الْأَرْضِ خَلِيفَةً ۖ قَالُوا أَتَجْعَلُ فِيهَا مَن يُفْسِدُ فِيهَا وَيَسْفِكُ الدِّمَاءَ وَنَحْنُ نُسَبِّحُ بِحَمْدِكَ وَنُقَدِّسُ لَكَ ۖ قَالَ إِنِّي أَعْلَمُ مَا لَا تَعْلَمُونَ',
+            translation: 'And when your Lord said to the angels: I am going to place a vicegerent on earth, they said: Will You place therein one who will cause corruption and shed blood while we glorify You with Your praise and sanctify You? He said: Indeed, I know what you do not know.',
+            reference: 'سورة البقرة - الآية 30'
+          },
+          {
+            arabic: 'وَعَلَّمَ آدَمَ الْأَسْمَاءَ كُلَّهَا ثُمَّ عَرَضَهُمْ عَلَى الْمَلَائِكَةِ فَقَالَ أَنبِئُونِي بِأَسْمَاءِ هَٰؤُلَاءِ إِن كُنتُمْ صَادِقِينَ',
+            translation: 'And He taught Adam all the names, then presented them to the angels and said: Inform Me of the names of these if you are truthful.',
+            reference: 'سورة البقرة - الآية 31'
+          },
+          {
+            arabic: 'فَتَلَقَّىٰ آدَمُ مِن رَّبِّهِ كَلِمَاتٍ فَتَابَ عَلَيْهِ ۚ إِنَّهُ هُوَ التَّوَّابُ الرَّحِيمُ',
+            translation: 'Then Adam received words from his Lord, and He accepted his repentance. Indeed, He is the Accepting of repentance, the Merciful.',
+            reference: 'سورة البقرة - الآية 37'
+          },
+        ],
+        hadiths: [
+          {
+            text: 'كُلُّكُمْ لآدَمَ، وَآدَمُ مِنْ تُرَابٍ',
+            source: 'رواه الترمذي - صحيح'
+          },
+          {
+            text: 'خَلَقَ اللهُ آدَمَ عَلَى صُورَتِهِ، طُولُهُ سِتُّونَ ذِرَاعًا',
+            source: 'رواه البخاري ومسلم'
+          },
         ],
       },
       'ar-eg': {
@@ -127,20 +173,51 @@ export const prophetStories: ProphetStory[] = [
       },
       en: {
         title: 'The Story of Prophet Adam - Father of Humanity',
-        content: `Prophet Adam (peace be upon him) was the first human being created by Allah, and he is the father of all mankind. Allah created him from clay and then breathed into him His spirit.
+        content: `Prophet Adam (peace be upon him) was the first human being created by Allah, and he is the father of all mankind. Allah created him from clay and then breathed into him His spirit. The creation of Adam was a great sign of Allah's power, as He shaped him with His own hands and breathed into him from His spirit, bestowing upon him a tremendous honor by making him a vicegerent on Earth.
 
-Allah commanded the angels to prostrate to Adam as an honor to him. They all prostrated except Iblis (Satan), who refused out of arrogance. Iblis said: "I am better than him. You created me from fire and created him from clay."
+Allah commanded the angels to prostrate to Adam as an honor to him. They all prostrated except Iblis (Satan), who refused out of arrogance. Iblis said arrogantly: "I am better than him. You created me from fire and created him from clay." This arrogance was the cause of his expulsion from Allah's mercy. Here we see the danger of arrogance, which blinds its holder from seeing the truth and leads to destruction.
 
-Allah settled Adam and his wife Hawwa (Eve) in Paradise and permitted them everything except one tree, which He forbade them from approaching. However, Satan whispered to them and tempted them until they ate from the tree.
+Allah settled Adam and his wife Hawwa (Eve) in Paradise and permitted them all its blessings and goodness, except for one tree which He forbade them from approaching as a test. Paradise was a magnificent place containing what no eye has seen, no ear has heard, and no human heart has imagined, and Adam and Hawwa were in eternal bliss.
 
-When they ate from the tree, their nakedness became apparent to them, and they began covering themselves with leaves from Paradise. Allah admonished them for what they had done, and they repented and sought forgiveness.
+But Satan did not despair from tempting them. He whispered to them and enticed them with promises of immortality and everlasting kingdom, until they ate from the forbidden tree. When they ate from it, their nakedness became apparent to them, and they began covering themselves with leaves from Paradise. Allah admonished them for what they had done, and they realized their sin and felt deep remorse. They repented to Allah and sought His forgiveness, and Allah accepted their repentance, for He is the Most Accepting of repentance, the Most Merciful.
 
-Allah sent Adam and Hawwa down to Earth to inhabit it, and made their descendants successors on Earth. Allah taught Adam all the names and made him the first prophet on Earth.`,
+Allah sent Adam and Hawwa down to Earth to inhabit it, and made their descendants successors on Earth to worship Allah and build civilization. Allah taught Adam all the names - names that none knew except Allah - then presented them to the angels who could not identify them, demonstrating Allah's honoring of Adam through knowledge. He made him the first prophet on Earth, calling his descendants to worship Allah alone.
+
+Adam lived on Earth for a long time, teaching his children monotheism and worship, and warning them about their enemy Iblis. It is narrated that Adam lived for a thousand years, guiding his descendants to the path of truth and righteousness.`,
         lessons: [
-          'Repentance erases sins no matter how great',
-          'Arrogance was the cause of Satan\'s downfall',
-          'Obedience to Allah is obligatory at all times',
-          'Humans are prone to error but must repent',
+          'Repentance erases sins no matter how great - the door of repentance is always open',
+          'Arrogance was the cause of Satan\'s downfall - it was the first sin against Allah',
+          'Obedience to Allah is obligatory at all times, and avoiding what He forbade',
+          'Humans are prone to error but must repent and seek forgiveness',
+          'Knowledge is an honor from Allah that elevates one\'s status',
+          'Satan is an enemy to mankind, always seeking to mislead',
+        ],
+        quranVerses: [
+          {
+            arabic: 'وَإِذْ قَالَ رَبُّكَ لِلْمَلَائِكَةِ إِنِّي جَاعِلٌ فِي الْأَرْضِ خَلِيفَةً',
+            translation: 'And when your Lord said to the angels: I am going to place a vicegerent on earth.',
+            reference: 'Surah Al-Baqarah - Verse 30'
+          },
+          {
+            arabic: 'وَعَلَّمَ آدَمَ الْأَسْمَاءَ كُلَّهَا',
+            translation: 'And He taught Adam all the names.',
+            reference: 'Surah Al-Baqarah - Verse 31'
+          },
+          {
+            arabic: 'فَتَلَقَّىٰ آدَمُ مِن رَّبِّهِ كَلِمَاتٍ فَتَابَ عَلَيْهِ ۚ إِنَّهُ هُوَ التَّوَّابُ الرَّحِيمُ',
+            translation: 'Then Adam received words from his Lord, and He accepted his repentance. Indeed, He is the Accepting of repentance, the Merciful.',
+            reference: 'Surah Al-Baqarah - Verse 37'
+          },
+        ],
+        hadiths: [
+          {
+            text: 'All of you are from Adam, and Adam was from dust.',
+            source: 'Narrated by Tirmidhi - Authentic'
+          },
+          {
+            text: 'Allah created Adam in His image, sixty cubits tall.',
+            source: 'Narrated by Bukhari and Muslim'
+          },
         ],
       },
       fr: {
@@ -1518,7 +1595,7 @@ Allah said: "O John, take the Scripture with determination. And We gave him wisd
   },
 ];
 
-export const getStoryByLanguage = (prophetId: string, languageId: string): ProphetStory['stories'][string] | null => {
+export const getStoryByLanguage = (prophetId: string, languageId: string): ExtendedStory | null => {
   const prophet = prophetStories.find(p => p.id === prophetId);
   if (!prophet) return null;
   

@@ -1,18 +1,15 @@
-import { ArrowRight, ArrowLeft, Lightbulb, Share2 } from "lucide-react";
+import { ArrowRight, ArrowLeft, Lightbulb, Share2, Volume2, VolumeX, Loader2, BookOpen, Quote } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import type { ProphetStory } from "@/data/prophetStories";
+import { useStoryAudio } from "@/hooks/useStoryAudio";
+import type { ProphetStory, ExtendedStory } from "@/data/prophetStories";
 
 interface ProphetStoryViewerProps {
   prophet: ProphetStory;
-  story: {
-    title: string;
-    content: string;
-    lessons: string[];
-  } | null;
+  story: ExtendedStory | null;
   language: string;
   isRTL: boolean;
   onBack: () => void;
@@ -20,6 +17,7 @@ interface ProphetStoryViewerProps {
 
 const ProphetStoryViewer = ({ prophet, story, language, isRTL, onBack }: ProphetStoryViewerProps) => {
   const prophetName = isRTL ? prophet.name.ar : (prophet.name[language.split('-')[0] as keyof typeof prophet.name] || prophet.name.en);
+  const { isLoading, isPlaying, generateAudio, stopAudio } = useStoryAudio();
 
   const handleShare = async () => {
     if (story) {
@@ -30,10 +28,17 @@ const ProphetStoryViewer = ({ prophet, story, language, isRTL, onBack }: Prophet
           url: window.location.href,
         });
       } catch (err) {
-        // Fallback to clipboard
         await navigator.clipboard.writeText(story.content);
         toast.success(isRTL ? 'تم نسخ القصة' : 'Story copied');
       }
+    }
+  };
+
+  const handlePlayAudio = async () => {
+    if (isPlaying) {
+      stopAudio();
+    } else if (story) {
+      await generateAudio(story.content, language, prophet.id);
     }
   };
 
@@ -63,9 +68,25 @@ const ProphetStoryViewer = ({ prophet, story, language, isRTL, onBack }: Prophet
             {isRTL ? <ArrowRight className="w-5 h-5" /> : <ArrowLeft className="w-5 h-5" />}
           </Button>
           <h1 className="font-bold text-lg truncate max-w-[200px]">{prophetName}</h1>
-          <Button variant="ghost" size="icon" onClick={handleShare}>
-            <Share2 className="w-5 h-5" />
-          </Button>
+          <div className="flex gap-1">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={handlePlayAudio}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : isPlaying ? (
+                <VolumeX className="w-5 h-5" />
+              ) : (
+                <Volume2 className="w-5 h-5" />
+              )}
+            </Button>
+            <Button variant="ghost" size="icon" onClick={handleShare}>
+              <Share2 className="w-5 h-5" />
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -87,8 +108,65 @@ const ProphetStoryViewer = ({ prophet, story, language, isRTL, onBack }: Prophet
             ))}
           </div>
 
+          {/* Quran Verses Section */}
+          {story.quranVerses && story.quranVerses.length > 0 && (
+            <Card className="mt-8 bg-emerald-500/10 border-emerald-500/20">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <BookOpen className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                  <h3 className="font-bold text-lg text-foreground">
+                    {isRTL ? 'آيات من القرآن الكريم' : 'Verses from the Holy Quran'}
+                  </h3>
+                </div>
+                <div className="space-y-4">
+                  {story.quranVerses.map((verse, index) => (
+                    <div key={index} className="bg-background/50 rounded-lg p-4 border border-emerald-500/10">
+                      <p className="text-lg font-arabic leading-loose text-foreground mb-2" dir="rtl">
+                        {verse.arabic}
+                      </p>
+                      {verse.translation && !isRTL && (
+                        <p className="text-muted-foreground text-sm italic">
+                          {verse.translation}
+                        </p>
+                      )}
+                      <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-2">
+                        {verse.reference}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Hadiths Section */}
+          {story.hadiths && story.hadiths.length > 0 && (
+            <Card className="mt-6 bg-amber-500/10 border-amber-500/20">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <Quote className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                  <h3 className="font-bold text-lg text-foreground">
+                    {isRTL ? 'أحاديث نبوية شريفة' : 'Prophetic Hadiths'}
+                  </h3>
+                </div>
+                <div className="space-y-4">
+                  {story.hadiths.map((hadith, index) => (
+                    <div key={index} className="bg-background/50 rounded-lg p-4 border border-amber-500/10">
+                      <p className="text-foreground leading-relaxed mb-2" dir={isRTL ? 'rtl' : 'ltr'}>
+                        "{hadith.text}"
+                      </p>
+                      <p className="text-xs text-amber-600 dark:text-amber-400">
+                        {hadith.source}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Lessons */}
-          <Card className="mt-8 bg-primary/5 border-primary/20">
+          <Card className="mt-6 bg-primary/5 border-primary/20">
             <CardContent className="p-6">
               <div className="flex items-center gap-2 mb-4">
                 <Lightbulb className="w-5 h-5 text-primary" />
