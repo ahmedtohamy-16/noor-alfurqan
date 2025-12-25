@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Book, Clock, Star, Users, Search, ChevronLeft, BookOpen, BarChart3, Target, Sunrise } from "lucide-react";
+import { Book, Clock, Star, Users, Search, ChevronLeft, BookOpen, BarChart3, Target, Sunrise, ScrollText } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/Header";
@@ -53,6 +53,13 @@ const Index = () => {
       description: "تتبع تقدمك",
       link: "/reading-stats",
       color: "bg-purple-500/10 text-purple-600",
+    },
+    {
+      icon: ScrollText,
+      title: "قصص الأنبياء",
+      description: "قصص بلغات متعددة",
+      link: "/prophet-stories",
+      color: "bg-emerald-500/10 text-emerald-600",
     },
     {
       icon: Users,
