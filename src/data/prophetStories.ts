@@ -62,6 +62,7 @@ export const languages: Language[] = [
 ];
 
 export const prophetStories: ProphetStory[] = [
+  // 1. آدم عليه السلام
   {
     id: 'adam',
     name: { ar: 'آدم', en: 'Adam', fr: 'Adam', ur: 'آدم', id: 'Adam', tr: 'Adem' },
@@ -72,44 +73,44 @@ export const prophetStories: ProphetStory[] = [
         title: 'قصة آدم عليه السلام - أبو البشر',
         content: `آدم عليه السلام هو أول إنسان خلقه الله تعالى، وهو أبو البشرية جمعاء. خلقه الله من طين ثم نفخ فيه من روحه. كان خلق آدم آية من آيات الله العظيمة، إذ صوّره بيده سبحانه وتعالى ونفخ فيه من روحه، فكان ذلك تكريماً عظيماً لهذا المخلوق الذي جعله الله خليفةً في الأرض.
 
-أمر الله الملائكة بالسجود لآدم تكريماً له، فسجدوا جميعاً إلا إبليس أبى واستكبر وكان من الكافرين. قال إبليس متكبراً: "أنا خير منه خلقتني من نار وخلقته من طين"، فكان هذا الكبر سبب طرده من رحمة الله. وهنا تتجلى خطورة الكبر الذي يحجب صاحبه عن رؤية الحق ويؤدي به إلى الهلاك.
+أمر الله الملائكة بالسجود لآدم تكريماً له، فسجدوا جميعاً إلا إبليس أبى واستكبر وكان من الكافرين. قال إبليس متكبراً: "أنا خير منه خلقتني من نار وخلقته من طين"، فكان هذا الكبر سبب طرده من رحمة الله.
 
-أسكن الله آدم وزوجته حواء الجنة، وأباح لهما كل ما فيها من نعيم وخيرات، إلا شجرة واحدة نهاهما عن الاقتراب منها ابتلاءً لهما. كانت الجنة مكاناً عظيماً فيه ما لا عين رأت ولا أذن سمعت ولا خطر على قلب بشر، وكان آدم وحواء في نعيم دائم.
+أسكن الله آدم وزوجته حواء الجنة، وأباح لهما كل ما فيها من نعيم وخيرات، إلا شجرة واحدة نهاهما عن الاقتراب منها ابتلاءً لهما.
 
-لكن الشيطان لم ييأس من إغوائهما، فوسوس لهما وأغراهما بالخلود والملك الذي لا يبلى، حتى أكلا من الشجرة المحرمة. عندما أكلا منها، بدت لهما سوآتهما، فأخذا يخصفان عليهما من ورق الجنة ستراً لأنفسهما. عاتبهما الله على ما فعلا، فأدركا خطيئتهما وندما ندماً شديداً، وتابا إلى الله واستغفراه، فتاب الله عليهما إنه هو التواب الرحيم.
+لكن الشيطان لم ييأس من إغوائهما، فوسوس لهما وأغراهما بالخلود والملك الذي لا يبلى، حتى أكلا من الشجرة المحرمة. عندما أكلا منها، بدت لهما سوآتهما، فأخذا يخصفان عليهما من ورق الجنة ستراً لأنفسهما.
 
-أنزل الله آدم وحواء إلى الأرض ليعمراها، وجعل ذريتهما خلفاء في الأرض يعبدون الله ويعمرون الكون. علّم الله آدم الأسماء كلها، الأسماء التي لا يعلمها إلا الله، فعرضها على الملائكة فلم يستطيعوا معرفتها، وهذا يدل على تكريم الله لآدم بالعلم. وجعله أول نبي على وجه الأرض، يدعو ذريته إلى عبادة الله وحده.
+عاتبهما الله على ما فعلا، فأدركا خطيئتهما وندما ندماً شديداً، وتابا إلى الله واستغفراه، فتاب الله عليهما إنه هو التواب الرحيم.
 
-عاش آدم عليه السلام على الأرض زمناً طويلاً، يعلّم أبناءه التوحيد والعبادة، ويحذرهم من عدوهم إبليس. وقد ورد في الأثر أن آدم عاش ألف سنة، وكان يرشد ذريته إلى طريق الحق والصواب.`,
+أنزل الله آدم وحواء إلى الأرض ليعمراها، وجعل ذريتهما خلفاء في الأرض يعبدون الله ويعمرون الكون. علّم الله آدم الأسماء كلها، وجعله أول نبي على وجه الأرض يدعو ذريته إلى عبادة الله وحده.`,
         lessons: [
           'التوبة تمحو الذنوب مهما عظمت، فباب التوبة مفتوح دائماً',
           'الكبر سبب هلاك إبليس، فهو أول ذنب عُصي الله به',
-          'طاعة الله واجبة في كل الأحوال، والابتعاد عن ما نهى عنه',
+          'طاعة الله واجبة في كل الأحوال',
           'الإنسان معرض للخطأ لكن عليه التوبة والاستغفار',
           'العلم تكريم من الله للإنسان ويرفع درجته',
           'الشيطان عدو للإنسان يسعى دائماً لإغوائه',
         ],
         quranVerses: [
           {
-            arabic: 'وَإِذْ قَالَ رَبُّكَ لِلْمَلَائِكَةِ إِنِّي جَاعِلٌ فِي الْأَرْضِ خَلِيفَةً ۖ قَالُوا أَتَجْعَلُ فِيهَا مَن يُفْسِدُ فِيهَا وَيَسْفِكُ الدِّمَاءَ وَنَحْنُ نُسَبِّحُ بِحَمْدِكَ وَنُقَدِّسُ لَكَ ۖ قَالَ إِنِّي أَعْلَمُ مَا لَا تَعْلَمُونَ',
-            translation: 'And when your Lord said to the angels: I am going to place a vicegerent on earth, they said: Will You place therein one who will cause corruption and shed blood while we glorify You with Your praise and sanctify You? He said: Indeed, I know what you do not know.',
+            arabic: 'وَإِذْ قَالَ رَبُّكَ لِلْمَلَائِكَةِ إِنِّي جَاعِلٌ فِي الْأَرْضِ خَلِيفَةً',
+            translation: 'And when your Lord said to the angels: I am going to place a vicegerent on earth.',
             reference: 'سورة البقرة - الآية 30'
           },
           {
-            arabic: 'وَعَلَّمَ آدَمَ الْأَسْمَاءَ كُلَّهَا ثُمَّ عَرَضَهُمْ عَلَى الْمَلَائِكَةِ فَقَالَ أَنبِئُونِي بِأَسْمَاءِ هَٰؤُلَاءِ إِن كُنتُمْ صَادِقِينَ',
-            translation: 'And He taught Adam all the names, then presented them to the angels and said: Inform Me of the names of these if you are truthful.',
+            arabic: 'وَعَلَّمَ آدَمَ الْأَسْمَاءَ كُلَّهَا',
+            translation: 'And He taught Adam all the names.',
             reference: 'سورة البقرة - الآية 31'
           },
           {
             arabic: 'فَتَلَقَّىٰ آدَمُ مِن رَّبِّهِ كَلِمَاتٍ فَتَابَ عَلَيْهِ ۚ إِنَّهُ هُوَ التَّوَّابُ الرَّحِيمُ',
-            translation: 'Then Adam received words from his Lord, and He accepted his repentance. Indeed, He is the Accepting of repentance, the Merciful.',
+            translation: 'Then Adam received words from his Lord, and He accepted his repentance.',
             reference: 'سورة البقرة - الآية 37'
           },
         ],
         hadiths: [
           {
             text: 'كُلُّكُمْ لآدَمَ، وَآدَمُ مِنْ تُرَابٍ',
-            source: 'رواه الترمذي - صحيح'
+            source: 'رواه الترمذي'
           },
           {
             text: 'خَلَقَ اللهُ آدَمَ عَلَى صُورَتِهِ، طُولُهُ سِتُّونَ ذِرَاعًا',
@@ -117,80 +118,26 @@ export const prophetStories: ProphetStory[] = [
           },
         ],
       },
-      'ar-eg': {
-        title: 'حكاية سيدنا آدم - أبو البشر',
-        content: `سيدنا آدم عليه السلام هو أول إنسان ربنا خلقه، وهو أبو البشر كلهم. ربنا خلقه من طين وبعدين نفخ فيه من روحه.
-
-ربنا أمر الملايكة يسجدوا لآدم عشان يكرموه، وكلهم سجدوا إلا إبليس رفض واستكبر. إبليس قال: "أنا أحسن منه، ربنا خلقني من نار وخلقه من طين".
-
-ربنا سكّن آدم ومراته حوا في الجنة، وسابهم ياكلوا من كل حاجة إلا شجرة واحدة منعهم منها. بس الشيطان وسوس ليهم وغواهم لحد ما أكلوا من الشجرة.
-
-لما أكلوا من الشجرة، بانت عورتهم، وابتدوا يغطوا نفسهم بورق الشجر. ربنا عاتبهم على اللي عملوه، فتابوا واستغفروا.
-
-ربنا نزّل آدم وحوا على الأرض عشان يعمروها، وخلى ولادهم خلفا في الأرض. ربنا علّم آدم الأسما كلها، وخلاه أول نبي على الأرض.`,
-        lessons: [
-          'التوبة بتمسح الذنوب مهما كانت كبيرة',
-          'الكبر والغرور سبب هلاك إبليس',
-          'طاعة ربنا واجبة في كل وقت',
-          'الإنسان ممكن يغلط بس لازم يتوب',
-        ],
-      },
-      'ar-sa': {
-        title: 'قصة نبينا آدم عليه السلام - أبو البشر',
-        content: `آدم عليه السلام هو أول إنسان خلقه الله سبحانه، وهو أبو البشر كلهم. الله خلقه من طين وبعدين نفخ فيه من روحه.
-
-الله أمر الملائكة يسجدون لآدم تكريم له، وسجدوا كلهم إلا إبليس أبى واستكبر. إبليس قال: "أنا أحسن منه، خلقتني من نار وخلقته من طين".
-
-الله سكّن آدم وزوجته حوا في الجنة، وأباح لهم كل شي إلا شجرة وحدة نهاهم عنها. بس الشيطان وسوس لهم وأغواهم حتى أكلوا من الشجرة.
-
-لما أكلوا من الشجرة، بانت لهم سوآتهم، وصاروا يخصفون عليهم من ورق الجنة. الله عاتبهم على اللي سووه، فتابوا واستغفروا.
-
-الله نزّل آدم وحوا للأرض عشان يعمرونها، وجعل ذريتهم خلفاء في الأرض. الله علّم آدم الأسماء كلها، وجعله أول نبي على وجه الأرض.`,
-        lessons: [
-          'التوبة تمحو الذنوب مهما كبرت',
-          'الكبر سبب هلاك إبليس لعنه الله',
-          'طاعة الله واجبة في كل الأوقات',
-          'الإنسان يخطئ لكن عليه التوبة',
-        ],
-      },
-      'ar-sy': {
-        title: 'قصة سيدنا آدم عليه السلام - أبو البشر',
-        content: `سيدنا آدم عليه السلام هو أول إنسان خلقو الله، وهو أبو البشر كلياتن. الله خلقو من طين وبعدين نفخ فيه من روحو.
-
-الله أمر الملايكة يسجدوا لآدم تكريم إلو، وسجدوا كلياتن إلا إبليس رفض واستكبر. إبليس قال: "أنا أحسن منو، خلقتني من نار وخلقتو من طين".
-
-الله سكّن آدم ومرتو حوا بالجنة، وسمحلن ياكلوا من كل شي إلا شجرة وحدة منعن منها. بس الشيطان وسوس إلن وأغوان لحتى أكلوا من الشجرة.
-
-لما أكلوا من الشجرة، بانت عورتن، وصاروا يغطوا حالن بورق الشجر. الله عاتبن على يلي عملوه، فتابوا واستغفروا.
-
-الله نزّل آدم وحوا عالأرض ليعمروها، وخلّى ولادن خلفاء بالأرض. الله علّم آدم الأسماء كلياتا، وخلاه أول نبي على وجه الأرض.`,
-        lessons: [
-          'التوبة بتمحي الذنوب مهما كانت كبيرة',
-          'الكبر والتعالي سبب هلاك إبليس',
-          'طاعة الله واجبة بكل الأوقات',
-          'الإنسان بيغلط بس لازم يتوب',
-        ],
-      },
       en: {
         title: 'The Story of Prophet Adam - Father of Humanity',
-        content: `Prophet Adam (peace be upon him) was the first human being created by Allah, and he is the father of all mankind. Allah created him from clay and then breathed into him His spirit. The creation of Adam was a great sign of Allah's power, as He shaped him with His own hands and breathed into him from His spirit, bestowing upon him a tremendous honor by making him a vicegerent on Earth.
+        content: `Prophet Adam (peace be upon him) was the first human being created by Allah, and he is the father of all mankind. Allah created him from clay and then breathed into him His spirit.
 
-Allah commanded the angels to prostrate to Adam as an honor to him. They all prostrated except Iblis (Satan), who refused out of arrogance. Iblis said arrogantly: "I am better than him. You created me from fire and created him from clay." This arrogance was the cause of his expulsion from Allah's mercy. Here we see the danger of arrogance, which blinds its holder from seeing the truth and leads to destruction.
+Allah commanded the angels to prostrate to Adam as an honor to him. They all prostrated except Iblis (Satan), who refused out of arrogance. Iblis said: "I am better than him. You created me from fire and created him from clay."
 
-Allah settled Adam and his wife Hawwa (Eve) in Paradise and permitted them all its blessings and goodness, except for one tree which He forbade them from approaching as a test. Paradise was a magnificent place containing what no eye has seen, no ear has heard, and no human heart has imagined, and Adam and Hawwa were in eternal bliss.
+Allah settled Adam and his wife Hawwa (Eve) in Paradise and permitted them all its blessings, except for one tree which He forbade them from approaching.
 
-But Satan did not despair from tempting them. He whispered to them and enticed them with promises of immortality and everlasting kingdom, until they ate from the forbidden tree. When they ate from it, their nakedness became apparent to them, and they began covering themselves with leaves from Paradise. Allah admonished them for what they had done, and they realized their sin and felt deep remorse. They repented to Allah and sought His forgiveness, and Allah accepted their repentance, for He is the Most Accepting of repentance, the Most Merciful.
+But Satan whispered to them and enticed them until they ate from the forbidden tree. When they ate from it, their nakedness became apparent to them, and they began covering themselves with leaves from Paradise.
 
-Allah sent Adam and Hawwa down to Earth to inhabit it, and made their descendants successors on Earth to worship Allah and build civilization. Allah taught Adam all the names - names that none knew except Allah - then presented them to the angels who could not identify them, demonstrating Allah's honoring of Adam through knowledge. He made him the first prophet on Earth, calling his descendants to worship Allah alone.
+Allah admonished them for what they had done, and they realized their sin and felt deep remorse. They repented to Allah and sought His forgiveness, and Allah accepted their repentance.
 
-Adam lived on Earth for a long time, teaching his children monotheism and worship, and warning them about their enemy Iblis. It is narrated that Adam lived for a thousand years, guiding his descendants to the path of truth and righteousness.`,
+Allah sent Adam and Hawwa down to Earth to inhabit it, and made their descendants successors on Earth to worship Allah. Allah taught Adam all the names and made him the first prophet on Earth.`,
         lessons: [
-          'Repentance erases sins no matter how great - the door of repentance is always open',
-          'Arrogance was the cause of Satan\'s downfall - it was the first sin against Allah',
-          'Obedience to Allah is obligatory at all times, and avoiding what He forbade',
-          'Humans are prone to error but must repent and seek forgiveness',
-          'Knowledge is an honor from Allah that elevates one\'s status',
-          'Satan is an enemy to mankind, always seeking to mislead',
+          'Repentance erases sins no matter how great',
+          'Arrogance was the cause of Satan\'s downfall',
+          'Obedience to Allah is obligatory at all times',
+          'Humans are prone to error but must repent',
+          'Knowledge is an honor from Allah',
+          'Satan is an enemy to mankind',
         ],
         quranVerses: [
           {
@@ -198,1417 +145,1769 @@ Adam lived on Earth for a long time, teaching his children monotheism and worshi
             translation: 'And when your Lord said to the angels: I am going to place a vicegerent on earth.',
             reference: 'Surah Al-Baqarah - Verse 30'
           },
-          {
-            arabic: 'وَعَلَّمَ آدَمَ الْأَسْمَاءَ كُلَّهَا',
-            translation: 'And He taught Adam all the names.',
-            reference: 'Surah Al-Baqarah - Verse 31'
-          },
-          {
-            arabic: 'فَتَلَقَّىٰ آدَمُ مِن رَّبِّهِ كَلِمَاتٍ فَتَابَ عَلَيْهِ ۚ إِنَّهُ هُوَ التَّوَّابُ الرَّحِيمُ',
-            translation: 'Then Adam received words from his Lord, and He accepted his repentance. Indeed, He is the Accepting of repentance, the Merciful.',
-            reference: 'Surah Al-Baqarah - Verse 37'
-          },
         ],
         hadiths: [
           {
             text: 'All of you are from Adam, and Adam was from dust.',
-            source: 'Narrated by Tirmidhi - Authentic'
+            source: 'Narrated by Tirmidhi'
           },
-          {
-            text: 'Allah created Adam in His image, sixty cubits tall.',
-            source: 'Narrated by Bukhari and Muslim'
-          },
-        ],
-      },
-      fr: {
-        title: 'L\'Histoire du Prophète Adam - Père de l\'Humanité',
-        content: `Le Prophète Adam (paix sur lui) fut le premier être humain créé par Allah, et il est le père de toute l'humanité. Allah l'a créé d'argile puis lui a insufflé de Son esprit.
-
-Allah a ordonné aux anges de se prosterner devant Adam pour l'honorer. Ils se sont tous prosternés sauf Iblis (Satan), qui a refusé par orgueil. Iblis a dit : « Je suis meilleur que lui. Tu m'as créé de feu et tu l'as créé d'argile. »
-
-Allah a installé Adam et son épouse Hawwa (Ève) au Paradis et leur a tout permis sauf un arbre, qu'Il leur a interdit d'approcher. Cependant, Satan leur a murmuré et les a tentés jusqu'à ce qu'ils mangent de l'arbre.
-
-Quand ils ont mangé de l'arbre, leur nudité leur est apparue, et ils ont commencé à se couvrir avec des feuilles du Paradis. Allah les a réprimandés pour ce qu'ils avaient fait, et ils se sont repentis et ont demandé pardon.
-
-Allah a envoyé Adam et Hawwa sur Terre pour l'habiter, et a fait de leurs descendants des successeurs sur Terre. Allah a enseigné à Adam tous les noms et a fait de lui le premier prophète sur Terre.`,
-        lessons: [
-          'Le repentir efface les péchés, quelle que soit leur gravité',
-          'L\'orgueil fut la cause de la chute de Satan',
-          'L\'obéissance à Allah est obligatoire en tout temps',
-          'Les humains sont sujets à l\'erreur mais doivent se repentir',
-        ],
-      },
-      ur: {
-        title: 'حضرت آدم علیہ السلام کی کہانی - ابو البشر',
-        content: `حضرت آدم علیہ السلام پہلے انسان تھے جنہیں اللہ تعالیٰ نے پیدا کیا، اور وہ تمام انسانیت کے باپ ہیں۔ اللہ نے انہیں مٹی سے بنایا اور پھر ان میں اپنی روح پھونکی۔
-
-اللہ نے فرشتوں کو حکم دیا کہ آدم کو سجدہ کریں ان کی تکریم کے لیے۔ سب نے سجدہ کیا سوائے ابلیس کے، جس نے تکبر کی وجہ سے انکار کر دیا۔ ابلیس نے کہا: "میں ان سے بہتر ہوں۔ تو نے مجھے آگ سے بنایا اور انہیں مٹی سے۔"
-
-اللہ نے آدم اور ان کی بیوی حوا کو جنت میں بسایا اور انہیں ہر چیز کی اجازت دی سوائے ایک درخت کے، جس سے انہیں منع کیا۔ لیکن شیطان نے انہیں وسوسہ دیا اور بہکایا یہاں تک کہ انہوں نے اس درخت سے کھا لیا۔
-
-جب انہوں نے درخت سے کھایا تو ان کی عریانی ان پر ظاہر ہو گئی، اور وہ جنت کے پتوں سے اپنے آپ کو ڈھانپنے لگے۔ اللہ نے ان کی سرزنش کی جو انہوں نے کیا، تو انہوں نے توبہ کی اور معافی مانگی۔
-
-اللہ نے آدم اور حوا کو زمین پر بھیجا تاکہ وہ اسے آباد کریں، اور ان کی اولاد کو زمین میں خلیفہ بنایا۔ اللہ نے آدم کو تمام نام سکھائے اور انہیں زمین پر پہلا نبی بنایا۔`,
-        lessons: [
-          'توبہ گناہوں کو مٹا دیتی ہے چاہے وہ کتنے ہی بڑے ہوں',
-          'تکبر شیطان کی تباہی کا سبب بنا',
-          'اللہ کی اطاعت ہر وقت فرض ہے',
-          'انسان غلطی کر سکتا ہے لیکن توبہ ضروری ہے',
-        ],
-      },
-      id: {
-        title: 'Kisah Nabi Adam - Bapak Umat Manusia',
-        content: `Nabi Adam (alaihissalam) adalah manusia pertama yang diciptakan Allah, dan beliau adalah bapak seluruh umat manusia. Allah menciptakannya dari tanah liat kemudian meniupkan ruh-Nya kepadanya.
-
-Allah memerintahkan para malaikat untuk bersujud kepada Adam sebagai penghormatan kepadanya. Mereka semua bersujud kecuali Iblis, yang menolak karena kesombongannya. Iblis berkata: "Aku lebih baik darinya. Engkau menciptakanku dari api dan menciptakannya dari tanah liat."
-
-Allah menempatkan Adam dan istrinya Hawa di surga dan membolehkan mereka menikmati segalanya kecuali satu pohon, yang Dia larang mereka mendekatinya. Namun, setan membisikkan kepada mereka dan menggoda mereka sampai mereka makan dari pohon itu.
-
-Ketika mereka makan dari pohon itu, aurat mereka tampak bagi mereka, dan mereka mulai menutupi diri dengan daun-daun dari surga. Allah menegur mereka atas apa yang telah mereka lakukan, dan mereka bertobat dan memohon ampunan.
-
-Allah menurunkan Adam dan Hawa ke Bumi untuk menghuninya, dan menjadikan keturunan mereka sebagai khalifah di Bumi. Allah mengajarkan Adam semua nama dan menjadikannya nabi pertama di Bumi.`,
-        lessons: [
-          'Taubat menghapus dosa sebesar apapun',
-          'Kesombongan adalah penyebab kehancuran setan',
-          'Ketaatan kepada Allah wajib setiap saat',
-          'Manusia bisa berbuat salah tapi harus bertaubat',
-        ],
-      },
-      tr: {
-        title: 'Hz. Adem\'in Kıssası - İnsanlığın Babası',
-        content: `Hz. Adem (aleyhisselam) Allah'ın yarattığı ilk insandır ve tüm insanlığın babasıdır. Allah onu çamurdan yarattı ve sonra ona ruhundan üfledi.
-
-Allah, meleklere Adem'e secde etmelerini emretti. Hepsi secde etti, ancak İblis kibrinden dolayı reddetti. İblis dedi ki: "Ben ondan daha iyiyim. Beni ateşten yarattın, onu ise çamurdan yarattın."
-
-Allah, Adem ve eşi Havva'yı cennete yerleştirdi ve onlara yaklaşmalarını yasakladığı bir ağaç hariç her şeye izin verdi. Ancak şeytan onlara vesvese verdi ve onları ağaçtan yiyinceye kadar kandırdı.
-
-Ağaçtan yediklerinde, çıplaklıkları kendilerine göründü ve cennet yapraklarıyla örtünmeye başladılar. Allah onları yaptıkları için azarladı ve onlar tövbe edip af dilediler.
-
-Allah, Adem ve Havva'yı yeryüzünü imar etmeleri için dünyaya indirdi ve soylarını yeryüzünde halifeler kıldı. Allah, Adem'e tüm isimleri öğretti ve onu yeryüzündeki ilk peygamber yaptı.`,
-        lessons: [
-          'Tövbe, ne kadar büyük olursa olsun günahları siler',
-          'Kibir, şeytanın helak olmasının sebebiydi',
-          'Allah\'a itaat her zaman farzdır',
-          'İnsan hata yapabilir ama tövbe etmelidir',
         ],
       },
     },
   },
+
+  // 2. إدريس عليه السلام
   {
     id: 'idris',
     name: { ar: 'إدريس', en: 'Idris', fr: 'Idris', ur: 'ادریس', id: 'Idris', tr: 'İdris' },
-    era: 'قبل نوح',
+    era: 'ما قبل الطوفان',
     order: 2,
     stories: {
       ar: {
-        title: 'قصة إدريس عليه السلام',
-        content: `إدريس عليه السلام هو من أوائل الأنبياء بعد آدم عليه السلام. كان من ذرية شيث بن آدم، وقد أعطاه الله علماً واسعاً وحكمة عظيمة.
+        title: 'قصة إدريس عليه السلام - أول من خط بالقلم',
+        content: `إدريس عليه السلام هو من أوائل الأنبياء بعد آدم عليه السلام، وهو جد نوح عليه السلام. كان صادقاً نبياً، رفعه الله مكاناً علياً.
 
-كان إدريس عليه السلام أول من خط بالقلم، وأول من خاط الثياب ولبسها، وكان الناس قبله يلبسون الجلود. علّم قومه الكتابة والحساب والفلك.
+كان إدريس عليه السلام أول من خط بالقلم، وأول من خاط الثياب ولبسها، فكان الناس قبله يلبسون الجلود. علّمه الله علم النجوم والحساب والكتابة.
 
-دعا قومه إلى عبادة الله وحده وترك عبادة الأصنام، فآمن به بعضهم وكفر آخرون. صبر على أذى قومه واستمر في دعوته.
+أمره الله تعالى بدعوة قومه إلى التوحيد وترك عبادة الأصنام. فكان يدعوهم إلى الله ويأمرهم بالمعروف وينهاهم عن المنكر.
 
-رفع الله إدريس مكاناً علياً كما قال تعالى: "ورفعناه مكاناً عليا". وكان صادقاً صابراً كثير العبادة والذكر.
+آمن به قليل من قومه، أما أكثرهم فكذبوه وأصروا على كفرهم. فاعتزلهم إدريس عليه السلام وانقطع للعبادة.
 
-ذُكر إدريس في القرآن الكريم في سورة مريم: "واذكر في الكتاب إدريس إنه كان صديقاً نبياً، ورفعناه مكاناً علياً".`,
+رفعه الله مكاناً علياً تكريماً له وجزاءً لصبره وإخلاصه في عبادته ودعوته.`,
         lessons: [
-          'العلم والتعلم من صفات الأنبياء',
-          'الصبر على الدعوة مهما كانت الصعوبات',
-          'الله يرفع درجات الصالحين',
+          'العلم والمعرفة من أعظم النعم التي يمنحها الله لعباده',
+          'الصبر على الدعوة واجب حتى لو قل المؤمنون',
+          'الاعتزال للعبادة عند فساد الناس محمود',
+          'الله يرفع من يخلص له في العبادة',
+          'الدعوة إلى الله مسؤولية كل مسلم',
         ],
-      },
-      'ar-eg': {
-        title: 'حكاية سيدنا إدريس عليه السلام',
-        content: `سيدنا إدريس عليه السلام كان من أوائل الأنبياء بعد سيدنا آدم. كان من نسل شيث ابن آدم، وربنا إداله علم كتير وحكمة كبيرة.
-
-سيدنا إدريس كان أول واحد كتب بالقلم، وأول واحد خاط هدوم ولبسها، الناس قبله كانوا بيلبسوا جلود الحيوانات. علّم الناس الكتابة والحساب وعلم الفلك.
-
-دعا قومه يعبدوا ربنا لوحده ويسيبوا عبادة الأصنام، بعضهم آمن وبعضهم كفر. صبر على أذية قومه وفضل يدعيهم.
-
-ربنا رفع إدريس مكان عالي زي ما قال في القرآن: "ورفعناه مكاناً عليا". وكان صادق صبور كتير العبادة والذكر.
-
-ربنا ذكر إدريس في القرآن في سورة مريم: "واذكر في الكتاب إدريس إنه كان صديقاً نبياً، ورفعناه مكاناً علياً".`,
-        lessons: [
-          'العلم والتعلم من صفات الأنبياء',
-          'الصبر على الدعوة مهما كانت الصعوبات',
-          'ربنا بيرفع درجات الصالحين',
+        quranVerses: [
+          {
+            arabic: 'وَاذْكُرْ فِي الْكِتَابِ إِدْرِيسَ ۚ إِنَّهُ كَانَ صِدِّيقًا نَّبِيًّا',
+            translation: 'And mention in the Book, Idris. Indeed, he was a truthful prophet.',
+            reference: 'سورة مريم - الآية 56'
+          },
+          {
+            arabic: 'وَرَفَعْنَاهُ مَكَانًا عَلِيًّا',
+            translation: 'And We raised him to a high station.',
+            reference: 'سورة مريم - الآية 57'
+          },
+        ],
+        hadiths: [
+          {
+            text: 'مررت على إدريس ليلة أسري بي في السماء الرابعة',
+            source: 'رواه البخاري ومسلم'
+          },
         ],
       },
       en: {
-        title: 'The Story of Prophet Idris',
-        content: `Prophet Idris (peace be upon him) was one of the earliest prophets after Adam. He was from the lineage of Shith (Seth), son of Adam, and Allah granted him vast knowledge and great wisdom.
+        title: 'The Story of Prophet Idris - The First to Write with a Pen',
+        content: `Prophet Idris (peace be upon him) was one of the earliest prophets after Adam. He was the grandfather of Noah. He was a truthful prophet whom Allah raised to a high station.
 
-Idris was the first to write with a pen, and the first to sew and wear clothes - people before him wore animal skins. He taught his people writing, mathematics, and astronomy.
+Idris was the first to write with a pen, and the first to sew clothes and wear them, as people before him used to wear animal skins. Allah taught him the knowledge of astronomy, mathematics, and writing.
 
-He called his people to worship Allah alone and abandon idol worship. Some believed while others rejected. He remained patient despite his people's harm and continued his mission.
+Allah commanded him to call his people to monotheism and abandon idol worship. He called them to Allah and enjoined what was good and forbade what was evil.
 
-Allah raised Idris to a high station as He said: "And We raised him to a high station." He was truthful, patient, and devoted to worship and remembrance.
+A few of his people believed, but most rejected him and persisted in their disbelief. So Idris isolated himself for worship.
 
-Idris is mentioned in the Quran in Surah Maryam: "And mention in the Book, Idris. Indeed, he was a man of truth and a prophet. And We raised him to a high station."`,
+Allah raised him to a high station as an honor for his patience and sincerity in worship and calling to Allah.`,
         lessons: [
-          'Knowledge and learning are attributes of prophets',
-          'Patience in calling to truth despite difficulties',
-          'Allah elevates the righteous to high ranks',
+          'Knowledge is one of the greatest blessings Allah grants His servants',
+          'Patience in calling to Allah is required even when believers are few',
+          'Isolating oneself for worship when people are corrupt is praiseworthy',
+          'Allah elevates those who are sincere in worship',
+          'Calling to Allah is every Muslim\'s responsibility',
         ],
-      },
-      fr: {
-        title: 'L\'Histoire du Prophète Idris',
-        content: `Le Prophète Idris (paix sur lui) était l'un des premiers prophètes après Adam. Il était de la lignée de Shith (Seth), fils d'Adam, et Allah lui a accordé une vaste connaissance et une grande sagesse.
-
-Idris fut le premier à écrire avec un stylo, et le premier à coudre et porter des vêtements - les gens avant lui portaient des peaux d'animaux. Il a enseigné à son peuple l'écriture, les mathématiques et l'astronomie.
-
-Il a appelé son peuple à adorer Allah seul et à abandonner l'idolâtrie. Certains ont cru tandis que d'autres ont rejeté. Il est resté patient malgré le mal de son peuple et a continué sa mission.
-
-Allah a élevé Idris à un haut rang comme Il l'a dit : « Et Nous l'avons élevé à un haut rang. » Il était véridique, patient et dévoué au culte et au souvenir.
-
-Idris est mentionné dans le Coran dans la sourate Maryam : « Et mentionne dans le Livre Idris. C'était un véridique et un prophète. Et Nous l'avons élevé à un haut rang. »`,
-        lessons: [
-          'La connaissance et l\'apprentissage sont des attributs des prophètes',
-          'La patience dans l\'appel à la vérité malgré les difficultés',
-          'Allah élève les justes à des rangs élevés',
-        ],
-      },
-      ur: {
-        title: 'حضرت ادریس علیہ السلام کی کہانی',
-        content: `حضرت ادریس علیہ السلام حضرت آدم کے بعد ابتدائی انبیاء میں سے تھے۔ وہ شیث بن آدم کی نسل سے تھے، اور اللہ نے انہیں وسیع علم اور عظیم حکمت عطا کی۔
-
-ادریس پہلے شخص تھے جنہوں نے قلم سے لکھا، اور پہلے جنہوں نے کپڑے سلائے اور پہنے - ان سے پہلے لوگ جانوروں کی کھالیں پہنتے تھے۔ انہوں نے اپنی قوم کو لکھنا، حساب اور علم فلکیات سکھایا۔
-
-انہوں نے اپنی قوم کو صرف اللہ کی عبادت کی دعوت دی اور بت پرستی چھوڑنے کو کہا۔ کچھ نے ایمان لایا جبکہ دوسروں نے انکار کیا۔ وہ اپنی قوم کی تکلیفوں کے باوجود صبر سے رہے اور اپنا مشن جاری رکھا۔
-
-اللہ نے ادریس کو بلند مقام پر اٹھایا جیسا کہ فرمایا: "اور ہم نے اسے بلند مقام پر اٹھایا۔" وہ سچے، صابر اور عبادت و ذکر میں مشغول رہنے والے تھے۔
-
-ادریس کا ذکر قرآن میں سورہ مریم میں آیا ہے: "اور کتاب میں ادریس کا ذکر کرو۔ بیشک وہ سچے اور نبی تھے۔ اور ہم نے اسے بلند مقام پر اٹھایا۔"`,
-        lessons: [
-          'علم اور سیکھنا انبیاء کی صفات ہیں',
-          'مشکلات کے باوجود حق کی دعوت میں صبر',
-          'اللہ نیک لوگوں کے درجات بلند کرتا ہے',
-        ],
-      },
-      id: {
-        title: 'Kisah Nabi Idris',
-        content: `Nabi Idris (alaihissalam) adalah salah satu nabi paling awal setelah Adam. Beliau berasal dari keturunan Syits (Shith) putra Adam, dan Allah menganugerahinya ilmu yang luas dan hikmah yang agung.
-
-Idris adalah orang pertama yang menulis dengan pena, dan orang pertama yang menjahit dan mengenakan pakaian - orang-orang sebelumnya memakai kulit binatang. Beliau mengajarkan umatnya menulis, matematika, dan astronomi.
-
-Beliau menyeru kaumnya untuk menyembah Allah saja dan meninggalkan penyembahan berhala. Sebagian beriman sementara yang lain menolak. Beliau tetap sabar meskipun mendapat gangguan dari kaumnya dan terus menjalankan misinya.
-
-Allah mengangkat Idris ke tempat yang tinggi sebagaimana firman-Nya: "Dan Kami angkat dia ke tempat yang tinggi." Beliau adalah orang yang jujur, sabar, dan tekun dalam ibadah dan zikir.
-
-Idris disebutkan dalam Al-Quran dalam Surah Maryam: "Dan ceritakanlah kisah Idris di dalam Kitab. Sesungguhnya dia adalah seorang yang sangat membenarkan dan seorang nabi. Dan Kami telah mengangkatnya ke tempat yang tinggi."`,
-        lessons: [
-          'Ilmu dan pembelajaran adalah sifat para nabi',
-          'Kesabaran dalam berdakwah meskipun ada kesulitan',
-          'Allah mengangkat derajat orang-orang saleh',
-        ],
-      },
-      tr: {
-        title: 'Hz. İdris\'in Kıssası',
-        content: `Hz. İdris (aleyhisselam), Adem'den sonraki ilk peygamberlerden biriydi. Adem'in oğlu Şit'in soyundandı ve Allah ona geniş ilim ve büyük hikmet verdi.
-
-İdris, kalemle yazan ilk kişiydi ve elbise dikip giyen ilk kişiydi - önceki insanlar hayvan derileri giyerdi. Kavmine yazı, matematik ve astronomi öğretti.
-
-Kavmini yalnız Allah'a ibadet etmeye ve putlara tapmayı bırakmaya çağırdı. Bazıları iman etti, bazıları reddetti. Kavminin eziyetine rağmen sabırlı kaldı ve görevine devam etti.
-
-Allah, İdris'i yüce bir makama yükseltti: "Onu yüce bir mekâna yükselttik." O, doğru sözlü, sabırlı ve ibadete düşkün biriydi.
-
-İdris, Kur'an'da Meryem Suresi'nde anılır: "Kitapta İdris'i de an. Gerçekten o, dosdoğru bir peygamberdi. Onu yüce bir makama yükselttik."`,
-        lessons: [
-          'İlim ve öğrenme peygamberlerin sıfatlarındandır',
-          'Zorluklara rağmen hakka davette sabır',
-          'Allah salihlerin derecelerini yükseltir',
+        quranVerses: [
+          {
+            arabic: 'وَاذْكُرْ فِي الْكِتَابِ إِدْرِيسَ ۚ إِنَّهُ كَانَ صِدِّيقًا نَّبِيًّا',
+            translation: 'And mention in the Book, Idris. Indeed, he was a truthful prophet.',
+            reference: 'Surah Maryam - Verse 56'
+          },
         ],
       },
     },
   },
+
+  // 3. نوح عليه السلام
   {
     id: 'nuh',
     name: { ar: 'نوح', en: 'Noah', fr: 'Noé', ur: 'نوح', id: 'Nuh', tr: 'Nuh' },
-    era: 'قبل الطوفان',
+    era: 'الطوفان العظيم',
     order: 3,
     stories: {
       ar: {
-        title: 'قصة نوح عليه السلام والطوفان العظيم',
-        content: `نوح عليه السلام هو أول رسول أرسله الله إلى أهل الأرض بعد أن انتشر الشرك والفساد. دعا قومه ألف سنة إلا خمسين عاماً كما ذكر القرآن.
+        title: 'قصة نوح عليه السلام - شيخ المرسلين',
+        content: `نوح عليه السلام هو أول رسول أرسله الله إلى أهل الأرض بعد أن انتشر الشرك والفساد. لبث في قومه ألف سنة إلا خمسين عاماً يدعوهم إلى الله.
 
-بذل نوح جهوداً عظيمة في دعوة قومه، فكان يدعوهم ليلاً ونهاراً، سراً وجهراً، ولكنهم أصروا على كفرهم واستكبارهم.
+بدأ قوم نوح بعبادة الأصنام وهي: ود، وسواع، ويغوث، ويعوق، ونسرا. وكانت أسماء رجال صالحين، فلما ماتوا صنعوا لهم تماثيل ثم عبدوها من دون الله.
 
-لما يئس نوح من إيمان قومه، دعا الله عليهم فاستجاب الله دعاءه. أمر الله نوحاً أن يصنع السفينة، وكان قومه يسخرون منه كلما مروا عليه.
+دعا نوح قومه بكل الوسائل: ليلاً ونهاراً، سراً وجهاراً. أنذرهم عذاب الله ووعدهم بالمغفرة إن آمنوا. لكنهم كذبوه واستهزأوا به.
 
-عندما جاء أمر الله وفار التنور، حمل نوح في السفينة من كل زوجين اثنين ومن آمن معه وكانوا قليلاً. لم يؤمن ابنه وزوجته فكانا من الهالكين.
+أوحى الله إلى نوح أن يصنع السفينة. فصنعها بأمر الله، وكان قومه يسخرون منه كلما مروا عليه.
 
-أغرق الله الكافرين بالطوفان العظيم، ونجّى نوحاً ومن معه. استوت السفينة على جبل الجودي، وبدأت البشرية من جديد من نسل نوح عليه السلام.`,
+لما اكتملت السفينة، أمره الله أن يحمل فيها من كل زوجين اثنين ومن آمن معه. وفار التنور وانهمر المطر، وارتفع الماء حتى غطى الجبال.
+
+غرق الكافرون ومنهم ابن نوح الذي رفض أن يركب مع أبيه. نجا نوح ومن معه، واستقرت السفينة على جبل الجودي.`,
         lessons: [
           'الصبر على الدعوة مهما طالت المدة',
-          'النسب لا ينفع بدون الإيمان',
-          'الله ينصر أولياءه مهما قل عددهم',
-          'الاستهزاء بالدين عاقبته وخيمة',
+          'التنويع في أساليب الدعوة',
+          'العلاقة بالله أهم من روابط القرابة',
+          'عاقبة المستكبرين الهلاك',
+          'الله ينجي المؤمنين مهما اشتدت المحن',
+          'التوكل على الله في أصعب الظروف',
         ],
-      },
-      'ar-eg': {
-        title: 'حكاية سيدنا نوح والطوفان العظيم',
-        content: `سيدنا نوح عليه السلام هو أول رسول بعته ربنا لأهل الأرض بعد ما الشرك والفساد انتشروا. فضل يدعي قومه ألف سنة إلا خمسين سنة زي ما القرآن قال.
-
-سيدنا نوح بذل مجهود كبير في دعوة قومه، كان بيدعيهم بالليل والنهار، في السر والعلن، بس هم أصروا على كفرهم وتكبرهم.
-
-لما سيدنا نوح يئس من إيمان قومه، دعا ربنا عليهم وربنا استجاب. ربنا أمر نوح يصنع السفينة، وقومه كانوا بيتريقوا عليه كل ما يعدوا من جنبه.
-
-لما جه أمر ربنا وفار التنور، نوح حمل في السفينة من كل نوع زوجين واللي آمنوا معاه وكانوا قليلين. ابنه ومراته ما آمنوش فكانوا من الهالكين.
-
-ربنا غرّق الكفار بالطوفان العظيم، ونجّى نوح واللي معاه. السفينة استقرت على جبل الجودي، والبشرية بدأت من جديد من نسل نوح عليه السلام.`,
-        lessons: [
-          'الصبر على الدعوة مهما طالت المدة',
-          'القرابة مش هتنفع من غير إيمان',
-          'ربنا بينصر أولياءه مهما كانوا قليلين',
-          'الاستهزاء بالدين عاقبته وحشة',
+        quranVerses: [
+          {
+            arabic: 'وَلَقَدْ أَرْسَلْنَا نُوحًا إِلَىٰ قَوْمِهِ فَلَبِثَ فِيهِمْ أَلْفَ سَنَةٍ إِلَّا خَمْسِينَ عَامًا',
+            translation: 'And We certainly sent Noah to his people, and he remained among them a thousand years minus fifty years.',
+            reference: 'سورة العنكبوت - الآية 14'
+          },
+          {
+            arabic: 'قِيلَ يَا نُوحُ اهْبِطْ بِسَلَامٍ مِّنَّا وَبَرَكَاتٍ عَلَيْكَ',
+            translation: 'It was said: O Noah, disembark with peace from Us and blessings.',
+            reference: 'سورة هود - الآية 48'
+          },
+        ],
+        hadiths: [
+          {
+            text: 'نوح أول رسول بعثه الله إلى أهل الأرض',
+            source: 'رواه البخاري'
+          },
         ],
       },
       en: {
-        title: 'The Story of Prophet Noah and the Great Flood',
-        content: `Prophet Noah (peace be upon him) was the first messenger sent by Allah to the people of Earth after polytheism and corruption had spread. He called his people for 950 years as mentioned in the Quran.
+        title: 'The Story of Prophet Noah - The Sheikh of Messengers',
+        content: `Prophet Noah (peace be upon him) was the first messenger sent by Allah to the people of Earth after polytheism and corruption spread. He remained among his people for 950 years calling them to Allah.
 
-Noah made tremendous efforts in calling his people. He would call them night and day, secretly and openly, but they persisted in their disbelief and arrogance.
+Noah's people began worshipping idols named Wadd, Suwa', Yaghuth, Ya'uq, and Nasr. These were originally names of righteous men, and when they died, statues were made of them and eventually worshipped.
 
-When Noah despaired of his people's faith, he prayed to Allah against them and Allah answered his prayer. Allah commanded Noah to build the ark, and his people would mock him whenever they passed by.
+Noah called his people by all means: day and night, secretly and publicly. He warned them of Allah's punishment and promised forgiveness if they believed. But they rejected and mocked him.
 
-When Allah's command came and the oven overflowed, Noah carried in the ark a pair from every species and those who believed with him - they were few. His son and wife did not believe and were among those who perished.
+Allah revealed to Noah to build the Ark. He built it as Allah commanded, while his people mocked him whenever they passed by.
 
-Allah drowned the disbelievers with the great flood and saved Noah and those with him. The ark settled on Mount Judi, and humanity began anew from Noah's descendants.`,
+When the Ark was complete, Allah commanded him to carry pairs of every creature and those who believed with him. The oven burst forth and rain poured down, and water rose until it covered the mountains.
+
+The disbelievers drowned, including Noah's son who refused to board with his father. Noah and those with him were saved, and the Ark came to rest on Mount Judi.`,
         lessons: [
-          'Patience in calling to truth regardless of duration',
-          'Lineage does not benefit without faith',
-          'Allah supports His allies no matter how few',
-          'Mocking religion has dire consequences',
+          'Patience in calling to Allah no matter how long it takes',
+          'Varying the methods of calling to Allah',
+          'Relationship with Allah is more important than family ties',
+          'The arrogant face destruction',
+          'Allah saves believers no matter how severe the trials',
+          'Trust in Allah in the most difficult circumstances',
         ],
-      },
-      fr: {
-        title: 'L\'Histoire du Prophète Noé et le Grand Déluge',
-        content: `Le Prophète Noé (paix sur lui) fut le premier messager envoyé par Allah aux habitants de la Terre après que le polythéisme et la corruption se soient répandus. Il a appelé son peuple pendant 950 ans comme mentionné dans le Coran.
-
-Noé a fait d'énormes efforts pour appeler son peuple. Il les appelait nuit et jour, secrètement et ouvertement, mais ils ont persisté dans leur mécréance et leur arrogance.
-
-Quand Noé a désespéré de la foi de son peuple, il a prié Allah contre eux et Allah a exaucé sa prière. Allah a ordonné à Noé de construire l'arche, et son peuple se moquait de lui chaque fois qu'ils passaient.
-
-Quand le commandement d'Allah est venu et que le four a débordé, Noé a embarqué dans l'arche un couple de chaque espèce et ceux qui avaient cru avec lui - ils étaient peu nombreux. Son fils et sa femme n'ont pas cru et ont péri.
-
-Allah a noyé les mécréants par le grand déluge et a sauvé Noé et ceux qui étaient avec lui. L'arche s'est posée sur le mont Judi, et l'humanité a recommencé à partir des descendants de Noé.`,
-        lessons: [
-          'Patience dans l\'appel à la vérité quelle que soit la durée',
-          'La lignée ne profite pas sans la foi',
-          'Allah soutient Ses alliés peu importe leur nombre',
-          'Se moquer de la religion a des conséquences graves',
-        ],
-      },
-      ur: {
-        title: 'حضرت نوح علیہ السلام اور عظیم طوفان کی کہانی',
-        content: `حضرت نوح علیہ السلام پہلے رسول تھے جنہیں اللہ نے زمین کے لوگوں کی طرف بھیجا جب شرک اور فساد پھیل گیا تھا۔ انہوں نے اپنی قوم کو 950 سال تک دعوت دی جیسا کہ قرآن میں ذکر ہے۔
-
-نوح نے اپنی قوم کو بلانے میں بہت محنت کی۔ وہ رات دن، خفیہ اور کھلے عام انہیں بلاتے رہے، لیکن وہ اپنے کفر اور تکبر پر قائم رہے۔
-
-جب نوح اپنی قوم کے ایمان سے مایوس ہوئے، تو انہوں نے اللہ سے ان کے خلاف دعا کی اور اللہ نے قبول فرمایا۔ اللہ نے نوح کو کشتی بنانے کا حکم دیا، اور جب بھی ان کی قوم گزرتی وہ مذاق اڑاتے۔
-
-جب اللہ کا حکم آیا اور تنور ابل پڑا، نوح نے کشتی میں ہر نوع کا ایک جوڑا اور ایمان لانے والوں کو سوار کیا - وہ کم تھے۔ ان کا بیٹا اور بیوی ایمان نہ لائے اور ہلاک ہونے والوں میں شامل تھے۔
-
-اللہ نے کافروں کو عظیم طوفان سے غرق کیا اور نوح اور ان کے ساتھیوں کو بچایا۔ کشتی جبل جودی پر ٹھہری، اور نوح کی نسل سے انسانیت نے نئی شروعات کی۔`,
-        lessons: [
-          'حق کی دعوت میں صبر چاہے کتنا ہی وقت لگے',
-          'نسب ایمان کے بغیر فائدہ نہیں دیتا',
-          'اللہ اپنے دوستوں کی مدد کرتا ہے چاہے وہ کم ہوں',
-          'دین کا مذاق اڑانے کا انجام برا ہے',
-        ],
-      },
-      id: {
-        title: 'Kisah Nabi Nuh dan Banjir Besar',
-        content: `Nabi Nuh (alaihissalam) adalah rasul pertama yang diutus Allah kepada penduduk bumi setelah kemusyrikan dan kerusakan menyebar. Beliau menyeru kaumnya selama 950 tahun sebagaimana disebutkan dalam Al-Quran.
-
-Nuh berusaha keras dalam menyeru kaumnya. Beliau menyeru mereka siang malam, secara rahasia dan terang-terangan, tetapi mereka tetap dalam kekufuran dan kesombongan mereka.
-
-Ketika Nuh berputus asa dari keimanan kaumnya, beliau berdoa kepada Allah melawan mereka dan Allah mengabulkan doanya. Allah memerintahkan Nuh untuk membangun bahtera, dan kaumnya mengejeknya setiap kali mereka lewat.
-
-Ketika perintah Allah datang dan dapur meluap, Nuh mengangkut dalam bahtera sepasang dari setiap jenis dan orang-orang yang beriman bersamanya - mereka sedikit. Putra dan istrinya tidak beriman dan termasuk yang binasa.
-
-Allah menenggelamkan orang-orang kafir dengan banjir besar dan menyelamatkan Nuh dan orang-orang bersamanya. Bahtera berlabuh di Gunung Judi, dan umat manusia dimulai kembali dari keturunan Nuh.`,
-        lessons: [
-          'Kesabaran dalam berdakwah berapa pun lamanya',
-          'Nasab tidak bermanfaat tanpa iman',
-          'Allah mendukung wali-Nya walau sedikit jumlahnya',
-          'Mengejek agama berakibat buruk',
-        ],
-      },
-      tr: {
-        title: 'Hz. Nuh\'un Kıssası ve Büyük Tufan',
-        content: `Hz. Nuh (aleyhisselam), şirk ve bozgunculuk yayıldıktan sonra Allah'ın yeryüzü insanlarına gönderdiği ilk rasuldür. Kur'an'da belirtildiği gibi 950 yıl kavmini davet etti.
-
-Nuh, kavmini çağırmakta büyük çaba gösterdi. Onları gece gündüz, gizli ve açık çağırıyordu ama onlar küfür ve kibirlerinde ısrar ettiler.
-
-Nuh kavminin imanından ümidini kesince, Allah'a onlara karşı dua etti ve Allah duasını kabul etti. Allah, Nuh'a gemiyi yapmasını emretti ve kavmi her geçtiklerinde onunla alay ediyorlardı.
-
-Allah'ın emri gelip tandır kaynadığında, Nuh gemiye her türden bir çift ve onunla birlikte iman edenleri aldı - sayıları azdı. Oğlu ve karısı iman etmedi ve helak olanlardan oldular.
-
-Allah, kafirleri büyük tufanla boğdu ve Nuh'u ve beraberindekileri kurtardı. Gemi Cudi Dağı'na oturdu ve insanlık Nuh'un soyundan yeniden başladı.`,
-        lessons: [
-          'Ne kadar uzun sürerse sürsün davette sabır',
-          'Soy, iman olmadan fayda vermez',
-          'Allah, az da olsalar dostlarına yardım eder',
-          'Dinle alay etmenin sonu kötüdür',
+        quranVerses: [
+          {
+            arabic: 'وَلَقَدْ أَرْسَلْنَا نُوحًا إِلَىٰ قَوْمِهِ فَلَبِثَ فِيهِمْ أَلْفَ سَنَةٍ إِلَّا خَمْسِينَ عَامًا',
+            translation: 'And We certainly sent Noah to his people, and he remained among them a thousand years minus fifty years.',
+            reference: 'Surah Al-Ankabut - Verse 14'
+          },
         ],
       },
     },
   },
-  {
-    id: 'ibrahim',
-    name: { ar: 'إبراهيم', en: 'Abraham', fr: 'Abraham', ur: 'ابراہیم', id: 'Ibrahim', tr: 'İbrahim' },
-    era: 'بابل والعراق',
-    order: 4,
-    stories: {
-      ar: {
-        title: 'قصة إبراهيم عليه السلام - خليل الله',
-        content: `إبراهيم عليه السلام هو خليل الرحمن، أبو الأنبياء، ولد في بابل بالعراق في قوم يعبدون الأصنام والكواكب.
 
-منذ صغره بدأ إبراهيم يتفكر في خلق السماوات والأرض، فنظر إلى الكوكب فقال هذا ربي، فلما أفل قال لا أحب الآفلين، ثم رأى القمر ثم الشمس وكلما أفلا علم أنها ليست بآلهة.
-
-تحدى إبراهيم أباه وقومه في عبادة الأصنام، وحطم الأصنام وترك كبيرهم ليسألوه. غضب قومه وقرروا إحراقه، لكن الله جعل النار برداً وسلاماً عليه.
-
-هاجر إبراهيم مع زوجته سارة وابن أخيه لوط. رُزق بإسماعيل من هاجر ثم بإسحاق من سارة. أُمر بذبح إسماعيل فلما همّ بذلك فداه الله بذبح عظيم.
-
-بنى إبراهيم وإسماعيل الكعبة المشرفة، ودعا الله أن يبعث في ذريته رسولاً فاستجاب الله وبعث محمداً صلى الله عليه وسلم من ذريته.`,
-        lessons: [
-          'استخدام العقل للوصول إلى الحق',
-          'التوكل على الله في مواجهة الباطل',
-          'الاستسلام لأمر الله مهما كان صعباً',
-          'الدعاء للذرية بالصلاح',
-        ],
-      },
-      'ar-eg': {
-        title: 'حكاية سيدنا إبراهيم عليه السلام - خليل الله',
-        content: `سيدنا إبراهيم عليه السلام هو خليل الرحمن، أبو الأنبياء، اتولد في بابل في العراق وسط ناس بيعبدوا الأصنام والكواكب.
-
-من وهو صغير إبراهيم ابتدى يفكر في خلق السماء والأرض، بص على الكوكب وقال ده ربي، ولما غرب قال أنا مش بحب اللي بيغيبوا، وبعدين شاف القمر والشمس وكل ما يغيبوا عرف إنهم مش آلهة.
-
-إبراهيم تحدى أبوه وقومه في عبادة الأصنام، وكسّر الأصنام وسابلهم الكبير عشان يسألوه. قومه زعلوا وقرروا يحرقوه، بس ربنا خلّى النار تبقى برد وسلام عليه.
-
-إبراهيم هاجر مع مراته سارة وابن أخوه لوط. ربنا رزقه بإسماعيل من هاجر وبعدين إسحاق من سارة. ربنا أمره يدبح إسماعيل، ولما همّ يدبحه ربنا فداه بذبح عظيم.
-
-إبراهيم وإسماعيل بنوا الكعبة، ودعا ربنا يبعت في ذريته رسول، وربنا استجاب وبعت محمد صلى الله عليه وسلم من ذريته.`,
-        lessons: [
-          'استخدم عقلك عشان توصل للحق',
-          'توكل على ربنا في مواجهة الباطل',
-          'سلّم لأمر ربنا مهما كان صعب',
-          'ادعي لولادك بالصلاح',
-        ],
-      },
-      en: {
-        title: 'The Story of Prophet Abraham - Friend of Allah',
-        content: `Prophet Abraham (peace be upon him) is the Friend of the Most Merciful, Father of the Prophets. He was born in Babylon, Iraq, among people who worshipped idols and celestial bodies.
-
-From his youth, Abraham pondered the creation of the heavens and earth. He looked at a star and said "This is my Lord," but when it set he said "I do not love things that set." Then he saw the moon and sun, and each time they set, he knew they were not gods.
-
-Abraham challenged his father and people in their idol worship. He smashed the idols and left the largest one so they could ask it. His people became angry and decided to burn him, but Allah made the fire cool and safe for him.
-
-Abraham migrated with his wife Sarah and his nephew Lot. He was blessed with Ishmael from Hagar, then Isaac from Sarah. He was commanded to sacrifice Ishmael, but when he was about to do so, Allah ransomed him with a great sacrifice.
-
-Abraham and Ishmael built the Holy Kaaba, and he prayed that Allah send a messenger from his descendants. Allah answered and sent Muhammad (peace be upon him) from his lineage.`,
-        lessons: [
-          'Using reason to reach the truth',
-          'Trusting Allah when facing falsehood',
-          'Submitting to Allah\'s command however difficult',
-          'Praying for righteous offspring',
-        ],
-      },
-      fr: {
-        title: 'L\'Histoire du Prophète Abraham - Ami d\'Allah',
-        content: `Le Prophète Abraham (paix sur lui) est l'Ami du Très Miséricordieux, le Père des Prophètes. Il est né à Babylone, en Irak, parmi un peuple qui adorait les idoles et les astres.
-
-Dès sa jeunesse, Abraham méditait sur la création des cieux et de la terre. Il regarda une étoile et dit « Voilà mon Seigneur », mais quand elle disparut, il dit « Je n'aime pas les choses qui disparaissent. » Puis il vit la lune et le soleil, et chaque fois qu'ils disparaissaient, il sut qu'ils n'étaient pas des dieux.
-
-Abraham défia son père et son peuple dans leur adoration des idoles. Il brisa les idoles et laissa la plus grande pour qu'ils puissent l'interroger. Son peuple se mit en colère et décida de le brûler, mais Allah rendit le feu frais et paisible pour lui.
-
-Abraham émigra avec son épouse Sarah et son neveu Lot. Il fut béni d'Ismaël de Hagar, puis d'Isaac de Sarah. Il reçut l'ordre de sacrifier Ismaël, mais quand il s'apprêtait à le faire, Allah le racheta avec un grand sacrifice.
-
-Abraham et Ismaël construisirent la Sainte Kaaba, et il pria Allah d'envoyer un messager parmi ses descendants. Allah exauça et envoya Muhammad (paix sur lui) de sa lignée.`,
-        lessons: [
-          'Utiliser la raison pour atteindre la vérité',
-          'Faire confiance à Allah face au mensonge',
-          'Se soumettre à l\'ordre d\'Allah même si c\'est difficile',
-          'Prier pour une descendance pieuse',
-        ],
-      },
-      ur: {
-        title: 'حضرت ابراہیم علیہ السلام کی کہانی - خلیل اللہ',
-        content: `حضرت ابراہیم علیہ السلام رحمٰن کے خلیل اور انبیاء کے باپ ہیں۔ وہ عراق کے شہر بابل میں پیدا ہوئے جہاں لوگ بتوں اور ستاروں کی پوجا کرتے تھے۔
-
-بچپن سے ہی ابراہیم آسمانوں اور زمین کی تخلیق پر غور کرتے تھے۔ انہوں نے ایک ستارے کو دیکھا اور کہا "یہ میرا رب ہے" لیکن جب وہ ڈوب گیا تو کہا "میں ڈوبنے والوں کو پسند نہیں کرتا۔" پھر انہوں نے چاند اور سورج دیکھا، اور جب بھی وہ غائب ہوتے، جان لیتے کہ یہ خدا نہیں ہیں۔
-
-ابراہیم نے اپنے والد اور قوم کو بت پرستی میں چیلنج کیا۔ انہوں نے بت توڑ دیے اور بڑے بت کو چھوڑ دیا تاکہ اس سے پوچھیں۔ قوم ناراض ہوئی اور انہیں جلانے کا فیصلہ کیا، لیکن اللہ نے آگ کو ٹھنڈا اور سلامتی بنا دیا۔
-
-ابراہیم اپنی بیوی سارہ اور بھتیجے لوط کے ساتھ ہجرت کر گئے۔ انہیں ہاجرہ سے اسماعیل اور سارہ سے اسحاق کی نعمت ملی۔ انہیں اسماعیل کو قربان کرنے کا حکم ملا، لیکن جب وہ کرنے لگے تو اللہ نے ایک بڑی قربانی سے فدیہ دیا۔
-
-ابراہیم اور اسماعیل نے کعبہ تعمیر کیا، اور دعا کی کہ ان کی نسل میں رسول بھیجے۔ اللہ نے قبول کیا اور محمد صلی اللہ علیہ وسلم کو ان کی نسل سے بھیجا۔`,
-        lessons: [
-          'حق تک پہنچنے کے لیے عقل کا استعمال',
-          'باطل کا سامنا کرتے ہوئے اللہ پر توکل',
-          'اللہ کے حکم کی تعمیل چاہے مشکل ہو',
-          'اولاد کے لیے نیکی کی دعا',
-        ],
-      },
-      id: {
-        title: 'Kisah Nabi Ibrahim - Kekasih Allah',
-        content: `Nabi Ibrahim (alaihissalam) adalah Kekasih Yang Maha Penyayang, Bapak Para Nabi. Beliau lahir di Babilonia, Irak, di tengah kaum yang menyembah berhala dan benda-benda langit.
-
-Sejak muda, Ibrahim merenungi penciptaan langit dan bumi. Ia melihat bintang dan berkata "Inilah Tuhanku," tetapi ketika bintang itu tenggelam ia berkata "Aku tidak suka yang tenggelam." Kemudian ia melihat bulan dan matahari, dan setiap kali tenggelam, ia tahu mereka bukan tuhan.
-
-Ibrahim menentang ayah dan kaumnya dalam penyembahan berhala. Ia menghancurkan berhala-berhala dan meninggalkan yang terbesar agar mereka bisa bertanya kepadanya. Kaumnya marah dan memutuskan untuk membakarnya, tetapi Allah menjadikan api itu sejuk dan selamat baginya.
-
-Ibrahim berhijrah bersama istrinya Sarah dan keponakannya Luth. Ia dikaruniai Ismail dari Hajar, kemudian Ishaq dari Sarah. Ia diperintahkan untuk menyembelih Ismail, tetapi ketika akan melakukannya, Allah menebusnya dengan sembelihan yang agung.
-
-Ibrahim dan Ismail membangun Ka'bah, dan ia berdoa agar Allah mengutus seorang rasul dari keturunannya. Allah mengabulkan dan mengutus Muhammad (shallallahu alaihi wasallam) dari keturunannya.`,
-        lessons: [
-          'Menggunakan akal untuk mencapai kebenaran',
-          'Bertawakkal kepada Allah saat menghadapi kebatilan',
-          'Tunduk pada perintah Allah walau sulit',
-          'Mendoakan keturunan yang saleh',
-        ],
-      },
-      tr: {
-        title: 'Hz. İbrahim\'in Kıssası - Allah\'ın Dostu',
-        content: `Hz. İbrahim (aleyhisselam), Rahman'ın Halil'i (dostu) ve Peygamberlerin Babasıdır. Putlara ve gök cisimlerine tapan bir toplumda, Irak'ın Babil şehrinde doğdu.
-
-İbrahim, gençliğinden itibaren göklerin ve yerin yaratılışını düşünürdü. Bir yıldıza baktı ve "Bu benim Rabbim" dedi, ama batınca "Ben batanları sevmem" dedi. Sonra ayı ve güneşi gördü ve her battıklarında bunların tanrı olmadığını anladı.
-
-İbrahim, babasına ve kavmine put ibadetinde meydan okudu. Putları kırdı ve sorabilsinler diye en büyüğünü bıraktı. Kavmi öfkelendi ve onu yakmaya karar verdi, ama Allah ateşi onun için serin ve selamet kıldı.
-
-İbrahim, eşi Sara ve yeğeni Lut ile hicret etti. Hacer'den İsmail, Sara'dan İshak ile nimetlendi. İsmail'i kurban etmesi emredildi ama yapacakken Allah onu büyük bir kurbanla fidye kıldı.
-
-İbrahim ve İsmail Kabe'yi inşa etti ve soyundan bir peygamber göndermesi için Allah'a dua etti. Allah kabul etti ve soyundan Muhammed'i (sallallahu aleyhi ve sellem) gönderdi.`,
-        lessons: [
-          'Hakikate ulaşmak için aklı kullanmak',
-          'Batıla karşı Allah\'a tevekkül etmek',
-          'Ne kadar zor olsa da Allah\'ın emrine teslim olmak',
-          'Salih nesil için dua etmek',
-        ],
-      },
-    },
-  },
-  {
-    id: 'yusuf',
-    name: { ar: 'يوسف', en: 'Joseph', fr: 'Joseph', ur: 'یوسف', id: 'Yusuf', tr: 'Yusuf' },
-    era: 'مصر',
-    order: 5,
-    stories: {
-      ar: {
-        title: 'قصة يوسف عليه السلام - أحسن القصص',
-        content: `يوسف عليه السلام ابن يعقوب ابن إسحاق ابن إبراهيم. رأى في منامه أحد عشر كوكباً والشمس والقمر يسجدون له، فأخبر أباه فحذره من إخوته.
-
-حسد إخوة يوسف أخاهم لمحبة أبيهم له، فتآمروا عليه وألقوه في الجب، وأخبروا أباهم أن الذئب أكله.
-
-التقطته قافلة وباعوه في مصر لعزيز مصر. راودته امرأة العزيز عن نفسه فاستعصم، فألقي في السجن ظلماً.
-
-في السجن فسّر رؤيا للملك فأخرجه وجعله على خزائن الأرض. جاء إخوته يطلبون الطعام فعرفهم ولم يعرفوه.
-
-بعد أحداث كثيرة اعترف إخوته بخطئهم وجاء أبواه وإخوته وخروا له سجداً تحقيقاً لرؤياه. عفا يوسف عن إخوته وقال: "لا تثريب عليكم اليوم يغفر الله لكم".`,
-        lessons: [
-          'الصبر على البلاء يعقبه الفرج',
-          'العفو عند المقدرة من شيم الكرام',
-          'الحسد يؤدي إلى الظلم والندم',
-          'الله يحفظ عباده الصالحين',
-        ],
-      },
-      en: {
-        title: 'The Story of Prophet Joseph - The Best of Stories',
-        content: `Prophet Joseph (peace be upon him) was the son of Jacob, son of Isaac, son of Abraham. He saw in a dream eleven stars, the sun, and the moon prostrating to him. He told his father, who warned him about his brothers.
-
-Joseph's brothers were jealous of him because of their father's love for him. They conspired against him, threw him into a well, and told their father that a wolf had eaten him.
-
-A caravan picked him up and sold him in Egypt to the Aziz (chief minister). The Aziz's wife tried to seduce him, but he resisted, and was unjustly imprisoned.
-
-In prison, he interpreted a dream for the king, who released him and made him in charge of the storehouses. His brothers came seeking food; he recognized them but they did not recognize him.
-
-After many events, his brothers admitted their mistake, and his parents and brothers came and prostrated to him, fulfilling his dream. Joseph forgave his brothers saying: "No blame upon you today. May Allah forgive you."`,
-        lessons: [
-          'Patience through trials leads to relief',
-          'Forgiveness when able is a noble trait',
-          'Jealousy leads to injustice and regret',
-          'Allah protects His righteous servants',
-        ],
-      },
-      fr: {
-        title: 'L\'Histoire du Prophète Joseph - Le Plus Beau des Récits',
-        content: `Le Prophète Joseph (paix sur lui) était le fils de Jacob, fils d'Isaac, fils d'Abraham. Il vit en rêve onze étoiles, le soleil et la lune se prosterner devant lui. Il en parla à son père qui le mit en garde contre ses frères.
-
-Les frères de Joseph étaient jaloux de lui à cause de l'amour de leur père pour lui. Ils complotèrent contre lui, le jetèrent dans un puits et dirent à leur père qu'un loup l'avait mangé.
-
-Une caravane le recueillit et le vendit en Égypte au ministre. La femme du ministre tenta de le séduire, mais il résista et fut injustement emprisonné.
-
-En prison, il interpréta un rêve pour le roi, qui le libéra et le mit en charge des réserves. Ses frères vinrent chercher de la nourriture ; il les reconnut mais eux ne le reconnurent pas.
-
-Après de nombreux événements, ses frères reconnurent leur erreur, et ses parents et frères vinrent se prosterner devant lui, réalisant son rêve. Joseph pardonna à ses frères en disant : « Pas de reproche sur vous aujourd'hui. Qu'Allah vous pardonne. »`,
-        lessons: [
-          'La patience dans les épreuves mène au soulagement',
-          'Le pardon quand on peut est une noble qualité',
-          'La jalousie mène à l\'injustice et au regret',
-          'Allah protège Ses serviteurs pieux',
-        ],
-      },
-      ur: {
-        title: 'حضرت یوسف علیہ السلام کی کہانی - احسن القصص',
-        content: `حضرت یوسف علیہ السلام یعقوب کے بیٹے تھے، جو اسحاق کے بیٹے تھے، جو ابراہیم کے بیٹے تھے۔ انہوں نے خواب میں گیارہ ستارے، سورج اور چاند کو اپنے سامنے سجدہ کرتے دیکھا۔ انہوں نے والد کو بتایا جنہوں نے بھائیوں سے خبردار کیا۔
-
-یوسف کے بھائی ان سے حسد کرتے تھے کیونکہ والد انہیں زیادہ محبت کرتے تھے۔ انہوں نے سازش کی، انہیں کنویں میں پھینک دیا، اور والد کو بتایا کہ بھیڑیے نے کھا لیا۔
-
-ایک قافلے نے انہیں اٹھایا اور مصر میں عزیز کو بیچ دیا۔ عزیز کی بیوی نے انہیں بہکانے کی کوشش کی، لیکن انہوں نے انکار کیا اور ناحق قید کیے گئے۔
-
-جیل میں انہوں نے بادشاہ کا خواب تعبیر کیا، جس نے انہیں رہا کیا اور خزانوں کا انچارج بنایا۔ بھائی کھانا لینے آئے؛ یوسف نے پہچان لیا لیکن انہوں نے نہیں پہچانا۔
-
-کئی واقعات کے بعد، بھائیوں نے غلطی مانی، اور والدین اور بھائی آئے اور سجدہ کیا، خواب پورا ہوا۔ یوسف نے معاف کیا اور کہا: "آج تم پر کوئی ملامت نہیں۔ اللہ تمہیں معاف کرے۔"`,
-        lessons: [
-          'آزمائشوں میں صبر راحت لاتا ہے',
-          'طاقت ہونے پر معافی بزرگوں کی صفت ہے',
-          'حسد ظلم اور پچھتاوے کی طرف لے جاتا ہے',
-          'اللہ اپنے نیک بندوں کی حفاظت کرتا ہے',
-        ],
-      },
-      id: {
-        title: 'Kisah Nabi Yusuf - Sebaik-baik Kisah',
-        content: `Nabi Yusuf (alaihissalam) adalah putra Ya'qub, putra Ishaq, putra Ibrahim. Ia bermimpi melihat sebelas bintang, matahari, dan bulan bersujud kepadanya. Ia memberitahu ayahnya yang memperingatkannya tentang saudara-saudaranya.
-
-Saudara-saudara Yusuf iri padanya karena cinta ayah mereka kepadanya. Mereka berkomplot melawannya, melemparkannya ke dalam sumur, dan memberitahu ayah mereka bahwa serigala telah memakannya.
-
-Sebuah kafilah menemukannya dan menjualnya di Mesir kepada Al-Aziz. Istri Al-Aziz mencoba merayunya, tetapi ia menolak dan dipenjara secara tidak adil.
-
-Di penjara, ia menafsirkan mimpi untuk raja, yang membebaskannya dan menjadikannya penguasa gudang. Saudara-saudaranya datang mencari makanan; ia mengenali mereka tetapi mereka tidak mengenalinya.
-
-Setelah banyak peristiwa, saudara-saudaranya mengakui kesalahan mereka, dan orang tua serta saudara-saudaranya datang bersujud kepadanya, menggenapi mimpinya. Yusuf memaafkan saudara-saudaranya: "Tidak ada cercaan atas kalian hari ini. Semoga Allah mengampuni kalian."`,
-        lessons: [
-          'Kesabaran dalam ujian membawa kelegaan',
-          'Memaafkan saat mampu adalah sifat mulia',
-          'Iri hati membawa ketidakadilan dan penyesalan',
-          'Allah melindungi hamba-hamba-Nya yang saleh',
-        ],
-      },
-      tr: {
-        title: 'Hz. Yusuf\'un Kıssası - Kıssaların En Güzeli',
-        content: `Hz. Yusuf (aleyhisselam), İbrahim'in oğlu İshak'ın oğlu Yakup'un oğluydu. Rüyasında on bir yıldız, güneş ve ayın kendisine secde ettiğini gördü. Babasına anlattı, babası kardeşleri hakkında onu uyardı.
-
-Yusuf'un kardeşleri, babalarının onu sevmesi yüzünden kıskandılar. Ona komplo kurdular, kuyuya attılar ve babalarına kurt yedi dediler.
-
-Bir kervan onu aldı ve Mısır'da Aziz'e sattı. Aziz'in karısı onu baştan çıkarmaya çalıştı ama o direndi ve haksız yere hapse atıldı.
-
-Hapishanede kral için rüya yorumladı, kral onu serbest bırakıp hazinelerin başına getirdi. Kardeşleri yiyecek aramaya geldiler; onları tanıdı ama onlar tanımadı.
-
-Birçok olaydan sonra kardeşleri hatalarını kabul etti, anne babası ve kardeşleri gelip secde ettiler, rüyası gerçekleşti. Yusuf kardeşlerini affetti: "Bugün size kınama yok. Allah sizi affetsin."`,
-        lessons: [
-          'Sıkıntılarda sabır rahata götürür',
-          'Güç varken affetmek asil bir özelliktir',
-          'Kıskançlık zulme ve pişmanlığa yol açar',
-          'Allah salih kullarını korur',
-        ],
-      },
-    },
-  },
-  {
-    id: 'musa',
-    name: { ar: 'موسى', en: 'Moses', fr: 'Moïse', ur: 'موسیٰ', id: 'Musa', tr: 'Musa' },
-    era: 'مصر وسيناء',
-    order: 6,
-    stories: {
-      ar: {
-        title: 'قصة موسى عليه السلام - كليم الله',
-        content: `موسى عليه السلام هو كليم الله، ولد في مصر في زمن فرعون الذي كان يقتل أبناء بني إسرائيل. ألهم الله أم موسى أن تضعه في تابوت وتلقيه في اليم.
-
-التقطه آل فرعون، فربّته امرأة فرعون آسية. كبر موسى في قصر فرعون، وذات يوم وجد رجلاً من بني إسرائيل يتقاتل مع مصري، فوكز المصري فمات، ففر إلى مدين.
-
-في مدين تزوج من ابنة الرجل الصالح ومكث عنده عشر سنين. في طريق عودته رأى ناراً فذهب إليها فكلمه الله من الشجرة وأعطاه المعجزات.
-
-عاد موسى إلى فرعون يدعوه إلى الله، فاستكبر فرعون. أنزل الله الآيات والعقوبات ولكن فرعون لم يؤمن. أمر الله موسى بالخروج ببني إسرائيل ليلاً.
-
-لحقهم فرعون وجنوده، ففلق الله البحر لموسى وقومه وأغرق فرعون وجنوده. قال فرعون عند الغرق: "آمنت أنه لا إله إلا الذي آمنت به بنو إسرائيل" لكن كان متأخراً.`,
-        lessons: [
-          'الله يحفظ أولياءه من كيد الأعداء',
-          'التوكل على الله في أشد المواقف',
-          'الظالم مهما علا سيهلك',
-          'التوبة عند الموت لا تنفع',
-        ],
-      },
-      en: {
-        title: 'The Story of Prophet Moses - The One Who Spoke to Allah',
-        content: `Prophet Moses (peace be upon him) is the one whom Allah spoke to directly. He was born in Egypt during Pharaoh's time, who was killing the sons of Israel. Allah inspired Moses's mother to place him in a chest and cast it in the river.
-
-Pharaoh's family found him, and Pharaoh's wife Asiya raised him. Moses grew up in Pharaoh's palace. One day he found a man from Israel fighting an Egyptian, struck the Egyptian who died, and fled to Midian.
-
-In Midian he married the daughter of a righteous man and stayed ten years. On his return journey, he saw a fire and went to it. Allah spoke to him from the tree and gave him miracles.
-
-Moses returned to Pharaoh calling him to Allah, but Pharaoh was arrogant. Allah sent signs and punishments, but Pharaoh did not believe. Allah commanded Moses to leave with Israel by night.
-
-Pharaoh and his army pursued them. Allah parted the sea for Moses and his people and drowned Pharaoh and his army. Pharaoh said while drowning: "I believe there is no god except the one Israel believed in" - but it was too late.`,
-        lessons: [
-          'Allah protects His allies from enemies\' plots',
-          'Trust in Allah in the most difficult situations',
-          'Oppressors will perish no matter how powerful',
-          'Repentance at death does not benefit',
-        ],
-      },
-      fr: {
-        title: 'L\'Histoire du Prophète Moïse - Celui qui a Parlé à Allah',
-        content: `Le Prophète Moïse (paix sur lui) est celui à qui Allah a parlé directement. Il est né en Égypte à l'époque de Pharaon, qui tuait les fils d'Israël. Allah a inspiré la mère de Moïse de le mettre dans un coffre et de le jeter dans le fleuve.
-
-La famille de Pharaon l'a trouvé, et Asiya, la femme de Pharaon, l'a élevé. Moïse a grandi dans le palais de Pharaon. Un jour, il a trouvé un homme d'Israël se battant avec un Égyptien, a frappé l'Égyptien qui est mort, et s'est enfui à Madian.
-
-À Madian, il a épousé la fille d'un homme pieux et est resté dix ans. Sur le chemin du retour, il a vu un feu et s'en est approché. Allah lui a parlé depuis l'arbre et lui a donné des miracles.
-
-Moïse est retourné vers Pharaon l'appelant à Allah, mais Pharaon était arrogant. Allah a envoyé des signes et des châtiments, mais Pharaon n'a pas cru. Allah a ordonné à Moïse de partir avec Israël de nuit.
-
-Pharaon et son armée les ont poursuivis. Allah a fendu la mer pour Moïse et son peuple et a noyé Pharaon et son armée. Pharaon a dit en se noyant : « Je crois qu'il n'y a pas de dieu sauf celui en qui Israël croit » - mais c'était trop tard.`,
-        lessons: [
-          'Allah protège Ses alliés des complots des ennemis',
-          'Faire confiance à Allah dans les situations les plus difficiles',
-          'Les oppresseurs périront peu importe leur puissance',
-          'Le repentir à la mort ne profite pas',
-        ],
-      },
-      ur: {
-        title: 'حضرت موسیٰ علیہ السلام کی کہانی - کلیم اللہ',
-        content: `حضرت موسیٰ علیہ السلام وہ ہیں جن سے اللہ نے براہ راست کلام کیا۔ وہ مصر میں فرعون کے زمانے میں پیدا ہوئے جو بنی اسرائیل کے بیٹوں کو قتل کرتا تھا۔ اللہ نے موسیٰ کی ماں کو الہام کیا کہ اسے صندوق میں رکھ کر دریا میں ڈال دے۔
-
-فرعون کے گھر والوں نے اسے پایا، اور فرعون کی بیوی آسیہ نے پالا۔ موسیٰ فرعون کے محل میں پلے بڑھے۔ ایک دن انہوں نے بنی اسرائیل کے آدمی کو مصری سے لڑتے دیکھا، مصری کو مارا جو مر گیا، اور مدین بھاگ گئے۔
-
-مدین میں انہوں نے ایک نیک آدمی کی بیٹی سے شادی کی اور دس سال رہے۔ واپسی پر انہوں نے آگ دیکھی اور گئے۔ اللہ نے درخت سے کلام کیا اور معجزے عطا کیے۔
-
-موسیٰ فرعون کے پاس اللہ کی طرف بلانے لوٹے، لیکن فرعون متکبر تھا۔ اللہ نے نشانیاں اور عذاب بھیجے، لیکن فرعون نے ایمان نہیں لایا۔ اللہ نے موسیٰ کو حکم دیا کہ رات کو بنی اسرائیل کو لے کر نکلیں۔
-
-فرعون اور لشکر نے پیچھا کیا۔ اللہ نے سمندر چیر دیا اور فرعون کو غرق کیا۔ فرعون نے ڈوبتے ہوئے کہا: "میں ایمان لایا کہ کوئی معبود نہیں سوائے جس پر بنی اسرائیل ایمان لائے" - لیکن دیر ہو چکی تھی۔`,
-        lessons: [
-          'اللہ اپنے دوستوں کو دشمنوں کی سازشوں سے بچاتا ہے',
-          'مشکل ترین حالات میں اللہ پر توکل',
-          'ظالم کتنا بھی طاقتور ہو ہلاک ہوگا',
-          'موت کے وقت توبہ فائدہ نہیں دیتی',
-        ],
-      },
-      id: {
-        title: 'Kisah Nabi Musa - Yang Berbicara dengan Allah',
-        content: `Nabi Musa (alaihissalam) adalah yang Allah berbicara langsung kepadanya. Beliau lahir di Mesir pada zaman Firaun yang membunuh anak laki-laki Bani Israil. Allah mengilhami ibu Musa untuk menaruhnya dalam peti dan melemparkannya ke sungai.
-
-Keluarga Firaun menemukannya, dan istri Firaun Asiyah membesarkannya. Musa besar di istana Firaun. Suatu hari ia melihat seorang Bani Israil berkelahi dengan orang Mesir, memukul orang Mesir yang mati, dan melarikan diri ke Madyan.
-
-Di Madyan ia menikahi putri seorang pria saleh dan tinggal sepuluh tahun. Dalam perjalanan pulang, ia melihat api dan menghampirinya. Allah berbicara kepadanya dari pohon dan memberinya mukjizat.
-
-Musa kembali kepada Firaun menyerunya kepada Allah, tetapi Firaun sombong. Allah mengirim tanda-tanda dan hukuman, tetapi Firaun tidak beriman. Allah memerintahkan Musa pergi bersama Bani Israil di malam hari.
-
-Firaun dan pasukannya mengejar. Allah membelah laut untuk Musa dan kaumnya dan menenggelamkan Firaun dan pasukannya. Firaun berkata saat tenggelam: "Aku beriman tidak ada tuhan kecuali yang Bani Israil imani" - tetapi sudah terlambat.`,
-        lessons: [
-          'Allah melindungi wali-Nya dari tipu daya musuh',
-          'Bertawakkal kepada Allah dalam situasi paling sulit',
-          'Penindas akan binasa walau sekuat apapun',
-          'Taubat saat kematian tidak bermanfaat',
-        ],
-      },
-      tr: {
-        title: 'Hz. Musa\'nın Kıssası - Allah\'ın Kelim\'i',
-        content: `Hz. Musa (aleyhisselam), Allah'ın doğrudan konuştuğu kişidir. İsrailoğullarının erkek çocuklarını öldüren Firavun döneminde Mısır'da doğdu. Allah, Musa'nın annesine onu sandığa koyup nehre bırakmasını ilham etti.
-
-Firavun ailesi onu buldu ve Firavun'un karısı Asiye yetiştirdi. Musa Firavun'un sarayında büyüdü. Bir gün İsrailden biriyle Mısırlının kavga ettiğini gördü, Mısırlıyı vurdu öldü ve Medyen'e kaçtı.
-
-Medyen'de salih bir adamın kızıyla evlendi ve on yıl kaldı. Dönüş yolunda ateş gördü ve gitti. Allah ağaçtan konuştu ve mucizeler verdi.
-
-Musa, Firavun'a Allah'a davet için döndü ama Firavun kibirlendi. Allah ayetler ve cezalar gönderdi ama Firavun iman etmedi. Allah, Musa'ya İsrailoğullarıyla gece çıkmasını emretti.
-
-Firavun ve ordusu takip etti. Allah denizi Musa ve kavmi için yardı, Firavun'u ve ordusunu boğdu. Firavun boğulurken dedi: "İsrailoğullarının iman ettiğinden başka ilah olmadığına iman ettim" - ama çok geçti.`,
-        lessons: [
-          'Allah dostlarını düşmanların tuzaklarından korur',
-          'En zor durumlarda Allah\'a tevekkül',
-          'Zalim ne kadar güçlü olursa olsun helak olur',
-          'Ölüm anında tövbe fayda vermez',
-        ],
-      },
-    },
-  },
-  {
-    id: 'isa',
-    name: { ar: 'عيسى', en: 'Jesus', fr: 'Jésus', ur: 'عیسیٰ', id: 'Isa', tr: 'İsa' },
-    era: 'فلسطين',
-    order: 7,
-    stories: {
-      ar: {
-        title: 'قصة عيسى عليه السلام - روح الله',
-        content: `عيسى عليه السلام هو كلمة الله وروح منه، ولد من مريم العذراء بدون أب بمعجزة إلهية. جاءه جبريل وبشرها بغلام زكي.
-
-تكلم عيسى في المهد دفاعاً عن أمه، وقال: "إني عبد الله آتاني الكتاب وجعلني نبياً". كانت هذه أولى معجزاته.
-
-أعطاه الله معجزات كثيرة: يخلق من الطين كهيئة الطير فينفخ فيه فيكون طيراً، ويبرئ الأكمه والأبرص ويحيي الموتى بإذن الله.
-
-دعا عيسى بني إسرائيل إلى عبادة الله وحده وترك ما حرّفوه من التوراة. آمن به الحواريون وكفر كثيرون.
-
-أراد اليهود قتله فرفعه الله إليه ولم يُصلب. سيعود عيسى آخر الزمان فيكسر الصليب ويقتل الخنزير ويحكم بشريعة محمد صلى الله عليه وسلم.`,
-        lessons: [
-          'الله قادر على كل شيء',
-          'المعجزات تأتي لتأييد الأنبياء',
-          'عيسى عبد الله ورسوله وليس إلهاً',
-          'التمسك بالحق رغم المعارضة',
-        ],
-      },
-      en: {
-        title: 'The Story of Prophet Jesus - The Spirit of Allah',
-        content: `Prophet Jesus (peace be upon him) is Allah's Word and Spirit from Him, born to the Virgin Mary without a father through divine miracle. Gabriel came to her with glad tidings of a pure son.
-
-Jesus spoke in the cradle defending his mother, saying: "Indeed, I am the servant of Allah. He has given me the Scripture and made me a prophet." This was his first miracle.
-
-Allah gave him many miracles: he would create from clay the form of a bird and breathe into it and it would become a bird, heal the blind and lepers, and bring the dead to life by Allah's permission.
-
-Jesus called the Children of Israel to worship Allah alone and leave what they had distorted from the Torah. The disciples believed in him, but many rejected.
-
-The Jews wanted to kill him, but Allah raised him up and he was not crucified. Jesus will return at the end of time, break the cross, kill the swine, and rule by the law of Muhammad (peace be upon him).`,
-        lessons: [
-          'Allah is capable of all things',
-          'Miracles come to support the prophets',
-          'Jesus is a servant and messenger of Allah, not a god',
-          'Holding to truth despite opposition',
-        ],
-      },
-      fr: {
-        title: 'L\'Histoire du Prophète Jésus - L\'Esprit d\'Allah',
-        content: `Le Prophète Jésus (paix sur lui) est la Parole d'Allah et un Esprit venant de Lui, né de la Vierge Marie sans père par miracle divin. Gabriel est venu à elle avec la bonne nouvelle d'un fils pur.
-
-Jésus a parlé au berceau pour défendre sa mère, disant : « Je suis vraiment le serviteur d'Allah. Il m'a donné le Livre et fait de moi un prophète. » C'était son premier miracle.
-
-Allah lui a donné de nombreux miracles : il créait de l'argile la forme d'un oiseau, soufflait dedans et il devenait oiseau, guérissait l'aveugle-né et les lépreux, et ramenait les morts à la vie par la permission d'Allah.
-
-Jésus a appelé les Enfants d'Israël à adorer Allah seul et à abandonner ce qu'ils avaient falsifié de la Torah. Les disciples ont cru en lui, mais beaucoup ont rejeté.
-
-Les Juifs voulaient le tuer, mais Allah l'a élevé vers Lui et il n'a pas été crucifié. Jésus reviendra à la fin des temps, brisera la croix, tuera le porc et gouvernera selon la loi de Muhammad (paix sur lui).`,
-        lessons: [
-          'Allah est capable de toute chose',
-          'Les miracles viennent pour soutenir les prophètes',
-          'Jésus est un serviteur et messager d\'Allah, pas un dieu',
-          'S\'accrocher à la vérité malgré l\'opposition',
-        ],
-      },
-      ur: {
-        title: 'حضرت عیسیٰ علیہ السلام کی کہانی - روح اللہ',
-        content: `حضرت عیسیٰ علیہ السلام اللہ کا کلمہ اور اس کی روح ہیں، کنواری مریم سے بغیر باپ کے الٰہی معجزے سے پیدا ہوئے۔ جبریل ان کے پاس آئے اور پاکیزہ بیٹے کی خوشخبری دی۔
-
-عیسیٰ نے گہوارے میں اپنی ماں کا دفاع کرتے ہوئے بات کی: "بیشک میں اللہ کا بندہ ہوں۔ اس نے مجھے کتاب دی اور نبی بنایا۔" یہ ان کا پہلا معجزہ تھا۔
-
-اللہ نے انہیں بہت سے معجزے دیے: وہ مٹی سے پرندے کی شکل بناتے، پھونکتے اور وہ پرندہ بن جاتا، اندھے اور کوڑھی کو شفا دیتے، اور اللہ کی اجازت سے مردوں کو زندہ کرتے۔
-
-عیسیٰ نے بنی اسرائیل کو صرف اللہ کی عبادت کی دعوت دی اور تورات میں تحریف چھوڑنے کو کہا۔ حواریوں نے ایمان لایا، لیکن بہتوں نے انکار کیا۔
-
-یہودی انہیں قتل کرنا چاہتے تھے، لیکن اللہ نے انہیں اٹھا لیا اور صلیب نہیں دی گئی۔ عیسیٰ آخر زمانے میں واپس آئیں گے، صلیب توڑیں گے، خنزیر ماریں گے، اور محمد صلی اللہ علیہ وسلم کی شریعت سے حکم کریں گے۔`,
-        lessons: [
-          'اللہ ہر چیز پر قادر ہے',
-          'معجزے انبیاء کی تائید کے لیے آتے ہیں',
-          'عیسیٰ اللہ کے بندے اور رسول ہیں، خدا نہیں',
-          'مخالفت کے باوجود حق پر ثابت قدم رہنا',
-        ],
-      },
-      id: {
-        title: 'Kisah Nabi Isa - Ruh Allah',
-        content: `Nabi Isa (alaihissalam) adalah Kalimat Allah dan Ruh dari-Nya, lahir dari Perawan Maryam tanpa ayah melalui mukjizat ilahi. Jibril datang kepadanya dengan kabar gembira tentang putra yang suci.
-
-Isa berbicara di buaian membela ibunya, berkata: "Sesungguhnya aku adalah hamba Allah. Dia telah memberiku Kitab dan menjadikanku nabi." Ini adalah mukjizat pertamanya.
-
-Allah memberinya banyak mukjizat: ia menciptakan dari tanah liat bentuk burung dan meniupnya menjadi burung, menyembuhkan orang buta dan kusta, dan menghidupkan orang mati dengan izin Allah.
-
-Isa menyeru Bani Israil untuk menyembah Allah saja dan meninggalkan apa yang telah mereka selewengkan dari Taurat. Para murid beriman kepadanya, tetapi banyak yang menolak.
-
-Yahudi ingin membunuhnya, tetapi Allah mengangkatnya dan ia tidak disalibkan. Isa akan kembali di akhir zaman, mematahkan salib, membunuh babi, dan memerintah dengan syariat Muhammad (shallallahu alaihi wasallam).`,
-        lessons: [
-          'Allah Mahakuasa atas segala sesuatu',
-          'Mukjizat datang untuk mendukung para nabi',
-          'Isa adalah hamba dan utusan Allah, bukan tuhan',
-          'Berpegang pada kebenaran meski ada penentangan',
-        ],
-      },
-      tr: {
-        title: 'Hz. İsa\'nın Kıssası - Ruhullah',
-        content: `Hz. İsa (aleyhisselam), Allah'ın Kelimesi ve O'ndan bir Ruhtur, ilahi mucize ile babasız olarak Bakire Meryem'den doğdu. Cebrail ona temiz bir oğul müjdesiyle geldi.
-
-İsa beşikte annesini savunarak konuştu: "Şüphesiz ben Allah'ın kuluyum. O bana Kitab verdi ve beni peygamber yaptı." Bu ilk mucizesiydi.
-
-Allah ona birçok mucize verdi: çamurdan kuş şekli yapar, üflerdi kuş olurdu, körleri ve cüzzamlıları iyileştirir, Allah'ın izniyle ölüleri diriltirdi.
-
-İsa, İsrailoğullarını yalnız Allah'a ibadete ve Tevrat'tan bozdukları şeyleri bırakmaya çağırdı. Havariler iman etti ama birçoğu reddetti.
-
-Yahudiler onu öldürmek istedi ama Allah onu yükseltti ve çarmıha gerilmedi. İsa ahir zamanda dönecek, haçı kıracak, domuzu öldürecek ve Muhammed'in (sallallahu aleyhi ve sellem) şeriatıyla hükmedecek.`,
-        lessons: [
-          'Allah her şeye kadirdir',
-          'Mucizeler peygamberleri desteklemek için gelir',
-          'İsa Allah\'ın kulu ve elçisidir, tanrı değil',
-          'Muhalefete rağmen hakka sarılmak',
-        ],
-      },
-    },
-  },
-  {
-    id: 'muhammad',
-    name: { ar: 'محمد', en: 'Muhammad', fr: 'Muhammad', ur: 'محمد', id: 'Muhammad', tr: 'Muhammed' },
-    era: 'مكة والمدينة',
-    order: 8,
-    stories: {
-      ar: {
-        title: 'قصة محمد صلى الله عليه وسلم - خاتم الأنبياء',
-        content: `محمد صلى الله عليه وسلم هو خاتم الأنبياء والمرسلين، ولد في مكة المكرمة عام الفيل. توفي والده قبل ولادته وتوفيت أمه وهو صغير فكفله جده ثم عمه أبو طالب.
-
-عُرف بالصادق الأمين قبل النبوة. بُعث نبياً وهو في الأربعين من عمره في غار حراء عندما جاءه جبريل بأول آيات القرآن: "اقرأ باسم ربك الذي خلق".
-
-دعا قومه سراً ثلاث سنوات ثم جهراً. أوذي وأصحابه أشد الأذى، حتى هاجروا إلى الحبشة ثم إلى المدينة المنورة.
-
-في المدينة أسس الدولة الإسلامية، وخاض غزوات لنصرة الدين. فتح مكة صلحاً، وحجّ حجة الوداع وخطب فيها خطبته الشهيرة.
-
-توفي صلى الله عليه وسلم وهو في الثالثة والستين من عمره بعد أن أكمل الله به الدين: "اليوم أكملت لكم دينكم وأتممت عليكم نعمتي ورضيت لكم الإسلام ديناً".`,
-        lessons: [
-          'الصبر والثبات في الدعوة إلى الله',
-          'الأخلاق الحسنة أساس الدعوة',
-          'الهجرة في سبيل الله عند الضرورة',
-          'القدوة الحسنة في جميع جوانب الحياة',
-        ],
-      },
-      en: {
-        title: 'The Story of Prophet Muhammad - Seal of the Prophets',
-        content: `Prophet Muhammad (peace be upon him) is the Seal of the Prophets and Messengers, born in Mecca in the Year of the Elephant. His father died before his birth and his mother when he was young, so his grandfather then his uncle Abu Talib raised him.
-
-He was known as the Truthful and Trustworthy before prophethood. He was appointed prophet at forty in the Cave of Hira when Gabriel brought the first verses: "Read in the name of your Lord who created."
-
-He called his people secretly for three years then openly. He and his companions faced severe persecution until they migrated to Abyssinia then Medina.
-
-In Medina he established the Islamic state and fought battles to support the religion. He conquered Mecca peacefully, performed the Farewell Pilgrimage and delivered his famous sermon.
-
-He died at sixty-three after Allah completed the religion through him: "Today I have perfected your religion for you, completed My favor upon you, and approved Islam as your religion."`,
-        lessons: [
-          'Patience and steadfastness in calling to Allah',
-          'Good character is the foundation of calling to Islam',
-          'Migration for Allah\'s sake when necessary',
-          'Being a good example in all aspects of life',
-        ],
-      },
-      fr: {
-        title: 'L\'Histoire du Prophète Muhammad - Sceau des Prophètes',
-        content: `Le Prophète Muhammad (paix sur lui) est le Sceau des Prophètes et des Messagers, né à La Mecque l'Année de l'Éléphant. Son père est mort avant sa naissance et sa mère quand il était jeune, alors son grand-père puis son oncle Abu Talib l'ont élevé.
-
-Il était connu comme le Véridique et le Digne de Confiance avant la prophétie. Il fut désigné prophète à quarante ans dans la grotte de Hira quand Gabriel apporta les premiers versets : « Lis au nom de ton Seigneur qui a créé. »
-
-Il appela son peuple secrètement pendant trois ans puis ouvertement. Lui et ses compagnons ont subi de sévères persécutions jusqu'à leur migration en Abyssinie puis à Médine.
-
-À Médine, il a établi l'État islamique et mené des batailles pour soutenir la religion. Il a conquis La Mecque pacifiquement, accompli le Pèlerinage d'Adieu et prononcé son célèbre sermon.
-
-Il est mort à soixante-trois ans après qu'Allah ait complété la religion par lui : « Aujourd'hui J'ai parachevé pour vous votre religion, complété Mon bienfait sur vous et agréé l'Islam comme religion pour vous. »`,
-        lessons: [
-          'Patience et constance dans l\'appel à Allah',
-          'Le bon caractère est le fondement de l\'appel à l\'Islam',
-          'L\'émigration pour Allah quand nécessaire',
-          'Être un bon exemple dans tous les aspects de la vie',
-        ],
-      },
-      ur: {
-        title: 'نبی محمد صلی اللہ علیہ وسلم کی کہانی - خاتم الانبیاء',
-        content: `نبی محمد صلی اللہ علیہ وسلم انبیاء اور رسولوں کے خاتم ہیں، عام الفیل میں مکہ میں پیدا ہوئے۔ والد پیدائش سے پہلے اور والدہ بچپن میں وفات پا گئیں، پھر دادا اور چچا ابو طالب نے پالا۔
-
-نبوت سے پہلے صادق اور امین کے نام سے معروف تھے۔ چالیس سال کی عمر میں غار حرا میں نبی مقرر ہوئے جب جبریل پہلی آیات لائے: "پڑھو اپنے رب کے نام سے جس نے پیدا کیا۔"
-
-تین سال خفیہ پھر علانیہ دعوت دی۔ آپ اور صحابہ کو شدید ایذا دی گئی یہاں تک کہ حبشہ پھر مدینہ ہجرت کی۔
-
-مدینہ میں اسلامی ریاست قائم کی اور دین کی مدد کے لیے غزوات لڑے۔ مکہ فتح کیا، حجة الوداع ادا کیا اور مشہور خطبہ دیا۔
-
-تریسٹھ سال کی عمر میں وفات پائی جب اللہ نے دین مکمل کیا: "آج میں نے تمہارے لیے دین مکمل کر دیا، اپنی نعمت پوری کر دی اور اسلام کو تمہارے لیے دین پسند کیا۔"`,
-        lessons: [
-          'اللہ کی طرف دعوت میں صبر اور ثابت قدمی',
-          'اچھا کردار دعوت کی بنیاد ہے',
-          'ضرورت پڑنے پر اللہ کی خاطر ہجرت',
-          'زندگی کے ہر پہلو میں اچھا نمونہ بننا',
-        ],
-      },
-      id: {
-        title: 'Kisah Nabi Muhammad - Penutup Para Nabi',
-        content: `Nabi Muhammad (shallallahu alaihi wasallam) adalah Penutup Para Nabi dan Rasul, lahir di Mekah pada Tahun Gajah. Ayahnya wafat sebelum kelahirannya dan ibunya saat ia masih kecil, maka kakek lalu pamannya Abu Thalib yang membesarkannya.
-
-Beliau dikenal sebagai Al-Amin (yang terpercaya) sebelum kenabian. Diangkat sebagai nabi pada usia empat puluh di Gua Hira ketika Jibril membawa ayat-ayat pertama: "Bacalah dengan nama Tuhanmu yang menciptakan."
-
-Beliau menyeru kaumnya secara rahasia selama tiga tahun lalu terang-terangan. Beliau dan para sahabat menghadapi penganiayaan berat sampai hijrah ke Habasyah lalu Madinah.
-
-Di Madinah beliau mendirikan negara Islam dan berperang untuk membela agama. Menaklukkan Mekah secara damai, menunaikan Haji Wada' dan menyampaikan khutbahnya yang terkenal.
-
-Beliau wafat pada usia enam puluh tiga setelah Allah menyempurnakan agama melalui beliau: "Pada hari ini telah Aku sempurnakan agamamu untukmu, dan telah Aku cukupkan nikmat-Ku bagimu, dan telah Aku ridai Islam sebagai agamamu."`,
-        lessons: [
-          'Kesabaran dan keteguhan dalam berdakwah kepada Allah',
-          'Akhlak yang baik adalah dasar dakwah',
-          'Hijrah di jalan Allah ketika diperlukan',
-          'Menjadi teladan yang baik dalam segala aspek kehidupan',
-        ],
-      },
-      tr: {
-        title: 'Hz. Muhammed\'in Kıssası - Peygamberlerin Sonuncusu',
-        content: `Hz. Muhammed (sallallahu aleyhi ve sellem) Peygamberlerin Sonuncusu ve Mühürüdür, Fil Yılı'nda Mekke'de doğdu. Babası doğumundan önce, annesi küçükken vefat etti, dedesi sonra amcası Ebu Talib yetiştirdi.
-
-Peygamberlikten önce Sadık ve Emin olarak bilinirdi. Kırk yaşında Hira Mağarası'nda Cebrail ilk ayetleri getirdiğinde peygamber olarak görevlendirildi: "Yaratan Rabbinin adıyla oku."
-
-Üç yıl gizlice sonra açıkça davet etti. O ve sahabeleri Habeşistan'a sonra Medine'ye hicret edene kadar şiddetli zulme maruz kaldılar.
-
-Medine'de İslam devletini kurdu ve dini desteklemek için savaşlar yaptı. Mekke'yi barışla fethetti, Veda Haccı'nı yaptı ve meşhur hutbesini verdi.
-
-Altmış üç yaşında Allah dini tamamladığında vefat etti: "Bugün sizin için dininizi kemale erdirdim, üzerinizdeki nimetimi tamamladım ve sizin için din olarak İslam'ı seçtim."`,
-        lessons: [
-          'Allah\'a davette sabır ve sebat',
-          'Güzel ahlak davetin temelidir',
-          'Gerektiğinde Allah yolunda hicret',
-          'Hayatın her alanında güzel örnek olmak',
-        ],
-      },
-    },
-  },
+  // 4. هود عليه السلام
   {
     id: 'hud',
     name: { ar: 'هود', en: 'Hud', fr: 'Houd', ur: 'ہود', id: 'Hud', tr: 'Hud' },
     era: 'قوم عاد',
-    order: 9,
+    order: 4,
     stories: {
       ar: {
-        title: 'قصة هود عليه السلام مع قوم عاد',
-        content: `هود عليه السلام أُرسل إلى قوم عاد الذين سكنوا الأحقاف في جنوب الجزيرة العربية. كانوا أقوياء البنية، بنوا المباني العالية والقصور الفخمة.
+        title: 'قصة هود عليه السلام - نبي عاد',
+        content: `هود عليه السلام أرسله الله إلى قوم عاد الذين سكنوا الأحقاف في جنوب الجزيرة العربية. كانوا قوماً أقوياء شديدي البأس، بنوا قصوراً عظيمة وكانوا أصحاب حضارة متقدمة.
 
-كفر قوم عاد بالله وعبدوا الأصنام، وتجبروا في الأرض. دعاهم هود إلى عبادة الله وحده وترك الأصنام، لكنهم كذبوه واستهزأوا به.
+أنعم الله عليهم بالقوة والمال والأولاد، لكنهم كفروا بنعمة الله وعبدوا الأصنام. وكانوا يقولون: "من أشد منا قوة؟"
 
-قالوا لهود: "ما نحن بتاركي آلهتنا عن قولك وما نحن لك بمؤمنين". واستمروا في طغيانهم وظلمهم.
+أرسل الله إليهم هوداً عليه السلام ليدعوهم إلى عبادة الله وحده وترك الأصنام. ذكّرهم بنعم الله عليهم وحذرهم من عذابه.
 
-أهلك الله قوم عاد بريح صرصر عاتية، سخرها عليهم سبع ليال وثمانية أيام حسوماً. كانت الريح تحمل الناس وترميهم كأنهم أعجاز نخل خاوية.
+استكبر قوم عاد وكذبوا هوداً وقالوا: "أجئتنا لنعبد الله وحده ونذر ما كان يعبد آباؤنا؟" واستمروا في طغيانهم.
 
-نجّى الله هوداً والذين آمنوا معه، وجعلهم عبرة للمعتبرين.`,
+أنجى الله هوداً ومن آمن معه، وأرسل على قوم عاد ريحاً صرصراً عاتية. سخرها عليهم سبع ليال وثمانية أيام حسوماً، فدمرتهم ولم تبق منهم أحداً.`,
         lessons: [
-          'القوة المادية لا تنفع بدون الإيمان',
-          'الطغيان سبب الهلاك',
-          'الله ينصر أنبياءه ويهلك المكذبين',
-          'التكبر على الرسل عاقبته وخيمة',
+          'القوة المادية لا تغني عن الله شيئاً',
+          'النعم تزول بالكفران',
+          'التكبر على الحق سبب الهلاك',
+          'الله قادر على إهلاك الظالمين بأضعف مخلوقاته',
+          'الاستغفار والتوبة سبب زيادة الخير',
+        ],
+        quranVerses: [
+          {
+            arabic: 'وَإِلَىٰ عَادٍ أَخَاهُمْ هُودًا ۗ قَالَ يَا قَوْمِ اعْبُدُوا اللَّهَ مَا لَكُم مِّنْ إِلَٰهٍ غَيْرُهُ',
+            translation: 'And to \'Aad We sent their brother Hud. He said: O my people, worship Allah; you have no deity other than Him.',
+            reference: 'سورة الأعراف - الآية 65'
+          },
+          {
+            arabic: 'فَأَرْسَلْنَا عَلَيْهِمْ رِيحًا صَرْصَرًا فِي أَيَّامٍ نَّحِسَاتٍ',
+            translation: 'So We sent upon them a screaming wind during days of misfortune.',
+            reference: 'سورة فصلت - الآية 16'
+          },
         ],
       },
       en: {
-        title: 'The Story of Prophet Hud and the People of Aad',
-        content: `Prophet Hud (peace be upon him) was sent to the people of Aad who lived in Al-Ahqaf in southern Arabia. They were physically powerful, building tall structures and magnificent palaces.
+        title: 'The Story of Prophet Hud - Prophet to \'Aad',
+        content: `Prophet Hud (peace be upon him) was sent by Allah to the people of 'Aad who lived in Al-Ahqaf in southern Arabia. They were a powerful and mighty people who built great palaces and had an advanced civilization.
 
-The people of Aad disbelieved in Allah and worshipped idols, becoming tyrants on earth. Hud called them to worship Allah alone and abandon idols, but they rejected and mocked him.
+Allah blessed them with strength, wealth, and children, but they disbelieved in Allah's blessings and worshipped idols. They would say: "Who is mightier than us in strength?"
 
-They said: "We will not abandon our gods for what you say, and we will never believe you." They continued in their tyranny and oppression.
+Allah sent Hud to call them to worship Allah alone and abandon idols. He reminded them of Allah's blessings and warned them of His punishment.
 
-Allah destroyed the people of Aad with a furious violent wind, which He imposed on them for seven nights and eight days. The wind would pick people up and throw them down like hollow palm trunks.
+The people of 'Aad were arrogant and rejected Hud. They said: "Have you come to us that we should worship Allah alone and leave what our fathers worshipped?" They continued in their transgression.
 
-Allah saved Hud and those who believed with him, making them a lesson for those who reflect.`,
+Allah saved Hud and those who believed with him, and sent upon the people of 'Aad a fierce, violent wind. He subjected it upon them for seven nights and eight days in succession, destroying them completely.`,
         lessons: [
-          'Material power is useless without faith',
-          'Tyranny leads to destruction',
-          'Allah supports His prophets and destroys the deniers',
-          'Arrogance towards messengers has dire consequences',
+          'Material strength is useless against Allah',
+          'Blessings disappear through ingratitude',
+          'Arrogance against truth leads to destruction',
+          'Allah can destroy oppressors with His weakest creation',
+          'Seeking forgiveness and repentance increases blessings',
+        ],
+        quranVerses: [
+          {
+            arabic: 'وَإِلَىٰ عَادٍ أَخَاهُمْ هُودًا',
+            translation: 'And to \'Aad We sent their brother Hud.',
+            reference: 'Surah Al-A\'raf - Verse 65'
+          },
         ],
       },
     },
   },
+
+  // 5. صالح عليه السلام
   {
     id: 'salih',
-    name: { ar: 'صالح', en: 'Salih', fr: 'Salih', ur: 'صالح', id: 'Shalih', tr: 'Salih' },
+    name: { ar: 'صالح', en: 'Salih', fr: 'Salih', ur: 'صالح', id: 'Shaleh', tr: 'Salih' },
     era: 'قوم ثمود',
-    order: 10,
+    order: 5,
     stories: {
       ar: {
-        title: 'قصة صالح عليه السلام مع قوم ثمود',
-        content: `صالح عليه السلام أُرسل إلى قوم ثمود الذين سكنوا في منطقة الحِجر شمال الجزيرة العربية. كانوا ينحتون الجبال بيوتاً ويبنون القصور في السهول.
+        title: 'قصة صالح عليه السلام - نبي ثمود',
+        content: `صالح عليه السلام أرسله الله إلى قوم ثمود الذين سكنوا الحجر بين الحجاز والشام. كانوا يسكنون في بيوت نحتوها في الجبال، وكانوا أصحاب حضارة عظيمة.
 
-دعا صالح قومه إلى عبادة الله وحده، فكذبوه وطلبوا منه آية. أخرج الله لهم ناقة من الصخر معجزة لهم، وأمرهم ألا يمسوها بسوء.
+دعاهم صالح إلى عبادة الله وحده وترك الأصنام، وذكّرهم بنعم الله عليهم وكيف أنه استخلفهم في الأرض بعد قوم عاد.
 
-قال صالح لقومه: "هذه ناقة الله لكم آية فذروها تأكل في أرض الله ولا تمسوها بسوء فيأخذكم عذاب أليم".
+طلب قوم ثمود من صالح آية تثبت نبوته، فدعا الله فأخرج لهم من الصخرة ناقة عظيمة. وأمرهم الله أن يتركوها تأكل في أرض الله وألا يمسوها بسوء.
 
-لكن قومه عقروا الناقة وتحدوا أمر الله. توعدهم صالح بالعذاب بعد ثلاثة أيام.
+لكن قوم ثمود لم يستمعوا للتحذير، فتآمر تسعة رجال منهم على قتل الناقة، فعقروها. فقال لهم صالح: "تمتعوا في داركم ثلاثة أيام"، وهذا وعد غير مكذوب.
 
-جاءتهم الصيحة فأهلكتهم أجمعين، وأصبحوا في ديارهم جاثمين. نجّى الله صالحاً والمؤمنين.`,
+بعد ثلاثة أيام جاءتهم الصيحة من السماء، فأصبحوا في ديارهم جاثمين. ونجى الله صالحاً ومن آمن معه.`,
         lessons: [
-          'المعجزات لا تنفع القوم العنيدين',
-          'تحدي أوامر الله يجلب الهلاك',
+          'الآيات والمعجزات لا تنفع من أصر على الكفر',
+          'الظلم سبب هلاك الأمم',
+          'اتباع الظالمين يؤدي إلى الهلاك معهم',
+          'العناد والاستكبار من صفات الهالكين',
           'الله يمهل ولا يهمل',
-          'الإيمان سبب النجاة',
+        ],
+        quranVerses: [
+          {
+            arabic: 'وَإِلَىٰ ثَمُودَ أَخَاهُمْ صَالِحًا ۗ قَالَ يَا قَوْمِ اعْبُدُوا اللَّهَ مَا لَكُم مِّنْ إِلَٰهٍ غَيْرُهُ',
+            translation: 'And to Thamud We sent their brother Salih. He said: O my people, worship Allah; you have no deity other than Him.',
+            reference: 'سورة الأعراف - الآية 73'
+          },
+          {
+            arabic: 'فَعَقَرُوهَا فَقَالَ تَمَتَّعُوا فِي دَارِكُمْ ثَلَاثَةَ أَيَّامٍ',
+            translation: 'But they hamstrung her, so he said: Enjoy yourselves in your homes for three days.',
+            reference: 'سورة هود - الآية 65'
+          },
         ],
       },
       en: {
-        title: 'The Story of Prophet Salih and the People of Thamud',
-        content: `Prophet Salih (peace be upon him) was sent to the people of Thamud who lived in the Al-Hijr region of northern Arabia. They carved houses out of mountains and built palaces in the plains.
+        title: 'The Story of Prophet Salih - Prophet to Thamud',
+        content: `Prophet Salih (peace be upon him) was sent by Allah to the people of Thamud who lived in Al-Hijr between Hijaz and Syria. They lived in houses carved from mountains and had a great civilization.
 
-Salih called his people to worship Allah alone, but they rejected him and demanded a sign. Allah brought forth a she-camel from a rock as a miracle, commanding them not to harm it.
+Salih called them to worship Allah alone and leave idols, reminding them of Allah's blessings and how He made them successors after the people of 'Aad.
 
-Salih told his people: "This is Allah's she-camel, a sign for you. Let her graze on Allah's earth and do not touch her with harm, lest a painful punishment seize you."
+The people of Thamud asked Salih for a sign proving his prophethood. He prayed to Allah, and a great she-camel emerged from a rock. Allah commanded them to let her graze in Allah's land and not harm her.
 
-But his people hamstrung the she-camel and defied Allah's command. Salih warned them of punishment in three days.
+But the people of Thamud did not heed the warning. Nine men conspired to kill the she-camel, and they hamstrung her. Salih said to them: "Enjoy yourselves in your homes for three days," an unfailing promise.
 
-The blast came upon them and destroyed them all, leaving them fallen in their homes. Allah saved Salih and the believers.`,
+After three days, a mighty blast came upon them from the sky, and they became lifeless in their homes. Allah saved Salih and those who believed with him.`,
         lessons: [
-          'Miracles do not benefit stubborn people',
-          'Defying Allah\'s commands brings destruction',
+          'Signs and miracles do not benefit those who insist on disbelief',
+          'Oppression causes the destruction of nations',
+          'Following oppressors leads to destruction with them',
+          'Stubbornness and arrogance are traits of the doomed',
           'Allah gives respite but never neglects',
-          'Faith is the cause of salvation',
+        ],
+        quranVerses: [
+          {
+            arabic: 'وَإِلَىٰ ثَمُودَ أَخَاهُمْ صَالِحًا',
+            translation: 'And to Thamud We sent their brother Salih.',
+            reference: 'Surah Al-A\'raf - Verse 73'
+          },
         ],
       },
     },
   },
+
+  // 6. إبراهيم عليه السلام
+  {
+    id: 'ibrahim',
+    name: { ar: 'إبراهيم', en: 'Abraham', fr: 'Abraham', ur: 'ابراہیم', id: 'Ibrahim', tr: 'İbrahim' },
+    era: 'خليل الرحمن',
+    order: 6,
+    stories: {
+      ar: {
+        title: 'قصة إبراهيم عليه السلام - خليل الله',
+        content: `إبراهيم عليه السلام هو أبو الأنبياء وخليل الرحمن. نشأ في بيئة يُعبد فيها الأصنام، وكان أبوه آزر يصنعها.
+
+تفكّر إبراهيم في الكون وبحث عن الحقيقة. رأى كوكباً فقال: "هذا ربي"، فلما أفل قال: "لا أحب الآفلين". ثم رأى القمر فقال: "هذا ربي"، فلما أفل قال: "لئن لم يهدني ربي لأكونن من القوم الضالين". ثم رأى الشمس فقال: "هذا ربي هذا أكبر"، فلما أفلت قال: "إني بريء مما تشركون".
+
+دعا إبراهيم قومه إلى الله وحطّم أصنامهم، فغضبوا منه وقرروا إحراقه. بنوا له ناراً عظيمة وألقوه فيها، لكن الله أمر النار أن تكون برداً وسلاماً على إبراهيم.
+
+ابتلى الله إبراهيم بأن أمره بذبح ابنه إسماعيل، فاستجاب إبراهيم وهمّ بتنفيذ الأمر، ففداه الله بذبح عظيم.
+
+بنى إبراهيم وإسماعيل الكعبة، ودعا الله أن يجعل مكة بلداً آمناً وأن يبعث فيهم رسولاً منهم.`,
+        lessons: [
+          'البحث عن الحقيقة فريضة على كل عاقل',
+          'التضحية في سبيل الله أعظم القربات',
+          'الله ينجي عباده المخلصين من كل كرب',
+          'الاستجابة لأوامر الله دون تردد',
+          'بناء بيوت الله من أعظم الأعمال',
+          'الدعاء للذرية من سنن الأنبياء',
+        ],
+        quranVerses: [
+          {
+            arabic: 'قُلْنَا يَا نَارُ كُونِي بَرْدًا وَسَلَامًا عَلَىٰ إِبْرَاهِيمَ',
+            translation: 'We said: O fire, be coolness and safety upon Abraham.',
+            reference: 'سورة الأنبياء - الآية 69'
+          },
+          {
+            arabic: 'وَاتَّخَذَ اللَّهُ إِبْرَاهِيمَ خَلِيلًا',
+            translation: 'And Allah took Abraham as a close friend.',
+            reference: 'سورة النساء - الآية 125'
+          },
+          {
+            arabic: 'فَلَمَّا أَسْلَمَا وَتَلَّهُ لِلْجَبِينِ وَنَادَيْنَاهُ أَن يَا إِبْرَاهِيمُ قَدْ صَدَّقْتَ الرُّؤْيَا',
+            translation: 'And when they had both submitted and he put him down upon his forehead, We called to him: O Abraham, you have fulfilled the vision.',
+            reference: 'سورة الصافات - الآيات 103-105'
+          },
+        ],
+        hadiths: [
+          {
+            text: 'إن أول ما يكسى يوم القيامة إبراهيم عليه السلام',
+            source: 'رواه البخاري'
+          },
+        ],
+      },
+      en: {
+        title: 'The Story of Prophet Abraham - The Friend of Allah',
+        content: `Prophet Abraham (peace be upon him) is the father of prophets and the close friend of Allah. He grew up in an environment where idols were worshipped, and his father Azar made them.
+
+Abraham contemplated the universe and searched for truth. He saw a star and said: "This is my Lord." When it set, he said: "I do not like those that set." Then he saw the moon and said: "This is my Lord." When it set, he said: "If my Lord does not guide me, I will surely be among the misguided." Then he saw the sun and said: "This is my Lord, this is greater." When it set, he said: "I am free from what you associate with Allah."
+
+Abraham called his people to Allah and destroyed their idols. They became angry and decided to burn him. They built a great fire and threw him in, but Allah commanded the fire to be cool and peaceful upon Abraham.
+
+Allah tested Abraham by commanding him to sacrifice his son Ishmael. Abraham submitted and was about to carry out the command when Allah ransomed him with a great sacrifice.
+
+Abraham and Ishmael built the Kaaba, and Abraham prayed for Mecca to be a secure city and for a messenger to be raised among them.`,
+        lessons: [
+          'Searching for truth is obligatory for every rational person',
+          'Sacrifice for Allah is the greatest act of worship',
+          'Allah saves His sincere servants from every hardship',
+          'Responding to Allah\'s commands without hesitation',
+          'Building houses of worship is among the greatest deeds',
+          'Praying for offspring is a practice of the prophets',
+        ],
+        quranVerses: [
+          {
+            arabic: 'قُلْنَا يَا نَارُ كُونِي بَرْدًا وَسَلَامًا عَلَىٰ إِبْرَاهِيمَ',
+            translation: 'We said: O fire, be coolness and safety upon Abraham.',
+            reference: 'Surah Al-Anbiya - Verse 69'
+          },
+        ],
+      },
+    },
+  },
+
+  // 7. لوط عليه السلام
   {
     id: 'lut',
     name: { ar: 'لوط', en: 'Lot', fr: 'Loth', ur: 'لوط', id: 'Luth', tr: 'Lut' },
-    era: 'سدوم',
+    era: 'قوم سدوم',
+    order: 7,
+    stories: {
+      ar: {
+        title: 'قصة لوط عليه السلام - نبي سدوم',
+        content: `لوط عليه السلام هو ابن أخي إبراهيم عليه السلام. آمن بإبراهيم وهاجر معه، ثم أرسله الله إلى أهل سدوم.
+
+كان قوم لوط يرتكبون فاحشة لم يسبقهم بها أحد من العالمين، فكانوا يأتون الرجال شهوة من دون النساء.
+
+دعاهم لوط إلى ترك هذه الفاحشة والتوبة إلى الله، لكنهم رفضوا وهددوه بالطرد. كانوا يقولون: "أخرجوا آل لوط من قريتكم إنهم أناس يتطهرون".
+
+أرسل الله الملائكة إلى لوط على هيئة ضيوف شباب حسان الوجوه. لما علم قوم لوط بذلك جاءوا يريدون الاعتداء عليهم.
+
+أخبر الملائكة لوطاً أنهم رسل ربه، وأمروه أن يخرج بأهله ليلاً ولا يلتفت منهم أحد إلا امرأته التي كانت تعين القوم عليه.
+
+أمطر الله على سدوم حجارة من سجيل، وقلب القرية عاليها سافلها، فهلكوا جميعاً.`,
+        lessons: [
+          'الفواحش تجلب غضب الله وعقابه',
+          'الشذوذ الجنسي من أعظم المنكرات',
+          'الله يعاقب المجتمعات التي تنتشر فيها الفاحشة',
+          'النجاة مع الصالحين والهلاك مع الظالمين',
+          'الدعوة واجبة حتى لو استهزأ القوم',
+        ],
+        quranVerses: [
+          {
+            arabic: 'وَلُوطًا إِذْ قَالَ لِقَوْمِهِ أَتَأْتُونَ الْفَاحِشَةَ مَا سَبَقَكُم بِهَا مِنْ أَحَدٍ مِّنَ الْعَالَمِينَ',
+            translation: 'And Lot, when he said to his people: Do you commit such immorality as no one has preceded you with from among the worlds?',
+            reference: 'سورة الأعراف - الآية 80'
+          },
+          {
+            arabic: 'فَلَمَّا جَاءَ أَمْرُنَا جَعَلْنَا عَالِيَهَا سَافِلَهَا وَأَمْطَرْنَا عَلَيْهَا حِجَارَةً مِّن سِجِّيلٍ مَّنضُودٍ',
+            translation: 'So when Our command came, We made the highest part of it the lowest and rained upon it stones of layered hard clay.',
+            reference: 'سورة هود - الآية 82'
+          },
+        ],
+      },
+      en: {
+        title: 'The Story of Prophet Lot - Prophet to Sodom',
+        content: `Prophet Lot (peace be upon him) was the nephew of Prophet Abraham. He believed in Abraham and migrated with him, then Allah sent him to the people of Sodom.
+
+The people of Lot committed an immorality no one had preceded them with in the world - they approached men with desire instead of women.
+
+Lot called them to abandon this immorality and repent to Allah, but they refused and threatened to expel him. They said: "Expel the family of Lot from your city. Indeed, they are people who keep themselves pure."
+
+Allah sent angels to Lot in the form of handsome young guests. When Lot's people learned of them, they came wanting to assault them.
+
+The angels informed Lot that they were messengers from his Lord and commanded him to leave with his family at night, with none looking back, except his wife who had been aiding the people against him.
+
+Allah rained upon Sodom stones of hard clay and turned the city upside down, destroying them all.`,
+        lessons: [
+          'Immorality brings Allah\'s wrath and punishment',
+          'Homosexuality is among the greatest sins',
+          'Allah punishes societies where immorality spreads',
+          'Salvation is with the righteous, destruction with the oppressors',
+          'Calling to Allah is obligatory even when people mock',
+        ],
+        quranVerses: [
+          {
+            arabic: 'وَلُوطًا إِذْ قَالَ لِقَوْمِهِ أَتَأْتُونَ الْفَاحِشَةَ',
+            translation: 'And Lot, when he said to his people: Do you commit such immorality?',
+            reference: 'Surah Al-A\'raf - Verse 80'
+          },
+        ],
+      },
+    },
+  },
+
+  // 8. إسماعيل عليه السلام
+  {
+    id: 'ismail',
+    name: { ar: 'إسماعيل', en: 'Ishmael', fr: 'Ismaël', ur: 'اسماعیل', id: 'Ismail', tr: 'İsmail' },
+    era: 'مكة المكرمة',
+    order: 8,
+    stories: {
+      ar: {
+        title: 'قصة إسماعيل عليه السلام - الذبيح',
+        content: `إسماعيل عليه السلام هو ابن إبراهيم الخليل من هاجر. ولد بعد أن دعا إبراهيم ربه أن يهب له من الصالحين.
+
+أمر الله إبراهيم أن يأخذ هاجر وإسماعيل الرضيع إلى وادٍ غير ذي زرع عند البيت الحرام. تركهما هناك بأمر الله ورجع.
+
+نفد الماء والطعام، وجعلت هاجر تسعى بين الصفا والمروة بحثاً عن الماء. سعت سبع مرات، ثم فجّر الله ماء زمزم تحت قدمي إسماعيل.
+
+لما كبر إسماعيل، رأى إبراهيم في المنام أنه يذبحه. أخبر إسماعيل فقال: "يا أبت افعل ما تؤمر ستجدني إن شاء الله من الصابرين". فلما استسلما لأمر الله، فداه الله بكبش عظيم.
+
+بنى إسماعيل مع أبيه إبراهيم الكعبة المشرفة، وكان صادق الوعد، وكان يأمر أهله بالصلاة والزكاة.`,
+        lessons: [
+          'الصبر على البلاء من صفات المؤمنين',
+          'طاعة الوالدين في طاعة الله',
+          'التوكل على الله في أشد الظروف',
+          'الوفاء بالوعد من أخلاق الأنبياء',
+          'بناء بيوت الله شرف عظيم',
+        ],
+        quranVerses: [
+          {
+            arabic: 'قَالَ يَا أَبَتِ افْعَلْ مَا تُؤْمَرُ ۖ سَتَجِدُنِي إِن شَاءَ اللَّهُ مِنَ الصَّابِرِينَ',
+            translation: 'He said: O my father, do as you are commanded. You will find me, if Allah wills, of the patient.',
+            reference: 'سورة الصافات - الآية 102'
+          },
+          {
+            arabic: 'وَاذْكُرْ فِي الْكِتَابِ إِسْمَاعِيلَ ۚ إِنَّهُ كَانَ صَادِقَ الْوَعْدِ وَكَانَ رَسُولًا نَّبِيًّا',
+            translation: 'And mention in the Book, Ishmael. Indeed, he was true to his promise and was a messenger and a prophet.',
+            reference: 'سورة مريم - الآية 54'
+          },
+        ],
+      },
+      en: {
+        title: 'The Story of Prophet Ishmael - The Sacrifice',
+        content: `Prophet Ishmael (peace be upon him) was the son of Abraham from Hagar. He was born after Abraham prayed to his Lord to grant him righteous offspring.
+
+Allah commanded Abraham to take Hagar and infant Ishmael to a barren valley near the Sacred House. He left them there by Allah's command and returned.
+
+Water and food ran out, and Hagar began running between Safa and Marwa searching for water. She ran seven times, then Allah caused the water of Zamzam to spring forth beneath Ishmael's feet.
+
+When Ishmael grew up, Abraham saw in a dream that he was sacrificing him. He told Ishmael, who said: "O my father, do as you are commanded. You will find me, if Allah wills, of the patient." When they both submitted to Allah's command, Allah ransomed him with a great ram.
+
+Ishmael built the Kaaba with his father Abraham. He was true to his promise and used to enjoin upon his family prayer and charity.`,
+        lessons: [
+          'Patience in trials is a trait of believers',
+          'Obeying parents in obedience to Allah',
+          'Trusting in Allah in the most difficult circumstances',
+          'Keeping promises is a prophetic character',
+          'Building houses of worship is a great honor',
+        ],
+        quranVerses: [
+          {
+            arabic: 'قَالَ يَا أَبَتِ افْعَلْ مَا تُؤْمَرُ',
+            translation: 'He said: O my father, do as you are commanded.',
+            reference: 'Surah As-Saffat - Verse 102'
+          },
+        ],
+      },
+    },
+  },
+
+  // 9. إسحاق عليه السلام
+  {
+    id: 'ishaq',
+    name: { ar: 'إسحاق', en: 'Isaac', fr: 'Isaac', ur: 'اسحاق', id: 'Ishaq', tr: 'İshak' },
+    era: 'أرض كنعان',
+    order: 9,
+    stories: {
+      ar: {
+        title: 'قصة إسحاق عليه السلام',
+        content: `إسحاق عليه السلام هو ابن إبراهيم من سارة. بشّر الله سارة به وهي عجوز عقيم، فتعجبت من ذلك، لكن الله على كل شيء قدير.
+
+ولد إسحاق وكان من الصالحين المباركين. ورث النبوة عن أبيه إبراهيم، وكان من الأنبياء الذين اختارهم الله وهداهم.
+
+أنجب إسحاق يعقوب والعيص، وكان يعقوب نبياً من بعده. ومن نسل إسحاق جاء كثير من أنبياء بني إسرائيل.
+
+كان إسحاق من الصابرين الشاكرين، عاش حياته في طاعة الله ودعوة الناس إلى عبادته.
+
+ذكره الله في القرآن مع أبيه إبراهيم وابنه يعقوب كأمثلة على الأنبياء الصالحين الذين اصطفاهم الله.`,
+        lessons: [
+          'قدرة الله لا حدود لها',
+          'البشارة بالخير من نعم الله',
+          'النبوة نعمة يختص الله بها من يشاء',
+          'الشكر على النعم واجب',
+          'الصبر والطاعة من صفات الأنبياء',
+        ],
+        quranVerses: [
+          {
+            arabic: 'وَبَشَّرْنَاهُ بِإِسْحَاقَ نَبِيًّا مِّنَ الصَّالِحِينَ',
+            translation: 'And We gave him good tidings of Isaac, a prophet from among the righteous.',
+            reference: 'سورة الصافات - الآية 112'
+          },
+          {
+            arabic: 'فَبَشَّرْنَاهَا بِإِسْحَاقَ وَمِن وَرَاءِ إِسْحَاقَ يَعْقُوبَ',
+            translation: 'So We gave her good tidings of Isaac, and after Isaac, Jacob.',
+            reference: 'سورة هود - الآية 71'
+          },
+        ],
+      },
+      en: {
+        title: 'The Story of Prophet Isaac',
+        content: `Prophet Isaac (peace be upon him) was the son of Abraham from Sarah. Allah gave Sarah glad tidings of him when she was an elderly barren woman. She was amazed by this, but Allah has power over all things.
+
+Isaac was born and was among the righteous and blessed. He inherited prophethood from his father Abraham and was among the prophets chosen and guided by Allah.
+
+Isaac had Jacob and Esau, and Jacob was a prophet after him. From Isaac's lineage came many prophets of the Children of Israel.
+
+Isaac was among the patient and grateful, living his life in obedience to Allah and calling people to worship Him.
+
+Allah mentioned him in the Quran alongside his father Abraham and his son Jacob as examples of righteous prophets whom Allah chose.`,
+        lessons: [
+          'Allah\'s power has no limits',
+          'Good tidings are among Allah\'s blessings',
+          'Prophethood is a blessing Allah bestows on whom He wills',
+          'Gratitude for blessings is obligatory',
+          'Patience and obedience are prophetic traits',
+        ],
+        quranVerses: [
+          {
+            arabic: 'وَبَشَّرْنَاهُ بِإِسْحَاقَ نَبِيًّا مِّنَ الصَّالِحِينَ',
+            translation: 'And We gave him good tidings of Isaac, a prophet from among the righteous.',
+            reference: 'Surah As-Saffat - Verse 112'
+          },
+        ],
+      },
+    },
+  },
+
+  // 10. يعقوب عليه السلام
+  {
+    id: 'yaqub',
+    name: { ar: 'يعقوب', en: 'Jacob', fr: 'Jacob', ur: 'یعقوب', id: 'Ya\'qub', tr: 'Yakub' },
+    era: 'أرض كنعان',
+    order: 10,
+    stories: {
+      ar: {
+        title: 'قصة يعقوب عليه السلام - إسرائيل',
+        content: `يعقوب عليه السلام هو ابن إسحاق وحفيد إبراهيم. سماه الله إسرائيل، ومنه انحدر بنو إسرائيل.
+
+رزقه الله اثني عشر ولداً، أشهرهم يوسف وبنيامين. كان يعقوب يحب يوسف حباً شديداً لما رأى فيه من علامات النبوة.
+
+حسد إخوة يوسف أخاهم، فألقوه في غيابة الجب وأخبروا أباهم أن الذئب أكله. حزن يعقوب حزناً شديداً حتى ابيضت عيناه من الحزن وفقد بصره.
+
+لكن يعقوب لم ييأس من رحمة الله، وظل يقول: "إنما أشكو بثي وحزني إلى الله". وكان يوصي أبناءه بالصبر والتقوى.
+
+لما التقى بيوسف في مصر بعد سنين طويلة، ردّ الله إليه بصره، وعاش بقية حياته مع أبنائه في سعادة.`,
+        lessons: [
+          'الصبر الجميل هو الصبر دون شكوى للناس',
+          'لا ييأس من رحمة الله إلا القوم الكافرون',
+          'الحسد يفرق بين الإخوة',
+          'الشكوى لله وحده لا للناس',
+          'العاقبة للمتقين مهما طال الزمن',
+        ],
+        quranVerses: [
+          {
+            arabic: 'قَالَ إِنَّمَا أَشْكُو بَثِّي وَحُزْنِي إِلَى اللَّهِ',
+            translation: 'He said: I only complain of my suffering and my grief to Allah.',
+            reference: 'سورة يوسف - الآية 86'
+          },
+          {
+            arabic: 'وَتَوَلَّىٰ عَنْهُمْ وَقَالَ يَا أَسَفَىٰ عَلَىٰ يُوسُفَ وَابْيَضَّتْ عَيْنَاهُ مِنَ الْحُزْنِ',
+            translation: 'And he turned away from them and said: Oh, my sorrow over Joseph, and his eyes became white from grief.',
+            reference: 'سورة يوسف - الآية 84'
+          },
+        ],
+      },
+      en: {
+        title: 'The Story of Prophet Jacob - Israel',
+        content: `Prophet Jacob (peace be upon him) was the son of Isaac and grandson of Abraham. Allah named him Israel, and from him descended the Children of Israel.
+
+Allah blessed him with twelve sons, the most famous being Joseph and Benjamin. Jacob loved Joseph deeply for the signs of prophethood he saw in him.
+
+Joseph's brothers envied him and threw him into a well, telling their father that a wolf had eaten him. Jacob grieved so deeply that his eyes turned white from sorrow and he lost his sight.
+
+But Jacob never despaired of Allah's mercy, always saying: "I only complain of my suffering and grief to Allah." He used to advise his sons of patience and piety.
+
+When he reunited with Joseph in Egypt after many years, Allah restored his sight, and he lived the rest of his life happily with his sons.`,
+        lessons: [
+          'Beautiful patience is patience without complaining to people',
+          'Only the disbelieving people despair of Allah\'s mercy',
+          'Envy divides siblings',
+          'Complain to Allah alone, not to people',
+          'The good outcome is for the righteous, no matter how long it takes',
+        ],
+        quranVerses: [
+          {
+            arabic: 'قَالَ إِنَّمَا أَشْكُو بَثِّي وَحُزْنِي إِلَى اللَّهِ',
+            translation: 'He said: I only complain of my suffering and my grief to Allah.',
+            reference: 'Surah Yusuf - Verse 86'
+          },
+        ],
+      },
+    },
+  },
+
+  // 11. يوسف عليه السلام
+  {
+    id: 'yusuf',
+    name: { ar: 'يوسف', en: 'Joseph', fr: 'Joseph', ur: 'یوسف', id: 'Yusuf', tr: 'Yusuf' },
+    era: 'مصر القديمة',
     order: 11,
     stories: {
       ar: {
-        title: 'قصة لوط عليه السلام مع قومه',
-        content: `لوط عليه السلام ابن أخ إبراهيم عليه السلام، هاجر مع عمه ثم استقر في مدينة سدوم. كان أهل سدوم يرتكبون الفاحشة التي لم يسبقهم بها أحد من العالمين.
+        title: 'قصة يوسف عليه السلام - أحسن القصص',
+        content: `يوسف عليه السلام هو ابن يعقوب بن إسحاق بن إبراهيم. رأى في منامه أحد عشر كوكباً والشمس والقمر يسجدون له، فأخبر أباه الذي حذره من إخبار إخوته.
 
-دعا لوط قومه إلى ترك هذه الفاحشة والتوبة إلى الله، لكنهم رفضوا وهددوه بالإخراج من المدينة.
+حسد إخوة يوسف أخاهم لمحبة أبيهم له، فتآمروا عليه وألقوه في غيابة الجب. التقطته قافلة وباعوه في مصر.
 
-جاءت الملائكة إلى لوط في صورة شباب حسان، فخاف عليهم من قومه. جاء قومه يريدون الضيوف، فعرض عليهم لوط بناته للزواج لكنهم رفضوا.
+اشتراه عزيز مصر، وراودته امرأة العزيز عن نفسه فاستعصم. لما أبى، كادت له ودخل السجن ظلماً.
 
-أخبرته الملائكة أنهم رسل الله وأمروه بالخروج مع أهله ليلاً، وألا يلتفت أحد منهم. امرأته كانت من الغابرين لأنها كانت تدل قومها على ضيوفه.
+في السجن فسّر رؤى المسجونين، ثم فسّر رؤيا الملك عن السبع البقرات السمان والسبع العجاف، فأعجب به الملك وجعله على خزائن مصر.
 
-أمطر الله على قوم لوط حجارة من سجيل، وقلب مدينتهم عاليها سافلها، ونجّى لوطاً والمؤمنين معه.`,
+جاء إخوته يطلبون الطعام في سنوات القحط، فعرفهم ولم يعرفوه. ثم كشف لهم عن نفسه وعفا عنهم، وجاء أبوه وخرّوا له سجداً، فتحققت رؤياه.`,
         lessons: [
-          'الفواحش سبب هلاك الأمم',
-          'الصبر على دعوة القوم الفاسدين',
-          'النجاة بالإيمان والطاعة',
-          'مخالفة الأقارب إذا كانوا على باطل',
+          'الصبر على البلاء مفتاح الفرج',
+          'العفة والطهارة من أعظم الأخلاق',
+          'الله ينصر عباده الصابرين',
+          'العفو عند المقدرة من شيم الكرام',
+          'تفسير الأحلام علم من الله',
+          'الحسد سبب للفتن بين الأهل',
+        ],
+        quranVerses: [
+          {
+            arabic: 'نَحْنُ نَقُصُّ عَلَيْكَ أَحْسَنَ الْقَصَصِ',
+            translation: 'We relate to you the best of stories.',
+            reference: 'سورة يوسف - الآية 3'
+          },
+          {
+            arabic: 'قَالَ مَعَاذَ اللَّهِ ۖ إِنَّهُ رَبِّي أَحْسَنَ مَثْوَايَ',
+            translation: 'He said: I seek refuge in Allah. Indeed, he is my master who has made good my residence.',
+            reference: 'سورة يوسف - الآية 23'
+          },
+          {
+            arabic: 'قَالَ لَا تَثْرِيبَ عَلَيْكُمُ الْيَوْمَ ۖ يَغْفِرُ اللَّهُ لَكُمْ',
+            translation: 'He said: No blame will there be upon you today. Allah will forgive you.',
+            reference: 'سورة يوسف - الآية 92'
+          },
+        ],
+        hadiths: [
+          {
+            text: 'الكريم ابن الكريم ابن الكريم ابن الكريم يوسف بن يعقوب بن إسحاق بن إبراهيم',
+            source: 'رواه البخاري'
+          },
         ],
       },
       en: {
-        title: 'The Story of Prophet Lot and His People',
-        content: `Prophet Lot (peace be upon him) was the nephew of Abraham. He migrated with his uncle and settled in the city of Sodom. The people of Sodom committed an immorality unprecedented in the world.
+        title: 'The Story of Prophet Joseph - The Best of Stories',
+        content: `Prophet Joseph (peace be upon him) was the son of Jacob son of Isaac son of Abraham. He saw in his dream eleven stars and the sun and moon prostrating to him. He told his father, who warned him not to tell his brothers.
 
-Lot called his people to abandon this immorality and repent to Allah, but they refused and threatened to expel him from the city.
+Joseph's brothers envied him for their father's love, so they conspired against him and threw him into a well. A caravan found him and sold him in Egypt.
 
-Angels came to Lot in the form of handsome young men. He feared for them from his people. His people came wanting the guests, but Lot offered his daughters in marriage and they refused.
+The Aziz of Egypt bought him, and the Aziz's wife tried to seduce him but he remained chaste. When he refused, she plotted against him and he was unjustly imprisoned.
 
-The angels told him they were Allah's messengers and commanded him to leave with his family at night, and none should look back. His wife was among those destroyed because she would inform her people about his guests.
+In prison, he interpreted dreams for fellow prisoners, then interpreted the king's dream about seven fat cows and seven lean ones. The king was impressed and made him treasurer of Egypt.
 
-Allah rained upon the people of Lot stones of baked clay, turning their city upside down, and saved Lot and the believers with him.`,
+His brothers came seeking food during years of famine. He recognized them but they did not recognize him. He revealed himself and forgave them. His father came and they fell prostrate to him, fulfilling his dream.`,
         lessons: [
-          'Immorality causes the destruction of nations',
-          'Patience in calling corrupt people',
-          'Salvation through faith and obedience',
-          'Opposing relatives when they are upon falsehood',
+          'Patience in trials is the key to relief',
+          'Chastity and purity are the greatest virtues',
+          'Allah supports His patient servants',
+          'Forgiveness when able is noble',
+          'Dream interpretation is knowledge from Allah',
+          'Envy causes strife among family',
+        ],
+        quranVerses: [
+          {
+            arabic: 'نَحْنُ نَقُصُّ عَلَيْكَ أَحْسَنَ الْقَصَصِ',
+            translation: 'We relate to you the best of stories.',
+            reference: 'Surah Yusuf - Verse 3'
+          },
         ],
       },
     },
   },
+
+  // 12. شعيب عليه السلام
   {
     id: 'shuayb',
-    name: { ar: 'شعيب', en: 'Shuayb', fr: 'Chouaïb', ur: 'شعیب', id: 'Syuaib', tr: 'Şuayb' },
-    era: 'مدين',
+    name: { ar: 'شعيب', en: 'Shuayb', fr: 'Chouaïb', ur: 'شعیب', id: 'Syu\'aib', tr: 'Şuayb' },
+    era: 'أهل مدين',
     order: 12,
     stories: {
       ar: {
-        title: 'قصة شعيب عليه السلام مع أهل مدين',
-        content: `شعيب عليه السلام أُرسل إلى أهل مدين، وكانوا قوماً يبخسون الناس أشياءهم ويطففون في الميزان والمكيال.
+        title: 'قصة شعيب عليه السلام - خطيب الأنبياء',
+        content: `شعيب عليه السلام أرسله الله إلى أهل مدين وأصحاب الأيكة. كانوا يعبدون الأصنام ويطففون الميزان ويبخسون الناس أشياءهم.
 
 دعاهم شعيب إلى عبادة الله وحده وإلى العدل في المعاملات. قال لهم: "أوفوا الكيل والميزان بالقسط ولا تبخسوا الناس أشياءهم".
 
-رفض قومه دعوته وقالوا: "أصلاتك تأمرك أن نترك ما يعبد آباؤنا أو أن نفعل في أموالنا ما نشاء".
+كان شعيب فصيح اللسان بليغ الحجة، لذلك لُقب بخطيب الأنبياء. استخدم الحكمة والموعظة الحسنة في دعوته.
 
-هددوه بالرجم والإخراج من القرية، لكنه صبر واستمر في دعوتهم. توعدهم بعذاب الله إن استمروا في غيهم.
+رفض قومه دعوته وهددوه بالرجم والإخراج من قريتهم. استمروا في طغيانهم وتطفيفهم.
 
-أخذتهم الرجفة وأصبحوا في ديارهم جاثمين. نجّى الله شعيباً والذين آمنوا معه.`,
+فأخذتهم الرجفة فأصبحوا في ديارهم جاثمين. ونجى الله شعيباً ومن آمن معه.`,
         lessons: [
-          'العدل في المعاملات من أصول الدين',
-          'الغش والتطفيف من كبائر الذنوب',
-          'الصبر على أذى الدعوة',
-          'ربط الدين بالمعاملات اليومية',
+          'الأمانة في المعاملات التجارية واجبة',
+          'التطفيف في الكيل والميزان من كبائر الذنوب',
+          'الفصاحة والبلاغة من أدوات الدعوة',
+          'العدل أساس الحضارات',
+          'الظلم في المعاملات سبب هلاك الأمم',
+        ],
+        quranVerses: [
+          {
+            arabic: 'وَإِلَىٰ مَدْيَنَ أَخَاهُمْ شُعَيْبًا ۗ قَالَ يَا قَوْمِ اعْبُدُوا اللَّهَ مَا لَكُم مِّنْ إِلَٰهٍ غَيْرُهُ',
+            translation: 'And to Madyan We sent their brother Shuayb. He said: O my people, worship Allah; you have no deity other than Him.',
+            reference: 'سورة الأعراف - الآية 85'
+          },
+          {
+            arabic: 'وَيَا قَوْمِ أَوْفُوا الْمِكْيَالَ وَالْمِيزَانَ بِالْقِسْطِ',
+            translation: 'And O my people, give full measure and weight in justice.',
+            reference: 'سورة هود - الآية 85'
+          },
         ],
       },
       en: {
-        title: 'The Story of Prophet Shuayb and the People of Midian',
-        content: `Prophet Shuayb (peace be upon him) was sent to the people of Midian, who cheated people in their dealings and gave short measure and weight.
+        title: 'The Story of Prophet Shuayb - The Orator of Prophets',
+        content: `Prophet Shuayb (peace be upon him) was sent by Allah to the people of Madyan and the companions of the thicket. They worshipped idols, cheated in measure, and wronged people in their dealings.
 
-Shuayb called them to worship Allah alone and to be just in their dealings. He told them: "Give full measure and weight in justice and do not deprive people of their goods."
+Shuayb called them to worship Allah alone and to be just in their dealings. He said: "Give full measure and weight in justice and do not deprive people of their due."
 
-His people rejected his call and said: "Does your prayer command you that we leave what our fathers worshipped or that we do with our wealth whatever we please?"
+Shuayb was eloquent and persuasive, which earned him the title "Orator of the Prophets." He used wisdom and good preaching in his call.
 
-They threatened him with stoning and expulsion from the village, but he remained patient and continued calling them. He warned them of Allah's punishment if they persisted.
+His people rejected his call and threatened to stone and expel him from their town. They continued in their transgression and cheating.
 
-The earthquake seized them and they lay fallen in their homes. Allah saved Shuayb and those who believed with him.`,
+Then the earthquake seized them, and they became lifeless in their homes. Allah saved Shuayb and those who believed with him.`,
         lessons: [
-          'Justice in dealings is fundamental to religion',
-          'Cheating and giving short measure are major sins',
-          'Patience in the face of persecution',
-          'Religion is connected to daily transactions',
+          'Honesty in business dealings is obligatory',
+          'Cheating in measure and weight is among major sins',
+          'Eloquence and persuasion are tools of calling to Allah',
+          'Justice is the foundation of civilizations',
+          'Oppression in dealings causes nations to perish',
+        ],
+        quranVerses: [
+          {
+            arabic: 'وَإِلَىٰ مَدْيَنَ أَخَاهُمْ شُعَيْبًا',
+            translation: 'And to Madyan We sent their brother Shuayb.',
+            reference: 'Surah Al-A\'raf - Verse 85'
+          },
         ],
       },
     },
   },
+
+  // 13. أيوب عليه السلام
   {
     id: 'ayyub',
-    name: { ar: 'أيوب', en: 'Job', fr: 'Job', ur: 'ایوب', id: 'Ayyub', tr: 'Eyyub' },
-    era: 'الشام',
+    name: { ar: 'أيوب', en: 'Job', fr: 'Job', ur: 'ایوب', id: 'Ayyub', tr: 'Eyyüp' },
+    era: 'الصبر والابتلاء',
     order: 13,
     stories: {
       ar: {
-        title: 'قصة أيوب عليه السلام والصبر على البلاء',
-        content: `أيوب عليه السلام كان نبياً صالحاً غنياً، له أولاد كثيرون ومال وفير وصحة جيدة. ابتلاه الله بلاء شديداً ليختبر صبره.
+        title: 'قصة أيوب عليه السلام - الصبر على البلاء',
+        content: `أيوب عليه السلام كان نبياً صالحاً أنعم الله عليه بالمال والأولاد والصحة. كان شاكراً لنعم الله، ذاكراً له في السراء والضراء.
 
-فقد أيوب ماله وأولاده، ثم أصابه مرض شديد في جسده. مكث سنوات طويلة في هذا البلاء، لكنه لم يشكُ إلا إلى الله.
+ابتلاه الله بفقد ماله وأولاده، ثم ابتلاه بمرض شديد أصاب جسده كله. تفرق عنه الناس ولم يبق معه إلا زوجته الصالحة.
 
-تخلى عنه الناس إلا زوجته التي بقيت تخدمه وترعاه. كان أيوب يصبر ويحتسب ولا يتضجر من قضاء الله.
+صبر أيوب صبراً عظيماً، لم يشك ولم يتذمر. استمر في حمد الله وشكره رغم كل ما أصابه. مكث في بلائه ثمانية عشر عاماً أو أكثر.
 
-في النهاية دعا ربه: "أني مسني الضر وأنت أرحم الراحمين". فاستجاب الله له وأمره أن يركض برجله فنبعت عين ماء، اغتسل منها فشُفي.
+لما دعا ربه قائلاً: "أني مسني الضر وأنت أرحم الراحمين"، استجاب الله له. أمره أن يركض برجله فنبع له ماء بارد شفاه من مرضه.
 
-رد الله إليه صحته وأهله ومثلهم معهم، وجعله مثالاً للصابرين. قال تعالى: "إنا وجدناه صابراً نعم العبد إنه أواب".`,
+رد الله عليه أهله ومثلهم معهم، وأعاد إليه صحته وماله، جزاءً على صبره.`,
         lessons: [
-          'الصبر على البلاء من علامات الإيمان',
-          'البلاء اختبار للمؤمن وتكفير للذنوب',
-          'الشكوى إلى الله وحده',
-          'الفرج يأتي بعد الصبر',
+          'الصبر على البلاء من أعظم العبادات',
+          'البلاء اختبار وتمحيص للمؤمنين',
+          'الله يبتلي من يحب',
+          'الشكوى لله وحده في الشدائد',
+          'جزاء الصابرين عظيم في الدنيا والآخرة',
+          'الدعاء في وقت الضيق مستجاب',
+        ],
+        quranVerses: [
+          {
+            arabic: 'وَأَيُّوبَ إِذْ نَادَىٰ رَبَّهُ أَنِّي مَسَّنِيَ الضُّرُّ وَأَنتَ أَرْحَمُ الرَّاحِمِينَ',
+            translation: 'And Job, when he called to his Lord: Indeed, adversity has touched me, and You are the Most Merciful of the merciful.',
+            reference: 'سورة الأنبياء - الآية 83'
+          },
+          {
+            arabic: 'فَاسْتَجَبْنَا لَهُ فَكَشَفْنَا مَا بِهِ مِن ضُرٍّ',
+            translation: 'So We responded to him and removed what afflicted him of adversity.',
+            reference: 'سورة الأنبياء - الآية 84'
+          },
         ],
       },
       en: {
-        title: 'The Story of Prophet Job and Patience Through Trials',
-        content: `Prophet Job (peace be upon him) was a righteous and wealthy prophet with many children, abundant wealth, and good health. Allah tested him with severe trials.
+        title: 'The Story of Prophet Job - Patience in Adversity',
+        content: `Prophet Job (peace be upon him) was a righteous prophet whom Allah blessed with wealth, children, and health. He was grateful for Allah's blessings, remembering Him in ease and hardship.
 
-Job lost his wealth and children, then was struck with a severe illness. He remained in this condition for many years, but he complained only to Allah.
+Allah tested him with the loss of his wealth and children, then with a severe illness that afflicted his entire body. People abandoned him, and only his righteous wife remained.
 
-People abandoned him except his wife, who continued to serve and care for him. Job remained patient and sought reward from Allah without complaining about His decree.
+Job was immensely patient, never complaining or grumbling. He continued praising and thanking Allah despite all that befell him. He remained in his trial for eighteen years or more.
 
-Finally he called upon his Lord: "Indeed, adversity has touched me, and You are the Most Merciful of the merciful." Allah answered him and commanded him to strike the ground with his foot, and a spring gushed forth. He washed from it and was healed.
+When he called upon his Lord saying: "Indeed, adversity has touched me, and You are the Most Merciful of the merciful," Allah responded. He commanded him to strike the ground with his foot, and cool water sprang forth that healed him.
 
-Allah restored his health, family, and doubled his blessings. He made him an example for the patient. Allah said: "Indeed, We found him patient, an excellent servant. Indeed, he was one repeatedly turning to Allah."`,
+Allah restored his family and as many again with them, and returned his health and wealth as a reward for his patience.`,
         lessons: [
-          'Patience through trials is a sign of faith',
-          'Trials test believers and expiate sins',
-          'Complain only to Allah',
-          'Relief comes after patience',
+          'Patience in adversity is among the greatest acts of worship',
+          'Trials test and purify believers',
+          'Allah tests those He loves',
+          'Complain to Allah alone in hardship',
+          'The reward for the patient is great in this world and the hereafter',
+          'Supplication in times of distress is answered',
+        ],
+        quranVerses: [
+          {
+            arabic: 'وَأَيُّوبَ إِذْ نَادَىٰ رَبَّهُ أَنِّي مَسَّنِيَ الضُّرُّ',
+            translation: 'And Job, when he called to his Lord: Indeed, adversity has touched me.',
+            reference: 'Surah Al-Anbiya - Verse 83'
+          },
         ],
       },
     },
   },
+
+  // 14. ذو الكفل عليه السلام
   {
-    id: 'yunus',
-    name: { ar: 'يونس', en: 'Jonah', fr: 'Jonas', ur: 'یونس', id: 'Yunus', tr: 'Yunus' },
-    era: 'نينوى',
+    id: 'dhul-kifl',
+    name: { ar: 'ذو الكفل', en: 'Dhul-Kifl', fr: 'Dhul-Kifl', ur: 'ذوالکفل', id: 'Dzulkifli', tr: 'Zülkifl' },
+    era: 'بعد أيوب',
     order: 14,
     stories: {
       ar: {
-        title: 'قصة يونس عليه السلام وصاحب الحوت',
-        content: `يونس عليه السلام أُرسل إلى أهل نينوى، فدعاهم إلى الله فكذبوه. غضب يونس وخرج من المدينة قبل أن يأذن له الله.
+        title: 'قصة ذي الكفل عليه السلام',
+        content: `ذو الكفل عليه السلام هو نبي من أنبياء الله، ذكره الله في القرآن مع الأنبياء الصابرين.
 
-ركب يونس السفينة، فهاج البحر واضطربت السفينة. اقترعوا فخرجت القرعة على يونس، فألقوه في البحر.
+قيل إنه سمي بذي الكفل لأنه تكفل لنبي قبله أن يصوم النهار ويقوم الليل ولا يغضب، ففعل ووفى بما تكفل به.
 
-التقمه الحوت بأمر الله، فبقي في بطنه يسبح الله ويستغفره. دعا في الظلمات: "لا إله إلا أنت سبحانك إني كنت من الظالمين".
+كان من الصابرين الأخيار الذين اختارهم الله واجتباهم. عُرف بالوفاء بالعهود والالتزام بما يتعهد به.
 
-استجاب الله دعاءه وأمر الحوت أن يلفظه على الساحل. كان سقيماً فأنبت الله عليه شجرة من يقطين تظلله وتحميه.
+أثنى الله عليه في القرآن ووصفه بالصبر، وأدخله في زمرة الأخيار من عباده.
 
-عاد يونس إلى قومه فوجدهم قد آمنوا، وكانوا مائة ألف أو يزيدون. متّعهم الله إلى حين.`,
+قيل إنه من نسل أيوب عليه السلام، وقيل إنه إلياس، ولكن الراجح أنه نبي مستقل.`,
         lessons: [
-          'عدم اليأس من هداية الناس',
-          'انتظار أمر الله قبل التصرف',
-          'الاستغفار والتسبيح سبب النجاة',
-          'الله يقبل توبة التائبين',
+          'الوفاء بالعهود من أخلاق الأنبياء',
+          'الصبر طريق إلى رضا الله',
+          'ضبط النفس عن الغضب من الفضائل',
+          'قيام الليل من أفضل العبادات',
+          'الالتزام بالوعود يرفع الإنسان عند الله',
+        ],
+        quranVerses: [
+          {
+            arabic: 'وَإِسْمَاعِيلَ وَإِدْرِيسَ وَذَا الْكِفْلِ ۖ كُلٌّ مِّنَ الصَّابِرِينَ',
+            translation: 'And Ishmael and Idris and Dhul-Kifl; all were of the patient.',
+            reference: 'سورة الأنبياء - الآية 85'
+          },
+          {
+            arabic: 'وَاذْكُرْ إِسْمَاعِيلَ وَالْيَسَعَ وَذَا الْكِفْلِ ۖ وَكُلٌّ مِّنَ الْأَخْيَارِ',
+            translation: 'And remember Ishmael, Elisha, and Dhul-Kifl; and all are among the outstanding.',
+            reference: 'سورة ص - الآية 48'
+          },
         ],
       },
       en: {
-        title: 'The Story of Prophet Jonah - Companion of the Whale',
-        content: `Prophet Jonah (peace be upon him) was sent to the people of Nineveh. He called them to Allah but they rejected him. Jonah became angry and left the city before Allah permitted him.
+        title: 'The Story of Prophet Dhul-Kifl',
+        content: `Prophet Dhul-Kifl (peace be upon him) is a prophet of Allah, mentioned in the Quran among the patient prophets.
 
-Jonah boarded a ship, but the sea became turbulent. They cast lots, and the lot fell on Jonah, so they threw him into the sea.
+It is said he was named Dhul-Kifl because he guaranteed a prophet before him that he would fast during the day, pray at night, and not become angry, and he fulfilled what he guaranteed.
 
-A whale swallowed him by Allah's command. He remained in its belly glorifying Allah and seeking forgiveness. He called out in the darkness: "There is no deity except You; exalted are You. Indeed, I have been of the wrongdoers."
+He was among the patient and righteous whom Allah chose and selected. He was known for keeping promises and fulfilling commitments.
 
-Allah answered his supplication and commanded the whale to cast him onto the shore. He was ill, so Allah caused a gourd tree to grow over him for shade and protection.
+Allah praised him in the Quran and described him with patience, placing him among the outstanding of His servants.
 
-Jonah returned to his people and found they had believed - a hundred thousand or more. Allah granted them enjoyment for a time.`,
+It is said he was from the lineage of Job, and some say he was Elijah, but the preferred view is that he was an independent prophet.`,
         lessons: [
-          'Never despair of guiding people',
-          'Wait for Allah\'s command before acting',
-          'Seeking forgiveness and glorification cause salvation',
-          'Allah accepts the repentance of those who repent',
+          'Keeping promises is a prophetic character',
+          'Patience is a path to Allah\'s pleasure',
+          'Controlling anger is a virtue',
+          'Night prayer is among the best acts of worship',
+          'Fulfilling commitments elevates one with Allah',
+        ],
+        quranVerses: [
+          {
+            arabic: 'وَإِسْمَاعِيلَ وَإِدْرِيسَ وَذَا الْكِفْلِ ۖ كُلٌّ مِّنَ الصَّابِرِينَ',
+            translation: 'And Ishmael and Idris and Dhul-Kifl; all were of the patient.',
+            reference: 'Surah Al-Anbiya - Verse 85'
+          },
         ],
       },
     },
   },
+
+  // 15. موسى عليه السلام
   {
-    id: 'dawud',
-    name: { ar: 'داود', en: 'David', fr: 'David', ur: 'داؤد', id: 'Daud', tr: 'Davud' },
-    era: 'فلسطين',
+    id: 'musa',
+    name: { ar: 'موسى', en: 'Moses', fr: 'Moïse', ur: 'موسیٰ', id: 'Musa', tr: 'Musa' },
+    era: 'مصر الفرعونية',
     order: 15,
     stories: {
       ar: {
-        title: 'قصة داود عليه السلام الملك النبي',
-        content: `داود عليه السلام كان نبياً وملكاً على بني إسرائيل. أعطاه الله ملكاً عظيماً وعلماً وحكمة، وآتاه الزبور.
+        title: 'قصة موسى عليه السلام - كليم الله',
+        content: `موسى عليه السلام هو كليم الله، من أولي العزم من الرسل. ولد في زمن فرعون الذي كان يقتل أبناء بني إسرائيل.
 
-كان داود شجاعاً، قتل جالوت الجبار وهو شاب صغير. ألان الله له الحديد فكان يصنع الدروع والسلاح.
+ألهمت أم موسى أن تضعه في تابوت وتلقيه في اليم. التقطه آل فرعون فربّته امرأة فرعون آسية، ورفض أن يرضع من أي مرضعة إلا أمه.
 
-أوتي داود صوتاً جميلاً، فكان إذا سبّح سبّحت معه الجبال والطير. قال تعالى: "يا جبال أوّبي معه والطير".
+لما كبر موسى، وكز رجلاً من قوم فرعون فقتله خطأً، ففر إلى مدين. هناك تزوج ابنة شعيب وعمل عنده سنين.
 
-كان داود يصوم يوماً ويفطر يوماً، وهو أحب الصيام إلى الله. وكان يقوم ثلث الليل.
+في طريق عودته إلى مصر، ناداه الله من شاطئ الوادي المقدس طوى. كلّمه الله وأعطاه المعجزات: العصا التي تتحول إلى ثعبان، واليد التي تخرج بيضاء.
 
-حكم داود بين الناس بالعدل، وعلّمه الله فصل الخطاب. كان يعمل بيده ويأكل من كسب يده.`,
+أرسله الله إلى فرعون ليطلب منه أن يرسل معه بني إسرائيل. كذّب فرعون وتحدّى موسى، فأراه الآيات الكبرى لكنه استكبر.
+
+خرج موسى ببني إسرائيل من مصر، وتبعهم فرعون بجنوده. شق الله البحر لموسى وأغرق فرعون وجنوده.
+
+أنزل الله على موسى التوراة، وكلّمه على جبل الطور.`,
         lessons: [
-          'الجمع بين النبوة والملك فضل من الله',
-          'العمل باليد لا يتنافى مع المكانة',
-          'تسخير المخلوقات للتسبيح',
-          'الحكم بالعدل بين الناس',
+          'الله يحفظ أولياءه مهما كادهم الأعداء',
+          'التوكل على الله في أحلك الظروف',
+          'عاقبة الظالمين الهلاك مهما عظموا',
+          'الثبات على الحق أمام الطغاة',
+          'معجزات الله تؤيد أنبياءه',
+          'الله يكلم من يشاء من عباده',
+        ],
+        quranVerses: [
+          {
+            arabic: 'وَكَلَّمَ اللَّهُ مُوسَىٰ تَكْلِيمًا',
+            translation: 'And Allah spoke to Moses with direct speech.',
+            reference: 'سورة النساء - الآية 164'
+          },
+          {
+            arabic: 'فَأَوْحَيْنَا إِلَىٰ مُوسَىٰ أَنِ اضْرِب بِّعَصَاكَ الْبَحْرَ ۖ فَانفَلَقَ',
+            translation: 'So We inspired to Moses: Strike the sea with your staff, and it parted.',
+            reference: 'سورة الشعراء - الآية 63'
+          },
+        ],
+        hadiths: [
+          {
+            text: 'لا تفضلوني على موسى',
+            source: 'رواه البخاري ومسلم'
+          },
+        ],
+      },
+      en: {
+        title: 'The Story of Prophet Moses - The One Who Spoke with Allah',
+        content: `Prophet Moses (peace be upon him) is the one who spoke directly with Allah, one of the Prophets of Strong Will. He was born when Pharaoh was killing the sons of the Children of Israel.
+
+Moses's mother was inspired to place him in a basket and cast it into the river. Pharaoh's household picked him up, and Pharaoh's wife Asiyah raised him. He refused to nurse from anyone except his own mother.
+
+When Moses grew up, he struck a man from Pharaoh's people and accidentally killed him, so he fled to Madyan. There he married Shuayb's daughter and worked for him for years.
+
+On his way back to Egypt, Allah called to him from the side of the holy valley of Tuwa. Allah spoke to him and gave him miracles: the staff that transforms into a serpent, and the hand that emerges white.
+
+Allah sent him to Pharaoh to request that he let the Children of Israel go. Pharaoh denied and challenged Moses, so he showed him the great signs, but Pharaoh was arrogant.
+
+Moses led the Children of Israel out of Egypt, and Pharaoh followed with his soldiers. Allah parted the sea for Moses and drowned Pharaoh and his soldiers.
+
+Allah revealed the Torah to Moses and spoke to him on Mount Tur.`,
+        lessons: [
+          'Allah protects His allies no matter how enemies plot',
+          'Trust in Allah in the darkest circumstances',
+          'Oppressors face destruction no matter how mighty',
+          'Standing firm for truth before tyrants',
+          'Allah\'s miracles support His prophets',
+          'Allah speaks to whom He wills of His servants',
+        ],
+        quranVerses: [
+          {
+            arabic: 'وَكَلَّمَ اللَّهُ مُوسَىٰ تَكْلِيمًا',
+            translation: 'And Allah spoke to Moses with direct speech.',
+            reference: 'Surah An-Nisa - Verse 164'
+          },
+        ],
+      },
+    },
+  },
+
+  // 16. هارون عليه السلام
+  {
+    id: 'harun',
+    name: { ar: 'هارون', en: 'Aaron', fr: 'Aaron', ur: 'ہارون', id: 'Harun', tr: 'Harun' },
+    era: 'مع موسى',
+    order: 16,
+    stories: {
+      ar: {
+        title: 'قصة هارون عليه السلام - وزير موسى',
+        content: `هارون عليه السلام هو أخو موسى الأكبر، اختاره الله نبياً ووزيراً لموسى. كان أفصح لساناً من موسى.
+
+لما أُرسل موسى إلى فرعون، دعا ربه أن يجعل له وزيراً من أهله هو هارون. استجاب الله دعاءه وأيده بأخيه.
+
+كان هارون مع موسى في مواجهة فرعون وسحرته. وقف معه صامداً أمام كل التحديات.
+
+لما ذهب موسى لميقات ربه أربعين ليلة، استخلف هارون على بني إسرائيل. لكن السامري أضلّهم وصنع لهم العجل.
+
+حاول هارون منعهم لكنهم لم يستمعوا إليه. لما رجع موسى وعاتبه، قال هارون: "يا ابن أم لا تأخذ بلحيتي ولا برأسي إني خشيت أن تقول فرقت بين بني إسرائيل".
+
+توفي هارون قبل موسى، وكان من المحسنين الذين أحسن الله إليهم.`,
+        lessons: [
+          'التعاون على البر والتقوى مطلوب',
+          'الفصاحة والبيان من أدوات الدعوة',
+          'القيادة الحكيمة تحافظ على وحدة الأمة',
+          'المسؤولية الثقيلة تحتاج إلى معاونين',
+          'الرفق بالناس من صفات الأنبياء',
+        ],
+        quranVerses: [
+          {
+            arabic: 'وَأَخِي هَارُونُ هُوَ أَفْصَحُ مِنِّي لِسَانًا فَأَرْسِلْهُ مَعِيَ رِدْءًا',
+            translation: 'And my brother Aaron is more fluent than me in tongue, so send him with me as support.',
+            reference: 'سورة القصص - الآية 34'
+          },
+          {
+            arabic: 'وَلَقَدْ آتَيْنَا مُوسَى وَهَارُونَ الْفُرْقَانَ',
+            translation: 'And We had already given Moses and Aaron the criterion.',
+            reference: 'سورة الأنبياء - الآية 48'
+          },
+        ],
+      },
+      en: {
+        title: 'The Story of Prophet Aaron - Moses\'s Minister',
+        content: `Prophet Aaron (peace be upon him) was Moses's elder brother, chosen by Allah as a prophet and minister to Moses. He was more eloquent in speech than Moses.
+
+When Moses was sent to Pharaoh, he prayed to his Lord to appoint him a minister from his family - Aaron. Allah answered his prayer and supported him with his brother.
+
+Aaron was with Moses in confronting Pharaoh and his sorcerers. He stood firm with him through all challenges.
+
+When Moses went to meet his Lord for forty nights, he left Aaron in charge of the Children of Israel. But the Samaritan led them astray and made them a calf.
+
+Aaron tried to stop them but they did not listen. When Moses returned and blamed him, Aaron said: "O son of my mother, do not seize me by my beard or head. I feared that you would say I caused division among the Children of Israel."
+
+Aaron died before Moses and was among the righteous whom Allah favored.`,
+        lessons: [
+          'Cooperation in righteousness and piety is required',
+          'Eloquence and clarity are tools of calling to Allah',
+          'Wise leadership preserves unity of the nation',
+          'Heavy responsibility needs helpers',
+          'Gentleness with people is a prophetic trait',
+        ],
+        quranVerses: [
+          {
+            arabic: 'وَأَخِي هَارُونُ هُوَ أَفْصَحُ مِنِّي لِسَانًا',
+            translation: 'And my brother Aaron is more fluent than me in tongue.',
+            reference: 'Surah Al-Qasas - Verse 34'
+          },
+        ],
+      },
+    },
+  },
+
+  // 17. داود عليه السلام
+  {
+    id: 'dawud',
+    name: { ar: 'داود', en: 'David', fr: 'David', ur: 'داؤد', id: 'Daud', tr: 'Davud' },
+    era: 'مملكة إسرائيل',
+    order: 17,
+    stories: {
+      ar: {
+        title: 'قصة داود عليه السلام - الملك النبي',
+        content: `داود عليه السلام كان نبياً وملكاً على بني إسرائيل. آتاه الله الملك والحكمة وفصل الخطاب.
+
+في شبابه، كان داود راعياً للغنم. لما خرج طالوت بجيشه لقتال جالوت وجنوده، كان داود من الذين خرجوا معه.
+
+قتل داود جالوت بحجر من مقلاعه، وكان ذلك نصراً عظيماً لبني إسرائيل. بعدها آتاه الله الملك.
+
+أنزل الله على داود الزبور، وآتاه صوتاً حسناً كانت الجبال تسبح معه والطير. علّمه صنعة الدروع.
+
+كان داود يصوم يوماً ويفطر يوماً، وكان يقوم نصف الليل. كان كثير العبادة، حتى سماه النبي ﷺ بأحب الصيام والقيام إلى الله.
+
+كان حكيماً عادلاً في قضائه بين الناس، أعطاه الله فصل الخطاب.`,
+        lessons: [
+          'الله يؤتي الملك من يشاء',
+          'الشجاعة في مواجهة الباطل مطلوبة',
+          'ذكر الله يشمل الكون كله',
+          'العمل والعبادة لا يتعارضان',
+          'الاعتدال في العبادة أفضل',
+          'العدل أساس الحكم',
+        ],
+        quranVerses: [
+          {
+            arabic: 'وَآتَيْنَا دَاوُودَ زَبُورًا',
+            translation: 'And to David We gave the Psalms.',
+            reference: 'سورة النساء - الآية 163'
+          },
+          {
+            arabic: 'وَلَقَدْ آتَيْنَا دَاوُودَ مِنَّا فَضْلًا ۖ يَا جِبَالُ أَوِّبِي مَعَهُ وَالطَّيْرَ',
+            translation: 'And We certainly gave David from Us bounty. O mountains, repeat Our praises with him, and the birds as well.',
+            reference: 'سورة سبأ - الآية 10'
+          },
+        ],
+        hadiths: [
+          {
+            text: 'أحب الصيام إلى الله صيام داود، كان يصوم يوماً ويفطر يوماً',
+            source: 'رواه البخاري ومسلم'
+          },
         ],
       },
       en: {
         title: 'The Story of Prophet David - The King Prophet',
-        content: `Prophet David (peace be upon him) was both a prophet and king over the Children of Israel. Allah granted him great kingdom, knowledge and wisdom, and gave him the Psalms.
+        content: `Prophet David (peace be upon him) was a prophet and king over the Children of Israel. Allah gave him kingdom, wisdom, and the ability to judge decisively.
 
-David was brave - he killed the giant Goliath as a young man. Allah softened iron for him so he could craft armor and weapons.
+In his youth, David was a shepherd. When Talut (Saul) went out with his army to fight Goliath and his soldiers, David was among those who went with him.
 
-David was blessed with a beautiful voice. When he glorified Allah, the mountains and birds would join him. Allah said: "O mountains, repeat the praises with him, and the birds."
+David killed Goliath with a stone from his sling, which was a great victory for the Children of Israel. After this, Allah gave him the kingdom.
 
-David would fast one day and break his fast the next - this is the most beloved fasting to Allah. He would stand in prayer for a third of the night.
+Allah revealed the Psalms (Zabur) to David and gave him a beautiful voice that the mountains and birds would glorify Allah with him. He taught him the craft of making armor.
 
-David judged between people with justice, and Allah taught him decisive speech. He worked with his own hands and ate from his earnings.`,
+David would fast one day and break his fast the next, and he would stand in prayer for half the night. He was abundant in worship, so much that the Prophet ﷺ called his fasting and prayer the most beloved to Allah.
+
+He was wise and just in his judgment between people; Allah gave him decisive speech.`,
         lessons: [
-          'Combining prophethood and kingship is a favor from Allah',
-          'Manual labor does not contradict high status',
-          'Creation joins in glorification of Allah',
-          'Judging with justice between people',
+          'Allah gives kingdom to whom He wills',
+          'Courage in facing falsehood is required',
+          'Remembrance of Allah encompasses the entire universe',
+          'Work and worship do not conflict',
+          'Moderation in worship is best',
+          'Justice is the foundation of governance',
+        ],
+        quranVerses: [
+          {
+            arabic: 'وَآتَيْنَا دَاوُودَ زَبُورًا',
+            translation: 'And to David We gave the Psalms.',
+            reference: 'Surah An-Nisa - Verse 163'
+          },
         ],
       },
     },
   },
+
+  // 18. سليمان عليه السلام
   {
     id: 'sulayman',
     name: { ar: 'سليمان', en: 'Solomon', fr: 'Salomon', ur: 'سلیمان', id: 'Sulaiman', tr: 'Süleyman' },
-    era: 'فلسطين',
-    order: 16,
-    stories: {
-      ar: {
-        title: 'قصة سليمان عليه السلام ومملكته العظيمة',
-        content: `سليمان عليه السلام ورث الملك والنبوة من أبيه داود. دعا الله أن يؤتيه ملكاً لا ينبغي لأحد من بعده، فاستجاب الله له.
-
-سخّر الله له الريح تجري بأمره، والجن يعملون له ما يشاء من محاريب وتماثيل وجفان كالجواب. علّمه منطق الطير والحيوان.
-
-قصة سليمان مع ملكة سبأ شهيرة. أرسل إليها يدعوها للإسلام، فجاءت بعرشها إليه بقدرة الله. أسلمت مع سليمان لله رب العالمين.
-
-بنى سليمان بيت المقدس، وكانت الجن تعمل بين يديه. مات وهو متكئ على عصاه، ولم تعلم الجن بموته حتى أكلت الأرضة عصاه فخرّ.
-
-قال تعالى: "ولسليمان الريح غدوها شهر ورواحها شهر وأسلنا له عين القطر".`,
-        lessons: [
-          'الملك والسلطان نعمة تستوجب الشكر',
-          'استخدام القوة في طاعة الله',
-          'الدعوة للإسلام بالحكمة',
-          'التواضع مع عظم الملك',
-        ],
-      },
-      en: {
-        title: 'The Story of Prophet Solomon and His Great Kingdom',
-        content: `Prophet Solomon (peace be upon him) inherited kingship and prophethood from his father David. He asked Allah to grant him a kingdom unlike any after him, and Allah answered.
-
-Allah subjected the wind to Solomon's command, and the jinn worked for him - building sanctuaries, statues, and large basins. He was taught the language of birds and animals.
-
-Solomon's story with the Queen of Sheba is famous. He invited her to Islam, and her throne was brought to him by Allah's power. She submitted to Allah, Lord of the worlds.
-
-Solomon built the Temple in Jerusalem, with jinn working under his command. He died while leaning on his staff, and the jinn did not know of his death until termites ate through it and he collapsed.
-
-Allah said: "And to Solomon the wind - its morning course was a month's journey and its evening course a month's journey. And We caused a spring of liquid copper to flow for him."`,
-        lessons: [
-          'Kingdom and authority require gratitude',
-          'Using power in obedience to Allah',
-          'Calling to Islam with wisdom',
-          'Humility despite great kingdom',
-        ],
-      },
-    },
-  },
-  {
-    id: 'zakariya',
-    name: { ar: 'زكريا', en: 'Zechariah', fr: 'Zacharie', ur: 'زکریا', id: 'Zakaria', tr: 'Zekeriya' },
-    era: 'فلسطين',
-    order: 17,
-    stories: {
-      ar: {
-        title: 'قصة زكريا عليه السلام واستجابة الدعاء',
-        content: `زكريا عليه السلام كان نبياً من أنبياء بني إسرائيل، وكان كفيل مريم أم عيسى. كان يدخل عليها المحراب فيجد عندها رزقاً.
-
-بلغ زكريا من الكبر عتياً، وكانت امرأته عاقراً لا تلد. تمنى الولد ليرث منه النبوة والعلم.
-
-دعا ربه دعاء خفياً: "رب إني وهن العظم مني واشتعل الرأس شيباً ولم أكن بدعائك رب شقياً".
-
-استجاب الله دعاءه وبشّره بغلام اسمه يحيى، لم يجعل الله له من قبل سمياً. تعجب زكريا كيف يكون له ولد وهو كبير وامرأته عاقر.
-
-جعل الله له آية ألا يكلم الناس ثلاث ليال سوياً. رُزق بيحيى وكان باراً تقياً.`,
-        lessons: [
-          'الله قادر على كل شيء',
-          'لا يأس من رحمة الله',
-          'الدعاء بإلحاح وخشوع',
-          'الإيمان بقدرة الله فوق الأسباب',
-        ],
-      },
-      en: {
-        title: 'The Story of Prophet Zechariah and the Answered Prayer',
-        content: `Prophet Zechariah (peace be upon him) was a prophet of the Children of Israel and the guardian of Mary, mother of Jesus. He would enter her chamber and find provision with her.
-
-Zechariah had reached old age and his wife was barren. He wished for a child to inherit prophethood and knowledge from him.
-
-He called upon his Lord in private supplication: "My Lord, indeed my bones have weakened and my head is filled with white hair, and I have never been in my supplication to You, my Lord, unhappy."
-
-Allah answered his prayer and gave him glad tidings of a son named John - a name Allah had not given to anyone before. Zechariah wondered how he could have a child when he was old and his wife was barren.
-
-Allah made a sign for him - that he should not speak to people for three nights. He was blessed with John, who was dutiful and righteous.`,
-        lessons: [
-          'Allah is capable of all things',
-          'Never despair of Allah\'s mercy',
-          'Supplicating with persistence and humility',
-          'Faith in Allah\'s power beyond natural means',
-        ],
-      },
-    },
-  },
-  {
-    id: 'yahya',
-    name: { ar: 'يحيى', en: 'John', fr: 'Jean', ur: 'یحییٰ', id: 'Yahya', tr: 'Yahya' },
-    era: 'فلسطين',
+    era: 'مملكة إسرائيل',
     order: 18,
     stories: {
       ar: {
-        title: 'قصة يحيى عليه السلام',
-        content: `يحيى عليه السلام ابن زكريا، وُلد بمعجزة من أب شيخ كبير وأم عاقر. آتاه الله الحكم صبياً وكان نبياً منذ صغره.
+        title: 'قصة سليمان عليه السلام - الملك العظيم',
+        content: `سليمان عليه السلام هو ابن داود، ورث عنه النبوة والملك. دعا ربه أن يهب له ملكاً لا ينبغي لأحد من بعده، فاستجاب الله له.
 
-كان يحيى حصوراً، أي عفيفاً لا يأتي النساء. وكان باراً بوالديه، لم يكن جباراً ولا عصياً.
+سخّر الله له الريح تجري بأمره، والجن يعملون له ما يشاء من محاريب وتماثيل. وعلّمه منطق الطير والنمل والحيوانات.
 
-عاش يحيى حياة زهد وتقوى، يأكل من ورق الشجر ويبكي من خشية الله. كان يدعو بني إسرائيل إلى التوبة والعودة إلى الله.
+مرّ سليمان بوادي النمل فسمع نملة تحذر قومها. تبسّم ضاحكاً من قولها وشكر الله على نعمه.
 
-صدّق يحيى بعيسى عليه السلام وآمن به قبل أن يُبعث. كان من المقربين إلى الله.
+جاءته ملكة سبأ بلقيس بعد أن دعاها للإسلام. لما رأت عظمة ملكه وحكمته، أسلمت لله رب العالمين.
 
-قال تعالى: "يا يحيى خذ الكتاب بقوة وآتيناه الحكم صبياً، وحناناً من لدنا وزكاة وكان تقياً".`,
+بنى سليمان بيت المقدس وأتم بناءه. وكان مع عظم ملكه شاكراً لله، منيباً إليه.
+
+توفي سليمان وهو متكئ على عصاه، ولم يعلم الجن بموته حتى أكلت الأرضة عصاه فخرّ.`,
         lessons: [
-          'الهداية منحة من الله',
-          'بر الوالدين من أعظم القربات',
-          'الزهد في الدنيا طريق الآخرة',
-          'التصديق بالأنبياء والإيمان بهم',
+          'الشكر على النعم يزيدها',
+          'القوة مع الحكمة نعمة عظيمة',
+          'التواضع مع العظمة',
+          'الدعوة إلى الله للملوك والعامة',
+          'الملك الحقيقي لله وحده',
+          'الموت يأتي على الجميع',
+        ],
+        quranVerses: [
+          {
+            arabic: 'قَالَ رَبِّ اغْفِرْ لِي وَهَبْ لِي مُلْكًا لَّا يَنبَغِي لِأَحَدٍ مِّن بَعْدِي',
+            translation: 'He said: My Lord, forgive me and grant me a kingdom such as will not belong to anyone after me.',
+            reference: 'سورة ص - الآية 35'
+          },
+          {
+            arabic: 'وَوَرِثَ سُلَيْمَانُ دَاوُودَ',
+            translation: 'And Solomon inherited David.',
+            reference: 'سورة النمل - الآية 16'
+          },
+        ],
+      },
+      en: {
+        title: 'The Story of Prophet Solomon - The Great King',
+        content: `Prophet Solomon (peace be upon him) was the son of David, inheriting prophethood and kingdom from him. He prayed to his Lord to grant him a kingdom that would not belong to anyone after him, and Allah answered.
+
+Allah subjected the wind to his command and the jinn to work for him, building whatever he wished. He taught him the language of birds, ants, and animals.
+
+Solomon passed by the valley of ants and heard an ant warning its colony. He smiled, laughing at its words, and thanked Allah for His blessings.
+
+The Queen of Sheba, Bilqis, came to him after he invited her to Islam. When she saw the magnificence of his kingdom and wisdom, she submitted to Allah, Lord of the worlds.
+
+Solomon built Bayt al-Maqdis (Jerusalem) and completed its construction. Despite his great kingdom, he was grateful to Allah and turned to Him.
+
+Solomon died while leaning on his staff, and the jinn did not know of his death until termites ate through his staff and he collapsed.`,
+        lessons: [
+          'Gratitude for blessings increases them',
+          'Power with wisdom is a great blessing',
+          'Humility despite greatness',
+          'Calling to Allah applies to kings and commoners',
+          'True sovereignty belongs to Allah alone',
+          'Death comes to everyone',
+        ],
+        quranVerses: [
+          {
+            arabic: 'قَالَ رَبِّ اغْفِرْ لِي وَهَبْ لِي مُلْكًا لَّا يَنبَغِي لِأَحَدٍ مِّن بَعْدِي',
+            translation: 'He said: My Lord, forgive me and grant me a kingdom such as will not belong to anyone after me.',
+            reference: 'Surah Sad - Verse 35'
+          },
+        ],
+      },
+    },
+  },
+
+  // 19. إلياس عليه السلام
+  {
+    id: 'ilyas',
+    name: { ar: 'إلياس', en: 'Elijah', fr: 'Élie', ur: 'الیاس', id: 'Ilyas', tr: 'İlyas' },
+    era: 'بني إسرائيل',
+    order: 19,
+    stories: {
+      ar: {
+        title: 'قصة إلياس عليه السلام',
+        content: `إلياس عليه السلام من أنبياء بني إسرائيل. أرسله الله إلى قومه في بعلبك بالشام.
+
+كان قومه يعبدون صنماً اسمه بعل. دعاهم إلياس إلى ترك عبادة الأصنام والعودة إلى عبادة الله الواحد.
+
+قال لهم: "ألا تتقون؟ أتدعون بعلاً وتذرون أحسن الخالقين؟ الله ربكم ورب آبائكم الأولين."
+
+كذّبه قومه ورفضوا دعوته. استمروا في عبادة الأصنام والإشراك بالله.
+
+سلّم الله على إلياس في القرآن وجعله من المرسلين. كان من الصالحين الذين اختارهم الله لهداية الناس.`,
+        lessons: [
+          'الدعوة إلى التوحيد رسالة كل الأنبياء',
+          'الصبر على تكذيب القوم',
+          'التذكير بنعم الله على الناس',
+          'مواجهة الشرك بالحكمة',
+          'الثبات على الحق رغم العناد',
+        ],
+        quranVerses: [
+          {
+            arabic: 'وَإِنَّ إِلْيَاسَ لَمِنَ الْمُرْسَلِينَ',
+            translation: 'And indeed, Elijah was from among the messengers.',
+            reference: 'سورة الصافات - الآية 123'
+          },
+          {
+            arabic: 'إِذْ قَالَ لِقَوْمِهِ أَلَا تَتَّقُونَ أَتَدْعُونَ بَعْلًا وَتَذَرُونَ أَحْسَنَ الْخَالِقِينَ',
+            translation: 'When he said to his people: Will you not fear Allah? Do you call upon Baal and leave the best of creators?',
+            reference: 'سورة الصافات - الآيات 124-125'
+          },
+        ],
+      },
+      en: {
+        title: 'The Story of Prophet Elijah',
+        content: `Prophet Elijah (peace be upon him) was among the prophets of the Children of Israel. Allah sent him to his people in Baalbek in the Levant.
+
+His people worshipped an idol called Baal. Elijah called them to abandon idol worship and return to worshipping the One God.
+
+He said to them: "Will you not fear Allah? Do you call upon Baal and leave the best of creators? Allah, your Lord and the Lord of your ancient forefathers."
+
+His people denied him and rejected his call. They continued worshipping idols and associating partners with Allah.
+
+Allah sent peace upon Elijah in the Quran and made him among the messengers. He was among the righteous whom Allah chose to guide people.`,
+        lessons: [
+          'Calling to monotheism is the message of all prophets',
+          'Patience when people deny',
+          'Reminding people of Allah\'s blessings',
+          'Confronting polytheism with wisdom',
+          'Standing firm on truth despite stubbornness',
+        ],
+        quranVerses: [
+          {
+            arabic: 'وَإِنَّ إِلْيَاسَ لَمِنَ الْمُرْسَلِينَ',
+            translation: 'And indeed, Elijah was from among the messengers.',
+            reference: 'Surah As-Saffat - Verse 123'
+          },
+        ],
+      },
+    },
+  },
+
+  // 20. اليسع عليه السلام
+  {
+    id: 'alyasa',
+    name: { ar: 'اليسع', en: 'Elisha', fr: 'Élisée', ur: 'الیسع', id: 'Ilyasa', tr: 'Elyesa' },
+    era: 'بني إسرائيل',
+    order: 20,
+    stories: {
+      ar: {
+        title: 'قصة اليسع عليه السلام',
+        content: `اليسع عليه السلام من أنبياء بني إسرائيل. كان تلميذاً وخليفة لإلياس عليه السلام.
+
+بعد إلياس، تولى اليسع مهمة الدعوة إلى الله وهداية بني إسرائيل. استمر في نهج إلياس في مواجهة الشرك والوثنية.
+
+ذكره الله في القرآن مع الأنبياء الأخيار، وأثنى عليه بأنه من المفضلين على العالمين.
+
+كان اليسع نبياً صالحاً، دعا قومه إلى الله وأرشدهم إلى طريق الهداية والصلاح.
+
+استمرت دعوته حتى توفاه الله، تاركاً أثراً طيباً في بني إسرائيل.`,
+        lessons: [
+          'استمرارية الدعوة من جيل إلى جيل',
+          'التلمذة على أيدي الصالحين',
+          'الإخلاص في العمل الدعوي',
+          'الصبر في مواجهة الانحراف',
+          'ترك الأثر الطيب للأجيال القادمة',
+        ],
+        quranVerses: [
+          {
+            arabic: 'وَإِسْمَاعِيلَ وَالْيَسَعَ وَيُونُسَ وَلُوطًا ۚ وَكُلًّا فَضَّلْنَا عَلَى الْعَالَمِينَ',
+            translation: 'And Ishmael and Elisha and Jonah and Lot - and all We preferred over the worlds.',
+            reference: 'سورة الأنعام - الآية 86'
+          },
+          {
+            arabic: 'وَاذْكُرْ إِسْمَاعِيلَ وَالْيَسَعَ وَذَا الْكِفْلِ ۖ وَكُلٌّ مِّنَ الْأَخْيَارِ',
+            translation: 'And remember Ishmael, Elisha, and Dhul-Kifl, and all are among the outstanding.',
+            reference: 'سورة ص - الآية 48'
+          },
+        ],
+      },
+      en: {
+        title: 'The Story of Prophet Elisha',
+        content: `Prophet Elisha (peace be upon him) was among the prophets of the Children of Israel. He was a student and successor of Elijah.
+
+After Elijah, Elisha took on the mission of calling to Allah and guiding the Children of Israel. He continued Elijah's approach in confronting polytheism and idolatry.
+
+Allah mentioned him in the Quran among the righteous prophets and praised him as being among those preferred over the worlds.
+
+Elisha was a righteous prophet who called his people to Allah and guided them to the path of guidance and righteousness.
+
+His call continued until Allah took him, leaving a good legacy among the Children of Israel.`,
+        lessons: [
+          'Continuity of the call from generation to generation',
+          'Learning from the righteous',
+          'Sincerity in calling to Allah',
+          'Patience in facing deviation',
+          'Leaving a good legacy for future generations',
+        ],
+        quranVerses: [
+          {
+            arabic: 'وَإِسْمَاعِيلَ وَالْيَسَعَ وَيُونُسَ وَلُوطًا',
+            translation: 'And Ishmael and Elisha and Jonah and Lot.',
+            reference: 'Surah Al-An\'am - Verse 86'
+          },
+        ],
+      },
+    },
+  },
+
+  // 21. يونس عليه السلام
+  {
+    id: 'yunus',
+    name: { ar: 'يونس', en: 'Jonah', fr: 'Jonas', ur: 'یونس', id: 'Yunus', tr: 'Yunus' },
+    era: 'نينوى',
+    order: 21,
+    stories: {
+      ar: {
+        title: 'قصة يونس عليه السلام - صاحب الحوت',
+        content: `يونس عليه السلام أرسله الله إلى أهل نينوى في العراق. كانوا قوماً يعبدون الأصنام.
+
+دعاهم يونس إلى عبادة الله وترك الأصنام، لكنهم كذبوه ورفضوا دعوته. غضب يونس وخرج من بينهم قبل أن يأذن له الله.
+
+ركب السفينة فهاج البحر، فأُلقي في الماء فالتقمه الحوت. نادى يونس في بطن الحوت: "لا إله إلا أنت سبحانك إني كنت من الظالمين."
+
+استجاب الله لدعائه وأمر الحوت أن يلفظه على الشاطئ. أنبت الله عليه شجرة من يقطين لتظله.
+
+عاد يونس إلى قومه فوجدهم قد آمنوا. كانوا القوم الوحيدين الذين آمنوا فرفع الله عنهم العذاب.`,
+        lessons: [
+          'عدم اليأس من رحمة الله',
+          'الاستغفار والدعاء في الشدة',
+          'التوكل على الله في كل الأحوال',
+          'عدم التسرع في ترك الدعوة',
+          'التوبة تنفع حتى بعد رؤية العذاب',
+          'لا إله إلا الله تفرج الكرب',
+        ],
+        quranVerses: [
+          {
+            arabic: 'وَذَا النُّونِ إِذ ذَّهَبَ مُغَاضِبًا فَظَنَّ أَن لَّن نَّقْدِرَ عَلَيْهِ فَنَادَىٰ فِي الظُّلُمَاتِ أَن لَّا إِلَٰهَ إِلَّا أَنتَ سُبْحَانَكَ إِنِّي كُنتُ مِنَ الظَّالِمِينَ',
+            translation: 'And the man of the fish, when he went off in anger and thought that We would not decree upon him. And he called out within the darknesses: There is no deity except You; exalted are You. Indeed, I have been of the wrongdoers.',
+            reference: 'سورة الأنبياء - الآية 87'
+          },
+          {
+            arabic: 'فَاسْتَجَبْنَا لَهُ وَنَجَّيْنَاهُ مِنَ الْغَمِّ ۚ وَكَذَٰلِكَ نُنجِي الْمُؤْمِنِينَ',
+            translation: 'So We responded to him and saved him from the distress. And thus do We save the believers.',
+            reference: 'سورة الأنبياء - الآية 88'
+          },
+        ],
+        hadiths: [
+          {
+            text: 'دعوة ذي النون إذ دعا وهو في بطن الحوت: لا إله إلا أنت سبحانك إني كنت من الظالمين، لم يدع بها رجل مسلم في شيء إلا استجاب الله له',
+            source: 'رواه الترمذي'
+          },
+        ],
+      },
+      en: {
+        title: 'The Story of Prophet Jonah - The Companion of the Whale',
+        content: `Prophet Jonah (peace be upon him) was sent by Allah to the people of Nineveh in Iraq. They were a people who worshipped idols.
+
+Jonah called them to worship Allah and leave idols, but they denied him and rejected his call. Jonah became angry and left them before Allah permitted him.
+
+He boarded a ship, and the sea became turbulent. He was thrown into the water and swallowed by a whale. Jonah called out from the whale's belly: "There is no deity except You; exalted are You. Indeed, I have been of the wrongdoers."
+
+Allah answered his supplication and commanded the whale to cast him onto the shore. Allah caused a gourd plant to grow over him for shade.
+
+Jonah returned to his people and found they had believed. They were the only people who believed after seeing signs of punishment, so Allah removed the punishment from them.`,
+        lessons: [
+          'Never despair of Allah\'s mercy',
+          'Seeking forgiveness and supplication in hardship',
+          'Trust in Allah in all circumstances',
+          'Not hastening to abandon the call',
+          'Repentance benefits even after seeing punishment',
+          'La ilaha illa Allah relieves distress',
+        ],
+        quranVerses: [
+          {
+            arabic: 'فَنَادَىٰ فِي الظُّلُمَاتِ أَن لَّا إِلَٰهَ إِلَّا أَنتَ سُبْحَانَكَ',
+            translation: 'And he called out within the darknesses: There is no deity except You; exalted are You.',
+            reference: 'Surah Al-Anbiya - Verse 87'
+          },
+        ],
+      },
+    },
+  },
+
+  // 22. زكريا عليه السلام
+  {
+    id: 'zakariya',
+    name: { ar: 'زكريا', en: 'Zechariah', fr: 'Zacharie', ur: 'زکریا', id: 'Zakaria', tr: 'Zekeriya' },
+    era: 'بيت المقدس',
+    order: 22,
+    stories: {
+      ar: {
+        title: 'قصة زكريا عليه السلام',
+        content: `زكريا عليه السلام كان نبياً من أنبياء بني إسرائيل وكفيل مريم عليها السلام. كان شيخاً كبيراً وامرأته عاقر.
+
+كان يدخل على مريم المحراب فيجد عندها رزقاً. لما سألها قالت: "هو من عند الله". هنالك دعا زكريا ربه أن يرزقه ذرية طيبة.
+
+نادته الملائكة وهو قائم يصلي في المحراب: "إن الله يبشرك بيحيى مصدقاً بكلمة من الله وسيداً وحصوراً ونبياً من الصالحين."
+
+تعجب زكريا وقال: "رب أنى يكون لي غلام وقد بلغني الكبر وامرأتي عاقر؟" قال الله: "كذلك الله يفعل ما يشاء."
+
+طلب زكريا آية، فجعل الله آيته ألا يكلم الناس ثلاث ليال سوياً. رُزق بيحيى كما وعده الله.`,
+        lessons: [
+          'الدعاء لله في كل حال',
+          'لا يستبعد على الله شيء',
+          'الأمل في رحمة الله مهما كبر السن',
+          'رؤية آيات الله تحفز على الدعاء',
+          'الذرية الصالحة نعمة عظيمة',
+        ],
+        quranVerses: [
+          {
+            arabic: 'هُنَالِكَ دَعَا زَكَرِيَّا رَبَّهُ ۖ قَالَ رَبِّ هَبْ لِي مِن لَّدُنكَ ذُرِّيَّةً طَيِّبَةً',
+            translation: 'At that, Zechariah called upon his Lord, saying: My Lord, grant me from Yourself a good offspring.',
+            reference: 'سورة آل عمران - الآية 38'
+          },
+          {
+            arabic: 'يَا زَكَرِيَّا إِنَّا نُبَشِّرُكَ بِغُلَامٍ اسْمُهُ يَحْيَىٰ لَمْ نَجْعَل لَّهُ مِن قَبْلُ سَمِيًّا',
+            translation: 'O Zechariah, indeed We give you good tidings of a boy whose name will be John. We have not assigned to any before him that name.',
+            reference: 'سورة مريم - الآية 7'
+          },
+        ],
+      },
+      en: {
+        title: 'The Story of Prophet Zechariah',
+        content: `Prophet Zechariah (peace be upon him) was a prophet from the Children of Israel and the guardian of Mary. He was an old man and his wife was barren.
+
+He used to enter upon Mary in the sanctuary and find provisions with her. When he asked her, she said: "It is from Allah." Then Zechariah called upon his Lord to grant him good offspring.
+
+The angels called to him while he was standing in prayer in the sanctuary: "Indeed, Allah gives you good tidings of John, confirming a word from Allah and honorable, abstaining from women, and a prophet from among the righteous."
+
+Zechariah was amazed and said: "My Lord, how will I have a boy when I have reached old age and my wife is barren?" Allah said: "Thus Allah does what He wills."
+
+Zechariah asked for a sign, and Allah made his sign that he would not speak to people for three nights. He was blessed with John as Allah promised.`,
+        lessons: [
+          'Supplicating to Allah in all circumstances',
+          'Nothing is impossible for Allah',
+          'Hope in Allah\'s mercy regardless of age',
+          'Seeing Allah\'s signs motivates supplication',
+          'Righteous offspring is a great blessing',
+        ],
+        quranVerses: [
+          {
+            arabic: 'هُنَالِكَ دَعَا زَكَرِيَّا رَبَّهُ',
+            translation: 'At that, Zechariah called upon his Lord.',
+            reference: 'Surah Aal-e-Imran - Verse 38'
+          },
+        ],
+      },
+    },
+  },
+
+  // 23. يحيى عليه السلام
+  {
+    id: 'yahya',
+    name: { ar: 'يحيى', en: 'John', fr: 'Jean', ur: 'یحییٰ', id: 'Yahya', tr: 'Yahya' },
+    era: 'بيت المقدس',
+    order: 23,
+    stories: {
+      ar: {
+        title: 'قصة يحيى عليه السلام',
+        content: `يحيى عليه السلام هو ابن زكريا، جاء بمعجزة من الله بعد أن كان أبواه كبيرين في السن وأمه عاقر.
+
+سماه الله يحيى، ولم يجعل له من قبل سمياً. آتاه الله الحكم وهو صبي، وكان براً بوالديه تقياً.
+
+أمره الله أن يأخذ الكتاب بقوة، وعلّمه الله الكتاب والحكمة. كان زاهداً عابداً، حصوراً (ممتنعاً عن الشهوات).
+
+كان يحيى نبياً مصدقاً بكلمة من الله (أي بعيسى عليه السلام). بشّر بمجيء عيسى ومهّد له الطريق.
+
+قُتل يحيى ظلماً على يد ملك ظالم، فكان شهيداً في سبيل الله. سلّم الله عليه يوم ولد ويوم يموت ويوم يُبعث حياً.`,
+        lessons: [
+          'طاعة الوالدين من صفات الأنبياء',
+          'الحكمة تُعطى للصغير والكبير',
+          'الزهد في الدنيا من صفات الصالحين',
+          'التصديق بالحق والتبشير به',
+          'الشهادة في سبيل الله رفعة',
+        ],
+        quranVerses: [
+          {
+            arabic: 'يَا يَحْيَىٰ خُذِ الْكِتَابَ بِقُوَّةٍ ۖ وَآتَيْنَاهُ الْحُكْمَ صَبِيًّا',
+            translation: 'O John, take the Scripture with determination. And We gave him judgement while yet a boy.',
+            reference: 'سورة مريم - الآية 12'
+          },
+          {
+            arabic: 'وَسَلَامٌ عَلَيْهِ يَوْمَ وُلِدَ وَيَوْمَ يَمُوتُ وَيَوْمَ يُبْعَثُ حَيًّا',
+            translation: 'And peace be upon him the day he was born and the day he dies and the day he is raised alive.',
+            reference: 'سورة مريم - الآية 15'
+          },
         ],
       },
       en: {
         title: 'The Story of Prophet John',
-        content: `Prophet John (peace be upon him) was the son of Zechariah, born miraculously to an elderly father and a barren mother. Allah granted him wisdom as a child and he was a prophet from youth.
+        content: `Prophet John (peace be upon him) was the son of Zechariah, born miraculously after his parents were old and his mother was barren.
 
-John was chaste and abstinent. He was dutiful to his parents, neither arrogant nor disobedient.
+Allah named him John (Yahya), and there had been none before him with that name. Allah gave him wisdom while still a boy, and he was dutiful to his parents and pious.
 
-John lived a life of asceticism and piety, eating leaves from trees and weeping from fear of Allah. He called the Children of Israel to repentance and return to Allah.
+Allah commanded him to hold fast to the Scripture, and taught him the Book and wisdom. He was an ascetic worshipper, abstaining from worldly desires.
 
-John believed in Jesus (peace be upon him) before he was sent as a prophet. He was among those close to Allah.
+John was a prophet who confirmed a Word from Allah (meaning Jesus). He heralded the coming of Jesus and prepared the way for him.
 
-Allah said: "O John, take the Scripture with determination. And We gave him wisdom while yet a boy, and affection from Us and purity, and he was fearing of Allah."`,
+John was unjustly killed by an oppressive king, becoming a martyr in the cause of Allah. Allah sent peace upon him the day he was born, the day he dies, and the day he will be raised alive.`,
         lessons: [
-          'Guidance is a gift from Allah',
-          'Honoring parents is among the greatest acts of worship',
-          'Asceticism in this world is the path to the Hereafter',
-          'Believing in and affirming the prophets',
+          'Obedience to parents is a prophetic trait',
+          'Wisdom can be given to both young and old',
+          'Asceticism is a trait of the righteous',
+          'Confirming truth and heralding it',
+          'Martyrdom for Allah\'s sake is an elevation',
+        ],
+        quranVerses: [
+          {
+            arabic: 'يَا يَحْيَىٰ خُذِ الْكِتَابَ بِقُوَّةٍ',
+            translation: 'O John, take the Scripture with determination.',
+            reference: 'Surah Maryam - Verse 12'
+          },
+        ],
+      },
+    },
+  },
+
+  // 24. عيسى عليه السلام
+  {
+    id: 'isa',
+    name: { ar: 'عيسى', en: 'Jesus', fr: 'Jésus', ur: 'عیسیٰ', id: 'Isa', tr: 'İsa' },
+    era: 'فلسطين',
+    order: 24,
+    stories: {
+      ar: {
+        title: 'قصة عيسى عليه السلام - المسيح',
+        content: `عيسى عليه السلام هو المسيح ابن مريم، كلمة الله ألقاها إلى مريم وروح منه. خُلق بكلمة "كن" بدون أب، كما خُلق آدم من تراب.
+
+جاء الملاك جبريل إلى مريم في صورة بشر سوي، وبشّرها بغلام زكي. نفخ فيها من روح الله فحملت بعيسى.
+
+تكلم عيسى في المهد دفاعاً عن أمه، وقال: "إني عبد الله آتاني الكتاب وجعلني نبياً."
+
+أيده الله بمعجزات عظيمة: يخلق من الطين كهيئة الطير فينفخ فيها فتكون طيراً بإذن الله، ويبرئ الأكمه والأبرص، ويحيي الموتى بإذن الله.
+
+أنزل الله عليه الإنجيل، ودعا بني إسرائيل إلى عبادة الله وحده. آمن به الحواريون ونصروه.
+
+أراد اليهود قتله فرفعه الله إليه، وسينزل في آخر الزمان ليقتل الدجال ويحكم بالإسلام.`,
+        lessons: [
+          'قدرة الله لا حدود لها',
+          'عيسى عبد الله ورسوله وليس إلهاً',
+          'المعجزات بإذن الله وحده',
+          'الدفاع عن الحق واجب',
+          'التوحيد رسالة جميع الأنبياء',
+          'الله ينجي أنبياءه من أعدائهم',
+        ],
+        quranVerses: [
+          {
+            arabic: 'إِنَّ مَثَلَ عِيسَىٰ عِندَ اللَّهِ كَمَثَلِ آدَمَ ۖ خَلَقَهُ مِن تُرَابٍ ثُمَّ قَالَ لَهُ كُن فَيَكُونُ',
+            translation: 'Indeed, the example of Jesus to Allah is like that of Adam. He created Him from dust; then He said to him: Be, and he was.',
+            reference: 'سورة آل عمران - الآية 59'
+          },
+          {
+            arabic: 'إِنَّمَا الْمَسِيحُ عِيسَى ابْنُ مَرْيَمَ رَسُولُ اللَّهِ وَكَلِمَتُهُ أَلْقَاهَا إِلَىٰ مَرْيَمَ وَرُوحٌ مِّنْهُ',
+            translation: 'The Messiah, Jesus, the son of Mary, was but a messenger of Allah and His word which He directed to Mary and a soul from Him.',
+            reference: 'سورة النساء - الآية 171'
+          },
+        ],
+        hadiths: [
+          {
+            text: 'أنا أولى الناس بعيسى ابن مريم في الدنيا والآخرة، الأنبياء إخوة لعلات',
+            source: 'رواه البخاري'
+          },
+        ],
+      },
+      en: {
+        title: 'The Story of Prophet Jesus - The Messiah',
+        content: `Prophet Jesus (peace be upon him) is the Messiah, son of Mary, a Word from Allah cast to Mary and a spirit from Him. He was created by the word "Be" without a father, just as Adam was created from dust.
+
+The angel Gabriel came to Mary in the form of a perfect man and gave her tidings of a pure son. He breathed into her from Allah's spirit and she conceived Jesus.
+
+Jesus spoke in the cradle in defense of his mother, saying: "Indeed, I am the servant of Allah. He has given me the Scripture and made me a prophet."
+
+Allah supported him with great miracles: he would create from clay the form of a bird and breathe into it, and it would become a bird by Allah's permission; he would heal the blind and the leper; and he would bring the dead to life by Allah's permission.
+
+Allah revealed to him the Gospel and he called the Children of Israel to worship Allah alone. The disciples believed in him and supported him.
+
+The Jews wanted to kill him, but Allah raised him to Himself. He will descend at the end of time to kill the Antichrist and rule by Islam.`,
+        lessons: [
+          'Allah\'s power has no limits',
+          'Jesus is Allah\'s servant and messenger, not a deity',
+          'Miracles occur only by Allah\'s permission',
+          'Defending truth is obligatory',
+          'Monotheism is the message of all prophets',
+          'Allah saves His prophets from their enemies',
+        ],
+        quranVerses: [
+          {
+            arabic: 'إِنَّ مَثَلَ عِيسَىٰ عِندَ اللَّهِ كَمَثَلِ آدَمَ',
+            translation: 'Indeed, the example of Jesus to Allah is like that of Adam.',
+            reference: 'Surah Aal-e-Imran - Verse 59'
+          },
+        ],
+      },
+    },
+  },
+
+  // 25. محمد صلى الله عليه وسلم
+  {
+    id: 'muhammad',
+    name: { ar: 'محمد ﷺ', en: 'Muhammad ﷺ', fr: 'Muhammad ﷺ', ur: 'محمد ﷺ', id: 'Muhammad ﷺ', tr: 'Muhammed ﷺ' },
+    era: 'خاتم النبيين',
+    order: 25,
+    stories: {
+      ar: {
+        title: 'قصة محمد ﷺ - خاتم النبيين',
+        content: `محمد صلى الله عليه وسلم هو خاتم الأنبياء والمرسلين، أرسله الله رحمة للعالمين. ولد في مكة عام الفيل.
+
+نشأ يتيماً، مات أبوه قبل ولادته وماتت أمه وهو صغير. كفله جده عبد المطلب ثم عمه أبو طالب.
+
+عُرف بالصادق الأمين قبل النبوة. تزوج خديجة بنت خويلد وكانت أول من آمن به من النساء.
+
+نزل عليه الوحي في غار حراء وهو في الأربعين من عمره. أمره الله أن يدعو الناس إلى الإسلام.
+
+صبر على أذى قريش ثلاث عشرة سنة في مكة، ثم هاجر إلى المدينة وأسس الدولة الإسلامية.
+
+فتح مكة وأتم الله به الدين، وتوفي وعمره ثلاث وستون سنة بعد أن بلّغ الرسالة وأدى الأمانة.`,
+        lessons: [
+          'الصبر على البلاء في سبيل الدعوة',
+          'الأخلاق الحسنة أساس الدعوة',
+          'الرحمة بالخلق من صفات النبي',
+          'التدرج في الدعوة والإصلاح',
+          'الوفاء والأمانة من أعظم الصفات',
+          'الإسلام دين كامل للبشرية جمعاء',
+        ],
+        quranVerses: [
+          {
+            arabic: 'وَمَا أَرْسَلْنَاكَ إِلَّا رَحْمَةً لِّلْعَالَمِينَ',
+            translation: 'And We have not sent you except as a mercy to the worlds.',
+            reference: 'سورة الأنبياء - الآية 107'
+          },
+          {
+            arabic: 'مَّا كَانَ مُحَمَّدٌ أَبَا أَحَدٍ مِّن رِّجَالِكُمْ وَلَٰكِن رَّسُولَ اللَّهِ وَخَاتَمَ النَّبِيِّينَ',
+            translation: 'Muhammad is not the father of any of your men, but he is the Messenger of Allah and the seal of the prophets.',
+            reference: 'سورة الأحزاب - الآية 40'
+          },
+          {
+            arabic: 'لَقَدْ كَانَ لَكُمْ فِي رَسُولِ اللَّهِ أُسْوَةٌ حَسَنَةٌ',
+            translation: 'There has certainly been for you in the Messenger of Allah an excellent example.',
+            reference: 'سورة الأحزاب - الآية 21'
+          },
+        ],
+        hadiths: [
+          {
+            text: 'إنما بُعثت لأتمم مكارم الأخلاق',
+            source: 'رواه البيهقي'
+          },
+          {
+            text: 'أنا سيد ولد آدم ولا فخر',
+            source: 'رواه الترمذي'
+          },
+        ],
+      },
+      en: {
+        title: 'The Story of Prophet Muhammad ﷺ - The Seal of Prophets',
+        content: `Prophet Muhammad (peace be upon him) is the seal of the prophets and messengers, sent by Allah as a mercy to all the worlds. He was born in Mecca in the Year of the Elephant.
+
+He grew up an orphan; his father died before his birth and his mother died when he was young. His grandfather Abdul-Muttalib and then his uncle Abu Talib cared for him.
+
+He was known as the Truthful and Trustworthy before prophethood. He married Khadijah bint Khuwaylid, who was the first woman to believe in him.
+
+Revelation came to him in the Cave of Hira when he was forty years old. Allah commanded him to call people to Islam.
+
+He patiently endured the persecution of Quraysh for thirteen years in Mecca, then migrated to Medina and established the Islamic state.
+
+He conquered Mecca and Allah completed the religion through him. He died at sixty-three years of age after delivering the message and fulfilling the trust.`,
+        lessons: [
+          'Patience in trials for the sake of calling to Allah',
+          'Good character is the foundation of calling to Allah',
+          'Mercy to creation is a prophetic trait',
+          'Gradual approach in calling and reform',
+          'Loyalty and trustworthiness are the greatest traits',
+          'Islam is a complete religion for all humanity',
+        ],
+        quranVerses: [
+          {
+            arabic: 'وَمَا أَرْسَلْنَاكَ إِلَّا رَحْمَةً لِّلْعَالَمِينَ',
+            translation: 'And We have not sent you except as a mercy to the worlds.',
+            reference: 'Surah Al-Anbiya - Verse 107'
+          },
         ],
       },
     },
   },
 ];
 
-export const getStoryByLanguage = (prophetId: string, languageId: string): ExtendedStory | null => {
+export function getStoryByLanguage(prophetId: string, languageId: string): ExtendedStory | null {
   const prophet = prophetStories.find(p => p.id === prophetId);
   if (!prophet) return null;
   
-  // Try exact language match
+  // Try exact language match first
   if (prophet.stories[languageId]) {
     return prophet.stories[languageId];
   }
   
-  // Fallback to standard Arabic if dialect not found
-  if (languageId.startsWith('ar-') && prophet.stories['ar']) {
-    return prophet.stories['ar'];
+  // For Arabic dialects, fallback to standard Arabic
+  if (languageId.startsWith('ar-')) {
+    return prophet.stories['ar'] || null;
   }
   
   // Fallback to Arabic
   return prophet.stories['ar'] || null;
-};
+}

@@ -1,10 +1,9 @@
-import { ArrowRight, ArrowLeft, Lightbulb, Share2, Volume2, VolumeX, Loader2, BookOpen, Quote } from "lucide-react";
+import { ArrowRight, ArrowLeft, Lightbulb, Share2, BookOpen, Quote } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { useStoryAudio } from "@/hooks/useStoryAudio";
 import type { ProphetStory, ExtendedStory } from "@/data/prophetStories";
 
 interface ProphetStoryViewerProps {
@@ -17,7 +16,6 @@ interface ProphetStoryViewerProps {
 
 const ProphetStoryViewer = ({ prophet, story, language, isRTL, onBack }: ProphetStoryViewerProps) => {
   const prophetName = isRTL ? prophet.name.ar : (prophet.name[language.split('-')[0] as keyof typeof prophet.name] || prophet.name.en);
-  const { isLoading, isPlaying, generateAudio, stopAudio } = useStoryAudio();
 
   const handleShare = async () => {
     if (story) {
@@ -31,14 +29,6 @@ const ProphetStoryViewer = ({ prophet, story, language, isRTL, onBack }: Prophet
         await navigator.clipboard.writeText(story.content);
         toast.success(isRTL ? 'تم نسخ القصة' : 'Story copied');
       }
-    }
-  };
-
-  const handlePlayAudio = async () => {
-    if (isPlaying) {
-      stopAudio();
-    } else if (story) {
-      await generateAudio(story.content, language, prophet.id);
     }
   };
 
@@ -68,25 +58,9 @@ const ProphetStoryViewer = ({ prophet, story, language, isRTL, onBack }: Prophet
             {isRTL ? <ArrowRight className="w-5 h-5" /> : <ArrowLeft className="w-5 h-5" />}
           </Button>
           <h1 className="font-bold text-lg truncate max-w-[200px]">{prophetName}</h1>
-          <div className="flex gap-1">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={handlePlayAudio}
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
-              ) : isPlaying ? (
-                <VolumeX className="w-5 h-5" />
-              ) : (
-                <Volume2 className="w-5 h-5" />
-              )}
-            </Button>
-            <Button variant="ghost" size="icon" onClick={handleShare}>
-              <Share2 className="w-5 h-5" />
-            </Button>
-          </div>
+          <Button variant="ghost" size="icon" onClick={handleShare}>
+            <Share2 className="w-5 h-5" />
+          </Button>
         </div>
       </div>
 
