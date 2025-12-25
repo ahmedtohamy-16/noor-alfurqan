@@ -1076,6 +1076,446 @@ Altmış üç yaşında Allah dini tamamladığında vefat etti: "Bugün sizin i
       },
     },
   },
+  {
+    id: 'hud',
+    name: { ar: 'هود', en: 'Hud', fr: 'Houd', ur: 'ہود', id: 'Hud', tr: 'Hud' },
+    era: 'قوم عاد',
+    order: 9,
+    stories: {
+      ar: {
+        title: 'قصة هود عليه السلام مع قوم عاد',
+        content: `هود عليه السلام أُرسل إلى قوم عاد الذين سكنوا الأحقاف في جنوب الجزيرة العربية. كانوا أقوياء البنية، بنوا المباني العالية والقصور الفخمة.
+
+كفر قوم عاد بالله وعبدوا الأصنام، وتجبروا في الأرض. دعاهم هود إلى عبادة الله وحده وترك الأصنام، لكنهم كذبوه واستهزأوا به.
+
+قالوا لهود: "ما نحن بتاركي آلهتنا عن قولك وما نحن لك بمؤمنين". واستمروا في طغيانهم وظلمهم.
+
+أهلك الله قوم عاد بريح صرصر عاتية، سخرها عليهم سبع ليال وثمانية أيام حسوماً. كانت الريح تحمل الناس وترميهم كأنهم أعجاز نخل خاوية.
+
+نجّى الله هوداً والذين آمنوا معه، وجعلهم عبرة للمعتبرين.`,
+        lessons: [
+          'القوة المادية لا تنفع بدون الإيمان',
+          'الطغيان سبب الهلاك',
+          'الله ينصر أنبياءه ويهلك المكذبين',
+          'التكبر على الرسل عاقبته وخيمة',
+        ],
+      },
+      en: {
+        title: 'The Story of Prophet Hud and the People of Aad',
+        content: `Prophet Hud (peace be upon him) was sent to the people of Aad who lived in Al-Ahqaf in southern Arabia. They were physically powerful, building tall structures and magnificent palaces.
+
+The people of Aad disbelieved in Allah and worshipped idols, becoming tyrants on earth. Hud called them to worship Allah alone and abandon idols, but they rejected and mocked him.
+
+They said: "We will not abandon our gods for what you say, and we will never believe you." They continued in their tyranny and oppression.
+
+Allah destroyed the people of Aad with a furious violent wind, which He imposed on them for seven nights and eight days. The wind would pick people up and throw them down like hollow palm trunks.
+
+Allah saved Hud and those who believed with him, making them a lesson for those who reflect.`,
+        lessons: [
+          'Material power is useless without faith',
+          'Tyranny leads to destruction',
+          'Allah supports His prophets and destroys the deniers',
+          'Arrogance towards messengers has dire consequences',
+        ],
+      },
+    },
+  },
+  {
+    id: 'salih',
+    name: { ar: 'صالح', en: 'Salih', fr: 'Salih', ur: 'صالح', id: 'Shalih', tr: 'Salih' },
+    era: 'قوم ثمود',
+    order: 10,
+    stories: {
+      ar: {
+        title: 'قصة صالح عليه السلام مع قوم ثمود',
+        content: `صالح عليه السلام أُرسل إلى قوم ثمود الذين سكنوا في منطقة الحِجر شمال الجزيرة العربية. كانوا ينحتون الجبال بيوتاً ويبنون القصور في السهول.
+
+دعا صالح قومه إلى عبادة الله وحده، فكذبوه وطلبوا منه آية. أخرج الله لهم ناقة من الصخر معجزة لهم، وأمرهم ألا يمسوها بسوء.
+
+قال صالح لقومه: "هذه ناقة الله لكم آية فذروها تأكل في أرض الله ولا تمسوها بسوء فيأخذكم عذاب أليم".
+
+لكن قومه عقروا الناقة وتحدوا أمر الله. توعدهم صالح بالعذاب بعد ثلاثة أيام.
+
+جاءتهم الصيحة فأهلكتهم أجمعين، وأصبحوا في ديارهم جاثمين. نجّى الله صالحاً والمؤمنين.`,
+        lessons: [
+          'المعجزات لا تنفع القوم العنيدين',
+          'تحدي أوامر الله يجلب الهلاك',
+          'الله يمهل ولا يهمل',
+          'الإيمان سبب النجاة',
+        ],
+      },
+      en: {
+        title: 'The Story of Prophet Salih and the People of Thamud',
+        content: `Prophet Salih (peace be upon him) was sent to the people of Thamud who lived in the Al-Hijr region of northern Arabia. They carved houses out of mountains and built palaces in the plains.
+
+Salih called his people to worship Allah alone, but they rejected him and demanded a sign. Allah brought forth a she-camel from a rock as a miracle, commanding them not to harm it.
+
+Salih told his people: "This is Allah's she-camel, a sign for you. Let her graze on Allah's earth and do not touch her with harm, lest a painful punishment seize you."
+
+But his people hamstrung the she-camel and defied Allah's command. Salih warned them of punishment in three days.
+
+The blast came upon them and destroyed them all, leaving them fallen in their homes. Allah saved Salih and the believers.`,
+        lessons: [
+          'Miracles do not benefit stubborn people',
+          'Defying Allah\'s commands brings destruction',
+          'Allah gives respite but never neglects',
+          'Faith is the cause of salvation',
+        ],
+      },
+    },
+  },
+  {
+    id: 'lut',
+    name: { ar: 'لوط', en: 'Lot', fr: 'Loth', ur: 'لوط', id: 'Luth', tr: 'Lut' },
+    era: 'سدوم',
+    order: 11,
+    stories: {
+      ar: {
+        title: 'قصة لوط عليه السلام مع قومه',
+        content: `لوط عليه السلام ابن أخ إبراهيم عليه السلام، هاجر مع عمه ثم استقر في مدينة سدوم. كان أهل سدوم يرتكبون الفاحشة التي لم يسبقهم بها أحد من العالمين.
+
+دعا لوط قومه إلى ترك هذه الفاحشة والتوبة إلى الله، لكنهم رفضوا وهددوه بالإخراج من المدينة.
+
+جاءت الملائكة إلى لوط في صورة شباب حسان، فخاف عليهم من قومه. جاء قومه يريدون الضيوف، فعرض عليهم لوط بناته للزواج لكنهم رفضوا.
+
+أخبرته الملائكة أنهم رسل الله وأمروه بالخروج مع أهله ليلاً، وألا يلتفت أحد منهم. امرأته كانت من الغابرين لأنها كانت تدل قومها على ضيوفه.
+
+أمطر الله على قوم لوط حجارة من سجيل، وقلب مدينتهم عاليها سافلها، ونجّى لوطاً والمؤمنين معه.`,
+        lessons: [
+          'الفواحش سبب هلاك الأمم',
+          'الصبر على دعوة القوم الفاسدين',
+          'النجاة بالإيمان والطاعة',
+          'مخالفة الأقارب إذا كانوا على باطل',
+        ],
+      },
+      en: {
+        title: 'The Story of Prophet Lot and His People',
+        content: `Prophet Lot (peace be upon him) was the nephew of Abraham. He migrated with his uncle and settled in the city of Sodom. The people of Sodom committed an immorality unprecedented in the world.
+
+Lot called his people to abandon this immorality and repent to Allah, but they refused and threatened to expel him from the city.
+
+Angels came to Lot in the form of handsome young men. He feared for them from his people. His people came wanting the guests, but Lot offered his daughters in marriage and they refused.
+
+The angels told him they were Allah's messengers and commanded him to leave with his family at night, and none should look back. His wife was among those destroyed because she would inform her people about his guests.
+
+Allah rained upon the people of Lot stones of baked clay, turning their city upside down, and saved Lot and the believers with him.`,
+        lessons: [
+          'Immorality causes the destruction of nations',
+          'Patience in calling corrupt people',
+          'Salvation through faith and obedience',
+          'Opposing relatives when they are upon falsehood',
+        ],
+      },
+    },
+  },
+  {
+    id: 'shuayb',
+    name: { ar: 'شعيب', en: 'Shuayb', fr: 'Chouaïb', ur: 'شعیب', id: 'Syuaib', tr: 'Şuayb' },
+    era: 'مدين',
+    order: 12,
+    stories: {
+      ar: {
+        title: 'قصة شعيب عليه السلام مع أهل مدين',
+        content: `شعيب عليه السلام أُرسل إلى أهل مدين، وكانوا قوماً يبخسون الناس أشياءهم ويطففون في الميزان والمكيال.
+
+دعاهم شعيب إلى عبادة الله وحده وإلى العدل في المعاملات. قال لهم: "أوفوا الكيل والميزان بالقسط ولا تبخسوا الناس أشياءهم".
+
+رفض قومه دعوته وقالوا: "أصلاتك تأمرك أن نترك ما يعبد آباؤنا أو أن نفعل في أموالنا ما نشاء".
+
+هددوه بالرجم والإخراج من القرية، لكنه صبر واستمر في دعوتهم. توعدهم بعذاب الله إن استمروا في غيهم.
+
+أخذتهم الرجفة وأصبحوا في ديارهم جاثمين. نجّى الله شعيباً والذين آمنوا معه.`,
+        lessons: [
+          'العدل في المعاملات من أصول الدين',
+          'الغش والتطفيف من كبائر الذنوب',
+          'الصبر على أذى الدعوة',
+          'ربط الدين بالمعاملات اليومية',
+        ],
+      },
+      en: {
+        title: 'The Story of Prophet Shuayb and the People of Midian',
+        content: `Prophet Shuayb (peace be upon him) was sent to the people of Midian, who cheated people in their dealings and gave short measure and weight.
+
+Shuayb called them to worship Allah alone and to be just in their dealings. He told them: "Give full measure and weight in justice and do not deprive people of their goods."
+
+His people rejected his call and said: "Does your prayer command you that we leave what our fathers worshipped or that we do with our wealth whatever we please?"
+
+They threatened him with stoning and expulsion from the village, but he remained patient and continued calling them. He warned them of Allah's punishment if they persisted.
+
+The earthquake seized them and they lay fallen in their homes. Allah saved Shuayb and those who believed with him.`,
+        lessons: [
+          'Justice in dealings is fundamental to religion',
+          'Cheating and giving short measure are major sins',
+          'Patience in the face of persecution',
+          'Religion is connected to daily transactions',
+        ],
+      },
+    },
+  },
+  {
+    id: 'ayyub',
+    name: { ar: 'أيوب', en: 'Job', fr: 'Job', ur: 'ایوب', id: 'Ayyub', tr: 'Eyyub' },
+    era: 'الشام',
+    order: 13,
+    stories: {
+      ar: {
+        title: 'قصة أيوب عليه السلام والصبر على البلاء',
+        content: `أيوب عليه السلام كان نبياً صالحاً غنياً، له أولاد كثيرون ومال وفير وصحة جيدة. ابتلاه الله بلاء شديداً ليختبر صبره.
+
+فقد أيوب ماله وأولاده، ثم أصابه مرض شديد في جسده. مكث سنوات طويلة في هذا البلاء، لكنه لم يشكُ إلا إلى الله.
+
+تخلى عنه الناس إلا زوجته التي بقيت تخدمه وترعاه. كان أيوب يصبر ويحتسب ولا يتضجر من قضاء الله.
+
+في النهاية دعا ربه: "أني مسني الضر وأنت أرحم الراحمين". فاستجاب الله له وأمره أن يركض برجله فنبعت عين ماء، اغتسل منها فشُفي.
+
+رد الله إليه صحته وأهله ومثلهم معهم، وجعله مثالاً للصابرين. قال تعالى: "إنا وجدناه صابراً نعم العبد إنه أواب".`,
+        lessons: [
+          'الصبر على البلاء من علامات الإيمان',
+          'البلاء اختبار للمؤمن وتكفير للذنوب',
+          'الشكوى إلى الله وحده',
+          'الفرج يأتي بعد الصبر',
+        ],
+      },
+      en: {
+        title: 'The Story of Prophet Job and Patience Through Trials',
+        content: `Prophet Job (peace be upon him) was a righteous and wealthy prophet with many children, abundant wealth, and good health. Allah tested him with severe trials.
+
+Job lost his wealth and children, then was struck with a severe illness. He remained in this condition for many years, but he complained only to Allah.
+
+People abandoned him except his wife, who continued to serve and care for him. Job remained patient and sought reward from Allah without complaining about His decree.
+
+Finally he called upon his Lord: "Indeed, adversity has touched me, and You are the Most Merciful of the merciful." Allah answered him and commanded him to strike the ground with his foot, and a spring gushed forth. He washed from it and was healed.
+
+Allah restored his health, family, and doubled his blessings. He made him an example for the patient. Allah said: "Indeed, We found him patient, an excellent servant. Indeed, he was one repeatedly turning to Allah."`,
+        lessons: [
+          'Patience through trials is a sign of faith',
+          'Trials test believers and expiate sins',
+          'Complain only to Allah',
+          'Relief comes after patience',
+        ],
+      },
+    },
+  },
+  {
+    id: 'yunus',
+    name: { ar: 'يونس', en: 'Jonah', fr: 'Jonas', ur: 'یونس', id: 'Yunus', tr: 'Yunus' },
+    era: 'نينوى',
+    order: 14,
+    stories: {
+      ar: {
+        title: 'قصة يونس عليه السلام وصاحب الحوت',
+        content: `يونس عليه السلام أُرسل إلى أهل نينوى، فدعاهم إلى الله فكذبوه. غضب يونس وخرج من المدينة قبل أن يأذن له الله.
+
+ركب يونس السفينة، فهاج البحر واضطربت السفينة. اقترعوا فخرجت القرعة على يونس، فألقوه في البحر.
+
+التقمه الحوت بأمر الله، فبقي في بطنه يسبح الله ويستغفره. دعا في الظلمات: "لا إله إلا أنت سبحانك إني كنت من الظالمين".
+
+استجاب الله دعاءه وأمر الحوت أن يلفظه على الساحل. كان سقيماً فأنبت الله عليه شجرة من يقطين تظلله وتحميه.
+
+عاد يونس إلى قومه فوجدهم قد آمنوا، وكانوا مائة ألف أو يزيدون. متّعهم الله إلى حين.`,
+        lessons: [
+          'عدم اليأس من هداية الناس',
+          'انتظار أمر الله قبل التصرف',
+          'الاستغفار والتسبيح سبب النجاة',
+          'الله يقبل توبة التائبين',
+        ],
+      },
+      en: {
+        title: 'The Story of Prophet Jonah - Companion of the Whale',
+        content: `Prophet Jonah (peace be upon him) was sent to the people of Nineveh. He called them to Allah but they rejected him. Jonah became angry and left the city before Allah permitted him.
+
+Jonah boarded a ship, but the sea became turbulent. They cast lots, and the lot fell on Jonah, so they threw him into the sea.
+
+A whale swallowed him by Allah's command. He remained in its belly glorifying Allah and seeking forgiveness. He called out in the darkness: "There is no deity except You; exalted are You. Indeed, I have been of the wrongdoers."
+
+Allah answered his supplication and commanded the whale to cast him onto the shore. He was ill, so Allah caused a gourd tree to grow over him for shade and protection.
+
+Jonah returned to his people and found they had believed - a hundred thousand or more. Allah granted them enjoyment for a time.`,
+        lessons: [
+          'Never despair of guiding people',
+          'Wait for Allah\'s command before acting',
+          'Seeking forgiveness and glorification cause salvation',
+          'Allah accepts the repentance of those who repent',
+        ],
+      },
+    },
+  },
+  {
+    id: 'dawud',
+    name: { ar: 'داود', en: 'David', fr: 'David', ur: 'داؤد', id: 'Daud', tr: 'Davud' },
+    era: 'فلسطين',
+    order: 15,
+    stories: {
+      ar: {
+        title: 'قصة داود عليه السلام الملك النبي',
+        content: `داود عليه السلام كان نبياً وملكاً على بني إسرائيل. أعطاه الله ملكاً عظيماً وعلماً وحكمة، وآتاه الزبور.
+
+كان داود شجاعاً، قتل جالوت الجبار وهو شاب صغير. ألان الله له الحديد فكان يصنع الدروع والسلاح.
+
+أوتي داود صوتاً جميلاً، فكان إذا سبّح سبّحت معه الجبال والطير. قال تعالى: "يا جبال أوّبي معه والطير".
+
+كان داود يصوم يوماً ويفطر يوماً، وهو أحب الصيام إلى الله. وكان يقوم ثلث الليل.
+
+حكم داود بين الناس بالعدل، وعلّمه الله فصل الخطاب. كان يعمل بيده ويأكل من كسب يده.`,
+        lessons: [
+          'الجمع بين النبوة والملك فضل من الله',
+          'العمل باليد لا يتنافى مع المكانة',
+          'تسخير المخلوقات للتسبيح',
+          'الحكم بالعدل بين الناس',
+        ],
+      },
+      en: {
+        title: 'The Story of Prophet David - The King Prophet',
+        content: `Prophet David (peace be upon him) was both a prophet and king over the Children of Israel. Allah granted him great kingdom, knowledge and wisdom, and gave him the Psalms.
+
+David was brave - he killed the giant Goliath as a young man. Allah softened iron for him so he could craft armor and weapons.
+
+David was blessed with a beautiful voice. When he glorified Allah, the mountains and birds would join him. Allah said: "O mountains, repeat the praises with him, and the birds."
+
+David would fast one day and break his fast the next - this is the most beloved fasting to Allah. He would stand in prayer for a third of the night.
+
+David judged between people with justice, and Allah taught him decisive speech. He worked with his own hands and ate from his earnings.`,
+        lessons: [
+          'Combining prophethood and kingship is a favor from Allah',
+          'Manual labor does not contradict high status',
+          'Creation joins in glorification of Allah',
+          'Judging with justice between people',
+        ],
+      },
+    },
+  },
+  {
+    id: 'sulayman',
+    name: { ar: 'سليمان', en: 'Solomon', fr: 'Salomon', ur: 'سلیمان', id: 'Sulaiman', tr: 'Süleyman' },
+    era: 'فلسطين',
+    order: 16,
+    stories: {
+      ar: {
+        title: 'قصة سليمان عليه السلام ومملكته العظيمة',
+        content: `سليمان عليه السلام ورث الملك والنبوة من أبيه داود. دعا الله أن يؤتيه ملكاً لا ينبغي لأحد من بعده، فاستجاب الله له.
+
+سخّر الله له الريح تجري بأمره، والجن يعملون له ما يشاء من محاريب وتماثيل وجفان كالجواب. علّمه منطق الطير والحيوان.
+
+قصة سليمان مع ملكة سبأ شهيرة. أرسل إليها يدعوها للإسلام، فجاءت بعرشها إليه بقدرة الله. أسلمت مع سليمان لله رب العالمين.
+
+بنى سليمان بيت المقدس، وكانت الجن تعمل بين يديه. مات وهو متكئ على عصاه، ولم تعلم الجن بموته حتى أكلت الأرضة عصاه فخرّ.
+
+قال تعالى: "ولسليمان الريح غدوها شهر ورواحها شهر وأسلنا له عين القطر".`,
+        lessons: [
+          'الملك والسلطان نعمة تستوجب الشكر',
+          'استخدام القوة في طاعة الله',
+          'الدعوة للإسلام بالحكمة',
+          'التواضع مع عظم الملك',
+        ],
+      },
+      en: {
+        title: 'The Story of Prophet Solomon and His Great Kingdom',
+        content: `Prophet Solomon (peace be upon him) inherited kingship and prophethood from his father David. He asked Allah to grant him a kingdom unlike any after him, and Allah answered.
+
+Allah subjected the wind to Solomon's command, and the jinn worked for him - building sanctuaries, statues, and large basins. He was taught the language of birds and animals.
+
+Solomon's story with the Queen of Sheba is famous. He invited her to Islam, and her throne was brought to him by Allah's power. She submitted to Allah, Lord of the worlds.
+
+Solomon built the Temple in Jerusalem, with jinn working under his command. He died while leaning on his staff, and the jinn did not know of his death until termites ate through it and he collapsed.
+
+Allah said: "And to Solomon the wind - its morning course was a month's journey and its evening course a month's journey. And We caused a spring of liquid copper to flow for him."`,
+        lessons: [
+          'Kingdom and authority require gratitude',
+          'Using power in obedience to Allah',
+          'Calling to Islam with wisdom',
+          'Humility despite great kingdom',
+        ],
+      },
+    },
+  },
+  {
+    id: 'zakariya',
+    name: { ar: 'زكريا', en: 'Zechariah', fr: 'Zacharie', ur: 'زکریا', id: 'Zakaria', tr: 'Zekeriya' },
+    era: 'فلسطين',
+    order: 17,
+    stories: {
+      ar: {
+        title: 'قصة زكريا عليه السلام واستجابة الدعاء',
+        content: `زكريا عليه السلام كان نبياً من أنبياء بني إسرائيل، وكان كفيل مريم أم عيسى. كان يدخل عليها المحراب فيجد عندها رزقاً.
+
+بلغ زكريا من الكبر عتياً، وكانت امرأته عاقراً لا تلد. تمنى الولد ليرث منه النبوة والعلم.
+
+دعا ربه دعاء خفياً: "رب إني وهن العظم مني واشتعل الرأس شيباً ولم أكن بدعائك رب شقياً".
+
+استجاب الله دعاءه وبشّره بغلام اسمه يحيى، لم يجعل الله له من قبل سمياً. تعجب زكريا كيف يكون له ولد وهو كبير وامرأته عاقر.
+
+جعل الله له آية ألا يكلم الناس ثلاث ليال سوياً. رُزق بيحيى وكان باراً تقياً.`,
+        lessons: [
+          'الله قادر على كل شيء',
+          'لا يأس من رحمة الله',
+          'الدعاء بإلحاح وخشوع',
+          'الإيمان بقدرة الله فوق الأسباب',
+        ],
+      },
+      en: {
+        title: 'The Story of Prophet Zechariah and the Answered Prayer',
+        content: `Prophet Zechariah (peace be upon him) was a prophet of the Children of Israel and the guardian of Mary, mother of Jesus. He would enter her chamber and find provision with her.
+
+Zechariah had reached old age and his wife was barren. He wished for a child to inherit prophethood and knowledge from him.
+
+He called upon his Lord in private supplication: "My Lord, indeed my bones have weakened and my head is filled with white hair, and I have never been in my supplication to You, my Lord, unhappy."
+
+Allah answered his prayer and gave him glad tidings of a son named John - a name Allah had not given to anyone before. Zechariah wondered how he could have a child when he was old and his wife was barren.
+
+Allah made a sign for him - that he should not speak to people for three nights. He was blessed with John, who was dutiful and righteous.`,
+        lessons: [
+          'Allah is capable of all things',
+          'Never despair of Allah\'s mercy',
+          'Supplicating with persistence and humility',
+          'Faith in Allah\'s power beyond natural means',
+        ],
+      },
+    },
+  },
+  {
+    id: 'yahya',
+    name: { ar: 'يحيى', en: 'John', fr: 'Jean', ur: 'یحییٰ', id: 'Yahya', tr: 'Yahya' },
+    era: 'فلسطين',
+    order: 18,
+    stories: {
+      ar: {
+        title: 'قصة يحيى عليه السلام',
+        content: `يحيى عليه السلام ابن زكريا، وُلد بمعجزة من أب شيخ كبير وأم عاقر. آتاه الله الحكم صبياً وكان نبياً منذ صغره.
+
+كان يحيى حصوراً، أي عفيفاً لا يأتي النساء. وكان باراً بوالديه، لم يكن جباراً ولا عصياً.
+
+عاش يحيى حياة زهد وتقوى، يأكل من ورق الشجر ويبكي من خشية الله. كان يدعو بني إسرائيل إلى التوبة والعودة إلى الله.
+
+صدّق يحيى بعيسى عليه السلام وآمن به قبل أن يُبعث. كان من المقربين إلى الله.
+
+قال تعالى: "يا يحيى خذ الكتاب بقوة وآتيناه الحكم صبياً، وحناناً من لدنا وزكاة وكان تقياً".`,
+        lessons: [
+          'الهداية منحة من الله',
+          'بر الوالدين من أعظم القربات',
+          'الزهد في الدنيا طريق الآخرة',
+          'التصديق بالأنبياء والإيمان بهم',
+        ],
+      },
+      en: {
+        title: 'The Story of Prophet John',
+        content: `Prophet John (peace be upon him) was the son of Zechariah, born miraculously to an elderly father and a barren mother. Allah granted him wisdom as a child and he was a prophet from youth.
+
+John was chaste and abstinent. He was dutiful to his parents, neither arrogant nor disobedient.
+
+John lived a life of asceticism and piety, eating leaves from trees and weeping from fear of Allah. He called the Children of Israel to repentance and return to Allah.
+
+John believed in Jesus (peace be upon him) before he was sent as a prophet. He was among those close to Allah.
+
+Allah said: "O John, take the Scripture with determination. And We gave him wisdom while yet a boy, and affection from Us and purity, and he was fearing of Allah."`,
+        lessons: [
+          'Guidance is a gift from Allah',
+          'Honoring parents is among the greatest acts of worship',
+          'Asceticism in this world is the path to the Hereafter',
+          'Believing in and affirming the prophets',
+        ],
+      },
+    },
+  },
 ];
 
 export const getStoryByLanguage = (prophetId: string, languageId: string): ProphetStory['stories'][string] | null => {
