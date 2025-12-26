@@ -124,6 +124,23 @@
     font-family: 'Cairo', sans-serif;
     direction: rtl;
   }
+
+  /* Quran font families */
+  .font-amiri {
+    font-family: 'Amiri', serif !important;
+  }
+  
+  .font-scheherazade {
+    font-family: 'Scheherazade New', serif !important;
+  }
+  
+  .font-noto-naskh {
+    font-family: 'Noto Naskh Arabic', serif !important;
+  }
+  
+  .font-uthmani {
+    font-family: 'Amiri', serif !important; /* Fallback to Amiri */
+  }
 }
 
 @layer utilities {
