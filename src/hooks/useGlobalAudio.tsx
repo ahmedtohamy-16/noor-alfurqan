@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useRef, useCallback, useEffect, ReactNode } from 'react';
 import { reciters, type Reciter } from '@/data/reciters';
+import { toast } from 'sonner';
 
 type RepeatMode = 'none' | 'single' | 'range';
 type PlayMode = 'single' | 'surah';
@@ -55,6 +56,7 @@ interface GlobalAudioContextType extends GlobalAudioState {
   setRangeEnd: (end: number) => void;
   setPlayMode: (mode: PlayMode) => void;
   cycleRepeatMode: () => void;
+  downloadAyah: (ayahNumber: number, surahName: string, ayahNumberInSurah: number) => void;
 }
 
 const GlobalAudioContext = createContext<GlobalAudioContextType | null>(null);
@@ -91,12 +93,15 @@ export const GlobalAudioProvider: React.FC<GlobalAudioProviderProps> = ({ childr
   const [playMode, setPlayMode] = useState<PlayMode>('surah');
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const preloadAudioRef = useRef<HTMLAudioElement | null>(null);
   const pendingPlayRef = useRef<number | null>(null);
+  const preloadedUrls = useRef<Set<string>>(new Set());
 
   // Initialize audio element
   useEffect(() => {
     if (!audioRef.current) {
       audioRef.current = new Audio();
+      preloadAudioRef.current = new Audio();
       audioRef.current.addEventListener('timeupdate', handleTimeUpdate);
       audioRef.current.addEventListener('ended', handleEnded);
       audioRef.current.addEventListener('loadstart', () => setIsLoading(true));
@@ -131,16 +136,39 @@ export const GlobalAudioProvider: React.FC<GlobalAudioProviderProps> = ({ childr
     }
   }, [selectedReciter.id]);
 
-  const getAudioUrl = useCallback((ayahNumber: number) => {
-    return `${selectedReciter.server}/${ayahNumber}.mp3`;
+  const getAudioUrl = useCallback((ayahNumber: number, reciter?: Reciter) => {
+    const server = reciter?.server || selectedReciter.server;
+    return `${server}/${ayahNumber}.mp3`;
   }, [selectedReciter]);
+
+  // Preload next ayah
+  const preloadNextAyah = useCallback((nextIndex: number) => {
+    if (!currentSurah || !currentSurah.ayahs[nextIndex]) return;
+    
+    const ayah = currentSurah.ayahs[nextIndex];
+    const url = getAudioUrl(ayah.number);
+    
+    if (!preloadedUrls.current.has(url) && preloadAudioRef.current) {
+      preloadAudioRef.current.src = url;
+      preloadAudioRef.current.load();
+      preloadedUrls.current.add(url);
+    }
+  }, [currentSurah, getAudioUrl]);
 
   const handleTimeUpdate = useCallback(() => {
     if (audioRef.current) {
       setProgress(audioRef.current.currentTime);
       setDuration(audioRef.current.duration || 0);
+      
+      // Preload next ayah when 70% through current
+      const percentComplete = audioRef.current.duration 
+        ? (audioRef.current.currentTime / audioRef.current.duration) * 100 
+        : 0;
+      if (percentComplete > 70 && currentSurah) {
+        preloadNextAyah(currentAyahIndex + 1);
+      }
     }
-  }, []);
+  }, [currentSurah, currentAyahIndex, preloadNextAyah]);
 
   const handleEnded = useCallback(() => {
     if (!currentSurah) return;
@@ -351,19 +379,60 @@ export const GlobalAudioProvider: React.FC<GlobalAudioProviderProps> = ({ childr
   }, []);
 
   const setReciter = useCallback((reciter: Reciter) => {
-    const wasPlaying = isPlaying;
-    const currentIndex = currentAyahIndex;
-
-    if (audioRef.current) {
-      audioRef.current.pause();
+    if (!currentSurah) {
+      setSelectedReciter(reciter);
+      return;
     }
-    setIsPlaying(false);
+
+    const currentAyah = currentSurah.ayahs[currentAyahIndex];
+    if (!currentAyah || !audioRef.current) {
+      setSelectedReciter(reciter);
+      return;
+    }
+
+    // Immediately switch to new reciter
+    const newUrl = getAudioUrl(currentAyah.number, reciter);
     setSelectedReciter(reciter);
-
-    if (wasPlaying) {
-      pendingPlayRef.current = currentIndex;
+    preloadedUrls.current.clear();
+    
+    if (isPlaying) {
+      setIsLoading(true);
+      audioRef.current.src = newUrl;
+      audioRef.current.play()
+        .then(() => {
+          setIsPlaying(true);
+          setIsLoading(false);
+        })
+        .catch((err) => {
+          console.error('Error switching reciter:', err);
+          setIsLoading(false);
+        });
     }
-  }, [isPlaying, currentAyahIndex]);
+  }, [isPlaying, currentAyahIndex, currentSurah, getAudioUrl]);
+
+  const downloadAyah = useCallback(async (ayahNumber: number, surahName: string, ayahNumberInSurah: number) => {
+    const url = getAudioUrl(ayahNumber);
+    
+    try {
+      toast.info('جاري تحميل الآية...');
+      const response = await fetch(url);
+      if (!response.ok) throw new Error('Failed to fetch');
+      
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = downloadUrl;
+      a.download = `${surahName}_آية_${ayahNumberInSurah}_${selectedReciter.nameArabic}.mp3`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(downloadUrl);
+      toast.success('تم تحميل الآية بنجاح');
+    } catch (error) {
+      console.error('Download error:', error);
+      toast.error('فشل تحميل الآية. جرب مرة أخرى.');
+    }
+  }, [getAudioUrl, selectedReciter.nameArabic]);
 
   const setExpanded = useCallback((expanded: boolean) => {
     setIsExpanded(expanded);
@@ -429,6 +498,7 @@ export const GlobalAudioProvider: React.FC<GlobalAudioProviderProps> = ({ childr
     setRangeEnd,
     setPlayMode,
     cycleRepeatMode,
+    downloadAyah,
   };
 
   return (
