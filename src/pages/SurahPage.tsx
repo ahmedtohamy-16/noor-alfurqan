@@ -309,11 +309,13 @@ const SurahPage = () => {
                       ayahText={displayText}
                       surahNumber={Number(surahNumber)}
                       surahName={surahInfo?.name || ""}
+                      globalAyahNumber={ayah.number}
                       isFavorite={isAyahFavorite}
                       onToggleFavorite={() => toggleFavorite(ayah, displayText)}
                       onOpenTafsir={() => setTafsirAyah({ number: ayah.numberInSurah, text: displayText })}
                       onOpenShare={() => setShareAyah({ number: ayah.numberInSurah, text: displayText })}
                       onPlayAyah={() => playSpecificAyah(index)}
+                      onDownloadAyah={() => globalAudio.downloadAyah(ayah.number, surahInfo?.name || "", ayah.numberInSurah)}
                     >
                       <span 
                         className={cn(
