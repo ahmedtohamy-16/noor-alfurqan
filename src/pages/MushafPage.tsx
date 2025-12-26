@@ -7,6 +7,7 @@ import Header from "@/components/Header";
 import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { stripLeadingBismillah } from "@/lib/quranText";
 import { useReadingProgress } from "@/hooks/useReadingProgress";
 import { useReadingStats } from "@/hooks/useReadingStats";
 
@@ -188,14 +189,14 @@ const MushafPage = () => {
                   )}
                   
                   {/* Ayahs */}
-                  <div className="quran-text text-xl md:text-2xl leading-[2.5] text-center">
-                    {surah.ayahs.map((ayah) => {
-                      let displayText = ayah.text;
-                      // Remove Bismillah from first ayah for all surahs except Al-Fatiha
-                      // This prevents duplication since we show Bismillah separately above
-                      if (ayah.numberInSurah === 1 && surah.number !== 1) {
-                        displayText = ayah.text.replace(/^بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ\s*/, "").trim();
-                      }
+                   <div className="quran-text text-xl md:text-2xl leading-[2.5] text-center">
+                     {surah.ayahs.map((ayah) => {
+                       let displayText = ayah.text;
+                       // Remove Bismillah from first ayah for all surahs except Al-Fatiha (1) and At-Tawbah (9)
+                       // This prevents duplication since we show Bismillah separately above
+                       if (ayah.numberInSurah === 1 && surah.number !== 1 && surah.number !== 9) {
+                         displayText = stripLeadingBismillah(displayText);
+                       }
                       
                       return (
                         <span key={ayah.number} className="inline">

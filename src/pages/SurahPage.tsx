@@ -23,6 +23,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import { stripLeadingBismillah } from "@/lib/quranText";
 
 interface Ayah {
   number: number;
@@ -236,7 +237,9 @@ const SurahPage = () => {
               استمع للسورة كاملة
             </Button>
           </div>
-          {surahNumber !== "9" && <p className="text-2xl md:text-3xl font-quran text-foreground">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</p>}
+          {surahNumber !== "9" && surahNumber !== "1" && (
+            <p className="text-2xl md:text-3xl font-quran text-foreground">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</p>
+          )}
         </div>
 
         <div className={cn(
@@ -277,14 +280,7 @@ const SurahPage = () => {
                 let displayText = ayah.text;
                 // Remove Bismillah from first ayah for all surahs except Al-Fatiha (1) and At-Tawbah (9)
                 if (ayah.numberInSurah === 1 && Number(surahNumber) !== 1 && Number(surahNumber) !== 9) {
-                  // Remove all possible variants of Bismillah (with different Unicode characters)
-                  displayText = displayText
-                    .replace(/^بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ\s*/u, "")
-                    .replace(/^بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ\s*/u, "")
-                    .replace(/^بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ\s*/u, "")
-                    .replace(/^بِسْمِ اللهِ الرَّحْمٰنِ الرَّحِيْمِ\s*/u, "")
-                    .replace(/^بسم الله الرحمن الرحيم\s*/u, "")
-                    .trim();
+                  displayText = stripLeadingBismillah(displayText);
                 }
                 const isAyahFavorite = isFavorite(Number(surahNumber), ayah.numberInSurah);
                 const translatedText = translationData?.find(t => t.numberInSurah === ayah.numberInSurah)?.text;
