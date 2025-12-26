@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowRight, Book, Search, Hash, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -7,9 +7,8 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import Header from "@/components/Header";
 import SurahCard from "@/components/SurahCard";
 import { surahs } from "@/data/surahs";
-import { useQuery } from "@tanstack/react-query";
+import { searchAyahs, QuranAyah } from "@/data/quranAyats";
 import { Skeleton } from "@/components/ui/skeleton";
-import { stripLeadingBismillah } from "@/lib/quranText";
 
 interface AyahResult {
   number: number;
@@ -21,20 +20,6 @@ interface AyahResult {
     englishName: string;
   };
 }
-
-const fetchAyahSearch = async (query: string): Promise<AyahResult[]> => {
-  if (!query.trim()) return [];
-  
-  try {
-    const response = await fetch(
-      `https://api.alquran.cloud/v1/search/${encodeURIComponent(query)}/all/ar.alafasy`
-    );
-    const data = await response.json();
-    return data.data?.matches || [];
-  } catch {
-    return [];
-  }
-};
 
 const QuranPage = () => {
   const navigate = useNavigate();
@@ -58,13 +43,27 @@ const QuranPage = () => {
     return matchesFilter && matchesSearch;
   });
 
-  // Search for ayahs
-  const { data: ayahResults, isLoading: isSearching } = useQuery({
-    queryKey: ["ayahSearch", searchQuery],
-    queryFn: () => fetchAyahSearch(searchQuery),
-    enabled: searchType === "ayah" && searchQuery.trim().length >= 2,
-    staleTime: 1000 * 60 * 5,
-  });
+  // Search for ayahs using local data
+  const ayahResults = useMemo((): AyahResult[] => {
+    if (searchType !== "ayah" || searchQuery.trim().length < 2) return [];
+    
+    const results = searchAyahs(searchQuery);
+    return results.slice(0, 100).map(a => {
+      const surahInfo = surahs.find(s => s.number === a.sura_id);
+      return {
+        number: a.id,
+        text: a.text_uthmani,
+        numberInSurah: a.ayat_number_in_sura,
+        surah: {
+          number: a.sura_id,
+          name: surahInfo?.name || `سورة ${a.sura_id}`,
+          englishName: surahInfo?.englishName || `Surah ${a.sura_id}`,
+        }
+      };
+    });
+  }, [searchQuery, searchType]);
+  
+  const isSearching = false;
 
   // Check if query is a valid ayah reference (e.g., "2:255" for Ayat Al-Kursi)
   const parseAyahReference = (q: string) => {
@@ -171,9 +170,7 @@ const QuranPage = () => {
                           </span>
                         </div>
                         <p className="text-foreground font-quran text-lg leading-loose line-clamp-3">
-                          {ayah.numberInSurah === 1 && ayah.surah.number !== 1 && ayah.surah.number !== 9
-                            ? stripLeadingBismillah(ayah.text)
-                            : ayah.text}
+                          {ayah.text}
                         </p>
                       </div>
                     </Link>
