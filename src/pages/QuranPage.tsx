@@ -9,6 +9,7 @@ import SurahCard from "@/components/SurahCard";
 import { surahs } from "@/data/surahs";
 import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
+import { stripLeadingBismillah } from "@/lib/quranText";
 
 interface AyahResult {
   number: number;
@@ -170,7 +171,9 @@ const QuranPage = () => {
                           </span>
                         </div>
                         <p className="text-foreground font-quran text-lg leading-loose line-clamp-3">
-                          {ayah.text}
+                          {ayah.numberInSurah === 1 && ayah.surah.number !== 1 && ayah.surah.number !== 9
+                            ? stripLeadingBismillah(ayah.text)
+                            : ayah.text}
                         </p>
                       </div>
                     </Link>
