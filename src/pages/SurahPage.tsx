@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, BookOpen, Headphones, Settings2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { surahs } from "@/data/surahs";
+import { getAyahsBySurah } from "@/data/quranAyats";
 import Header from "@/components/Header";
 import AudioPlayer, { type AudioPlayerHandle } from "@/components/AudioPlayer";
 import TafsirDialog from "@/components/TafsirDialog";
@@ -10,7 +11,7 @@ import ShareAyahDialog from "@/components/ShareAyahDialog";
 import AyahOptionsMenu from "@/components/AyahOptionsMenu";
 import TranslationSelector from "@/components/TranslationSelector";
 import DisplaySettingsPanel, { type DisplaySettings, getThemeClasses } from "@/components/DisplaySettings";
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useReadingProgress } from "@/hooks/useReadingProgress";
@@ -23,7 +24,6 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
-import { stripLeadingBismillah } from "@/lib/quranText";
 
 interface Ayah {
   number: number;
@@ -40,14 +40,6 @@ interface SurahData {
   revelationType: string;
   ayahs: Ayah[];
 }
-
-const fetchSurah = async (surahNumber: string): Promise<SurahData> => {
-  const response = await fetch(
-    `https://api.alquran.cloud/v1/surah/${surahNumber}`
-  );
-  const data = await response.json();
-  return data.data;
-};
 
 const fetchTranslation = async (surahNumber: string, edition: string): Promise<Ayah[]> => {
   const response = await fetch(
@@ -80,11 +72,30 @@ const SurahPage = () => {
 
   const surahInfo = surahs.find((s) => s.number === Number(surahNumber));
 
-  const { data: surah, isLoading, error } = useQuery({
-    queryKey: ["surah", surahNumber],
-    queryFn: () => fetchSurah(surahNumber!),
-    enabled: !!surahNumber,
-  });
+  // Use local static data instead of API
+  const surah = useMemo((): SurahData | null => {
+    if (!surahNumber || !surahInfo) return null;
+    
+    const localAyahs = getAyahsBySurah(Number(surahNumber));
+    if (localAyahs.length === 0) return null;
+    
+    return {
+      number: surahInfo.number,
+      name: surahInfo.name,
+      englishName: surahInfo.englishName,
+      englishNameTranslation: surahInfo.englishNameTranslation,
+      numberOfAyahs: surahInfo.numberOfAyahs,
+      revelationType: surahInfo.revelationType,
+      ayahs: localAyahs.map((a, index) => ({
+        number: a.id,
+        text: a.text_uthmani,
+        numberInSurah: a.ayat_number_in_sura,
+      }))
+    };
+  }, [surahNumber, surahInfo]);
+  
+  const isLoading = false;
+  const error = !surah && surahNumber ? new Error("Surah not found") : null;
 
   const { data: translationData } = useQuery({
     queryKey: ["translation", surahNumber, selectedTranslation],
@@ -277,11 +288,8 @@ const SurahPage = () => {
               }}
             >
               {surah?.ayahs.map((ayah, index) => {
-                let displayText = ayah.text;
-                // Remove Bismillah from first ayah for all surahs except Al-Fatiha (1) and At-Tawbah (9)
-                if (ayah.numberInSurah === 1 && Number(surahNumber) !== 1 && Number(surahNumber) !== 9) {
-                  displayText = stripLeadingBismillah(displayText);
-                }
+                // Text is already clean from local data, no need to strip Bismillah
+                const displayText = ayah.text;
                 const isAyahFavorite = isFavorite(Number(surahNumber), ayah.numberInSurah);
                 const translatedText = translationData?.find(t => t.numberInSurah === ayah.numberInSurah)?.text;
                 const isCurrentlyPlaying = currentPlayingAyah === index;

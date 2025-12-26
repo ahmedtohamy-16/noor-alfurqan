@@ -1,39 +1,16 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { ChevronLeft, ChevronRight, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Header from "@/components/Header";
-import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
-import { stripLeadingBismillah } from "@/lib/quranText";
 import { useReadingProgress } from "@/hooks/useReadingProgress";
 import { useReadingStats } from "@/hooks/useReadingStats";
+import { getAyahsByPage } from "@/data/quranAyats";
+import { surahs } from "@/data/surahs";
 
 const TOTAL_PAGES = 604;
-
-interface PageData {
-  ayahs: {
-    number: number;
-    text: string;
-    numberInSurah: number;
-    surah: {
-      number: number;
-      name: string;
-      englishName: string;
-    };
-    page: number;
-  }[];
-}
-
-const fetchPage = async (page: number): Promise<PageData> => {
-  const response = await fetch(
-    `https://api.alquran.cloud/v1/page/${page}/quran-uthmani`
-  );
-  const data = await response.json();
-  return data.data;
-};
 
 const MushafPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -43,10 +20,27 @@ const MushafPage = () => {
   const { saveProgress } = useReadingProgress();
   const { incrementPage } = useReadingStats();
 
-  const { data, isLoading, error } = useQuery({
-    queryKey: ["mushafPage", currentPage],
-    queryFn: () => fetchPage(currentPage),
-  });
+  // Use local static data instead of API
+  const pageAyahs = useMemo(() => {
+    const ayahs = getAyahsByPage(currentPage);
+    return ayahs.map(a => {
+      const surahInfo = surahs.find(s => s.number === a.sura_id);
+      return {
+        number: a.id,
+        text: a.text_uthmani,
+        numberInSurah: a.ayat_number_in_sura,
+        surah: {
+          number: a.sura_id,
+          name: surahInfo?.name || `سورة ${a.sura_id}`,
+          englishName: surahInfo?.englishName || `Surah ${a.sura_id}`,
+        },
+        page: a.page_number,
+      };
+    });
+  }, [currentPage]);
+
+  const isLoading = false;
+  const error = pageAyahs.length === 0;
 
   // Update URL and track reading
   useEffect(() => {
@@ -56,16 +50,16 @@ const MushafPage = () => {
 
   // Save reading progress when page loads
   useEffect(() => {
-    if (data && data.ayahs.length > 0) {
-      const firstAyah = data.ayahs[0];
+    if (pageAyahs.length > 0) {
+      const firstAyah = pageAyahs[0];
       saveProgress(
         firstAyah.surah.number,
         firstAyah.numberInSurah,
         firstAyah.surah.name,
-        data.ayahs[data.ayahs.length - 1]?.numberInSurah || 1
+        pageAyahs[pageAyahs.length - 1]?.numberInSurah || 1
       );
     }
-  }, [data]);
+  }, [pageAyahs]);
 
   const goToPage = (page: number) => {
     if (page >= 1 && page <= TOTAL_PAGES) {
@@ -88,7 +82,7 @@ const MushafPage = () => {
   };
 
   // Group ayahs by surah
-  const groupedBySurah = data?.ayahs.reduce((acc, ayah) => {
+  const groupedBySurah = pageAyahs.reduce((acc, ayah) => {
     const surahNum = ayah.surah.number;
     if (!acc[surahNum]) {
       acc[surahNum] = {
@@ -99,7 +93,7 @@ const MushafPage = () => {
     }
     acc[surahNum].ayahs.push(ayah);
     return acc;
-  }, {} as Record<number, { name: string; number: number; ayahs: typeof data.ayahs }>);
+  }, {} as Record<number, { name: string; number: number; ayahs: typeof pageAyahs }>);
 
   return (
     <div className="min-h-screen bg-background">
@@ -169,7 +163,7 @@ const MushafPage = () => {
             </div>
           ) : (
             <div className="space-y-8">
-              {groupedBySurah && Object.values(groupedBySurah).map((surah) => (
+              {Object.values(groupedBySurah).map((surah) => (
                 <div key={surah.number}>
                   {/* Surah Header - only show if first ayah is ayah 1 */}
                   {surah.ayahs[0].numberInSurah === 1 && (
@@ -182,26 +176,21 @@ const MushafPage = () => {
                       {/* Show Bismillah separately only for surahs other than At-Tawbah (9) and Al-Fatiha (1) */}
                       {surah.number !== 9 && surah.number !== 1 && (
                         <p className="text-xl md:text-2xl font-quran text-foreground/90 mb-4">
-                          بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
+                          بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ
                         </p>
                       )}
                     </div>
                   )}
                   
                   {/* Ayahs */}
-                   <div className="quran-text text-xl md:text-2xl leading-[2.5] text-center">
-                     {surah.ayahs.map((ayah) => {
-                       let displayText = ayah.text;
-                       // Remove Bismillah from first ayah for all surahs except Al-Fatiha (1) and At-Tawbah (9)
-                       // This prevents duplication since we show Bismillah separately above
-                       if (ayah.numberInSurah === 1 && surah.number !== 1 && surah.number !== 9) {
-                         displayText = stripLeadingBismillah(displayText);
-                       }
+                  <div className="quran-text text-xl md:text-2xl leading-[2.5] text-center">
+                    {surah.ayahs.map((ayah) => {
+                      const displayText = ayah.text;
                       
                       return (
                         <span key={ayah.number} className="inline">
                           <Link 
-                            to={`/surah/${surah.number}#ayah-${ayah.numberInSurah}`}
+                            to={`/surah/${surah.number}?ayah=${ayah.numberInSurah}`}
                             className="hover:bg-primary/10 rounded px-1 transition-colors"
                           >
                             {displayText}
