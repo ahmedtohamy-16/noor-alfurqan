@@ -10,6 +10,7 @@ import ShareAyahDialog from "@/components/ShareAyahDialog";
 import AyahOptionsMenu from "@/components/AyahOptionsMenu";
 import TranslationSelector from "@/components/TranslationSelector";
 import DisplaySettingsPanel, { type DisplaySettings, getThemeClasses } from "@/components/DisplaySettings";
+import ReciterSettingsPanel from "@/components/ReciterSettingsPanel";
 import { DownloadAudioDialog } from "@/components/DownloadAudioDialog";
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -24,6 +25,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 
 interface Ayah {
@@ -68,8 +70,9 @@ const SurahPage = () => {
     showTranslation: true,
   });
   const [showDownloadDialog, setShowDownloadDialog] = useState(false);
-  const [downloadType, setDownloadType] = useState<'surah' | 'ayah'>('surah');
+  const [downloadType, setDownloadType] = useState<'surah' | 'ayah' | 'range'>('surah');
   const [downloadAyahNumber, setDownloadAyahNumber] = useState<number | null>(null);
+  const [downloadGlobalAyahNumber, setDownloadGlobalAyahNumber] = useState<number | null>(null);
   const globalAudio = useGlobalAudio();
   const ayahRefs = useRef<{ [key: number]: HTMLSpanElement | null }>({});
 
@@ -221,6 +224,30 @@ const SurahPage = () => {
                 <SheetTitle>إعدادات العرض</SheetTitle>
               </SheetHeader>
               <div className="mt-6 space-y-6">
+                {/* Reciter Settings */}
+                <ReciterSettingsPanel 
+                  surahNumber={surah?.number}
+                  surahName={surahInfo?.name}
+                />
+                
+                <Separator />
+                
+                {/* Download Range Button */}
+                <Button
+                  variant="outline"
+                  className="w-full gap-2"
+                  onClick={() => {
+                    setDownloadType('range');
+                    setDownloadGlobalAyahNumber(surah?.ayahs[0]?.number || null);
+                    setShowDownloadDialog(true);
+                  }}
+                >
+                  <Download className="w-4 h-4" />
+                  تحميل نطاق من الآيات
+                </Button>
+                
+                <Separator />
+                
                 <div>
                   <h4 className="font-medium mb-3">الترجمة</h4>
                   <TranslationSelector
@@ -315,7 +342,12 @@ const SurahPage = () => {
                       onOpenTafsir={() => setTafsirAyah({ number: ayah.numberInSurah, text: displayText })}
                       onOpenShare={() => setShareAyah({ number: ayah.numberInSurah, text: displayText })}
                       onPlayAyah={() => playSpecificAyah(index)}
-                      onDownloadAyah={() => globalAudio.downloadAyah(ayah.number, surahInfo?.name || "", ayah.numberInSurah)}
+                      onDownloadAyah={() => {
+                        setDownloadType('ayah');
+                        setDownloadAyahNumber(ayah.numberInSurah);
+                        setDownloadGlobalAyahNumber(ayah.number);
+                        setShowDownloadDialog(true);
+                      }}
                     >
                       <span 
                         className={cn(
@@ -360,7 +392,9 @@ const SurahPage = () => {
         surahNumber={surah?.number || 1}
         surahName={surahInfo?.name || ""}
         ayahNumber={downloadAyahNumber}
+        globalAyahNumber={downloadGlobalAyahNumber}
         downloadType={downloadType}
+        totalAyahs={surah?.numberOfAyahs || 0}
       />
     </div>
   );

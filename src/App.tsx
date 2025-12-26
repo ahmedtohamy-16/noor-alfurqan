@@ -8,6 +8,7 @@ import { ThemeProvider } from "@/hooks/useTheme";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ReadingSettingsProvider } from "@/hooks/useReadingSettings";
 import { GlobalAudioProvider } from "@/hooks/useGlobalAudio";
+import { DownloadManagerProvider } from "@/components/DownloadManager";
 import BottomNavigation from "@/components/BottomNavigation";
 import GlobalAudioPlayer from "@/components/GlobalAudioPlayer";
 import Index from "./pages/Index";
@@ -38,8 +39,9 @@ const App = () => (
         <AuthProvider>
           <ReadingSettingsProvider>
             <GlobalAudioProvider>
-              <TooltipProvider>
-                <Toaster />
+              <DownloadManagerProvider>
+                <TooltipProvider>
+                  <Toaster />
                 <Sonner />
                 <BrowserRouter>
                   <Routes>
@@ -64,8 +66,9 @@ const App = () => (
                   </Routes>
                   <GlobalAudioPlayer />
                   <BottomNavigation />
-                </BrowserRouter>
-              </TooltipProvider>
+                  </BrowserRouter>
+                </TooltipProvider>
+              </DownloadManagerProvider>
             </GlobalAudioProvider>
           </ReadingSettingsProvider>
         </AuthProvider>
