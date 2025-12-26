@@ -7,7 +7,9 @@ import { HelmetProvider } from "react-helmet-async";
 import { ThemeProvider } from "@/hooks/useTheme";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ReadingSettingsProvider } from "@/hooks/useReadingSettings";
+import { GlobalAudioProvider } from "@/hooks/useGlobalAudio";
 import BottomNavigation from "@/components/BottomNavigation";
+import GlobalAudioPlayer from "@/components/GlobalAudioPlayer";
 import Index from "./pages/Index";
 import QuranPage from "./pages/QuranPage";
 import SurahPage from "./pages/SurahPage";
@@ -35,33 +37,36 @@ const App = () => (
       <ThemeProvider>
         <AuthProvider>
           <ReadingSettingsProvider>
-            <TooltipProvider>
-              <Toaster />
-              <Sonner />
-              <BrowserRouter>
-                <Routes>
-                  <Route path="/" element={<Index />} />
-                  <Route path="/quran" element={<QuranPage />} />
-                  <Route path="/surah/:surahNumber" element={<SurahPage />} />
-                  <Route path="/mushaf" element={<MushafPage />} />
-                  <Route path="/favorites" element={<FavoritesPage />} />
-                  <Route path="/search" element={<SearchPage />} />
-                  <Route path="/khatmah" element={<KhatmahPage />} />
-                  <Route path="/auth" element={<AuthPage />} />
-                  <Route path="/verify-otp" element={<VerifyOtpPage />} />
-                  <Route path="/profile" element={<ProfilePage />} />
-                  <Route path="/settings" element={<SettingsPage />} />
-                  <Route path="/prayer-times" element={<PrayerTimesPage />} />
-                  <Route path="/reading-stats" element={<ReadingStatsPage />} />
-                  <Route path="/daily-wird" element={<DailyWirdPage />} />
-                  <Route path="/tasbih" element={<TasbihPage />} />
-                  <Route path="/azkar" element={<AzkarPage />} />
-                  <Route path="/prophet-stories" element={<ProphetStoriesPage />} />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-                <BottomNavigation />
-              </BrowserRouter>
-            </TooltipProvider>
+            <GlobalAudioProvider>
+              <TooltipProvider>
+                <Toaster />
+                <Sonner />
+                <BrowserRouter>
+                  <Routes>
+                    <Route path="/" element={<Index />} />
+                    <Route path="/quran" element={<QuranPage />} />
+                    <Route path="/surah/:surahNumber" element={<SurahPage />} />
+                    <Route path="/mushaf" element={<MushafPage />} />
+                    <Route path="/favorites" element={<FavoritesPage />} />
+                    <Route path="/search" element={<SearchPage />} />
+                    <Route path="/khatmah" element={<KhatmahPage />} />
+                    <Route path="/auth" element={<AuthPage />} />
+                    <Route path="/verify-otp" element={<VerifyOtpPage />} />
+                    <Route path="/profile" element={<ProfilePage />} />
+                    <Route path="/settings" element={<SettingsPage />} />
+                    <Route path="/prayer-times" element={<PrayerTimesPage />} />
+                    <Route path="/reading-stats" element={<ReadingStatsPage />} />
+                    <Route path="/daily-wird" element={<DailyWirdPage />} />
+                    <Route path="/tasbih" element={<TasbihPage />} />
+                    <Route path="/azkar" element={<AzkarPage />} />
+                    <Route path="/prophet-stories" element={<ProphetStoriesPage />} />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                  <GlobalAudioPlayer />
+                  <BottomNavigation />
+                </BrowserRouter>
+              </TooltipProvider>
+            </GlobalAudioProvider>
           </ReadingSettingsProvider>
         </AuthProvider>
       </ThemeProvider>

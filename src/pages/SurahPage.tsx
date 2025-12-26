@@ -1,21 +1,22 @@
 import { useParams, Link, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, BookOpen, Headphones, Settings2 } from "lucide-react";
+import { ArrowRight, BookOpen, Headphones, Settings2, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { surahs } from "@/data/surahs";
 import { getAyahsBySurah } from "@/data/quranAyats";
 import Header from "@/components/Header";
-import AudioPlayer, { type AudioPlayerHandle } from "@/components/AudioPlayer";
 import TafsirDialog from "@/components/TafsirDialog";
 import ShareAyahDialog from "@/components/ShareAyahDialog";
 import AyahOptionsMenu from "@/components/AyahOptionsMenu";
 import TranslationSelector from "@/components/TranslationSelector";
 import DisplaySettingsPanel, { type DisplaySettings, getThemeClasses } from "@/components/DisplaySettings";
+import { DownloadAudioDialog } from "@/components/DownloadAudioDialog";
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useReadingProgress } from "@/hooks/useReadingProgress";
 import { useReadingStats } from "@/hooks/useReadingStats";
+import { useGlobalAudio } from "@/hooks/useGlobalAudio";
 import {
   Sheet,
   SheetContent,
@@ -66,8 +67,10 @@ const SurahPage = () => {
     fontFamily: "Amiri",
     showTranslation: true,
   });
-  const [currentPlayingAyah, setCurrentPlayingAyah] = useState<number | null>(null);
-  const audioPlayerRef = useRef<AudioPlayerHandle | null>(null);
+  const [showDownloadDialog, setShowDownloadDialog] = useState(false);
+  const [downloadType, setDownloadType] = useState<'surah' | 'ayah'>('surah');
+  const [downloadAyahNumber, setDownloadAyahNumber] = useState<number | null>(null);
+  const globalAudio = useGlobalAudio();
   const ayahRefs = useRef<{ [key: number]: HTMLSpanElement | null }>({});
 
   const surahInfo = surahs.find((s) => s.number === Number(surahNumber));
@@ -115,18 +118,27 @@ const SurahPage = () => {
   useEffect(() => {
     if (highlightAyah && surah) {
       const ayahNum = parseInt(highlightAyah);
-      const ayahIndex = surah.ayahs.findIndex(a => a.numberInSurah === ayahNum);
-      if (ayahIndex !== -1) {
-        setCurrentPlayingAyah(ayahIndex);
-        setTimeout(() => {
-          const element = ayahRefs.current[ayahNum];
-          if (element) {
-            element.scrollIntoView({ behavior: "smooth", block: "center" });
-          }
-        }, 500);
-      }
+      setTimeout(() => {
+        const element = ayahRefs.current[ayahNum];
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      }, 500);
     }
   }, [highlightAyah, surah]);
+
+  // Scroll to current playing ayah
+  useEffect(() => {
+    if (globalAudio.currentSurah?.number === surah?.number && surah) {
+      const currentAyah = surah.ayahs[globalAudio.currentAyahIndex];
+      if (currentAyah) {
+        const element = ayahRefs.current[currentAyah.numberInSurah];
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      }
+    }
+  }, [globalAudio.currentAyahIndex, globalAudio.currentSurah?.number, surah]);
 
   const toggleFavorite = async (ayah: Ayah, displayText: string) => {
     const surahNum = Number(surahNumber);
@@ -137,33 +149,25 @@ const SurahPage = () => {
     }
   };
 
-  const handleAyahChange = useCallback((ayahIndex: number) => {
-    setCurrentPlayingAyah(ayahIndex);
-    // Scroll to current ayah
-    if (surah?.ayahs[ayahIndex]) {
-      const ayahNum = surah.ayahs[ayahIndex].numberInSurah;
-      setTimeout(() => {
-        const element = ayahRefs.current[ayahNum];
-        if (element) {
-          element.scrollIntoView({ behavior: "smooth", block: "center" });
-        }
-      }, 100);
-    }
-  }, [surah]);
-
   const playSpecificAyah = useCallback((ayahIndex: number) => {
-    if (audioPlayerRef.current) {
-      setCurrentPlayingAyah(ayahIndex);
-      audioPlayerRef.current.playSpecificAyah(ayahIndex);
+    if (surah && surahInfo) {
+      globalAudio.playAyah({
+        number: surah.number,
+        name: surahInfo.name,
+        ayahs: surah.ayahs,
+      }, ayahIndex);
     }
-  }, []);
+  }, [surah, surahInfo, globalAudio]);
 
   const playSurahFromStart = useCallback(() => {
-    if (audioPlayerRef.current) {
-      setCurrentPlayingAyah(0);
-      audioPlayerRef.current.playSurahFromStart();
+    if (surah && surahInfo) {
+      globalAudio.playSurah({
+        number: surah.number,
+        name: surahInfo.name,
+        ayahs: surah.ayahs,
+      }, 0);
     }
-  }, []);
+  }, [surah, surahInfo, globalAudio]);
 
   const convertToArabicNumber = (num: number): string => {
     const arabicNumbers = ["٠", "١", "٢", "٣", "٤", "٥", "٦", "٧", "٨", "٩"];
@@ -292,7 +296,7 @@ const SurahPage = () => {
                 const displayText = ayah.text;
                 const isAyahFavorite = isFavorite(Number(surahNumber), ayah.numberInSurah);
                 const translatedText = translationData?.find(t => t.numberInSurah === ayah.numberInSurah)?.text;
-                const isCurrentlyPlaying = currentPlayingAyah === index;
+                const isCurrentlyPlaying = globalAudio.currentSurah?.number === surah.number && globalAudio.currentAyahIndex === index;
                 
                 return (
                   <span 
@@ -343,20 +347,19 @@ const SurahPage = () => {
           {Number(surahNumber) < 114 && <Link to={`/surah/${Number(surahNumber) + 1}`}><Button variant="outline" className="gap-2"><ArrowRight className="w-4 h-4 rotate-180" />السورة التالية</Button></Link>}
         </div>
       </main>
-
-      {surah && surahInfo && (
-        <AudioPlayer 
-          ref={audioPlayerRef} 
-          surahNumber={surah.number} 
-          ayahs={surah.ayahs} 
-          surahName={surahInfo.name}
-          onAyahChange={handleAyahChange}
-        />
-      )}
       
       {tafsirAyah && <TafsirDialog isOpen={!!tafsirAyah} onClose={() => setTafsirAyah(null)} surahNumber={Number(surahNumber)} ayahNumber={tafsirAyah.number} ayahText={tafsirAyah.text} />}
       
       {shareAyah && surahInfo && <ShareAyahDialog isOpen={!!shareAyah} onClose={() => setShareAyah(null)} ayahText={shareAyah.text} surahName={surahInfo.name} ayahNumber={shareAyah.number} />}
+
+      <DownloadAudioDialog
+        open={showDownloadDialog}
+        onOpenChange={setShowDownloadDialog}
+        surahNumber={surah?.number || 1}
+        surahName={surahInfo?.name || ""}
+        ayahNumber={downloadAyahNumber}
+        downloadType={downloadType}
+      />
     </div>
   );
 };
