@@ -1,10 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
 import { useUserSettings } from "./useUserSettings";
+import { useFCMNotifications } from "./useFCMNotifications";
 import { toast } from "sonner";
 
 export const useNotifications = () => {
   const [permission, setPermission] = useState<NotificationPermission>("default");
   const { settings, updateSettings } = useUserSettings();
+  const { enableNotifications, disableNotifications, sendLocalNotification, isEnabled } = useFCMNotifications();
 
   useEffect(() => {
     if ("Notification" in window) {
@@ -13,61 +15,24 @@ export const useNotifications = () => {
   }, []);
 
   const requestPermission = useCallback(async () => {
-    if (!("Notification" in window)) {
-      toast.error("الإشعارات غير مدعومة في هذا المتصفح");
-      return false;
+    const success = await enableNotifications();
+    if (success) {
+      setPermission("granted");
     }
+    return success;
+  }, [enableNotifications]);
 
-    try {
-      const result = await Notification.requestPermission();
-      setPermission(result);
-      
-      if (result === "granted") {
-        await updateSettings({ notifications_enabled: true });
-        toast.success("تم تفعيل الإشعارات بنجاح");
-        return true;
-      } else if (result === "denied") {
-        toast.error("تم رفض الإشعارات. يرجى تفعيلها من إعدادات المتصفح");
-        return false;
-      }
-      return false;
-    } catch (error) {
-      console.error("Error requesting notification permission:", error);
-      toast.error("حدث خطأ في طلب الإشعارات");
-      return false;
-    }
-  }, [updateSettings]);
-
-  const disableNotifications = useCallback(async () => {
-    await updateSettings({ notifications_enabled: false });
-    toast.success("تم إيقاف الإشعارات");
-  }, [updateSettings]);
+  const disableNotificationsHandler = useCallback(async () => {
+    await disableNotifications();
+  }, [disableNotifications]);
 
   const sendNotification = useCallback((title: string, options?: NotificationOptions) => {
     if (permission !== "granted" || !settings.notifications_enabled) {
       return null;
     }
 
-    try {
-      const notification = new Notification(title, {
-        icon: "/favicon.ico",
-        badge: "/favicon.ico",
-        dir: "rtl",
-        lang: "ar",
-        ...options,
-      });
-
-      notification.onclick = () => {
-        window.focus();
-        notification.close();
-      };
-
-      return notification;
-    } catch (error) {
-      console.error("Error sending notification:", error);
-      return null;
-    }
-  }, [permission, settings.notifications_enabled]);
+    return sendLocalNotification(title, options?.body || "", options);
+  }, [permission, settings.notifications_enabled, sendLocalNotification]);
 
   const schedulePrayerReminder = useCallback((prayerName: string, prayerTime: string) => {
     const [hours, minutes] = prayerTime.split(":").map(Number);
@@ -82,13 +47,12 @@ export const useNotifications = () => {
       const delay = reminderDate.getTime() - now.getTime();
       
       setTimeout(() => {
-        sendNotification("تذكير بموعد الصلاة 🕌", {
-          body: `حان وقت صلاة ${prayerName} بعد 10 دقائق`,
+        sendLocalNotification("تذكير بموعد الصلاة 🕌", `حان وقت صلاة ${prayerName} بعد 10 دقائق`, {
           tag: `prayer-${prayerName}`,
         });
       }, delay);
     }
-  }, [sendNotification]);
+  }, [sendLocalNotification]);
 
   const scheduleWirdReminder = useCallback((wirdTime: string) => {
     const [hours, minutes] = wirdTime.split(":").map(Number);
@@ -100,19 +64,18 @@ export const useNotifications = () => {
       const delay = wirdDate.getTime() - now.getTime();
       
       setTimeout(() => {
-        sendNotification("تذكير بالورد اليومي 📖", {
-          body: "حان وقت قراءة وردك اليومي من القرآن الكريم",
+        sendLocalNotification("تذكير بالورد اليومي 📖", "حان وقت قراءة وردك اليومي من القرآن الكريم", {
           tag: "daily-wird",
         });
       }, delay);
     }
-  }, [sendNotification]);
+  }, [sendLocalNotification]);
 
   return {
     permission,
-    isEnabled: settings.notifications_enabled && permission === "granted",
+    isEnabled: isEnabled,
     requestPermission,
-    disableNotifications,
+    disableNotifications: disableNotificationsHandler,
     sendNotification,
     schedulePrayerReminder,
     scheduleWirdReminder,
