@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, ChevronLeft, Check, Play, Pause, Volume2, VolumeX, Search, Download, Bell, BellOff, X } from "lucide-react";
+import { ArrowRight, ChevronLeft, Check, Play, Pause, Volume2, VolumeX, Search, Download, Bell, BellOff, X, Share2, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -468,9 +468,15 @@ const AzkarPage = () => {
 
           {/* Quick Actions */}
           <div className="flex flex-wrap gap-2 mb-4">
+            <Link to="/ruqyah">
+              <Button variant="outline" size="sm" className="gap-2">
+                <Shield className="w-4 h-4" />
+                الرقية الشرعية
+              </Button>
+            </Link>
             <Button variant="outline" size="sm" className="gap-2" onClick={downloadAllAzkar}>
               <Download className="w-4 h-4" />
-              تحميل الكل للاستماع بدون نت
+              تحميل الكل
             </Button>
             <Button
               variant={morningReminderEnabled ? "default" : "outline"}
@@ -626,7 +632,7 @@ const AzkarPage = () => {
             </Card>
 
             {/* Audio Control */}
-            <div className="flex justify-center mt-4">
+            <div className="flex flex-wrap justify-center gap-2 mt-4">
               <Button
                 variant="outline"
                 size="lg"
@@ -636,14 +642,31 @@ const AzkarPage = () => {
                 {isPlaying ? (
                   <>
                     <Pause className="w-5 h-5" />
-                    إيقاف الصوت
+                    إيقاف
                   </>
                 ) : (
                   <>
                     <Play className="w-5 h-5" />
-                    تشغيل الصوت
+                    تشغيل
                   </>
                 )}
+              </Button>
+              <Button
+                variant="outline"
+                size="lg"
+                className="gap-2"
+                onClick={() => {
+                  const shareText = `${currentDhikr.text}\n\nعدد التكرار: ${currentDhikr.count}`;
+                  if (navigator.share) {
+                    navigator.share({ title: selectedCategory.category, text: shareText });
+                  } else {
+                    navigator.clipboard.writeText(shareText);
+                    toast.success("تم نسخ النص للمشاركة");
+                  }
+                }}
+              >
+                <Share2 className="w-5 h-5" />
+                مشاركة
               </Button>
             </div>
 
