@@ -1,76 +1,40 @@
 import { useState, useEffect } from "react";
-import { Bell, BellOff, Clock, Volume2, VolumeX } from "lucide-react";
+import { Bell, BellOff, Clock, Volume2, VolumeX, CheckCircle2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { useUserSettings } from "@/hooks/useUserSettings";
-import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
+import { useFCMNotifications } from "@/hooks/useFCMNotifications";
 import { toast } from "sonner";
 
 // Adhan audio for testing
 const ADHAN_AUDIO_URL = "https://www.islamcan.com/audio/adhan/azan1.mp3";
 
 const PrayerNotificationSettings = () => {
-  const { user } = useAuth();
   const { settings, updateSettings } = useUserSettings();
-  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  const { 
+    isEnabled, 
+    isLoading, 
+    isSupported, 
+    enableNotifications, 
+    disableNotifications,
+    sendLocalNotification 
+  } = useFCMNotifications();
+  
   const [reminderMinutes, setReminderMinutes] = useState(settings.prayer_reminder_minutes || 15);
   const [adhanEnabled, setAdhanEnabled] = useState(true);
   const [isTestingAdhan, setIsTestingAdhan] = useState(false);
 
   useEffect(() => {
-    setNotificationsEnabled(settings.notifications_enabled || false);
     setReminderMinutes(settings.prayer_reminder_minutes || 15);
   }, [settings]);
 
-  const requestNotificationPermission = async () => {
-    if (!("Notification" in window)) {
-      toast.error("الإشعارات غير مدعومة في هذا المتصفح");
-      return false;
-    }
-
-    try {
-      const permission = await Notification.requestPermission();
-      if (permission === "granted") {
-        toast.success("تم تفعيل الإشعارات بنجاح");
-        return true;
-      } else {
-        toast.error("تم رفض الإشعارات. يرجى تفعيلها من إعدادات المتصفح");
-        return false;
-      }
-    } catch (error) {
-      console.error("Error requesting notification permission:", error);
-      toast.error("حدث خطأ في طلب الإشعارات");
-      return false;
-    }
-  };
-
   const handleToggleNotifications = async () => {
-    if (!notificationsEnabled) {
-      const granted = await requestNotificationPermission();
-      if (granted) {
-        setNotificationsEnabled(true);
-        await updateSettings({ notifications_enabled: true });
-        
-        // Save subscription info if user is logged in
-        if (user) {
-          await supabase.from("push_subscriptions").upsert({
-            user_id: user.id,
-            fcm_token: `browser-${Date.now()}`,
-            device_info: { 
-              userAgent: navigator.userAgent,
-              platform: navigator.platform,
-              language: navigator.language,
-            },
-          }, { onConflict: "user_id" });
-        }
-      }
+    if (!isEnabled) {
+      await enableNotifications();
     } else {
-      setNotificationsEnabled(false);
-      await updateSettings({ notifications_enabled: false });
-      toast.success("تم إيقاف الإشعارات");
+      await disableNotifications();
     }
   };
 
@@ -102,12 +66,7 @@ const PrayerNotificationSettings = () => {
 
   const testNotification = () => {
     if (Notification.permission === "granted") {
-      new Notification("اختبار إشعار الصلاة 🕌", {
-        body: "هذا اختبار لإشعارات أوقات الصلاة",
-        icon: "/favicon.ico",
-        dir: "rtl",
-        lang: "ar",
-      });
+      sendLocalNotification("اختبار إشعار الصلاة 🕌", "هذا اختبار لإشعارات أوقات الصلاة");
       toast.success("تم إرسال إشعار تجريبي");
     } else {
       toast.error("يجب تفعيل الإشعارات أولاً");
@@ -119,7 +78,7 @@ const PrayerNotificationSettings = () => {
       {/* Main Toggle */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          {notificationsEnabled ? (
+          {isEnabled ? (
             <Bell className="w-5 h-5 text-primary" />
           ) : (
             <BellOff className="w-5 h-5 text-muted-foreground" />
@@ -132,12 +91,13 @@ const PrayerNotificationSettings = () => {
           </div>
         </div>
         <Switch
-          checked={notificationsEnabled}
+          checked={isEnabled}
+          disabled={isLoading}
           onCheckedChange={handleToggleNotifications}
         />
       </div>
 
-      {notificationsEnabled && (
+      {isEnabled && (
         <div className="pt-4 border-t border-border space-y-6">
           {/* Reminder Time */}
           <div className="space-y-4">
