@@ -1,12 +1,12 @@
 import { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, Play, Pause, Download, ChevronLeft, Volume2, Copy, Check, RotateCcw } from "lucide-react";
+import { ArrowRight, Play, Pause, Download, ChevronLeft, Volume2, Copy, Check, RotateCcw, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import Header from "@/components/Header";
-import { ruqyahCategories, ruqyahAudioLinks, RuqyahCategory, RuqyahItem } from "@/data/ruqyahData";
+import { ruqyahCategories, ruqyahAudioLinks, RuqyahCategory, RuqyahItem, getAyahAudioUrl } from "@/data/ruqyahData";
 import { toast } from "sonner";
 import { useDownloadManager } from "@/components/DownloadManager";
 
@@ -32,7 +32,7 @@ const RuqyahPage = () => {
     };
   }, []);
 
-  const playItemAudio = (item: RuqyahItem, category: RuqyahCategory) => {
+  const playItemAudio = async (item: RuqyahItem, category: RuqyahCategory) => {
     if (fullAudioRef.current) {
       fullAudioRef.current.pause();
       setIsFullRuqyahPlaying(false);
@@ -42,15 +42,17 @@ const RuqyahPage = () => {
       audioRef.current.pause();
     }
 
-    // Get audio URL based on category
-    let audioUrl = category.audioUrl;
-    if (!audioUrl) {
-      // Default to Alafasy for specific surahs
-      if (item.title.includes("الفاتحة")) audioUrl = ruqyahAudioLinks.fatiha;
-      else if (item.title.includes("الكرسي")) audioUrl = ruqyahAudioLinks.ayatKursi;
-      else if (item.title.includes("الإخلاص")) audioUrl = ruqyahAudioLinks.ikhlas;
-      else if (item.title.includes("الفلق")) audioUrl = ruqyahAudioLinks.falaq;
-      else if (item.title.includes("الناس")) audioUrl = ruqyahAudioLinks.nas;
+    let audioUrl: string | null = null;
+
+    // Get audio URL based on item's Quran reference
+    if (item.surahNumber) {
+      if (item.ayahNumber) {
+        // Single ayah
+        audioUrl = getAyahAudioUrl(item.surahNumber, item.ayahNumber);
+      } else if (item.ayahStart) {
+        // First ayah of a range
+        audioUrl = getAyahAudioUrl(item.surahNumber, item.ayahStart);
+      }
     }
 
     if (!audioUrl) {
@@ -164,6 +166,32 @@ const RuqyahPage = () => {
       setCopiedId(itemId);
       toast.success("تم نسخ النص");
       setTimeout(() => setCopiedId(null), 2000);
+    });
+  };
+
+  const shareItem = async (item: RuqyahItem) => {
+    const shareText = `${item.title}\n\n${item.text}\n\n${item.source ? `المصدر: ${item.source}` : ""}`;
+    
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: item.title,
+          text: shareText,
+        });
+      } catch (error) {
+        // User cancelled or error
+        if ((error as Error).name !== "AbortError") {
+          copyToClipboardAndNotify(shareText);
+        }
+      }
+    } else {
+      copyToClipboardAndNotify(shareText);
+    }
+  };
+
+  const copyToClipboardAndNotify = (text: string) => {
+    navigator.clipboard.writeText(text).then(() => {
+      toast.success("تم نسخ النص للمشاركة");
     });
   };
 
@@ -335,6 +363,15 @@ const RuqyahPage = () => {
               >
                 {copiedId === currentItem.id ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                 نسخ
+              </Button>
+
+              <Button
+                variant="outline"
+                className="gap-2"
+                onClick={() => shareItem(currentItem)}
+              >
+                <Share2 className="w-4 h-4" />
+                مشاركة
               </Button>
 
               {currentItem.repeatCount && currentItem.repeatCount > 1 && (

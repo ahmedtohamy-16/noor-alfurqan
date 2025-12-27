@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Book, Clock, Star, Users, Search, ChevronLeft, BookOpen, BarChart3, Target, Sunrise, ScrollText } from "lucide-react";
+import { Book, Clock, Star, Users, Search, ChevronLeft, BookOpen, BarChart3, Target, Sunrise, ScrollText, Shield } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/Header";
@@ -32,6 +32,13 @@ const Index = () => {
       description: "أذكار الصباح والمساء",
       link: "/azkar",
       color: "bg-teal-500/10 text-teal-600",
+    },
+    {
+      icon: Shield,
+      title: "الرقية الشرعية",
+      description: "آيات وأدعية للاستشفاء",
+      link: "/ruqyah",
+      color: "bg-rose-500/10 text-rose-600",
     },
     {
       icon: Star,
