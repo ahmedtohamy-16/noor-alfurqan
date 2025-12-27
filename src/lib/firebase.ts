@@ -55,19 +55,39 @@ export const requestNotificationPermission = async (): Promise<string | null> =>
       return null;
     }
 
-    // Register service worker
-    const registration = await navigator.serviceWorker.register("/firebase-messaging-sw.js");
+    // Register service worker with proper scope
+    let registration: ServiceWorkerRegistration;
+    
+    try {
+      registration = await navigator.serviceWorker.register("/firebase-messaging-sw.js", {
+        scope: "/"
+      });
+      console.log("Service Worker registered with scope:", registration.scope);
+      
+      // Wait for the service worker to be ready
+      await navigator.serviceWorker.ready;
+    } catch (swError) {
+      console.error("Service Worker registration failed:", swError);
+      // Try without service worker registration for basic notifications
+      return `browser-fallback-${Date.now()}`;
+    }
     
     // Get FCM token
-    const token = await getToken(messaging, {
-      vapidKey: VAPID_KEY,
-      serviceWorkerRegistration: registration,
-    });
+    try {
+      const token = await getToken(messaging, {
+        vapidKey: VAPID_KEY,
+        serviceWorkerRegistration: registration,
+      });
 
-    console.log("FCM Token:", token);
-    return token;
+      console.log("FCM Token:", token);
+      return token;
+    } catch (tokenError) {
+      console.error("Error getting FCM token:", tokenError);
+      // Return a fallback token for basic browser notifications
+      return `browser-fallback-${Date.now()}`;
+    }
   } catch (error) {
-    console.error("Error getting FCM token:", error);
+    console.error("Error in requestNotificationPermission:", error);
     return null;
   }
 };

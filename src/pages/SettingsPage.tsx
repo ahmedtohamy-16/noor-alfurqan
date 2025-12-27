@@ -19,8 +19,15 @@ const SettingsPage = () => {
   const { user, signOut } = useAuth();
   const { settings, updateSettings } = useUserSettings();
   const navigate = useNavigate();
-  const [wirdTime, setWirdTime] = useState(settings.daily_wird_time?.slice(0, 5) || "06:00");
+  const [wirdTime, setWirdTime] = useState("06:00");
   const [isAdmin, setIsAdmin] = useState(false);
+
+  // Update wirdTime when settings are loaded
+  useEffect(() => {
+    if (settings.daily_wird_time) {
+      setWirdTime(settings.daily_wird_time.slice(0, 5));
+    }
+  }, [settings.daily_wird_time]);
 
   useEffect(() => {
     checkAdminStatus();
