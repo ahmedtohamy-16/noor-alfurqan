@@ -1,188 +1,223 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, Sunrise, Sunset, Moon, Sun, ChevronLeft, Check } from "lucide-react";
+import { ArrowRight, ChevronLeft, Check, Play, Pause, Volume2, VolumeX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import Header from "@/components/Header";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
 import { Skeleton } from "@/components/ui/skeleton";
+import adhkarData from "@/data/adhkar.json";
 
-interface AzkarCategory {
-  id: string;
-  name: string;
-  icon: string;
-  display_order: number;
+const AUDIO_BASE_URL = "https://raw.githubusercontent.com/rn0x/Adhkar-json/main";
+
+interface DhikrItem {
+  id: number;
+  text: string;
+  count: number;
+  audio: string;
+  filename: string;
 }
 
-interface Dhikr {
-  id: string;
-  text: string;
-  reference: string | null;
-  repeat_count: number;
-  display_order: number;
+interface AzkarCategory {
+  id: number;
+  category: string;
+  audio: string;
+  filename: string;
+  array: DhikrItem[];
 }
 
 interface UserProgress {
-  [azkarId: string]: number;
+  [key: string]: number;
 }
 
-const iconMap: { [key: string]: React.ReactNode } = {
-  sunrise: <Sunrise className="w-6 h-6" />,
-  sunset: <Sunset className="w-6 h-6" />,
-  moon: <Moon className="w-6 h-6" />,
-  sun: <Sun className="w-6 h-6" />,
-};
-
 const AzkarPage = () => {
-  const { user } = useAuth();
-  const [categories, setCategories] = useState<AzkarCategory[]>([]);
+  const [categories] = useState<AzkarCategory[]>(adhkarData as AzkarCategory[]);
   const [selectedCategory, setSelectedCategory] = useState<AzkarCategory | null>(null);
-  const [azkar, setAzkar] = useState<Dhikr[]>([]);
   const [progress, setProgress] = useState<UserProgress>({});
-  const [isLoading, setIsLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isCategoryAudioPlaying, setIsCategoryAudioPlaying] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const categoryAudioRef = useRef<HTMLAudioElement | null>(null);
 
+  // Load progress from localStorage
   useEffect(() => {
-    fetchCategories();
+    const today = new Date().toISOString().split("T")[0];
+    const savedProgress = localStorage.getItem(`azkar_progress_${today}`);
+    if (savedProgress) {
+      setProgress(JSON.parse(savedProgress));
+    }
   }, []);
 
+  // Save progress to localStorage
   useEffect(() => {
-    if (selectedCategory) {
-      fetchAzkar(selectedCategory.id);
-      setCurrentIndex(0);
-    }
-  }, [selectedCategory]);
+    const today = new Date().toISOString().split("T")[0];
+    localStorage.setItem(`azkar_progress_${today}`, JSON.stringify(progress));
+  }, [progress]);
 
+  // Cleanup audio on unmount
   useEffect(() => {
-    if (user && azkar.length > 0) {
-      fetchProgress();
-    }
-  }, [user, azkar]);
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+      if (categoryAudioRef.current) {
+        categoryAudioRef.current.pause();
+        categoryAudioRef.current = null;
+      }
+    };
+  }, []);
 
-  const fetchCategories = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("azkar_categories")
-        .select("*")
-        .order("display_order");
-
-      if (error) throw error;
-      setCategories(data || []);
-    } catch (error) {
-      console.error("Error fetching categories:", error);
-    } finally {
-      setIsLoading(false);
-    }
+  const getProgressKey = (categoryId: number, dhikrId: number) => {
+    return `${categoryId}_${dhikrId}`;
   };
 
-  const fetchAzkar = async (categoryId: string) => {
-    setIsLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from("azkar")
-        .select("*")
-        .eq("category_id", categoryId)
-        .order("display_order");
-
-      if (error) throw error;
-      setAzkar(data || []);
-    } catch (error) {
-      console.error("Error fetching azkar:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const fetchProgress = async () => {
-    if (!user) return;
-
-    try {
-      const today = new Date().toISOString().split("T")[0];
-      const { data, error } = await supabase
-        .from("user_azkar_progress")
-        .select("azkar_id, completed_count")
-        .eq("user_id", user.id)
-        .eq("progress_date", today);
-
-      if (error) throw error;
-
-      const progressMap: UserProgress = {};
-      data?.forEach((p) => {
-        progressMap[p.azkar_id] = p.completed_count;
-      });
-      setProgress(progressMap);
-    } catch (error) {
-      console.error("Error fetching progress:", error);
-    }
-  };
-
-  const incrementProgress = async (dhikr: Dhikr) => {
-    const currentCount = progress[dhikr.id] || 0;
-    if (currentCount >= dhikr.repeat_count) return;
+  const incrementProgress = (dhikr: DhikrItem) => {
+    if (!selectedCategory) return;
+    
+    const key = getProgressKey(selectedCategory.id, dhikr.id);
+    const currentCount = progress[key] || 0;
+    if (currentCount >= dhikr.count) return;
 
     const newCount = currentCount + 1;
-    setProgress((prev) => ({ ...prev, [dhikr.id]: newCount }));
+    setProgress((prev) => ({ ...prev, [key]: newCount }));
 
     // Vibrate for feedback
     if (navigator.vibrate) {
       navigator.vibrate(50);
     }
+  };
 
-    if (!user) {
-      // Save to localStorage for non-authenticated users
-      const localProgress = JSON.parse(localStorage.getItem("azkar_progress") || "{}");
-      const today = new Date().toISOString().split("T")[0];
-      if (!localProgress[today]) localProgress[today] = {};
-      localProgress[today][dhikr.id] = newCount;
-      localStorage.setItem("azkar_progress", JSON.stringify(localProgress));
-      return;
+  const playDhikrAudio = (dhikr: DhikrItem) => {
+    // Stop category audio if playing
+    if (categoryAudioRef.current) {
+      categoryAudioRef.current.pause();
+      setIsCategoryAudioPlaying(false);
     }
 
-    try {
-      const today = new Date().toISOString().split("T")[0];
-      await supabase
-        .from("user_azkar_progress")
-        .upsert({
-          user_id: user.id,
-          azkar_id: dhikr.id,
-          completed_count: newCount,
-          progress_date: today,
-        }, { onConflict: "user_id,azkar_id,progress_date" });
-    } catch (error) {
-      console.error("Error saving progress:", error);
+    if (audioRef.current) {
+      audioRef.current.pause();
+    }
+
+    const audioUrl = `${AUDIO_BASE_URL}${dhikr.audio}`;
+    audioRef.current = new Audio(audioUrl);
+    
+    audioRef.current.onplay = () => setIsPlaying(true);
+    audioRef.current.onended = () => setIsPlaying(false);
+    audioRef.current.onpause = () => setIsPlaying(false);
+    audioRef.current.onerror = () => {
+      setIsPlaying(false);
+      console.error("Error loading audio:", audioUrl);
+    };
+
+    audioRef.current.play().catch((err) => {
+      console.error("Error playing audio:", err);
+      setIsPlaying(false);
+    });
+  };
+
+  const toggleDhikrAudio = (dhikr: DhikrItem) => {
+    if (isPlaying && audioRef.current) {
+      audioRef.current.pause();
+      setIsPlaying(false);
+    } else {
+      playDhikrAudio(dhikr);
     }
   };
 
-  const getCategoryProgress = (categoryId: string) => {
-    const categoryAzkar = azkar.filter((a) => a.id);
-    if (categoryAzkar.length === 0) return { completed: 0, total: 0 };
+  const playCategoryAudio = (category: AzkarCategory) => {
+    // Stop dhikr audio if playing
+    if (audioRef.current) {
+      audioRef.current.pause();
+      setIsPlaying(false);
+    }
 
+    if (categoryAudioRef.current) {
+      categoryAudioRef.current.pause();
+    }
+
+    const audioUrl = `${AUDIO_BASE_URL}${category.audio}`;
+    categoryAudioRef.current = new Audio(audioUrl);
+    
+    categoryAudioRef.current.onplay = () => setIsCategoryAudioPlaying(true);
+    categoryAudioRef.current.onended = () => setIsCategoryAudioPlaying(false);
+    categoryAudioRef.current.onpause = () => setIsCategoryAudioPlaying(false);
+    categoryAudioRef.current.onerror = () => {
+      setIsCategoryAudioPlaying(false);
+      console.error("Error loading category audio:", audioUrl);
+    };
+
+    categoryAudioRef.current.play().catch((err) => {
+      console.error("Error playing category audio:", err);
+      setIsCategoryAudioPlaying(false);
+    });
+  };
+
+  const toggleCategoryAudio = (category: AzkarCategory, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isCategoryAudioPlaying && categoryAudioRef.current) {
+      categoryAudioRef.current.pause();
+      setIsCategoryAudioPlaying(false);
+    } else {
+      playCategoryAudio(category);
+    }
+  };
+
+  const getCategoryProgress = (category: AzkarCategory) => {
     let completed = 0;
     let total = 0;
-    categoryAzkar.forEach((a) => {
-      total += a.repeat_count;
-      completed += progress[a.id] || 0;
+    
+    category.array.forEach((dhikr) => {
+      const key = getProgressKey(category.id, dhikr.id);
+      total += dhikr.count;
+      completed += progress[key] || 0;
     });
 
-    return { completed, total };
+    return { completed, total, percentage: total > 0 ? (completed / total) * 100 : 0 };
   };
 
-  const currentDhikr = azkar[currentIndex];
-  const currentProgress = currentDhikr ? (progress[currentDhikr.id] || 0) : 0;
-  const isCurrentCompleted = currentDhikr && currentProgress >= currentDhikr.repeat_count;
+  const currentDhikr = selectedCategory?.array[currentIndex];
+  const currentProgressKey = selectedCategory && currentDhikr 
+    ? getProgressKey(selectedCategory.id, currentDhikr.id) 
+    : "";
+  const currentCount = currentProgressKey ? (progress[currentProgressKey] || 0) : 0;
+  const isCurrentCompleted = currentDhikr && currentCount >= currentDhikr.count;
 
   const goToNext = () => {
-    if (currentIndex < azkar.length - 1) {
+    if (selectedCategory && currentIndex < selectedCategory.array.length - 1) {
       setCurrentIndex(currentIndex + 1);
+      // Stop current audio when navigating
+      if (audioRef.current) {
+        audioRef.current.pause();
+        setIsPlaying(false);
+      }
     }
   };
 
   const goToPrev = () => {
     if (currentIndex > 0) {
       setCurrentIndex(currentIndex - 1);
+      // Stop current audio when navigating
+      if (audioRef.current) {
+        audioRef.current.pause();
+        setIsPlaying(false);
+      }
     }
+  };
+
+  const handleBack = () => {
+    // Stop all audio when going back
+    if (audioRef.current) {
+      audioRef.current.pause();
+      setIsPlaying(false);
+    }
+    if (categoryAudioRef.current) {
+      categoryAudioRef.current.pause();
+      setIsCategoryAudioPlaying(false);
+    }
+    setSelectedCategory(null);
+    setCurrentIndex(0);
   };
 
   // Category List View
@@ -200,37 +235,52 @@ const AzkarPage = () => {
             </Link>
             <div>
               <h1 className="text-2xl font-bold text-foreground">الأذكار والأدعية</h1>
-              <p className="text-muted-foreground text-sm">حافظ على ذكرك اليومي</p>
+              <p className="text-muted-foreground text-sm">حصن المسلم - {categories.length} قسم</p>
             </div>
           </div>
 
-          {isLoading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {[...Array(6)].map((_, i) => (
-                <Skeleton key={i} className="h-24 rounded-xl" />
-              ))}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {categories.map((category) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {categories.map((category) => {
+              const categoryProgress = getCategoryProgress(category);
+              return (
                 <Card
                   key={category.id}
                   className="p-4 cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02] group"
-                  onClick={() => setSelectedCategory(category)}
+                  onClick={() => {
+                    setSelectedCategory(category);
+                    setCurrentIndex(0);
+                  }}
                 >
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                      {iconMap[category.icon] || <Sun className="w-6 h-6" />}
+                  <div className="flex items-center gap-3">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-bold text-foreground text-sm truncate">{category.category}</h3>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {category.array.length} ذكر
+                      </p>
+                      {categoryProgress.total > 0 && (
+                        <div className="mt-2">
+                          <Progress value={categoryProgress.percentage} className="h-1" />
+                        </div>
+                      )}
                     </div>
-                    <div className="flex-1">
-                      <h3 className="font-bold text-foreground">{category.name}</h3>
-                    </div>
-                    <ChevronLeft className="w-5 h-5 text-muted-foreground" />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="shrink-0"
+                      onClick={(e) => toggleCategoryAudio(category, e)}
+                    >
+                      {isCategoryAudioPlaying ? (
+                        <VolumeX className="w-4 h-4" />
+                      ) : (
+                        <Volume2 className="w-4 h-4" />
+                      )}
+                    </Button>
+                    <ChevronLeft className="w-5 h-5 text-muted-foreground shrink-0" />
                   </div>
                 </Card>
-              ))}
-            </div>
-          )}
+              );
+            })}
+          </div>
         </main>
       </div>
     );
@@ -243,31 +293,40 @@ const AzkarPage = () => {
 
       <main className="container mx-auto px-4 py-6 arabic-ui">
         <div className="flex items-center gap-4 mb-6">
-          <Button variant="ghost" size="icon" onClick={() => setSelectedCategory(null)}>
+          <Button variant="ghost" size="icon" onClick={handleBack}>
             <ArrowRight className="w-5 h-5" />
           </Button>
           <div className="flex-1">
-            <h1 className="text-2xl font-bold text-foreground">{selectedCategory.name}</h1>
+            <h1 className="text-xl font-bold text-foreground truncate">{selectedCategory.category}</h1>
             <p className="text-muted-foreground text-sm">
-              {currentIndex + 1} من {azkar.length}
+              {currentIndex + 1} من {selectedCategory.array.length}
             </p>
           </div>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={(e) => toggleCategoryAudio(selectedCategory, e)}
+          >
+            {isCategoryAudioPlaying ? (
+              <Pause className="w-4 h-4" />
+            ) : (
+              <Play className="w-4 h-4" />
+            )}
+          </Button>
         </div>
 
-        {isLoading ? (
-          <Skeleton className="h-64 rounded-xl" />
-        ) : currentDhikr ? (
+        {currentDhikr ? (
           <div className="max-w-2xl mx-auto">
             {/* Progress Bar */}
             <div className="mb-4">
               <div className="flex justify-between text-sm mb-2">
                 <span className="text-muted-foreground">التقدم في هذا الذكر</span>
                 <span className="font-medium text-primary">
-                  {currentProgress}/{currentDhikr.repeat_count}
+                  {currentCount}/{currentDhikr.count}
                 </span>
               </div>
               <Progress 
-                value={(currentProgress / currentDhikr.repeat_count) * 100} 
+                value={(currentCount / currentDhikr.count) * 100} 
                 className="h-2"
               />
             </div>
@@ -288,22 +347,38 @@ const AzkarPage = () => {
                 </div>
               )}
 
-              <p className="text-2xl font-quran leading-loose text-foreground mb-4">
+              <p className="text-xl font-quran leading-loose text-foreground mb-4">
                 {currentDhikr.text}
               </p>
 
-              {currentDhikr.reference && (
-                <p className="text-sm text-muted-foreground">
-                  {currentDhikr.reference}
-                </p>
-              )}
-
               {!isCurrentCompleted && (
                 <p className="text-primary text-sm mt-4">
-                  اضغط للتسبيح • {currentDhikr.repeat_count - currentProgress} متبقي
+                  اضغط للتسبيح • {currentDhikr.count - currentCount} متبقي
                 </p>
               )}
             </Card>
+
+            {/* Audio Control */}
+            <div className="flex justify-center mt-4">
+              <Button
+                variant="outline"
+                size="lg"
+                className="gap-2"
+                onClick={() => toggleDhikrAudio(currentDhikr)}
+              >
+                {isPlaying ? (
+                  <>
+                    <Pause className="w-5 h-5" />
+                    إيقاف الصوت
+                  </>
+                ) : (
+                  <>
+                    <Play className="w-5 h-5" />
+                    تشغيل الصوت
+                  </>
+                )}
+              </Button>
+            </div>
 
             {/* Navigation */}
             <div className="flex items-center justify-between mt-6">
@@ -317,26 +392,40 @@ const AzkarPage = () => {
                 <ArrowRight className="w-4 h-4" />
               </Button>
 
-              <div className="flex gap-1">
-                {azkar.map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setCurrentIndex(i)}
-                    className={`w-2 h-2 rounded-full transition-colors ${
-                      i === currentIndex
-                        ? "bg-primary"
-                        : progress[azkar[i]?.id] >= azkar[i]?.repeat_count
-                        ? "bg-green-500"
-                        : "bg-muted"
-                    }`}
-                  />
-                ))}
+              <div className="flex gap-1 flex-wrap justify-center max-w-[200px]">
+                {selectedCategory.array.slice(0, 20).map((_, i) => {
+                  const key = getProgressKey(selectedCategory.id, selectedCategory.array[i].id);
+                  const dhikrProgress = progress[key] || 0;
+                  const dhikrCount = selectedCategory.array[i].count;
+                  return (
+                    <button
+                      key={i}
+                      onClick={() => {
+                        setCurrentIndex(i);
+                        if (audioRef.current) {
+                          audioRef.current.pause();
+                          setIsPlaying(false);
+                        }
+                      }}
+                      className={`w-2 h-2 rounded-full transition-colors ${
+                        i === currentIndex
+                          ? "bg-primary"
+                          : dhikrProgress >= dhikrCount
+                          ? "bg-green-500"
+                          : "bg-muted"
+                      }`}
+                    />
+                  );
+                })}
+                {selectedCategory.array.length > 20 && (
+                  <span className="text-xs text-muted-foreground">...</span>
+                )}
               </div>
 
               <Button
                 variant="outline"
                 onClick={goToNext}
-                disabled={currentIndex === azkar.length - 1}
+                disabled={currentIndex === selectedCategory.array.length - 1}
                 className="gap-2"
               >
                 <ArrowRight className="w-4 h-4 rotate-180" />
@@ -349,19 +438,25 @@ const AzkarPage = () => {
               <div className="flex items-center justify-around text-center">
                 <div>
                   <p className="text-2xl font-bold text-primary">
-                    {azkar.filter((a) => (progress[a.id] || 0) >= a.repeat_count).length}
+                    {selectedCategory.array.filter((a) => {
+                      const key = getProgressKey(selectedCategory.id, a.id);
+                      return (progress[key] || 0) >= a.count;
+                    }).length}
                   </p>
                   <p className="text-sm text-muted-foreground">مكتمل</p>
                 </div>
                 <div className="w-px h-10 bg-border" />
                 <div>
-                  <p className="text-2xl font-bold text-foreground">{azkar.length}</p>
+                  <p className="text-2xl font-bold text-foreground">{selectedCategory.array.length}</p>
                   <p className="text-sm text-muted-foreground">إجمالي</p>
                 </div>
                 <div className="w-px h-10 bg-border" />
                 <div>
                   <p className="text-2xl font-bold text-muted-foreground">
-                    {azkar.filter((a) => (progress[a.id] || 0) < a.repeat_count).length}
+                    {selectedCategory.array.filter((a) => {
+                      const key = getProgressKey(selectedCategory.id, a.id);
+                      return (progress[key] || 0) < a.count;
+                    }).length}
                   </p>
                   <p className="text-sm text-muted-foreground">متبقي</p>
                 </div>
