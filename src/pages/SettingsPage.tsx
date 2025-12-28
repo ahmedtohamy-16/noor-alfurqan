@@ -1,4 +1,4 @@
-import { ArrowRight, Moon, Sun, LogOut, User, Bell, BellOff, Clock, Headphones, Shield } from "lucide-react";
+import { ArrowRight, Moon, Sun, LogOut, User, Clock, Shield } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -10,6 +10,7 @@ import PrayerNotificationSettings from "@/components/PrayerNotificationSettings"
 import { useTheme } from "@/hooks/useTheme";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserSettings } from "@/hooks/useUserSettings";
+import { useNotifications } from "@/hooks/useNotifications";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,6 +19,7 @@ const SettingsPage = () => {
   const { theme, toggleTheme } = useTheme();
   const { user, signOut } = useAuth();
   const { settings, updateSettings } = useUserSettings();
+  const { permission, requestPermission, scheduleWirdReminder } = useNotifications();
   const navigate = useNavigate();
   const [wirdTime, setWirdTime] = useState("06:00");
   const [isAdmin, setIsAdmin] = useState(false);
@@ -32,6 +34,15 @@ const SettingsPage = () => {
   useEffect(() => {
     checkAdminStatus();
   }, [user]);
+
+  // Keep a local reminder scheduled when daily wird reminder is enabled.
+  useEffect(() => {
+    if (!settings.daily_wird_enabled) return;
+    if (permission !== "granted") return;
+
+    // Schedule using the selected time (HH:mm)
+    scheduleWirdReminder(wirdTime + ":00");
+  }, [permission, scheduleWirdReminder, settings.daily_wird_enabled, wirdTime]);
 
   const checkAdminStatus = async () => {
     if (!user) return;
@@ -53,11 +64,40 @@ const SettingsPage = () => {
   const handleWirdTimeChange = async (time: string) => {
     setWirdTime(time);
     await updateSettings({ daily_wird_time: time + ":00" });
+
+    if (settings.daily_wird_enabled) {
+      const ok = permission === "granted" ? true : await requestPermission();
+      if (ok) {
+        scheduleWirdReminder(time + ":00");
+        toast.success("تم تحديث وقت التذكير بالورد");
+        return;
+      }
+
+      toast.error("لا يمكن تفعيل التذكير بدون إذن الإشعارات");
+      return;
+    }
+
     toast.success("تم تحديث وقت التذكير بالورد");
   };
 
   const handleDailyWirdToggle = async () => {
-    await updateSettings({ daily_wird_enabled: !settings.daily_wird_enabled });
+    const next = !settings.daily_wird_enabled;
+
+    if (next) {
+      const ok = permission === "granted" ? true : await requestPermission();
+      if (!ok) {
+        toast.error("لا يمكن تفعيل تذكير الورد بدون السماح بالإشعارات");
+        return;
+      }
+
+      await updateSettings({ daily_wird_enabled: true });
+      scheduleWirdReminder(wirdTime + ":00");
+      toast.success("تم تفعيل تذكير الورد اليومي");
+      return;
+    }
+
+    await updateSettings({ daily_wird_enabled: false });
+    toast.success("تم إيقاف تذكير الورد اليومي");
   };
 
   return (
@@ -80,22 +120,13 @@ const SettingsPage = () => {
           <Card className="p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                {theme === "dark" ? (
-                  <Moon className="w-5 h-5 text-primary" />
-                ) : (
-                  <Sun className="w-5 h-5 text-primary" />
-                )}
+                {theme === "dark" ? <Moon className="w-5 h-5 text-primary" /> : <Sun className="w-5 h-5 text-primary" />}
                 <div>
                   <p className="font-medium text-foreground">الوضع الليلي</p>
-                  <p className="text-sm text-muted-foreground">
-                    تفعيل المظهر الداكن للتطبيق
-                  </p>
+                  <p className="text-sm text-muted-foreground">تفعيل المظهر الداكن للتطبيق</p>
                 </div>
               </div>
-              <Switch
-                checked={theme === "dark"}
-                onCheckedChange={toggleTheme}
-              />
+              <Switch checked={theme === "dark"} onCheckedChange={toggleTheme} />
             </div>
           </Card>
 
@@ -109,26 +140,16 @@ const SettingsPage = () => {
                 <Clock className="w-5 h-5 text-primary" />
                 <div>
                   <p className="font-medium text-foreground">تذكير الورد اليومي</p>
-                  <p className="text-sm text-muted-foreground">
-                    تذكير يومي لقراءة وردك من القرآن
-                  </p>
+                  <p className="text-sm text-muted-foreground">تذكير يومي لقراءة وردك من القرآن</p>
                 </div>
               </div>
-              <Switch
-                checked={settings.daily_wird_enabled}
-                onCheckedChange={handleDailyWirdToggle}
-              />
+              <Switch checked={settings.daily_wird_enabled} onCheckedChange={handleDailyWirdToggle} />
             </div>
-            
+
             {settings.daily_wird_enabled && (
               <div className="flex items-center gap-3 pt-2 border-t border-border">
                 <span className="text-sm text-muted-foreground">وقت التذكير:</span>
-                <Input
-                  type="time"
-                  value={wirdTime}
-                  onChange={(e) => handleWirdTimeChange(e.target.value)}
-                  className="w-32"
-                />
+                <Input type="time" value={wirdTime} onChange={(e) => handleWirdTimeChange(e.target.value)} className="w-32" />
               </div>
             )}
           </Card>
@@ -160,9 +181,7 @@ const SettingsPage = () => {
                   <User className="w-5 h-5 text-primary" />
                   <div>
                     <p className="font-medium text-foreground">تسجيل الدخول</p>
-                    <p className="text-sm text-muted-foreground">
-                      سجل دخولك لحفظ المفضلة والختمات
-                    </p>
+                    <p className="text-sm text-muted-foreground">سجل دخولك لحفظ المفضلة والختمات</p>
                   </div>
                 </div>
                 <Link to="/auth">
@@ -180,9 +199,7 @@ const SettingsPage = () => {
                   <Shield className="w-5 h-5 text-primary" />
                   <div>
                     <p className="font-medium text-foreground">لوحة الإدارة</p>
-                    <p className="text-sm text-muted-foreground">
-                      إدارة المستخدمين والإعدادات
-                    </p>
+                    <p className="text-sm text-muted-foreground">إدارة المستخدمين والإعدادات</p>
                   </div>
                 </div>
                 <ArrowRight className="w-5 h-5 text-muted-foreground rotate-180" />
