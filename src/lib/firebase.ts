@@ -2,12 +2,12 @@ import { initializeApp } from "firebase/app";
 import { getMessaging, getToken, onMessage, Messaging } from "firebase/messaging";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCmuCFmj_xlW7ObI_3wwaFCKxebpTWH-Z0",
-  authDomain: "noor-al-furqan-2691e.firebaseapp.com",
-  projectId: "noor-al-furqan-2691e",
-  storageBucket: "noor-al-furqan-2691e.firebasestorage.app",
-  messagingSenderId: "585810509786",
-  appId: "1:585810509786:web:ae3da99817777abf9f8ae3"
+  apiKey: "AIzaSyCNOO_ktmL4UVeozjRIpBZWWoVHiKDFFIE",
+  authDomain: "noor-al-furqan-c5507.firebaseapp.com",
+  projectId: "noor-al-furqan-c5507",
+  storageBucket: "noor-al-furqan-c5507.firebasestorage.app",
+  messagingSenderId: "899247240422",
+  appId: "1:899247240422:web:060b75b1bbfc1fbe7c3727"
 };
 
 const VAPID_KEY = "BMrJX4GXmHHdV0Eh6ZaoMxUQHtYw2IDl9FYhSTl--6XM_5m4i138JZOfmaytxK8m225LpswX28JapB76j09Aius";
