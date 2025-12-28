@@ -1,1 +1,10 @@
 project_id = "xjbykaphnxiyocmkurpo"
+
+[functions.send-push-notification]
+verify_jwt = false
+
+[functions.scheduled-notifications]
+verify_jwt = false
+
+[functions.prophet-story-audio]
+verify_jwt = false
