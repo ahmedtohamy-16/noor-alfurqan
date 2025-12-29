@@ -19,7 +19,7 @@ const SettingsPage = () => {
   const { theme, toggleTheme } = useTheme();
   const { user, signOut } = useAuth();
   const { settings, updateSettings } = useUserSettings();
-  const { permission, requestPermission, scheduleWirdReminder } = useNotifications();
+  const { permission, requestPermission } = useNotifications();
   const navigate = useNavigate();
   const [wirdTime, setWirdTime] = useState("06:00");
   const [isAdmin, setIsAdmin] = useState(false);
@@ -34,15 +34,6 @@ const SettingsPage = () => {
   useEffect(() => {
     checkAdminStatus();
   }, [user]);
-
-  // Keep a local reminder scheduled when daily wird reminder is enabled.
-  useEffect(() => {
-    if (!settings.daily_wird_enabled) return;
-    if (permission !== "granted") return;
-
-    // Schedule using the selected time (HH:mm)
-    scheduleWirdReminder(wirdTime + ":00");
-  }, [permission, scheduleWirdReminder, settings.daily_wird_enabled, wirdTime]);
 
   const checkAdminStatus = async () => {
     if (!user) return;
@@ -65,25 +56,16 @@ const SettingsPage = () => {
     setWirdTime(time);
     await updateSettings({ daily_wird_time: time + ":00" });
 
-    if (settings.daily_wird_enabled) {
-      const ok = permission === "granted" ? true : await requestPermission();
-      if (ok) {
-        scheduleWirdReminder(time + ":00");
-        toast.success("تم تحديث وقت التذكير بالورد");
-        return;
-      }
-
-      toast.error("لا يمكن تفعيل التذكير بدون إذن الإشعارات");
-      return;
-    }
-
-    toast.success("تم تحديث وقت التذكير بالورد");
+    // Clean-slate: scheduling will be reimplemented.
+    // We only keep the stored time.
+    toast.success("تم تحديث وقت الورد");
   };
 
   const handleDailyWirdToggle = async () => {
     const next = !settings.daily_wird_enabled;
 
     if (next) {
+      // Ask for permission now so it's ready once we wire background/push again.
       const ok = permission === "granted" ? true : await requestPermission();
       if (!ok) {
         toast.error("لا يمكن تفعيل تذكير الورد بدون السماح بالإشعارات");
@@ -91,7 +73,6 @@ const SettingsPage = () => {
       }
 
       await updateSettings({ daily_wird_enabled: true });
-      scheduleWirdReminder(wirdTime + ":00");
       toast.success("تم تفعيل تذكير الورد اليومي");
       return;
     }
