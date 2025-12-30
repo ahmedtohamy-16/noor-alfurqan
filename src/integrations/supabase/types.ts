@@ -359,6 +359,45 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_logs: {
+        Row: {
+          body: string | null
+          created_at: string
+          error_message: string | null
+          id: string
+          notification_type: string
+          sent_at: string | null
+          status: string
+          tag: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          notification_type?: string
+          sent_at?: string | null
+          status?: string
+          tag?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          notification_type?: string
+          sent_at?: string | null
+          status?: string
+          tag?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -398,6 +437,8 @@ export type Database = {
           device_info: Json | null
           fcm_token: string
           id: string
+          is_active: boolean | null
+          platform: string | null
           updated_at: string | null
           user_id: string
         }
@@ -406,6 +447,8 @@ export type Database = {
           device_info?: Json | null
           fcm_token: string
           id?: string
+          is_active?: boolean | null
+          platform?: string | null
           updated_at?: string | null
           user_id: string
         }
@@ -414,6 +457,8 @@ export type Database = {
           device_info?: Json | null
           fcm_token?: string
           id?: string
+          is_active?: boolean | null
+          platform?: string | null
           updated_at?: string | null
           user_id?: string
         }

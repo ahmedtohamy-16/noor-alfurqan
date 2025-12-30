@@ -1,60 +1,202 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { useAuth } from "./useAuth";
 import { useUserSettings } from "./useUserSettings";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import {
+  isFirebaseConfigured,
+  initializeFirebase,
+  requestFCMToken,
+  onForegroundMessage,
+} from "@/lib/firebase";
 
-// Clean-slate notifications hook.
-// NOTE: Push/FCM wiring was removed until you provide the correct credentials again.
+interface NotificationState {
+  isSupported: boolean;
+  isInIframe: boolean;
+  permission: NotificationPermission;
+  fcmToken: string | null;
+  isLoading: boolean;
+  isEnabled: boolean;
+  firebaseConfigured: boolean;
+}
+
 export const useFCMNotifications = () => {
-  const [isLoading, setIsLoading] = useState(false);
+  const { user } = useAuth();
   const { settings, updateSettings } = useUserSettings();
+  const [state, setState] = useState<NotificationState>({
+    isSupported: false,
+    isInIframe: false,
+    permission: "default",
+    fcmToken: null,
+    isLoading: false,
+    isEnabled: false,
+    firebaseConfigured: false,
+  });
+  const messageUnsubscribeRef = useRef<(() => void) | null>(null);
 
-  const isInIframe = typeof window !== "undefined" && window.self !== window.top;
-  const isSupported = typeof window !== "undefined" && "Notification" in window && !isInIframe;
-
+  // Initialize state
   useEffect(() => {
-    if (!isInIframe && settings.notifications_enabled && Notification.permission !== "granted") {
-      toast.error("الإشعارات مفعّلة داخل التطبيق لكن إذن المتصفح غير مسموح. فعّل Allow ثم أعد المحاولة.");
-    }
-    if (isInIframe && settings.notifications_enabled) {
-      toast.message("ملاحظة: تفعيل إشعارات المتصفح لا يعمل داخل نافذة المعاينة. افتح التطبيق في تبويب مستقل.");
-    }
-  }, [isInIframe, settings.notifications_enabled]);
+    const isInIframe = typeof window !== "undefined" && window.self !== window.top;
+    const isSupported = typeof window !== "undefined" && "Notification" in window && "serviceWorker" in navigator;
+    const permission = isSupported ? Notification.permission : "default";
+    const firebaseConfigured = isFirebaseConfigured();
 
+    setState((prev) => ({
+      ...prev,
+      isInIframe,
+      isSupported,
+      permission,
+      firebaseConfigured,
+      isEnabled: settings.notifications_enabled && permission === "granted",
+    }));
+  }, [settings.notifications_enabled]);
+
+  // Register service worker and setup FCM
+  useEffect(() => {
+    if (!state.isSupported || state.isInIframe || !user) return;
+
+    const setupFCM = async () => {
+      try {
+        // Register service worker
+        const registration = await navigator.serviceWorker.register("/firebase-messaging-sw.js");
+        console.log("✅ Service Worker registered");
+
+        // Initialize Firebase if configured
+        if (state.firebaseConfigured) {
+          const initialized = await initializeFirebase();
+          if (initialized && Notification.permission === "granted") {
+            const token = await requestFCMToken();
+            if (token) {
+              setState((prev) => ({ ...prev, fcmToken: token }));
+              await registerTokenWithBackend(token);
+            }
+          }
+
+          // Setup foreground message handler
+          messageUnsubscribeRef.current = await onForegroundMessage((payload) => {
+            console.log("📩 Foreground message:", payload);
+            const { title, body } = payload.notification || {};
+            if (title) {
+              toast.info(title, { description: body });
+            }
+          });
+        }
+      } catch (error) {
+        console.error("❌ FCM setup error:", error);
+      }
+    };
+
+    setupFCM();
+
+    return () => {
+      if (messageUnsubscribeRef.current) {
+        messageUnsubscribeRef.current();
+      }
+    };
+  }, [state.isSupported, state.isInIframe, state.firebaseConfigured, user]);
+
+  // Register FCM token with backend
+  const registerTokenWithBackend = async (token: string) => {
+    if (!user) return;
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/register-push-token`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({
+            fcm_token: token,
+            platform: "web",
+            device_info: {
+              userAgent: navigator.userAgent,
+              language: navigator.language,
+            },
+          }),
+        }
+      );
+
+      const result = await response.json();
+      if (result.success) {
+        console.log("✅ Token registered with backend");
+      }
+    } catch (error) {
+      console.error("❌ Failed to register token:", error);
+    }
+  };
+
+  // Enable notifications
   const enableNotifications = useCallback(async (): Promise<boolean> => {
-    if (!isSupported) {
-      toast.error("هذا المتصفح/البيئة لا تدعم الإشعارات.");
+    if (!state.isSupported) {
+      toast.error("هذا المتصفح لا يدعم الإشعارات");
       return false;
     }
 
-    setIsLoading(true);
+    if (state.isInIframe) {
+      toast.error("افتح التطبيق في تبويب مستقل لتفعيل الإشعارات");
+      return false;
+    }
+
+    setState((prev) => ({ ...prev, isLoading: true }));
+
     try {
+      // Request notification permission
       const permission = await Notification.requestPermission();
+      setState((prev) => ({ ...prev, permission }));
+
       if (permission !== "granted") {
-        toast.error("تم رفض إذن الإشعارات.");
+        toast.error("تم رفض إذن الإشعارات");
         return false;
       }
 
+      // Get FCM token if Firebase is configured
+      let token: string | null = null;
+      if (state.firebaseConfigured) {
+        await initializeFirebase();
+        token = await requestFCMToken();
+        if (token) {
+          setState((prev) => ({ ...prev, fcmToken: token }));
+          await registerTokenWithBackend(token);
+        }
+      } else {
+        // Use browser-fallback token for local notifications
+        token = `browser-fallback-${Date.now()}`;
+      }
+
+      // Update settings
       await updateSettings({ notifications_enabled: true });
+      setState((prev) => ({ ...prev, isEnabled: true }));
+
       toast.success("تم تفعيل الإشعارات ✅");
       return true;
-    } catch (e) {
-      console.error(e);
+    } catch (error) {
+      console.error("❌ Enable notifications error:", error);
       toast.error("حدث خطأ أثناء تفعيل الإشعارات");
       return false;
     } finally {
-      setIsLoading(false);
+      setState((prev) => ({ ...prev, isLoading: false }));
     }
-  }, [isSupported, updateSettings]);
+  }, [state.isSupported, state.isInIframe, state.firebaseConfigured, updateSettings, user]);
 
+  // Disable notifications
   const disableNotifications = useCallback(async () => {
     await updateSettings({ notifications_enabled: false });
+    setState((prev) => ({ ...prev, isEnabled: false }));
     toast.success("تم إيقاف الإشعارات");
   }, [updateSettings]);
 
+  // Send local notification (foreground only)
   const sendLocalNotification = useCallback(
-    (title: string, body: string, options?: NotificationOptions) => {
-      if (typeof window === "undefined") return null;
-      if (Notification.permission !== "granted") return null;
+    (title: string, body: string, options?: NotificationOptions): Notification | null => {
+      if (!state.isSupported || Notification.permission !== "granted") {
+        return null;
+      }
 
       try {
         const notification = new Notification(title, {
@@ -73,22 +215,61 @@ export const useFCMNotifications = () => {
 
         return notification;
       } catch (error) {
-        console.error("Error sending notification:", error);
+        console.error("❌ Local notification error:", error);
         return null;
       }
     },
-    []
+    [state.isSupported]
   );
 
+  // Test notification via backend
+  const testNotification = useCallback(async (): Promise<boolean> => {
+    if (!user) {
+      toast.error("يجب تسجيل الدخول لاختبار الإشعارات");
+      return false;
+    }
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return false;
+
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/test-notification`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.access_token}`,
+          },
+        }
+      );
+
+      const result = await response.json();
+      
+      if (result.test_result?.success && result.test_result?.sent > 0) {
+        toast.success("تم إرسال إشعار الاختبار!");
+        return true;
+      } else if (!result.config_status?.firebase_configured) {
+        toast.warning("Firebase غير مُعد - سيتم استخدام الإشعارات المحلية فقط");
+        sendLocalNotification("🧪 اختبار محلي", "الإشعارات المحلية تعمل!");
+        return true;
+      } else {
+        toast.error("فشل إرسال الإشعار: " + (result.error || "خطأ غير معروف"));
+        return false;
+      }
+    } catch (error) {
+      console.error("❌ Test notification error:", error);
+      toast.error("فشل اختبار الإشعارات");
+      return false;
+    }
+  }, [user, sendLocalNotification]);
+
   return {
-    // kept for API compatibility
-    fcmToken: null as string | null,
-    isLoading,
-    isEnabled: settings.notifications_enabled && Notification.permission === "granted" && !isInIframe,
-    isSupported,
+    ...state,
     enableNotifications,
     disableNotifications,
     sendLocalNotification,
+    testNotification,
+    registerTokenWithBackend,
   };
 };
-
