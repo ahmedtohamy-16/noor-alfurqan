@@ -13,20 +13,28 @@ interface NotificationPayload {
   tag?: string;
   broadcast?: boolean;
   notification_type?: "prayer" | "wird" | "azkar" | "custom";
+  data?: Record<string, string>;
 }
 
-// Get OAuth2 access token using service account
-async function getAccessToken(serviceAccount: any): Promise<string> {
+interface FirebaseServiceAccount {
+  type: string;
+  project_id: string;
+  private_key_id: string;
+  private_key: string;
+  client_email: string;
+  client_id: string;
+  auth_uri: string;
+  token_uri: string;
+  auth_provider_x509_cert_url: string;
+  client_x509_cert_url: string;
+}
+
+// Generate OAuth2 access token using service account credentials
+async function getAccessToken(serviceAccount: FirebaseServiceAccount): Promise<string> {
   const now = Math.floor(Date.now() / 1000);
-  const exp = now + 3600; // 1 hour expiry
+  const exp = now + 3600;
 
-  // Create JWT header
-  const header = {
-    alg: "RS256",
-    typ: "JWT",
-  };
-
-  // Create JWT payload
+  const header = { alg: "RS256", typ: "JWT" };
   const payload = {
     iss: serviceAccount.client_email,
     scope: "https://www.googleapis.com/auth/firebase.messaging",
@@ -35,18 +43,14 @@ async function getAccessToken(serviceAccount: any): Promise<string> {
     exp: exp,
   };
 
-  // Base64url encode
-  const encoder = new TextEncoder();
-  const base64url = (data: string) => {
-    return btoa(data).replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
-  };
+  const base64url = (data: string) =>
+    btoa(data).replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
 
   const headerB64 = base64url(JSON.stringify(header));
   const payloadB64 = base64url(JSON.stringify(payload));
-
   const signatureInput = `${headerB64}.${payloadB64}`;
 
-  // Import private key and sign
+  // Import and sign with private key
   const privateKeyPem = serviceAccount.private_key;
   const pemContents = privateKeyPem
     .replace("-----BEGIN PRIVATE KEY-----", "")
@@ -58,10 +62,7 @@ async function getAccessToken(serviceAccount: any): Promise<string> {
   const cryptoKey = await crypto.subtle.importKey(
     "pkcs8",
     binaryKey,
-    {
-      name: "RSASSA-PKCS1-v1_5",
-      hash: "SHA-256",
-    },
+    { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
     false,
     ["sign"]
   );
@@ -69,21 +70,16 @@ async function getAccessToken(serviceAccount: any): Promise<string> {
   const signature = await crypto.subtle.sign(
     "RSASSA-PKCS1-v1_5",
     cryptoKey,
-    encoder.encode(signatureInput)
+    new TextEncoder().encode(signatureInput)
   );
 
-  const signatureB64 = base64url(
-    String.fromCharCode(...new Uint8Array(signature))
-  );
-
+  const signatureB64 = base64url(String.fromCharCode(...new Uint8Array(signature)));
   const jwt = `${signatureInput}.${signatureB64}`;
 
   // Exchange JWT for access token
   const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({
       grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
       assertion: jwt,
@@ -91,35 +87,123 @@ async function getAccessToken(serviceAccount: any): Promise<string> {
   });
 
   const tokenData = await tokenResponse.json();
-  
   if (!tokenResponse.ok) {
-    console.error("Token exchange error:", tokenData);
-    throw new Error(`Failed to get access token: ${tokenData.error_description || tokenData.error}`);
+    throw new Error(`Token exchange failed: ${tokenData.error_description || tokenData.error}`);
   }
 
   return tokenData.access_token;
 }
 
+// Send FCM message to a single token
+async function sendFCMMessage(
+  token: string,
+  notification: { title: string; body: string },
+  data: Record<string, string>,
+  accessToken: string,
+  projectId: string
+): Promise<{ success: boolean; error?: string }> {
+  const fcmUrl = `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`;
+
+  const message = {
+    message: {
+      token,
+      notification,
+      webpush: {
+        headers: { Urgency: "high" },
+        notification: {
+          icon: "/favicon.ico",
+          badge: "/favicon.ico",
+          tag: data.tag || "general",
+          vibrate: [200, 100, 200],
+          requireInteraction: true,
+          dir: "rtl",
+          lang: "ar",
+        },
+        fcm_options: {
+          link: data.click_url || "/",
+        },
+      },
+      data: {
+        ...data,
+        timestamp: new Date().toISOString(),
+      },
+    },
+  };
+
+  const response = await fetch(fcmUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify(message),
+  });
+
+  const result = await response.json();
+
+  if (response.ok) {
+    return { success: true };
+  }
+
+  return {
+    success: false,
+    error: result.error?.message || JSON.stringify(result),
+  };
+}
+
 serve(async (req) => {
-  // Handle CORS preflight
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+  const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const serviceAccountJson = Deno.env.get("FIREBASE_SERVICE_ACCOUNT");
+
+  const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
   try {
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const serviceAccountJson = Deno.env.get("FIREBASE_SERVICE_ACCOUNT");
-
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
     const payload: NotificationPayload = await req.json();
-    const { user_id, title, body, tag, broadcast, notification_type } = payload;
+    const { user_id, title, body, tag, broadcast, notification_type, data } = payload;
 
-    console.log("Sending notification:", { title, body, tag, broadcast, notification_type });
+    console.log("📤 Sending notification:", { title, body, tag, broadcast, notification_type, user_id });
+
+    // Validate required fields
+    if (!title || !body) {
+      return new Response(
+        JSON.stringify({ success: false, error: "title and body are required" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Check Firebase config
+    if (!serviceAccountJson) {
+      console.log("⚠️ FIREBASE_SERVICE_ACCOUNT not configured");
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "FIREBASE_SERVICE_ACCOUNT not configured",
+          code: "FCM_NOT_CONFIGURED",
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    let serviceAccount: FirebaseServiceAccount;
+    try {
+      serviceAccount = JSON.parse(serviceAccountJson);
+    } catch {
+      return new Response(
+        JSON.stringify({ success: false, error: "Invalid FIREBASE_SERVICE_ACCOUNT JSON" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     // Get FCM tokens
-    let query = supabase.from("push_subscriptions").select("fcm_token, user_id");
+    let query = supabase
+      .from("push_subscriptions")
+      .select("fcm_token, user_id")
+      .eq("is_active", true);
 
     if (!broadcast && user_id) {
       query = query.eq("user_id", user_id);
@@ -128,158 +212,101 @@ serve(async (req) => {
     const { data: subscriptions, error: subError } = await query;
 
     if (subError) {
-      console.error("Error fetching subscriptions:", subError);
-      throw subError;
+      throw new Error(`Database error: ${subError.message}`);
     }
 
-    if (!subscriptions || subscriptions.length === 0) {
-      console.log("No subscriptions found");
-      return new Response(
-        JSON.stringify({ success: true, message: "No subscriptions found", sent: 0 }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    console.log(`Found ${subscriptions.length} subscriptions`);
-
-    // Filter out browser-fallback tokens (they don't support server push)
-    const validTokens = subscriptions.filter(
+    // Filter valid tokens (exclude browser-fallback tokens)
+    const validSubscriptions = (subscriptions || []).filter(
       (sub) => sub.fcm_token && !sub.fcm_token.startsWith("browser-fallback")
     );
 
-    if (validTokens.length === 0) {
-      console.log("No valid FCM tokens found (only browser-fallback tokens)");
-      return new Response(
-        JSON.stringify({ 
-          success: true, 
-          message: "Only browser-fallback tokens found - notifications will be shown when app is open",
-          sent: 0 
-        }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    // Parse service account
-    if (!serviceAccountJson) {
-      console.error("FIREBASE_SERVICE_ACCOUNT not configured");
+    if (validSubscriptions.length === 0) {
+      console.log("📭 No valid FCM tokens found");
       return new Response(
         JSON.stringify({
-          success: false,
-          message: "FIREBASE_SERVICE_ACCOUNT not configured",
+          success: true,
+          message: "No valid FCM tokens found",
           sent: 0,
+          total: 0,
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    let serviceAccount;
-    try {
-      serviceAccount = JSON.parse(serviceAccountJson);
-    } catch (e) {
-      console.error("Failed to parse service account JSON:", e);
-      return new Response(
-        JSON.stringify({
-          success: false,
-          message: "Invalid FIREBASE_SERVICE_ACCOUNT JSON",
-          sent: 0,
-        }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    // Get OAuth2 access token
-    console.log("Getting OAuth2 access token...");
+    // Get access token
+    console.log("🔐 Generating access token...");
     const accessToken = await getAccessToken(serviceAccount);
-    console.log("Got access token successfully");
 
-    const projectId = serviceAccount.project_id;
-    const fcmUrl = `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`;
+    // Send to all tokens
+    const results: Array<{ token: string; success: boolean; error?: string; userId: string }> = [];
+    const invalidTokens: string[] = [];
 
-    // Send notifications to each token
-    const results = [];
-    const tokens = validTokens.map((sub) => sub.fcm_token);
+    for (const sub of validSubscriptions) {
+      const result = await sendFCMMessage(
+        sub.fcm_token,
+        { title, body },
+        {
+          notification_type: notification_type || "general",
+          tag: tag || "",
+          ...data,
+        },
+        accessToken,
+        serviceAccount.project_id
+      );
 
-    for (const token of tokens) {
-      try {
-        const message = {
-          message: {
-            token: token,
-            notification: {
-              title,
-              body,
-            },
-            webpush: {
-              headers: {
-                Urgency: "high",
-              },
-              notification: {
-                icon: "/favicon.ico",
-                badge: "/favicon.ico",
-                tag: tag || notification_type || "general",
-                vibrate: [200, 100, 200],
-                requireInteraction: true,
-              },
-              fcm_options: {
-                link: "https://noor-alfurqan.lovable.app/",
-              },
-            },
-            data: {
-              notification_type: notification_type || "general",
-              tag: tag || "",
-              timestamp: new Date().toISOString(),
-            },
-          },
-        };
+      results.push({
+        token: sub.fcm_token.substring(0, 20) + "...",
+        success: result.success,
+        error: result.error,
+        userId: sub.user_id,
+      });
 
-        const fcmResponse = await fetch(fcmUrl, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
-          },
-          body: JSON.stringify(message),
-        });
+      // Track invalid tokens for cleanup
+      if (!result.success && result.error?.includes("UNREGISTERED")) {
+        invalidTokens.push(sub.fcm_token);
+      }
 
-        const fcmResult = await fcmResponse.json();
-        
-        if (fcmResponse.ok) {
-          console.log("FCM sent successfully to token:", token.substring(0, 20) + "...");
-          results.push({ token: token.substring(0, 20) + "...", success: true });
-        } else {
-          console.error("FCM error for token:", token.substring(0, 20) + "...", fcmResult);
-          results.push({ token: token.substring(0, 20) + "...", success: false, error: fcmResult });
-          
-          // Remove invalid tokens
-          if (fcmResult.error?.code === 404 || fcmResult.error?.details?.[0]?.errorCode === "UNREGISTERED") {
-            console.log("Removing invalid token from database");
-            await supabase.from("push_subscriptions").delete().eq("fcm_token", token);
-          }
-        }
-      } catch (tokenError) {
-        console.error("Error sending to token:", tokenError);
-        results.push({ token: token.substring(0, 20) + "...", success: false, error: String(tokenError) });
+      // Log notification
+      await supabase.from("notification_logs").insert({
+        user_id: sub.user_id,
+        title,
+        body,
+        notification_type: notification_type || "general",
+        tag,
+        status: result.success ? "sent" : "failed",
+        error_message: result.error,
+        sent_at: result.success ? new Date().toISOString() : null,
+      });
+    }
+
+    // Cleanup invalid tokens
+    if (invalidTokens.length > 0) {
+      console.log(`🧹 Removing ${invalidTokens.length} invalid tokens`);
+      for (const token of invalidTokens) {
+        await supabase.from("push_subscriptions").delete().eq("fcm_token", token);
       }
     }
 
     const successCount = results.filter((r) => r.success).length;
-    console.log(`Sent ${successCount}/${tokens.length} notifications successfully`);
+    console.log(`✅ Sent ${successCount}/${validSubscriptions.length} notifications`);
 
     return new Response(
       JSON.stringify({
         success: true,
-        message: `Notifications sent via FCM v1 API`,
+        message: `Notifications sent`,
         sent: successCount,
-        total: tokens.length,
+        total: validSubscriptions.length,
         results,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
-
   } catch (error) {
-    console.error("Error:", error);
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    console.error("❌ Error:", error);
     return new Response(
-      JSON.stringify({ success: false, error: errorMessage }),
+      JSON.stringify({
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

@@ -6,5 +6,11 @@ verify_jwt = false
 [functions.scheduled-notifications]
 verify_jwt = false
 
+[functions.register-push-token]
+verify_jwt = false
+
+[functions.test-notification]
+verify_jwt = false
+
 [functions.prophet-story-audio]
 verify_jwt = false

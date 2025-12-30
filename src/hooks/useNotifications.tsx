@@ -2,49 +2,51 @@ import { useState, useEffect, useCallback } from "react";
 import { useUserSettings } from "./useUserSettings";
 import { useFCMNotifications } from "./useFCMNotifications";
 
-// Facade hook (kept stable) while we rebuild push + background scheduling cleanly.
+/**
+ * Main notifications hook - facade for all notification functionality
+ */
 export const useNotifications = () => {
   const [permission, setPermission] = useState<NotificationPermission>("default");
   const { settings } = useUserSettings();
-  const { enableNotifications, disableNotifications, sendLocalNotification, isEnabled } = useFCMNotifications();
+  const fcm = useFCMNotifications();
 
   useEffect(() => {
-    if ("Notification" in window) {
+    if (typeof window !== "undefined" && "Notification" in window) {
       setPermission(Notification.permission);
     }
   }, []);
 
-  const requestPermission = useCallback(async () => {
-    const success = await enableNotifications();
+  const requestPermission = useCallback(async (): Promise<boolean> => {
+    const success = await fcm.enableNotifications();
     if (success) setPermission("granted");
     return success;
-  }, [enableNotifications]);
+  }, [fcm]);
 
-  const disableNotificationsHandler = useCallback(async () => {
-    await disableNotifications();
-  }, [disableNotifications]);
+  const disableNotifications = useCallback(async () => {
+    await fcm.disableNotifications();
+  }, [fcm]);
 
-  // Immediate (foreground) notification only
   const sendNotification = useCallback(
     (title: string, options?: NotificationOptions) => {
       if (permission !== "granted" || !settings.notifications_enabled) return null;
-      return sendLocalNotification(title, options?.body || "", options);
+      return fcm.sendLocalNotification(title, options?.body || "", options);
     },
-    [permission, settings.notifications_enabled, sendLocalNotification]
+    [permission, settings.notifications_enabled, fcm]
   );
 
-  // Clean-slate: scheduling will be rebuilt (backend + push).
   const schedulePrayerReminder = useCallback((_prayerName: string, _prayerTime: string) => {}, []);
   const scheduleWirdReminder = useCallback((_wirdTime: string) => {}, []);
 
   return {
     permission,
-    isEnabled,
+    isEnabled: fcm.isEnabled,
+    isSupported: fcm.isSupported,
+    isLoading: fcm.isLoading,
     requestPermission,
-    disableNotifications: disableNotificationsHandler,
+    disableNotifications,
     sendNotification,
     schedulePrayerReminder,
     scheduleWirdReminder,
+    testPushNotification: fcm.testNotification,
   };
 };
-
