@@ -1,50 +1,51 @@
-// Push service worker for receiving FCM notifications
-// This will be configured with Firebase when credentials are provided
+// Firebase Messaging Service Worker
+// Uses Firebase SDK for proper FCM integration
 
-self.addEventListener("install", (event) => {
-  console.log("🔧 Service Worker installed");
-  self.skipWaiting();
-});
+importScripts('https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging-compat.js');
 
-self.addEventListener("activate", (event) => {
-  console.log("✅ Service Worker activated");
-  event.waitUntil(clients.claim());
-});
+// Firebase configuration - must match the client config
+const firebaseConfig = {
+  apiKey: "AIzaSyDdpGCVHY9CTTlscKC7T70YJANaUNnH6wY",
+  authDomain: "noor-al-furqan-e2bbc.firebaseapp.com",
+  projectId: "noor-al-furqan-e2bbc",
+  storageBucket: "noor-al-furqan-e2bbc.firebasestorage.app",
+  messagingSenderId: "246635031366",
+  appId: "1:246635031366:web:d2cafd0898899142cbd347",
+};
 
-// Handle push events (from FCM)
-self.addEventListener("push", (event) => {
-  console.log("📩 Push event received");
-  
-  try {
-    let data = {};
-    if (event.data) {
-      data = event.data.json();
-    }
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
 
-    const title = data.notification?.title || data.title || "نور الفرقان";
-    const options = {
-      body: data.notification?.body || data.body || "",
-      icon: "/favicon.ico",
-      badge: "/favicon.ico",
-      dir: "rtl",
-      lang: "ar",
-      tag: data.data?.tag || "general",
-      vibrate: [200, 100, 200],
-      requireInteraction: true,
-      data: data.data || data,
-    };
+// Get messaging instance
+const messaging = firebase.messaging();
 
-    event.waitUntil(
-      self.registration.showNotification(title, options)
-    );
-  } catch (error) {
-    console.error("❌ Push event error:", error);
-  }
+// Handle background messages
+messaging.onBackgroundMessage((payload) => {
+  console.log("📩 Background message received:", payload);
+
+  const notificationTitle = payload.notification?.title || payload.data?.title || "نور الفرقان";
+  const notificationOptions = {
+    body: payload.notification?.body || payload.data?.body || "",
+    icon: "/favicon.ico",
+    badge: "/favicon.ico",
+    dir: "rtl",
+    lang: "ar",
+    tag: payload.data?.tag || "general",
+    vibrate: [200, 100, 200],
+    requireInteraction: true,
+    data: {
+      click_url: payload.data?.click_url || "/",
+      ...payload.data,
+    },
+  };
+
+  return self.registration.showNotification(notificationTitle, notificationOptions);
 });
 
 // Handle notification click
 self.addEventListener("notificationclick", (event) => {
-  console.log("👆 Notification clicked");
+  console.log("👆 Notification clicked:", event.notification.tag);
   event.notification.close();
 
   const clickUrl = event.notification.data?.click_url || "/";
@@ -54,6 +55,7 @@ self.addEventListener("notificationclick", (event) => {
       // Focus existing window if available
       for (const client of clientList) {
         if (client.url.includes(self.location.origin) && "focus" in client) {
+          client.navigate(clickUrl);
           return client.focus();
         }
       }
@@ -65,7 +67,14 @@ self.addEventListener("notificationclick", (event) => {
   );
 });
 
-// Handle notification close
-self.addEventListener("notificationclose", (event) => {
-  console.log("❎ Notification closed");
+// Handle service worker installation
+self.addEventListener("install", (event) => {
+  console.log("🔧 Firebase Messaging SW installed");
+  self.skipWaiting();
+});
+
+// Handle service worker activation
+self.addEventListener("activate", (event) => {
+  console.log("✅ Firebase Messaging SW activated");
+  event.waitUntil(clients.claim());
 });
