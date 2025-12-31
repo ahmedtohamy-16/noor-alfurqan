@@ -19,49 +19,38 @@ export interface VapidConfig {
 let firebaseApp: unknown = null;
 let messagingInstance: unknown = null;
 
-// Check if Firebase is configured (config will come from environment)
-export const isFirebaseConfigured = (): boolean => {
-  // Will be true when VITE_FIREBASE_* env vars are set
-  return !!(
-    import.meta.env.VITE_FIREBASE_API_KEY &&
-    import.meta.env.VITE_FIREBASE_PROJECT_ID &&
-    import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID &&
-    import.meta.env.VITE_FIREBASE_APP_ID
-  );
+// Firebase configuration - these are public/publishable keys
+const FIREBASE_CONFIG: FirebaseConfig = {
+  apiKey: "AIzaSyDdpGCVHY9CTTlscKC7T70YJANaUNnH6wY",
+  authDomain: "noor-al-furqan-e2bbc.firebaseapp.com",
+  projectId: "noor-al-furqan-e2bbc",
+  storageBucket: "noor-al-furqan-e2bbc.firebasestorage.app",
+  messagingSenderId: "246635031366",
+  appId: "1:246635031366:web:d2cafd0898899142cbd347",
 };
 
-// Get Firebase config from environment
-export const getFirebaseConfig = (): FirebaseConfig | null => {
-  if (!isFirebaseConfigured()) return null;
+const VAPID_KEY = "BP155IMLyCP2dszPBBJOglRtDuL0TNZkWNhxtk6EQFqtoGJ99q5yL4RxvPxU8XA0hyvDaGlIgtlkkyCX-u_OLwI";
 
-  return {
-    apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || `${import.meta.env.VITE_FIREBASE_PROJECT_ID}.firebaseapp.com`,
-    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || `${import.meta.env.VITE_FIREBASE_PROJECT_ID}.appspot.com`,
-    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-    appId: import.meta.env.VITE_FIREBASE_APP_ID,
-    measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
-  };
+// Check if Firebase is configured
+export const isFirebaseConfigured = (): boolean => {
+  return true; // Always configured with hardcoded values
+};
+
+// Get Firebase config
+export const getFirebaseConfig = (): FirebaseConfig => {
+  return FIREBASE_CONFIG;
 };
 
 // Get VAPID public key for web push
-export const getVapidKey = (): string | null => {
-  return import.meta.env.VITE_FIREBASE_VAPID_KEY || null;
+export const getVapidKey = (): string => {
+  return VAPID_KEY;
 };
 
 // Initialize Firebase (will be called when config is available)
 export const initializeFirebase = async (): Promise<boolean> => {
-  if (!isFirebaseConfigured()) {
-    console.log("⚠️ Firebase not configured - FCM disabled");
-    return false;
-  }
-
   try {
     const { initializeApp, getApps } = await import("firebase/app");
     const config = getFirebaseConfig();
-
-    if (!config) return false;
 
     // Check if already initialized
     if (getApps().length === 0) {
@@ -104,10 +93,6 @@ export const requestFCMToken = async (): Promise<string | null> => {
   if (!messaging) return null;
 
   const vapidKey = getVapidKey();
-  if (!vapidKey) {
-    console.error("❌ VAPID key not configured");
-    return null;
-  }
 
   try {
     const { getToken } = await import("firebase/messaging");
