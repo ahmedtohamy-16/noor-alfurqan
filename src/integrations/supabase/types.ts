@@ -89,6 +89,30 @@ export type Database = {
         }
         Relationships: []
       }
+      audio_generation_log: {
+        Row: {
+          created_at: string | null
+          id: string
+          prophet_id: string | null
+          text_length: number | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          prophet_id?: string | null
+          text_length?: number | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          prophet_id?: string | null
+          text_length?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       azkar: {
         Row: {
           category_id: string | null
