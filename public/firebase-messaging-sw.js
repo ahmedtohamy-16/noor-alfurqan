@@ -36,9 +36,21 @@ messaging.onBackgroundMessage((payload) => {
     requireInteraction: true,
     data: {
       click_url: payload.data?.click_url || "/",
+      adhanUrl: payload.data?.adhanUrl || null,
       ...payload.data,
     },
   };
+
+  // Play Adhan sound for prayer notifications
+  if (payload.data?.adhanUrl) {
+    try {
+      const audio = new Audio(payload.data.adhanUrl);
+      audio.volume = 0.8;
+      audio.play().catch(err => console.log("Could not play adhan:", err));
+    } catch (e) {
+      console.log("Audio playback error:", e);
+    }
+  }
 
   return self.registration.showNotification(notificationTitle, notificationOptions);
 });
