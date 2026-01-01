@@ -7,6 +7,7 @@ interface UserSettings {
   latitude: number | null;
   longitude: number | null;
   city_name: string | null;
+  timezone: string;
   notifications_enabled: boolean;
   daily_wird_enabled: boolean;
   daily_wird_time: string;
@@ -18,6 +19,7 @@ const defaultSettings: UserSettings = {
   latitude: null,
   longitude: null,
   city_name: null,
+  timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
   notifications_enabled: false,
   daily_wird_enabled: false,
   daily_wird_time: "06:00:00",
@@ -62,6 +64,7 @@ export const useUserSettings = () => {
           latitude: data.latitude,
           longitude: data.longitude,
           city_name: data.city_name,
+          timezone: data.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
           notifications_enabled: data.notifications_enabled || false,
           daily_wird_enabled: data.daily_wird_enabled || false,
           daily_wird_time: data.daily_wird_time || "06:00:00",
@@ -101,10 +104,14 @@ export const useUserSettings = () => {
   };
 
   const updateLocation = async (lat: number, lng: number, cityName?: string) => {
+    // Detect timezone based on coordinates
+    const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+    
     await updateSettings({
       latitude: lat,
       longitude: lng,
       city_name: cityName || null,
+      timezone: detectedTimezone,
     });
     toast.success("تم تحديث الموقع بنجاح");
   };
