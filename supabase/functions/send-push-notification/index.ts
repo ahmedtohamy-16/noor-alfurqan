@@ -19,14 +19,42 @@ const getCorsHeaders = (origin: string | null): Record<string, string> => {
   };
 };
 
+// Input validation constants
+const MAX_TITLE_LENGTH = 200;
+const MAX_BODY_LENGTH = 1000;
+const MAX_TAG_LENGTH = 100;
+const VALID_NOTIFICATION_TYPES = ["prayer", "wird", "azkar", "custom", "general"] as const;
+
 interface NotificationPayload {
   user_id?: string;
   title: string;
   body: string;
   tag?: string;
   broadcast?: boolean;
-  notification_type?: "prayer" | "wird" | "azkar" | "custom";
+  notification_type?: typeof VALID_NOTIFICATION_TYPES[number];
   data?: Record<string, string>;
+}
+
+// Sanitize string input
+function sanitizeString(input: string, maxLength: number): string {
+  return input.slice(0, maxLength).trim();
+}
+
+// Validate notification payload
+function validatePayload(payload: NotificationPayload): { valid: boolean; error?: string } {
+  if (!payload.title || typeof payload.title !== "string") {
+    return { valid: false, error: "title is required and must be a string" };
+  }
+  if (!payload.body || typeof payload.body !== "string") {
+    return { valid: false, error: "body is required and must be a string" };
+  }
+  if (payload.notification_type && !VALID_NOTIFICATION_TYPES.includes(payload.notification_type)) {
+    return { valid: false, error: `notification_type must be one of: ${VALID_NOTIFICATION_TYPES.join(", ")}` };
+  }
+  if (payload.user_id && typeof payload.user_id !== "string") {
+    return { valid: false, error: "user_id must be a string" };
+  }
+  return { valid: true };
 }
 
 interface FirebaseServiceAccount {
@@ -179,18 +207,24 @@ serve(async (req) => {
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
   try {
-    const payload: NotificationPayload = await req.json();
-    const { user_id, title, body, tag, broadcast, notification_type, data } = payload;
-
-    console.log("📤 Sending notification:", { title, body, tag, broadcast, notification_type, user_id });
-
-    // Validate required fields
-    if (!title || !body) {
+    const rawPayload = await req.json();
+    
+    // Validate payload structure
+    const validation = validatePayload(rawPayload);
+    if (!validation.valid) {
       return new Response(
-        JSON.stringify({ success: false, error: "title and body are required" }),
+        JSON.stringify({ success: false, error: validation.error }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    // Sanitize inputs
+    const title = sanitizeString(rawPayload.title, MAX_TITLE_LENGTH);
+    const body = sanitizeString(rawPayload.body, MAX_BODY_LENGTH);
+    const tag = rawPayload.tag ? sanitizeString(rawPayload.tag, MAX_TAG_LENGTH) : undefined;
+    const { user_id, broadcast, notification_type, data } = rawPayload;
+
+    console.log("📤 Sending notification:", { title: title.substring(0, 50), broadcast, notification_type, user_id });
 
     // Check Firebase config
     if (!serviceAccountJson) {

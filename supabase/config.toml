@@ -7,10 +7,10 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.register-push-token]
-verify_jwt = false
+verify_jwt = true
 
 [functions.test-notification]
-verify_jwt = false
+verify_jwt = true
 
 [functions.prophet-story-audio]
-verify_jwt = false
+verify_jwt = true
