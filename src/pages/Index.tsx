@@ -3,7 +3,8 @@ import { Book, Clock, Star, Users, Search, ChevronLeft, BookOpen, BarChart3, Tar
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/Header";
-import NextPrayerWidget from "@/components/NextPrayerWidget";
+import NextPrayerWidgetEnhanced from "@/components/NextPrayerWidgetEnhanced";
+import LocationButton from "@/components/LocationButton";
 import { useReadingProgress } from "@/hooks/useReadingProgress";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -90,6 +91,11 @@ const Index = () => {
 
       {/* Hero Section */}
       <section className="relative bg-gradient-to-br from-primary/10 via-background to-accent/10 py-12 md:py-16">
+        {/* Location Button - Top Left */}
+        <div className="absolute top-4 left-4 z-10">
+          <LocationButton />
+        </div>
+
         <div className="container mx-auto px-4 text-center arabic-ui">
           <div className="max-w-2xl mx-auto">
             <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
@@ -123,7 +129,7 @@ const Index = () => {
       <main className="container mx-auto px-4 py-8 arabic-ui">
         {/* Next Prayer Widget */}
         <section className="mb-8">
-          <NextPrayerWidget />
+          <NextPrayerWidgetEnhanced />
         </section>
 
         {/* Last Read Card */}

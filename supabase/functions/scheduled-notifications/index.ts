@@ -1,7 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.89.0";
 
-// Allowed origins for CORS (for direct calls, not cron)
 const allowedOrigins = [
   "https://noor-alfurqan.lovable.app",
   "https://a627a8a5-f451-4c03-86fb-fc0ef654d906.lovableproject.com",
@@ -18,6 +17,30 @@ const getCorsHeaders = (origin: string | null): Record<string, string> => {
     "Access-Control-Allow-Methods": "POST, OPTIONS",
   };
 };
+
+// Get timezone offset in minutes
+function getTimezoneOffset(timezone: string): number {
+  try {
+    const now = new Date();
+    const utcDate = new Date(now.toLocaleString("en-US", { timeZone: "UTC" }));
+    const tzDate = new Date(now.toLocaleString("en-US", { timeZone: timezone }));
+    return Math.round((tzDate.getTime() - utcDate.getTime()) / (1000 * 60));
+  } catch {
+    return 0; // Default to UTC if timezone is invalid
+  }
+}
+
+// Convert local time to UTC minutes
+function localTimeToUTCMinutes(localTime: string, timezoneOffset: number): number {
+  const [hours, minutes] = localTime.split(":").map(Number);
+  let utcMinutes = (hours * 60 + minutes) - timezoneOffset;
+  
+  // Handle day overflow
+  if (utcMinutes < 0) utcMinutes += 24 * 60;
+  if (utcMinutes >= 24 * 60) utcMinutes -= 24 * 60;
+  
+  return utcMinutes;
+}
 
 // Prayer API for calculating prayer times
 async function getPrayerTimes(lat: number, lng: number, method: number = 4): Promise<Record<string, string> | null> {
@@ -45,12 +68,6 @@ function timeToMinutes(time: string): number {
   return hours * 60 + minutes;
 }
 
-// Check if current time matches target time within tolerance
-function isTimeMatch(currentMinutes: number, targetTime: string, toleranceMinutes: number = 1): boolean {
-  const targetMinutes = timeToMinutes(targetTime);
-  return Math.abs(currentMinutes - targetMinutes) <= toleranceMinutes;
-}
-
 interface UserSettings {
   user_id: string;
   notifications_enabled: boolean;
@@ -60,6 +77,7 @@ interface UserSettings {
   latitude: number | null;
   longitude: number | null;
   prayer_method: number;
+  timezone: string | null;
 }
 
 interface ScheduledNotification {
@@ -93,7 +111,7 @@ serve(async (req) => {
     // Get users with notifications enabled
     const { data: settings, error: settingsError } = await supabase
       .from("user_settings")
-      .select("user_id, notifications_enabled, daily_wird_enabled, daily_wird_time, prayer_reminder_minutes, latitude, longitude, prayer_method")
+      .select("user_id, notifications_enabled, daily_wird_enabled, daily_wird_time, prayer_reminder_minutes, latitude, longitude, prayer_method, timezone")
       .eq("notifications_enabled", true);
 
     if (settingsError) throw settingsError;
@@ -117,12 +135,21 @@ serve(async (req) => {
     };
 
     for (const user of settings as UserSettings[]) {
-      // === Daily Wird Reminder ===
+      // Get user's timezone offset
+      const userTimezone = user.timezone || "UTC";
+      const timezoneOffset = getTimezoneOffset(userTimezone);
+      
+      console.log(`👤 Processing user ${user.user_id} (timezone: ${userTimezone}, offset: ${timezoneOffset} min)`);
+
+      // === Daily Wird Reminder (using LOCAL time) ===
       if (user.daily_wird_enabled && user.daily_wird_time) {
-        const [wirdHour, wirdMinute] = user.daily_wird_time.split(":").map(Number);
-        const wirdUTCMinutes = wirdHour * 60 + wirdMinute;
+        // Convert user's local wird time to UTC for comparison
+        const wirdUTCMinutes = localTimeToUTCMinutes(user.daily_wird_time, timezoneOffset);
+        
+        console.log(`📖 User wird time: ${user.daily_wird_time} local = ${Math.floor(wirdUTCMinutes/60)}:${String(wirdUTCMinutes%60).padStart(2,"0")} UTC`);
         
         if (Math.abs(currentUTCMinutes - wirdUTCMinutes) <= 1) {
+          console.log(`✅ Wird time matched for user ${user.user_id}`);
           notifications.push({
             user_id: user.user_id,
             title: "📖 تذكير بالورد اليومي",
@@ -133,7 +160,7 @@ serve(async (req) => {
         }
       }
 
-      // === Prayer Time Reminders ===
+      // === Prayer Time Reminders (API returns local time based on coordinates) ===
       if (user.latitude && user.longitude && user.prayer_reminder_minutes > 0) {
         const prayerTimes = await getPrayerTimes(
           user.latitude,
@@ -146,12 +173,18 @@ serve(async (req) => {
             const prayerTime = prayerTimes[prayer];
             if (!prayerTime) continue;
 
-            const prayerMinutes = timeToMinutes(prayerTime);
-            const reminderMinutes = prayerMinutes - user.prayer_reminder_minutes;
+            // Prayer time is already in local time from the API
+            const prayerLocalMinutes = timeToMinutes(prayerTime);
+            const reminderLocalMinutes = prayerLocalMinutes - user.prayer_reminder_minutes;
             
-            // Convert to local time offset (approximate - user location based)
-            // For simplicity, we use UTC and let the API handle timezone
-            if (isTimeMatch(currentUTCMinutes, prayerTime, user.prayer_reminder_minutes)) {
+            // Convert reminder time to UTC for comparison
+            const reminderUTCMinutes = localTimeToUTCMinutes(
+              `${Math.floor(reminderLocalMinutes / 60)}:${String(reminderLocalMinutes % 60).padStart(2, "0")}`,
+              timezoneOffset
+            );
+            
+            if (Math.abs(currentUTCMinutes - reminderUTCMinutes) <= 1) {
+              console.log(`🕌 Prayer reminder for ${prayer} matched for user ${user.user_id}`);
               notifications.push({
                 user_id: user.user_id,
                 title: `🕌 صلاة ${arabicName}`,
@@ -164,8 +197,9 @@ serve(async (req) => {
         }
       }
 
-      // === Morning Azkar (around 5:00 AM local / 3:00 UTC for Middle East) ===
-      if (currentHour === 3 && currentMinute === 0) {
+      // === Morning Azkar (6:00 AM user's local time) ===
+      const morningAzkarUTC = localTimeToUTCMinutes("06:00", timezoneOffset);
+      if (Math.abs(currentUTCMinutes - morningAzkarUTC) <= 1) {
         notifications.push({
           user_id: user.user_id,
           title: "🌅 أذكار الصباح",
@@ -175,8 +209,9 @@ serve(async (req) => {
         });
       }
 
-      // === Evening Azkar (around 5:00 PM local / 15:00 UTC for Middle East) ===
-      if (currentHour === 15 && currentMinute === 0) {
+      // === Evening Azkar (5:00 PM user's local time) ===
+      const eveningAzkarUTC = localTimeToUTCMinutes("17:00", timezoneOffset);
+      if (Math.abs(currentUTCMinutes - eveningAzkarUTC) <= 1) {
         notifications.push({
           user_id: user.user_id,
           title: "🌙 أذكار المساء",
@@ -208,6 +243,15 @@ serve(async (req) => {
           if (result.success && result.sent > 0) {
             sentCount++;
             console.log(`✅ Sent to ${notification.user_id}: ${notification.title}`);
+            
+            // Save to notification history
+            await supabase.from("notification_history").insert({
+              user_id: notification.user_id,
+              title: notification.title,
+              body: notification.body,
+              notification_type: notification.notification_type,
+              tag: notification.tag,
+            });
           }
         } catch (error) {
           console.error(`❌ Failed to send to ${notification.user_id}:`, error);

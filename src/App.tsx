@@ -29,6 +29,7 @@ import TasbihPage from "./pages/TasbihPage";
 import AzkarPage from "./pages/AzkarPage";
 import ProphetStoriesPage from "./pages/ProphetStoriesPage";
 import RuqyahPage from "./pages/RuqyahPage";
+import NotificationsPage from "./pages/NotificationsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -64,6 +65,7 @@ const App = () => (
                     <Route path="/azkar" element={<AzkarPage />} />
                     <Route path="/prophet-stories" element={<ProphetStoriesPage />} />
                     <Route path="/ruqyah" element={<RuqyahPage />} />
+                    <Route path="/notifications" element={<NotificationsPage />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                   <GlobalAudioPlayer />

@@ -383,6 +383,39 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_history: {
+        Row: {
+          body: string | null
+          created_at: string
+          id: string
+          notification_type: string
+          read: boolean
+          tag: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          notification_type?: string
+          read?: boolean
+          tag?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          notification_type?: string
+          read?: boolean
+          tag?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       notification_logs: {
         Row: {
           body: string | null
@@ -689,6 +722,7 @@ export type Database = {
           notifications_enabled: boolean | null
           prayer_method: number | null
           prayer_reminder_minutes: number | null
+          timezone: string | null
           updated_at: string | null
           user_id: string
         }
@@ -704,6 +738,7 @@ export type Database = {
           notifications_enabled?: boolean | null
           prayer_method?: number | null
           prayer_reminder_minutes?: number | null
+          timezone?: string | null
           updated_at?: string | null
           user_id: string
         }
@@ -719,6 +754,7 @@ export type Database = {
           notifications_enabled?: boolean | null
           prayer_method?: number | null
           prayer_reminder_minutes?: number | null
+          timezone?: string | null
           updated_at?: string | null
           user_id?: string
         }
