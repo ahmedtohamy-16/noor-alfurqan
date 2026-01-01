@@ -30,6 +30,7 @@ import AzkarPage from "./pages/AzkarPage";
 import ProphetStoriesPage from "./pages/ProphetStoriesPage";
 import RuqyahPage from "./pages/RuqyahPage";
 import NotificationsPage from "./pages/NotificationsPage";
+import NotificationSettingsPage from "./components/NotificationSettingsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -66,6 +67,7 @@ const App = () => (
                     <Route path="/prophet-stories" element={<ProphetStoriesPage />} />
                     <Route path="/ruqyah" element={<RuqyahPage />} />
                     <Route path="/notifications" element={<NotificationsPage />} />
+                    <Route path="/notification-settings" element={<NotificationSettingsPage />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                   <GlobalAudioPlayer />

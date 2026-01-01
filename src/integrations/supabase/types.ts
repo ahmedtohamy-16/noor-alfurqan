@@ -711,6 +711,16 @@ export type Database = {
       }
       user_settings: {
         Row: {
+          adhan_sound: string | null
+          azkar_evening_enabled: boolean | null
+          azkar_evening_time: string | null
+          azkar_morning_enabled: boolean | null
+          azkar_morning_time: string | null
+          azkar_prayer_enabled: boolean | null
+          azkar_sleep_enabled: boolean | null
+          azkar_sleep_time: string | null
+          azkar_wakeup_enabled: boolean | null
+          azkar_wakeup_time: string | null
           city_name: string | null
           created_at: string | null
           daily_wird_enabled: boolean | null
@@ -720,6 +730,11 @@ export type Database = {
           latitude: number | null
           longitude: number | null
           notifications_enabled: boolean | null
+          prayer_asr_enabled: boolean | null
+          prayer_dhuhr_enabled: boolean | null
+          prayer_fajr_enabled: boolean | null
+          prayer_isha_enabled: boolean | null
+          prayer_maghrib_enabled: boolean | null
           prayer_method: number | null
           prayer_reminder_minutes: number | null
           timezone: string | null
@@ -727,6 +742,16 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          adhan_sound?: string | null
+          azkar_evening_enabled?: boolean | null
+          azkar_evening_time?: string | null
+          azkar_morning_enabled?: boolean | null
+          azkar_morning_time?: string | null
+          azkar_prayer_enabled?: boolean | null
+          azkar_sleep_enabled?: boolean | null
+          azkar_sleep_time?: string | null
+          azkar_wakeup_enabled?: boolean | null
+          azkar_wakeup_time?: string | null
           city_name?: string | null
           created_at?: string | null
           daily_wird_enabled?: boolean | null
@@ -736,6 +761,11 @@ export type Database = {
           latitude?: number | null
           longitude?: number | null
           notifications_enabled?: boolean | null
+          prayer_asr_enabled?: boolean | null
+          prayer_dhuhr_enabled?: boolean | null
+          prayer_fajr_enabled?: boolean | null
+          prayer_isha_enabled?: boolean | null
+          prayer_maghrib_enabled?: boolean | null
           prayer_method?: number | null
           prayer_reminder_minutes?: number | null
           timezone?: string | null
@@ -743,6 +773,16 @@ export type Database = {
           user_id: string
         }
         Update: {
+          adhan_sound?: string | null
+          azkar_evening_enabled?: boolean | null
+          azkar_evening_time?: string | null
+          azkar_morning_enabled?: boolean | null
+          azkar_morning_time?: string | null
+          azkar_prayer_enabled?: boolean | null
+          azkar_sleep_enabled?: boolean | null
+          azkar_sleep_time?: string | null
+          azkar_wakeup_enabled?: boolean | null
+          azkar_wakeup_time?: string | null
           city_name?: string | null
           created_at?: string | null
           daily_wird_enabled?: boolean | null
@@ -752,6 +792,11 @@ export type Database = {
           latitude?: number | null
           longitude?: number | null
           notifications_enabled?: boolean | null
+          prayer_asr_enabled?: boolean | null
+          prayer_dhuhr_enabled?: boolean | null
+          prayer_fajr_enabled?: boolean | null
+          prayer_isha_enabled?: boolean | null
+          prayer_maghrib_enabled?: boolean | null
           prayer_method?: number | null
           prayer_reminder_minutes?: number | null
           timezone?: string | null

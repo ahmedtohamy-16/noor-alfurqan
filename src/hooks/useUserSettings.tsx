@@ -13,6 +13,23 @@ interface UserSettings {
   daily_wird_time: string;
   prayer_method: number;
   prayer_reminder_minutes: number;
+  // Prayer notification settings
+  adhan_sound: string;
+  prayer_fajr_enabled: boolean;
+  prayer_dhuhr_enabled: boolean;
+  prayer_asr_enabled: boolean;
+  prayer_maghrib_enabled: boolean;
+  prayer_isha_enabled: boolean;
+  // Azkar notification settings
+  azkar_morning_enabled: boolean;
+  azkar_morning_time: string;
+  azkar_evening_enabled: boolean;
+  azkar_evening_time: string;
+  azkar_sleep_enabled: boolean;
+  azkar_sleep_time: string;
+  azkar_wakeup_enabled: boolean;
+  azkar_wakeup_time: string;
+  azkar_prayer_enabled: boolean;
 }
 
 const defaultSettings: UserSettings = {
@@ -23,8 +40,25 @@ const defaultSettings: UserSettings = {
   notifications_enabled: false,
   daily_wird_enabled: false,
   daily_wird_time: "06:00:00",
-  prayer_method: 4, // Default: Umm Al-Qura
+  prayer_method: 4,
   prayer_reminder_minutes: 15,
+  // Prayer defaults
+  adhan_sound: "makkah",
+  prayer_fajr_enabled: true,
+  prayer_dhuhr_enabled: true,
+  prayer_asr_enabled: true,
+  prayer_maghrib_enabled: true,
+  prayer_isha_enabled: true,
+  // Azkar defaults
+  azkar_morning_enabled: true,
+  azkar_morning_time: "06:00:00",
+  azkar_evening_enabled: true,
+  azkar_evening_time: "17:00:00",
+  azkar_sleep_enabled: false,
+  azkar_sleep_time: "22:00:00",
+  azkar_wakeup_enabled: false,
+  azkar_wakeup_time: "05:00:00",
+  azkar_prayer_enabled: false,
 };
 
 export const useUserSettings = () => {
@@ -70,6 +104,23 @@ export const useUserSettings = () => {
           daily_wird_time: data.daily_wird_time || "06:00:00",
           prayer_method: data.prayer_method || 4,
           prayer_reminder_minutes: data.prayer_reminder_minutes || 15,
+          // Prayer settings
+          adhan_sound: (data as any).adhan_sound || "makkah",
+          prayer_fajr_enabled: (data as any).prayer_fajr_enabled ?? true,
+          prayer_dhuhr_enabled: (data as any).prayer_dhuhr_enabled ?? true,
+          prayer_asr_enabled: (data as any).prayer_asr_enabled ?? true,
+          prayer_maghrib_enabled: (data as any).prayer_maghrib_enabled ?? true,
+          prayer_isha_enabled: (data as any).prayer_isha_enabled ?? true,
+          // Azkar settings
+          azkar_morning_enabled: (data as any).azkar_morning_enabled ?? true,
+          azkar_morning_time: (data as any).azkar_morning_time || "06:00:00",
+          azkar_evening_enabled: (data as any).azkar_evening_enabled ?? true,
+          azkar_evening_time: (data as any).azkar_evening_time || "17:00:00",
+          azkar_sleep_enabled: (data as any).azkar_sleep_enabled ?? false,
+          azkar_sleep_time: (data as any).azkar_sleep_time || "22:00:00",
+          azkar_wakeup_enabled: (data as any).azkar_wakeup_enabled ?? false,
+          azkar_wakeup_time: (data as any).azkar_wakeup_time || "05:00:00",
+          azkar_prayer_enabled: (data as any).azkar_prayer_enabled ?? false,
         });
       }
     } catch (error) {

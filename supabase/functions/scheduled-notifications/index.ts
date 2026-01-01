@@ -18,6 +18,18 @@ const getCorsHeaders = (origin: string | null): Record<string, string> => {
   };
 };
 
+// Adhan sound URLs
+const adhanSounds: Record<string, { url: string; fajrUrl?: string }> = {
+  makkah: {
+    url: "https://www.islamcan.com/audio/adhan/azan1.mp3",
+    fajrUrl: "https://www.islamcan.com/audio/adhan/azan-fajr1.mp3"
+  },
+  madinah: { url: "https://www.islamcan.com/audio/adhan/azan2.mp3" },
+  mishary: { url: "https://www.islamcan.com/audio/adhan/azan3.mp3" },
+  "abdul-basit": { url: "https://www.islamcan.com/audio/adhan/azan4.mp3" },
+  egypt: { url: "https://www.islamcan.com/audio/adhan/azan5.mp3" },
+};
+
 // Get timezone offset in minutes
 function getTimezoneOffset(timezone: string): number {
   try {
@@ -26,7 +38,7 @@ function getTimezoneOffset(timezone: string): number {
     const tzDate = new Date(now.toLocaleString("en-US", { timeZone: timezone }));
     return Math.round((tzDate.getTime() - utcDate.getTime()) / (1000 * 60));
   } catch {
-    return 0; // Default to UTC if timezone is invalid
+    return 0;
   }
 }
 
@@ -35,7 +47,6 @@ function localTimeToUTCMinutes(localTime: string, timezoneOffset: number): numbe
   const [hours, minutes] = localTime.split(":").map(Number);
   let utcMinutes = (hours * 60 + minutes) - timezoneOffset;
   
-  // Handle day overflow
   if (utcMinutes < 0) utcMinutes += 24 * 60;
   if (utcMinutes >= 24 * 60) utcMinutes -= 24 * 60;
   
@@ -78,6 +89,22 @@ interface UserSettings {
   longitude: number | null;
   prayer_method: number;
   timezone: string | null;
+  // Prayer toggles
+  adhan_sound: string | null;
+  prayer_fajr_enabled: boolean;
+  prayer_dhuhr_enabled: boolean;
+  prayer_asr_enabled: boolean;
+  prayer_maghrib_enabled: boolean;
+  prayer_isha_enabled: boolean;
+  // Azkar settings
+  azkar_morning_enabled: boolean;
+  azkar_morning_time: string | null;
+  azkar_evening_enabled: boolean;
+  azkar_evening_time: string | null;
+  azkar_sleep_enabled: boolean;
+  azkar_sleep_time: string | null;
+  azkar_wakeup_enabled: boolean;
+  azkar_wakeup_time: string | null;
 }
 
 interface ScheduledNotification {
@@ -86,6 +113,7 @@ interface ScheduledNotification {
   body: string;
   tag: string;
   notification_type: string;
+  data?: Record<string, string>;
 }
 
 serve(async (req) => {
@@ -111,7 +139,14 @@ serve(async (req) => {
     // Get users with notifications enabled
     const { data: settings, error: settingsError } = await supabase
       .from("user_settings")
-      .select("user_id, notifications_enabled, daily_wird_enabled, daily_wird_time, prayer_reminder_minutes, latitude, longitude, prayer_method, timezone")
+      .select(`
+        user_id, notifications_enabled, daily_wird_enabled, daily_wird_time, 
+        prayer_reminder_minutes, latitude, longitude, prayer_method, timezone,
+        adhan_sound, prayer_fajr_enabled, prayer_dhuhr_enabled, prayer_asr_enabled,
+        prayer_maghrib_enabled, prayer_isha_enabled,
+        azkar_morning_enabled, azkar_morning_time, azkar_evening_enabled, azkar_evening_time,
+        azkar_sleep_enabled, azkar_sleep_time, azkar_wakeup_enabled, azkar_wakeup_time
+      `)
       .eq("notifications_enabled", true);
 
     if (settingsError) throw settingsError;
@@ -126,24 +161,22 @@ serve(async (req) => {
     console.log(`👥 Found ${settings.length} users with notifications enabled`);
 
     const notifications: ScheduledNotification[] = [];
-    const prayerNames: Record<string, string> = {
-      Fajr: "الفجر",
-      Dhuhr: "الظهر",
-      Asr: "العصر",
-      Maghrib: "المغرب",
-      Isha: "العشاء",
+    const prayerNames: Record<string, { ar: string; key: string }> = {
+      Fajr: { ar: "الفجر", key: "fajr" },
+      Dhuhr: { ar: "الظهر", key: "dhuhr" },
+      Asr: { ar: "العصر", key: "asr" },
+      Maghrib: { ar: "المغرب", key: "maghrib" },
+      Isha: { ar: "العشاء", key: "isha" },
     };
 
     for (const user of settings as UserSettings[]) {
-      // Get user's timezone offset
       const userTimezone = user.timezone || "UTC";
       const timezoneOffset = getTimezoneOffset(userTimezone);
       
       console.log(`👤 Processing user ${user.user_id} (timezone: ${userTimezone}, offset: ${timezoneOffset} min)`);
 
-      // === Daily Wird Reminder (using LOCAL time) ===
+      // === Daily Wird Reminder ===
       if (user.daily_wird_enabled && user.daily_wird_time) {
-        // Convert user's local wird time to UTC for comparison
         const wirdUTCMinutes = localTimeToUTCMinutes(user.daily_wird_time, timezoneOffset);
         
         console.log(`📖 User wird time: ${user.daily_wird_time} local = ${Math.floor(wirdUTCMinutes/60)}:${String(wirdUTCMinutes%60).padStart(2,"0")} UTC`);
@@ -160,7 +193,7 @@ serve(async (req) => {
         }
       }
 
-      // === Prayer Time Reminders (API returns local time based on coordinates) ===
+      // === Prayer Time Reminders with Adhan ===
       if (user.latitude && user.longitude && user.prayer_reminder_minutes > 0) {
         const prayerTimes = await getPrayerTimes(
           user.latitude,
@@ -169,15 +202,24 @@ serve(async (req) => {
         );
 
         if (prayerTimes) {
-          for (const [prayer, arabicName] of Object.entries(prayerNames)) {
+          const adhanSoundId = user.adhan_sound || "makkah";
+          const adhanConfig = adhanSounds[adhanSoundId] || adhanSounds.makkah;
+
+          for (const [prayer, info] of Object.entries(prayerNames)) {
+            // Check if this prayer is enabled for user
+            const prayerEnabledKey = `prayer_${info.key}_enabled` as keyof UserSettings;
+            const isPrayerEnabled = user[prayerEnabledKey] ?? true;
+            
+            if (!isPrayerEnabled) {
+              continue;
+            }
+
             const prayerTime = prayerTimes[prayer];
             if (!prayerTime) continue;
 
-            // Prayer time is already in local time from the API
             const prayerLocalMinutes = timeToMinutes(prayerTime);
             const reminderLocalMinutes = prayerLocalMinutes - user.prayer_reminder_minutes;
             
-            // Convert reminder time to UTC for comparison
             const reminderUTCMinutes = localTimeToUTCMinutes(
               `${Math.floor(reminderLocalMinutes / 60)}:${String(reminderLocalMinutes % 60).padStart(2, "0")}`,
               timezoneOffset
@@ -185,40 +227,87 @@ serve(async (req) => {
             
             if (Math.abs(currentUTCMinutes - reminderUTCMinutes) <= 1) {
               console.log(`🕌 Prayer reminder for ${prayer} matched for user ${user.user_id}`);
+              
+              // Use Fajr-specific adhan if available
+              const adhanUrl = prayer === "Fajr" && adhanConfig.fajrUrl 
+                ? adhanConfig.fajrUrl 
+                : adhanConfig.url;
+
               notifications.push({
                 user_id: user.user_id,
-                title: `🕌 صلاة ${arabicName}`,
-                body: `باقي ${user.prayer_reminder_minutes} دقيقة على صلاة ${arabicName}`,
-                tag: `prayer-${prayer.toLowerCase()}`,
+                title: `🕌 صلاة ${info.ar}`,
+                body: `باقي ${user.prayer_reminder_minutes} دقيقة على صلاة ${info.ar}`,
+                tag: `prayer-${info.key}`,
                 notification_type: "prayer",
+                data: {
+                  adhanUrl,
+                  prayerName: info.ar,
+                  prayerTime: prayerTime
+                }
               });
             }
           }
         }
       }
 
-      // === Morning Azkar (6:00 AM user's local time) ===
-      const morningAzkarUTC = localTimeToUTCMinutes("06:00", timezoneOffset);
-      if (Math.abs(currentUTCMinutes - morningAzkarUTC) <= 1) {
-        notifications.push({
-          user_id: user.user_id,
-          title: "🌅 أذكار الصباح",
-          body: "حان وقت أذكار الصباح - ابدأ يومك بذكر الله",
-          tag: "morning-azkar",
-          notification_type: "azkar",
-        });
+      // === Morning Azkar ===
+      if (user.azkar_morning_enabled) {
+        const morningTime = user.azkar_morning_time || "06:00:00";
+        const morningUTCMinutes = localTimeToUTCMinutes(morningTime.slice(0, 5), timezoneOffset);
+        if (Math.abs(currentUTCMinutes - morningUTCMinutes) <= 1) {
+          notifications.push({
+            user_id: user.user_id,
+            title: "🌅 أذكار الصباح",
+            body: "حان وقت أذكار الصباح - ابدأ يومك بذكر الله",
+            tag: "morning-azkar",
+            notification_type: "azkar",
+          });
+        }
       }
 
-      // === Evening Azkar (5:00 PM user's local time) ===
-      const eveningAzkarUTC = localTimeToUTCMinutes("17:00", timezoneOffset);
-      if (Math.abs(currentUTCMinutes - eveningAzkarUTC) <= 1) {
-        notifications.push({
-          user_id: user.user_id,
-          title: "🌙 أذكار المساء",
-          body: "حان وقت أذكار المساء - اختم يومك بذكر الله",
-          tag: "evening-azkar",
-          notification_type: "azkar",
-        });
+      // === Evening Azkar ===
+      if (user.azkar_evening_enabled) {
+        const eveningTime = user.azkar_evening_time || "17:00:00";
+        const eveningUTCMinutes = localTimeToUTCMinutes(eveningTime.slice(0, 5), timezoneOffset);
+        if (Math.abs(currentUTCMinutes - eveningUTCMinutes) <= 1) {
+          notifications.push({
+            user_id: user.user_id,
+            title: "🌙 أذكار المساء",
+            body: "حان وقت أذكار المساء - اختم يومك بذكر الله",
+            tag: "evening-azkar",
+            notification_type: "azkar",
+          });
+        }
+      }
+
+      // === Sleep Azkar ===
+      if (user.azkar_sleep_enabled) {
+        const sleepTime = user.azkar_sleep_time || "22:00:00";
+        const sleepUTCMinutes = localTimeToUTCMinutes(sleepTime.slice(0, 5), timezoneOffset);
+        if (Math.abs(currentUTCMinutes - sleepUTCMinutes) <= 1) {
+          notifications.push({
+            user_id: user.user_id,
+            title: "🌙 أذكار النوم",
+            body: "حان وقت أذكار النوم - اذكر الله قبل النوم",
+            tag: "sleep-azkar",
+            notification_type: "azkar",
+          });
+        }
+      }
+
+      // === Wakeup Azkar ===
+      if (user.azkar_wakeup_enabled) {
+        const wakeupTime = user.azkar_wakeup_time || "05:00:00";
+        const wakeupUTCMinutes = localTimeToUTCMinutes(wakeupTime.slice(0, 5), timezoneOffset);
+        if (Math.abs(currentUTCMinutes - wakeupUTCMinutes) <= 1) {
+          notifications.push({
+            user_id: user.user_id,
+            title: "🌅 أذكار الاستيقاظ",
+            body: "حان وقت أذكار الاستيقاظ - الحمد لله الذي أحيانا",
+            tag: "wakeup-azkar",
+            notification_type: "azkar",
+          });
+        }
       }
     }
 
@@ -235,7 +324,14 @@ serve(async (req) => {
               "Content-Type": "application/json",
               Authorization: `Bearer ${supabaseServiceKey}`,
             },
-            body: JSON.stringify(notification),
+            body: JSON.stringify({
+              user_id: notification.user_id,
+              title: notification.title,
+              body: notification.body,
+              tag: notification.tag,
+              notification_type: notification.notification_type,
+              data: notification.data,
+            }),
           });
 
           const result = await response.json();
