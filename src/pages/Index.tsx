@@ -12,12 +12,14 @@ import {
   Sunrise,
   ScrollText,
   Shield,
+  Library,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/Header";
 import NextPrayerWidgetEnhanced from "@/components/NextPrayerWidgetEnhanced";
 import LocationButton from "@/components/LocationButton";
+import DailyHadithCard from "@/components/DailyHadithCard";
 import { useReadingProgress } from "@/hooks/useReadingProgress";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -32,6 +34,13 @@ const Index = () => {
       description: "تصفح وقراءة جميع السور",
       link: "/quran",
       color: "bg-primary/10 text-primary",
+    },
+    {
+      icon: Library,
+      title: "الأحاديث النبوية",
+      description: "تصفح الكتب الستة",
+      link: "/hadith",
+      color: "bg-indigo-500/10 text-indigo-600",
     },
     {
       icon: BookOpen,
@@ -138,6 +147,11 @@ const Index = () => {
       </section>
 
       <main className="container mx-auto px-4 py-8 arabic-ui">
+        {/* Daily Hadith Card - Featured at top */}
+        <section className="mb-8">
+          <DailyHadithCard />
+        </section>
+
         {/* Next Prayer Widget */}
         <section className="mb-8">
           <NextPrayerWidgetEnhanced />
