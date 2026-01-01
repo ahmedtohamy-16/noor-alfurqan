@@ -19,10 +19,42 @@ const getCorsHeaders = (origin: string | null): Record<string, string> => {
   };
 };
 
+// Input validation constants
+const MAX_TOKEN_LENGTH = 500;
+const MAX_PLATFORM_LENGTH = 50;
+const VALID_PLATFORMS = ["web", "android", "ios"] as const;
+const FCM_TOKEN_PATTERN = /^[a-zA-Z0-9_:/-]+$/;
+
 interface RegisterTokenPayload {
   fcm_token: string;
-  platform?: string;
+  platform?: typeof VALID_PLATFORMS[number];
   device_info?: Record<string, unknown>;
+}
+
+// Validate FCM token format
+function validateFcmToken(token: string): boolean {
+  if (!token || typeof token !== "string") return false;
+  if (token.length > MAX_TOKEN_LENGTH) return false;
+  if (!FCM_TOKEN_PATTERN.test(token)) return false;
+  return true;
+}
+
+// Sanitize device_info to prevent large payloads
+function sanitizeDeviceInfo(info: unknown): Record<string, unknown> | null {
+  if (!info || typeof info !== "object") return null;
+  const sanitized: Record<string, unknown> = {};
+  const allowedKeys = ["userAgent", "platform", "language", "screenWidth", "screenHeight", "vendor"];
+  for (const key of allowedKeys) {
+    if (key in (info as Record<string, unknown>)) {
+      const value = (info as Record<string, unknown>)[key];
+      if (typeof value === "string" && value.length <= 500) {
+        sanitized[key] = value;
+      } else if (typeof value === "number") {
+        sanitized[key] = value;
+      }
+    }
+  }
+  return Object.keys(sanitized).length > 0 ? sanitized : null;
 }
 
 serve(async (req) => {
@@ -60,15 +92,29 @@ serve(async (req) => {
       );
     }
 
-    const payload: RegisterTokenPayload = await req.json();
-    const { fcm_token, platform = "web", device_info } = payload;
+    const rawPayload = await req.json();
+    const fcm_token = rawPayload.fcm_token;
+    const platform = rawPayload.platform || "web";
+    const device_info = rawPayload.device_info;
 
-    if (!fcm_token) {
+    // Validate FCM token
+    if (!validateFcmToken(fcm_token)) {
       return new Response(
-        JSON.stringify({ success: false, error: "fcm_token is required" }),
+        JSON.stringify({ success: false, error: "Invalid fcm_token format or length" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    // Validate platform
+    if (!VALID_PLATFORMS.includes(platform as typeof VALID_PLATFORMS[number])) {
+      return new Response(
+        JSON.stringify({ success: false, error: `platform must be one of: ${VALID_PLATFORMS.join(", ")}` }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Sanitize device info
+    const sanitizedDeviceInfo = sanitizeDeviceInfo(device_info);
 
     console.log(`📱 Registering token for user ${user.id}, platform: ${platform}`);
 
@@ -86,7 +132,7 @@ serve(async (req) => {
         .update({
           user_id: user.id,
           platform,
-          device_info,
+          device_info: sanitizedDeviceInfo,
           is_active: true,
           updated_at: new Date().toISOString(),
         })
@@ -108,7 +154,7 @@ serve(async (req) => {
         user_id: user.id,
         fcm_token,
         platform,
-        device_info,
+        device_info: sanitizedDeviceInfo,
         is_active: true,
       });
 
