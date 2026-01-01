@@ -30,6 +30,7 @@ interface UserSettings {
   azkar_wakeup_enabled: boolean;
   azkar_wakeup_time: string;
   azkar_prayer_enabled: boolean;
+  azkar_prayer_delay_minutes: number;
 }
 
 const defaultSettings: UserSettings = {
@@ -59,6 +60,7 @@ const defaultSettings: UserSettings = {
   azkar_wakeup_enabled: false,
   azkar_wakeup_time: "05:00:00",
   azkar_prayer_enabled: false,
+  azkar_prayer_delay_minutes: 10,
 };
 
 export const useUserSettings = () => {
@@ -121,6 +123,7 @@ export const useUserSettings = () => {
           azkar_wakeup_enabled: (data as any).azkar_wakeup_enabled ?? false,
           azkar_wakeup_time: (data as any).azkar_wakeup_time || "05:00:00",
           azkar_prayer_enabled: (data as any).azkar_prayer_enabled ?? false,
+          azkar_prayer_delay_minutes: (data as any).azkar_prayer_delay_minutes || 10,
         });
       }
     } catch (error) {

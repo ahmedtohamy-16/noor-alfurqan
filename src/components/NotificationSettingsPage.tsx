@@ -27,7 +27,7 @@ interface AzkarSettings {
   evening: { enabled: boolean; time: string };
   sleep: { enabled: boolean; time: string };
   wakeup: { enabled: boolean; time: string };
-  prayer: { enabled: boolean };
+  prayer: { enabled: boolean; delayMinutes: number };
 }
 
 const NotificationSettingsPage = () => {
@@ -52,7 +52,7 @@ const NotificationSettingsPage = () => {
     evening: { enabled: true, time: "17:00" },
     sleep: { enabled: false, time: "22:00" },
     wakeup: { enabled: false, time: "05:00" },
-    prayer: { enabled: false },
+    prayer: { enabled: false, delayMinutes: 10 },
   });
 
   // Load settings from database
@@ -83,7 +83,10 @@ const NotificationSettingsPage = () => {
           enabled: (settings as any).azkar_wakeup_enabled ?? false, 
           time: ((settings as any).azkar_wakeup_time || "05:00:00").slice(0, 5) 
         },
-        prayer: { enabled: (settings as any).azkar_prayer_enabled ?? false },
+        prayer: { 
+          enabled: (settings as any).azkar_prayer_enabled ?? false,
+          delayMinutes: (settings as any).azkar_prayer_delay_minutes || 10
+        },
       });
     }
   }, [settings]);
@@ -115,7 +118,7 @@ const NotificationSettingsPage = () => {
   const handleAzkarToggle = async (type: keyof AzkarSettings) => {
     if (type === "prayer") {
       const newValue = !azkarSettings.prayer.enabled;
-      setAzkarSettings(prev => ({ ...prev, prayer: { enabled: newValue } }));
+      setAzkarSettings(prev => ({ ...prev, prayer: { ...prev.prayer, enabled: newValue } }));
       await updateSettings({ azkar_prayer_enabled: newValue } as any);
     } else {
       const newValue = !azkarSettings[type].enabled;
@@ -125,6 +128,15 @@ const NotificationSettingsPage = () => {
       }));
       await updateSettings({ [`azkar_${type}_enabled`]: newValue } as any);
     }
+  };
+
+  const handlePrayerAzkarDelayChange = async (delayMinutes: number) => {
+    setAzkarSettings(prev => ({ 
+      ...prev, 
+      prayer: { ...prev.prayer, delayMinutes } 
+    }));
+    await updateSettings({ azkar_prayer_delay_minutes: delayMinutes } as any);
+    toast.success("تم تحديث وقت التنبيه");
   };
 
   const handleAzkarTimeChange = async (type: "morning" | "evening" | "sleep" | "wakeup", time: string) => {
@@ -369,18 +381,41 @@ const NotificationSettingsPage = () => {
                       ))}
 
                       {/* Prayer Azkar */}
-                      <div className="flex items-center justify-between pt-2 border-t border-border">
-                        <div className="flex items-center gap-2">
-                          <BookOpen className="w-4 h-4 text-muted-foreground" />
-                          <div>
-                            <span className="text-foreground block">أذكار بعد الصلاة</span>
-                            <span className="text-xs text-muted-foreground">تذكير بعد كل صلاة</span>
+                      <div className="space-y-2 pt-2 border-t border-border">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <BookOpen className="w-4 h-4 text-muted-foreground" />
+                            <div>
+                              <span className="text-foreground block">أذكار بعد الصلاة</span>
+                              <span className="text-xs text-muted-foreground">تذكير بعد كل صلاة</span>
+                            </div>
                           </div>
+                          <Switch
+                            checked={azkarSettings.prayer.enabled}
+                            onCheckedChange={() => handleAzkarToggle("prayer")}
+                          />
                         </div>
-                        <Switch
-                          checked={azkarSettings.prayer.enabled}
-                          onCheckedChange={() => handleAzkarToggle("prayer")}
-                        />
+                        
+                        {azkarSettings.prayer.enabled && (
+                          <div className="flex items-center gap-2 mr-6">
+                            <Clock className="w-4 h-4 text-muted-foreground" />
+                            <span className="text-sm text-muted-foreground">بعد</span>
+                            <Select 
+                              value={String(azkarSettings.prayer.delayMinutes)}
+                              onValueChange={(value) => handlePrayerAzkarDelayChange(Number(value))}
+                            >
+                              <SelectTrigger className="w-28">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="10">١٠ دقائق</SelectItem>
+                                <SelectItem value="15">١٥ دقيقة</SelectItem>
+                                <SelectItem value="20">٢٠ دقيقة</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <span className="text-sm text-muted-foreground">من وقت الصلاة</span>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </CollapsibleContent>

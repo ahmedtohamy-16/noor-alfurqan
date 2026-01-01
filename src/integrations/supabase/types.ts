@@ -716,6 +716,7 @@ export type Database = {
           azkar_evening_time: string | null
           azkar_morning_enabled: boolean | null
           azkar_morning_time: string | null
+          azkar_prayer_delay_minutes: number | null
           azkar_prayer_enabled: boolean | null
           azkar_sleep_enabled: boolean | null
           azkar_sleep_time: string | null
@@ -747,6 +748,7 @@ export type Database = {
           azkar_evening_time?: string | null
           azkar_morning_enabled?: boolean | null
           azkar_morning_time?: string | null
+          azkar_prayer_delay_minutes?: number | null
           azkar_prayer_enabled?: boolean | null
           azkar_sleep_enabled?: boolean | null
           azkar_sleep_time?: string | null
@@ -778,6 +780,7 @@ export type Database = {
           azkar_evening_time?: string | null
           azkar_morning_enabled?: boolean | null
           azkar_morning_time?: string | null
+          azkar_prayer_delay_minutes?: number | null
           azkar_prayer_enabled?: boolean | null
           azkar_sleep_enabled?: boolean | null
           azkar_sleep_time?: string | null
