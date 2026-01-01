@@ -31,6 +31,7 @@ import ProphetStoriesPage from "./pages/ProphetStoriesPage";
 import RuqyahPage from "./pages/RuqyahPage";
 import NotificationsPage from "./pages/NotificationsPage";
 import NotificationSettingsPage from "./components/NotificationSettingsPage";
+import HadithPage from "./pages/HadithPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -68,6 +69,7 @@ const App = () => (
                     <Route path="/ruqyah" element={<RuqyahPage />} />
                     <Route path="/notifications" element={<NotificationsPage />} />
                     <Route path="/notification-settings" element={<NotificationSettingsPage />} />
+                    <Route path="/hadith" element={<HadithPage />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                   <GlobalAudioPlayer />
