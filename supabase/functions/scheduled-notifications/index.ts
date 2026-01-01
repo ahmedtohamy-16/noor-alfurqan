@@ -105,6 +105,8 @@ interface UserSettings {
   azkar_sleep_time: string | null;
   azkar_wakeup_enabled: boolean;
   azkar_wakeup_time: string | null;
+  azkar_prayer_enabled: boolean;
+  azkar_prayer_delay_minutes: number;
 }
 
 interface ScheduledNotification {
@@ -145,7 +147,8 @@ serve(async (req) => {
         adhan_sound, prayer_fajr_enabled, prayer_dhuhr_enabled, prayer_asr_enabled,
         prayer_maghrib_enabled, prayer_isha_enabled,
         azkar_morning_enabled, azkar_morning_time, azkar_evening_enabled, azkar_evening_time,
-        azkar_sleep_enabled, azkar_sleep_time, azkar_wakeup_enabled, azkar_wakeup_time
+        azkar_sleep_enabled, azkar_sleep_time, azkar_wakeup_enabled, azkar_wakeup_time,
+        azkar_prayer_enabled, azkar_prayer_delay_minutes
       `)
       .eq("notifications_enabled", true);
 
@@ -307,6 +310,43 @@ serve(async (req) => {
             tag: "wakeup-azkar",
             notification_type: "azkar",
           });
+        }
+      }
+
+      // === After Prayer Azkar ===
+      if (user.azkar_prayer_enabled && user.latitude && user.longitude) {
+        const prayerTimes = await getPrayerTimes(
+          user.latitude,
+          user.longitude,
+          user.prayer_method || 4
+        );
+
+        if (prayerTimes) {
+          const delayMinutes = user.azkar_prayer_delay_minutes || 10;
+          
+          for (const [prayer, info] of Object.entries(prayerNames)) {
+            const prayerTime = prayerTimes[prayer];
+            if (!prayerTime) continue;
+
+            const prayerLocalMinutes = timeToMinutes(prayerTime);
+            const azkarLocalMinutes = prayerLocalMinutes + delayMinutes;
+            
+            const azkarUTCMinutes = localTimeToUTCMinutes(
+              `${Math.floor(azkarLocalMinutes / 60)}:${String(azkarLocalMinutes % 60).padStart(2, "0")}`,
+              timezoneOffset
+            );
+            
+            if (Math.abs(currentUTCMinutes - azkarUTCMinutes) <= 1) {
+              console.log(`📿 After prayer azkar for ${prayer} matched for user ${user.user_id}`);
+              notifications.push({
+                user_id: user.user_id,
+                title: `📿 أذكار بعد صلاة ${info.ar}`,
+                body: `حان وقت أذكار ما بعد صلاة ${info.ar}`,
+                tag: `prayer-azkar-${info.key}`,
+                notification_type: "azkar",
+              });
+            }
+          }
         }
       }
     }
