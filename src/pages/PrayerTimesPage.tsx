@@ -26,6 +26,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import Header from "@/components/Header";
+import LocationButton from "@/components/LocationButton";
 import { useUserSettings } from "@/hooks/useUserSettings";
 import { usePrayerNotifications } from "@/hooks/usePrayerNotifications";
 import { toast } from "sonner";
@@ -123,33 +124,11 @@ const getLocationByIP = async (): Promise<{ lat: number; lng: number; city: stri
 
 const PrayerTimesPage = () => {
   const { settings, updateSettings, updateLocation, requestLocation } = useUserSettings();
-  const [location, setLocation] = useState<Location | null>(null);
   const [isRequestingLocation, setIsRequestingLocation] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [calculationMethod, setCalculationMethod] = useState<number>(settings.prayer_method || 4);
 
-  useEffect(() => {
-    if (settings.latitude && settings.longitude) {
-      setLocation({
-        latitude: settings.latitude,
-        longitude: settings.longitude,
-        city: settings.city_name || undefined,
-      });
-    } else {
-      // Try IP-based location as fallback
-      getLocationByIP().then((ipLocation) => {
-        if (ipLocation) {
-          setLocation({
-            latitude: ipLocation.lat,
-            longitude: ipLocation.lng,
-            city: ipLocation.city,
-          });
-        } else {
-          setLocation(DEFAULT_LOCATION);
-        }
-      });
-    }
-  }, [settings.latitude, settings.longitude, settings.city_name]);
+  const hasLocation = settings.latitude && settings.longitude;
 
   useEffect(() => {
     if (settings.prayer_method) {
@@ -158,9 +137,9 @@ const PrayerTimesPage = () => {
   }, [settings.prayer_method]);
 
   const { data, isLoading, refetch } = useQuery({
-    queryKey: ["prayerTimes", location?.latitude, location?.longitude, selectedDate.toDateString(), calculationMethod],
-    queryFn: () => fetchPrayerTimes(location!.latitude, location!.longitude, selectedDate, calculationMethod),
-    enabled: !!location,
+    queryKey: ["prayerTimes", settings.latitude, settings.longitude, selectedDate.toDateString(), calculationMethod],
+    queryFn: () => fetchPrayerTimes(settings.latitude!, settings.longitude!, selectedDate, calculationMethod),
+    enabled: !!hasLocation,
     staleTime: 1000 * 60 * 60,
   });
 
@@ -312,11 +291,11 @@ const PrayerTimesPage = () => {
                   <div className="p-3 rounded-lg bg-muted/50">
                     <div className="flex items-center gap-2 mb-2">
                       <MapPin className="w-4 h-4 text-primary" />
-                      <span className="font-medium">{location?.city || "مكة المكرمة"}</span>
+                      <span className="font-medium">{settings.city_name || "غير محدد"}</span>
                     </div>
-                    {location && (
+                    {hasLocation && (
                       <p className="text-xs text-muted-foreground">
-                        {location.latitude.toFixed(4)}, {location.longitude.toFixed(4)}
+                        {settings.latitude?.toFixed(4)}, {settings.longitude?.toFixed(4)}
                       </p>
                     )}
                   </div>
@@ -390,7 +369,7 @@ const PrayerTimesPage = () => {
                   </div>
                   <div>
                     <p className="font-medium text-foreground">
-                      {location?.city || "مكة المكرمة"}
+                      {hasLocation ? (settings.city_name || "موقعك") : "لم يتم تحديد الموقع"}
                     </p>
                     <p className="text-xs text-muted-foreground">
                       {calculationMethods.find(m => m.id === calculationMethod)?.name || "جامعة أم القرى"}

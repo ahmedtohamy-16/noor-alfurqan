@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { useUserSettings } from "@/hooks/useUserSettings";
 import { toast } from "sonner";
-import EnhancedLocationPicker from "./EnhancedLocationPicker";
+import LocationPickerDialog from "./LocationPickerDialog";
 
 const LocationButton = () => {
   const { settings, updateLocation, requestLocation } = useUserSettings();
@@ -117,8 +117,8 @@ const LocationButton = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Enhanced Location Picker */}
-      <EnhancedLocationPicker
+      {/* Location Picker Dialog */}
+      <LocationPickerDialog
         open={showPicker}
         onOpenChange={setShowPicker}
         onLocationSelect={handleLocationSelect}
