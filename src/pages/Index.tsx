@@ -1,5 +1,18 @@
 import { Link } from "react-router-dom";
-import { Book, Clock, Star, Users, Search, ChevronLeft, BookOpen, BarChart3, Target, Sunrise, ScrollText, Shield } from "lucide-react";
+import {
+  Book,
+  Clock,
+  Star,
+  Users,
+  Search,
+  ChevronLeft,
+  BookOpen,
+  BarChart3,
+  Target,
+  Sunrise,
+  ScrollText,
+  Shield,
+} from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/Header";
@@ -30,14 +43,14 @@ const Index = () => {
     {
       icon: Sunrise,
       title: "الأذكار",
-      description: "أذكار الصباح والمساء",
+      description: "أذكار الصباح والمساء والخ",
       link: "/azkar",
       color: "bg-teal-500/10 text-teal-600",
     },
     {
       icon: Shield,
       title: "الرقية الشرعية",
-      description: "آيات وأدعية للاستشفاء",
+      description: "رُّقَى منقولة عن النبي ﷺ",
       link: "/ruqyah",
       color: "bg-rose-500/10 text-rose-600",
     },
@@ -65,7 +78,7 @@ const Index = () => {
     {
       icon: ScrollText,
       title: "قصص الأنبياء",
-      description: "قصص بلغات متعددة",
+      description: "قصص الأنبياء ومنقولة مع توضيحات وسرد من القرآن",
       link: "/prophet-stories",
       color: "bg-emerald-500/10 text-emerald-600",
     },
@@ -98,9 +111,7 @@ const Index = () => {
 
         <div className="container mx-auto px-4 text-center arabic-ui">
           <div className="max-w-2xl mx-auto">
-            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
-              نور الفرقان
-            </h1>
+            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">نور الفرقان</h1>
             <p className="text-lg md:text-xl text-muted-foreground mb-8">
               تطبيق شامل لقراءة القرآن الكريم والاستماع إليه
             </p>
@@ -165,7 +176,9 @@ const Index = () => {
             {features.map((feature) => (
               <Link key={feature.title} to={feature.link}>
                 <Card className="p-5 h-full hover:shadow-lg transition-all group cursor-pointer hover:scale-[1.02]">
-                  <div className={`w-12 h-12 rounded-xl ${feature.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
+                  <div
+                    className={`w-12 h-12 rounded-xl ${feature.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}
+                  >
                     <feature.icon className="w-6 h-6" />
                   </div>
                   <h3 className="font-bold text-foreground mb-1">{feature.title}</h3>
@@ -187,7 +200,7 @@ const Index = () => {
               </Button>
             </Link>
           </div>
-          
+
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
             {[
               { name: "الفاتحة", number: 1 },
@@ -215,12 +228,8 @@ const Index = () => {
       {/* Footer */}
       <footer className="bg-card border-t border-border py-8 mt-12">
         <div className="container mx-auto px-4 text-center arabic-ui">
-          <p className="text-muted-foreground">
-            نور الفرقان - تطبيق لقراءة القرآن الكريم
-          </p>
-          <p className="text-sm text-muted-foreground mt-2">
-            جميع الحقوق محفوظة © {new Date().getFullYear()}
-          </p>
+          <p className="text-muted-foreground">نور الفرقان - تطبيق لقراءة القرآن الكريم</p>
+          <p className="text-sm text-muted-foreground mt-2">جميع الحقوق محفوظة © {new Date().getFullYear()}</p>
         </div>
       </footer>
     </div>
