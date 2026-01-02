@@ -51,6 +51,16 @@ export const hadithBooks: HadithBook[] = [
     color: 'from-orange-500 to-amber-600'
   },
   {
+    id: 'nasai',
+    name: 'Sunan An-Nasai',
+    nameAr: 'سنن النسائي',
+    author: 'Imam An-Nasai',
+    authorAr: 'الإمام النسائي',
+    totalHadiths: 5758,
+    description: 'المجتبى من السنن',
+    color: 'from-cyan-500 to-sky-600'
+  },
+  {
     id: 'ibnmajah',
     name: 'Sunan Ibn Majah',
     nameAr: 'سنن ابن ماجه',
@@ -59,6 +69,36 @@ export const hadithBooks: HadithBook[] = [
     totalHadiths: 4342,
     description: 'من الكتب الستة',
     color: 'from-rose-500 to-pink-600'
+  },
+  {
+    id: 'malik',
+    name: 'Muwatta Malik',
+    nameAr: 'موطأ مالك',
+    author: 'Imam Malik',
+    authorAr: 'الإمام مالك بن أنس',
+    totalHadiths: 1594,
+    description: 'أول كتاب حديث مرتب',
+    color: 'from-lime-500 to-green-600'
+  },
+  {
+    id: 'ahmad',
+    name: 'Musnad Ahmad',
+    nameAr: 'مسند أحمد',
+    author: 'Imam Ahmad',
+    authorAr: 'الإمام أحمد بن حنبل',
+    totalHadiths: 26363,
+    description: 'أكبر دواوين السنة',
+    color: 'from-amber-500 to-yellow-600'
+  },
+  {
+    id: 'darimi',
+    name: 'Sunan Ad-Darimi',
+    nameAr: 'سنن الدارمي',
+    author: 'Imam Ad-Darimi',
+    authorAr: 'الإمام الدارمي',
+    totalHadiths: 3503,
+    description: 'المسند الجامع',
+    color: 'from-fuchsia-500 to-purple-600'
   }
 ];
 
