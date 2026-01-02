@@ -117,8 +117,8 @@ export const hadithBooks: HadithBook[] = [
     name: 'Musnad Ahmad',
     nameAr: 'مسند أحمد',
     folder: 'Musnad_Ahmad_Ibn-Hanbal',
-    fileWithDiacritics: 'musnad_ahmad_ibn_hanbal_ahadith_mushakkala.utf8.csv',
-    fileWithoutDiacritics: 'musnad_ahmad_ibn_hanbal_ahadith.utf8.csv',
+    fileWithDiacritics: 'musnad_ahmad_ibn-hanbal_ahadith_mushakkala.utf8.csv',
+    fileWithoutDiacritics: 'musnad_ahmad_ibn-hanbal_ahadith.utf8.csv',
     author: 'Imam Ahmad',
     authorAr: 'الإمام أحمد بن حنبل',
     totalHadiths: 27647,
@@ -131,14 +131,14 @@ export const hadithBooks: HadithBook[] = [
     name: 'Sunan Ad-Darimi',
     nameAr: 'سنن الدارمي',
     folder: 'Sunan_Al-Darimi',
-    fileWithDiacritics: 'sunan_al-darimi_ahadith_mushakkala.utf8.csv',
+    fileWithDiacritics: 'sunan_al-darimi_ahadith_mushakkala_mufassala.utf8.csv',
     fileWithoutDiacritics: 'sunan_al-darimi_ahadith.utf8.csv',
     author: 'Imam Ad-Darimi',
     authorAr: 'الإمام الدارمي',
     totalHadiths: 3503,
     description: 'المسند الجامع',
     color: 'from-fuchsia-500 to-purple-600',
-    hasElaboration: false
+    hasElaboration: true
   }
 ];
 
