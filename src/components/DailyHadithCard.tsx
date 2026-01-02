@@ -4,7 +4,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useHadith } from '@/hooks/useHadith';
-import { hadithBooks } from '@/data/hadithBooks';
+import { hadithBooks, getBookById } from '@/data/hadithBooks';
 import { 
   BookOpen, 
   RefreshCw, 
@@ -17,16 +17,22 @@ import {
 import { toast } from 'sonner';
 
 const DailyHadithCard = () => {
-  const { dailyHadith, loading, getRandomHadith } = useHadith();
-  const [currentHadith, setCurrentHadith] = useState(dailyHadith);
+  const { getRandomHadith, loading } = useHadith();
+  const [currentHadith, setCurrentHadith] = useState<any>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
 
   useEffect(() => {
-    if (dailyHadith) {
-      setCurrentHadith(dailyHadith);
-    }
-  }, [dailyHadith]);
+    loadHadith();
+  }, []);
+
+  const loadHadith = async () => {
+    setInitialLoading(true);
+    const hadith = await getRandomHadith();
+    setCurrentHadith(hadith);
+    setInitialLoading(false);
+  };
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -40,7 +46,8 @@ const DailyHadithCard = () => {
   const handleCopy = async () => {
     if (!currentHadith) return;
     
-    const text = `${currentHadith.hadith_arabic}\n\n— ${getBookName(currentHadith.book)}`;
+    const book = getBookById(currentHadith.bookId);
+    const text = `${currentHadith.text}\n\n— ${book?.nameAr || ''}`;
     
     try {
       await navigator.clipboard.writeText(text);
@@ -55,7 +62,8 @@ const DailyHadithCard = () => {
   const handleShare = async () => {
     if (!currentHadith) return;
     
-    const text = `${currentHadith.hadith_arabic}\n\n— ${getBookName(currentHadith.book)}`;
+    const book = getBookById(currentHadith.bookId);
+    const text = `${currentHadith.text}\n\n— ${book?.nameAr || ''}`;
     
     if (navigator.share) {
       try {
@@ -71,12 +79,7 @@ const DailyHadithCard = () => {
     }
   };
 
-  const getBookName = (bookId: string) => {
-    const book = hadithBooks.find(b => b.id === bookId);
-    return book?.nameAr || bookId;
-  };
-
-  if (loading && !currentHadith) {
+  if (initialLoading && !currentHadith) {
     return (
       <Card className="p-6 bg-gradient-to-br from-primary/5 via-background to-accent/5 border-primary/20">
         <div className="space-y-4">
@@ -105,7 +108,7 @@ const DailyHadithCard = () => {
             <div>
               <h3 className="text-lg font-bold text-foreground">حديث اليوم</h3>
               <p className="text-sm text-muted-foreground">
-                {currentHadith ? getBookName(currentHadith.book) : ''}
+                {currentHadith ? getBookById(currentHadith.bookId)?.nameAr : ''}
               </p>
             </div>
           </div>
@@ -147,7 +150,7 @@ const DailyHadithCard = () => {
                 ❝
               </div>
               <p className="quran-text text-lg md:text-xl leading-loose pr-6 text-foreground">
-                {currentHadith.hadith_arabic}
+                {currentHadith.text}
               </p>
               <div className="absolute -left-2 bottom-0 text-6xl text-primary/10 font-serif leading-none rotate-180">
                 ❝
@@ -155,9 +158,9 @@ const DailyHadithCard = () => {
             </div>
 
             {/* Narrator */}
-            {currentHadith.narrator_arabic && (
+            {currentHadith.narrator && (
               <p className="text-sm text-muted-foreground text-right">
-                الراوي: {currentHadith.narrator_arabic}
+                الراوي: {currentHadith.narrator}
               </p>
             )}
           </div>
@@ -166,7 +169,7 @@ const DailyHadithCard = () => {
         {/* Footer */}
         <div className="flex items-center justify-between mt-6 pt-4 border-t border-border/50">
           <p className="text-xs text-muted-foreground">
-            {currentHadith && `رقم الحديث: ${currentHadith.hadith_id || currentHadith.id}`}
+            {currentHadith && `رقم الحديث: ${currentHadith.hadithNumber || currentHadith.id}`}
           </p>
           <Link to="/hadith">
             <Button variant="ghost" size="sm" className="gap-2 group-hover:bg-primary/10">
