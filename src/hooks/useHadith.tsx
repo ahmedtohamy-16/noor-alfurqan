@@ -1,12 +1,51 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Hadith, hadithBooks } from '@/data/hadithBooks';
+import { supabase } from '@/integrations/supabase/client';
 
-const HADITH_API_BASE = 'https://hadithapi.pages.dev/api';
+const getSupabaseUrl = () => {
+  return import.meta.env.VITE_SUPABASE_URL || 'https://xjbykaphnxiyocmkurpo.supabase.co';
+};
 
 export const useHadith = () => {
   const [dailyHadith, setDailyHadith] = useState<Hadith | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const getFallbackHadith = (): Hadith => ({
+    id: 1,
+    hadith_id: 1,
+    book: 'bukhari',
+    hadith_arabic: 'عَنْ عُمَرَ بْنِ الْخَطَّابِ رَضِيَ اللَّهُ عَنْهُ قَالَ: سَمِعْتُ رَسُولَ اللَّهِ صَلَّى اللَّهُ عَلَيْهِ وَسَلَّمَ يَقُولُ: «إِنَّمَا الْأَعْمَالُ بِالنِّيَّاتِ، وَإِنَّمَا لِكُلِّ امْرِئٍ مَا نَوَى، فَمَنْ كَانَتْ هِجْرَتُهُ إِلَى دُنْيَا يُصِيبُهَا أَوْ إِلَى امْرَأَةٍ يَنْكِحُهَا فَهِجْرَتُهُ إِلَى مَا هَاجَرَ إِلَيْهِ»',
+    hadith_english: "Umar ibn Al-Khattab (may Allah be pleased with him) narrated: I heard the Messenger of Allah (peace be upon him) say: Actions are but by intentions, and every person will have only what they intended.",
+    narrator_arabic: 'عمر بن الخطاب رضي الله عنه'
+  });
+
+  // Fetch via edge function (to bypass CORS)
+  const fetchFromApi = async (path: string): Promise<any> => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+      
+      const response = await fetch(
+        `${getSupabaseUrl()}/functions/v1/hadith-api?path=${encodeURIComponent(path)}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('فشل في جلب البيانات');
+      }
+
+      return await response.json();
+    } catch (err) {
+      console.error('API Error:', err);
+      throw err;
+    }
+  };
 
   // Get a random hadith for daily display
   const fetchDailyHadith = useCallback(async () => {
@@ -14,34 +53,18 @@ export const useHadith = () => {
     setError(null);
     
     try {
-      // Use date to generate a consistent daily hadith
       const today = new Date();
       const dayOfYear = Math.floor((today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / 86400000);
       
-      // Rotate through books and hadiths based on day
       const bookIndex = dayOfYear % hadithBooks.length;
       const book = hadithBooks[bookIndex];
       const hadithNumber = (dayOfYear % 100) + 1;
       
-      const response = await fetch(`${HADITH_API_BASE}/${book.id}/${hadithNumber}`);
-      
-      if (!response.ok) {
-        throw new Error('فشل في جلب الحديث');
-      }
-      
-      const data = await response.json();
+      const data = await fetchFromApi(`${book.id}/${hadithNumber}`);
       setDailyHadith(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'حدث خطأ');
-      // Fallback to a default hadith
-      setDailyHadith({
-        id: 1,
-        hadith_id: 1,
-        book: 'bukhari',
-        hadith_arabic: 'عَنْ عُمَرَ بْنِ الْخَطَّابِ رَضِيَ اللَّهُ عَنْهُ قَالَ: سَمِعْتُ رَسُولَ اللَّهِ صَلَّى اللَّهُ عَلَيْهِ وَسَلَّمَ يَقُولُ: «إِنَّمَا الْأَعْمَالُ بِالنِّيَّاتِ، وَإِنَّمَا لِكُلِّ امْرِئٍ مَا نَوَى، فَمَنْ كَانَتْ هِجْرَتُهُ إِلَى دُنْيَا يُصِيبُهَا أَوْ إِلَى امْرَأَةٍ يَنْكِحُهَا فَهِجْرَتُهُ إِلَى مَا هَاجَرَ إِلَيْهِ»',
-        hadith_english: "Umar ibn Al-Khattab (may Allah be pleased with him) narrated: I heard the Messenger of Allah (peace be upon him) say: Actions are but by intentions, and every person will have only what they intended. So whoever migration was for Allah and His Messenger, then their migration was for Allah and His Messenger. And whoever migration was for worldly gain or a woman to marry, then their migration was for what they migrated for.",
-        narrator_arabic: 'عمر بن الخطاب رضي الله عنه'
-      });
+      setDailyHadith(getFallbackHadith());
     } finally {
       setLoading(false);
     }
@@ -56,13 +79,7 @@ export const useHadith = () => {
       const startId = (page - 1) * limit + 1;
       const endId = page * limit;
       
-      const response = await fetch(`${HADITH_API_BASE}/${bookId}?start=${startId}&end=${endId}`);
-      
-      if (!response.ok) {
-        throw new Error('فشل في جلب الأحاديث');
-      }
-      
-      const data = await response.json();
+      const data = await fetchFromApi(`${bookId}?start=${startId}&end=${endId}`);
       return data;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'حدث خطأ');
@@ -78,13 +95,7 @@ export const useHadith = () => {
     setError(null);
     
     try {
-      const response = await fetch(`${HADITH_API_BASE}/${bookId}/${hadithId}`);
-      
-      if (!response.ok) {
-        throw new Error('فشل في جلب الحديث');
-      }
-      
-      const data = await response.json();
+      const data = await fetchFromApi(`${bookId}/${hadithId}`);
       return data;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'حدث خطأ');
@@ -100,18 +111,12 @@ export const useHadith = () => {
     setError(null);
     
     try {
-      let url = `${HADITH_API_BASE}/search?q=${encodeURIComponent(query)}`;
+      let path = `search?q=${encodeURIComponent(query)}`;
       if (bookId) {
-        url += `&collection=${bookId}`;
+        path += `&collection=${bookId}`;
       }
       
-      const response = await fetch(url);
-      
-      if (!response.ok) {
-        throw new Error('فشل في البحث');
-      }
-      
-      const data = await response.json();
+      const data = await fetchFromApi(path);
       return data;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'حدث خطأ');

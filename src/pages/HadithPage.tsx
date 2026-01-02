@@ -7,8 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { Progress } from '@/components/ui/progress';
 import { useHadith } from '@/hooks/useHadith';
+import { useHadithOffline } from '@/hooks/useHadithOffline';
 import { hadithBooks, Hadith } from '@/data/hadithBooks';
 import { 
   Search, 
@@ -21,13 +22,28 @@ import {
   RefreshCw,
   Sparkles,
   Library,
-  Star
+  Star,
+  Download,
+  Trash2,
+  CheckCircle,
+  Loader2,
+  WifiOff
 } from 'lucide-react';
 import { toast } from 'sonner';
 
 const HadithPage = () => {
   const navigate = useNavigate();
-  const { fetchHadithsByBook, searchHadiths, getRandomHadith, loading } = useHadith();
+  const { searchHadiths, getRandomHadith, loading } = useHadith();
+  const { 
+    downloading, 
+    downloadProgress, 
+    downloadedBooks, 
+    checkDownloadedBooks, 
+    downloadBook, 
+    getHadiths,
+    deleteBook,
+    isDownloaded 
+  } = useHadithOffline();
   
   const [selectedBook, setSelectedBook] = useState(hadithBooks[0].id);
   const [hadiths, setHadiths] = useState<Hadith[]>([]);
@@ -38,19 +54,27 @@ const HadithPage = () => {
   const [copiedId, setCopiedId] = useState<number | null>(null);
   const [randomHadith, setRandomHadith] = useState<Hadith | null>(null);
   const [loadingRandom, setLoadingRandom] = useState(false);
+  const [loadingHadiths, setLoadingHadiths] = useState(false);
 
   const ITEMS_PER_PAGE = 10;
+
+  useEffect(() => {
+    checkDownloadedBooks();
+  }, [checkDownloadedBooks]);
 
   useEffect(() => {
     loadHadiths();
   }, [selectedBook, currentPage]);
 
   const loadHadiths = async () => {
-    const data = await fetchHadithsByBook(selectedBook, currentPage, ITEMS_PER_PAGE);
-    if (Array.isArray(data)) {
+    setLoadingHadiths(true);
+    try {
+      const data = await getHadiths(selectedBook, currentPage, ITEMS_PER_PAGE);
       setHadiths(data);
-    } else if (data?.hadiths) {
-      setHadiths(data.hadiths);
+    } catch (error) {
+      console.error('Error loading hadiths:', error);
+    } finally {
+      setLoadingHadiths(false);
     }
   };
 
@@ -106,8 +130,14 @@ const HadithPage = () => {
     return book?.nameAr || bookId;
   };
 
-  const getBookInfo = (bookId: string) => {
-    return hadithBooks.find(b => b.id === bookId);
+  const handleDownload = async (bookId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    await downloadBook(bookId);
+  };
+
+  const handleDelete = async (bookId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    await deleteBook(bookId);
   };
 
   return (
@@ -230,32 +260,85 @@ const HadithPage = () => {
 
           {/* Books Grid */}
           <section className="mb-12">
-            <h2 className="text-2xl font-bold text-foreground mb-6">الكتب المتوفرة</h2>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-foreground">الكتب المتوفرة</h2>
+              {downloadedBooks.length > 0 && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <WifiOff className="w-4 h-4" />
+                  <span>{downloadedBooks.length} كتب متاحة بدون انترنت</span>
+                </div>
+              )}
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
-              {hadithBooks.map((book) => (
-                <Card
-                  key={book.id}
-                  className={`p-5 cursor-pointer transition-all hover:shadow-lg hover:scale-[1.02] ${
-                    selectedBook === book.id ? 'ring-2 ring-primary' : ''
-                  }`}
-                  onClick={() => {
-                    setSelectedBook(book.id);
-                    setCurrentPage(1);
-                    setSearchResults([]);
-                    setSearchQuery('');
-                  }}
-                >
-                  <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${book.color} flex items-center justify-center mb-4`}>
-                    <BookOpen className="w-6 h-6 text-white" />
-                  </div>
-                  <h3 className="font-bold text-foreground mb-1">{book.nameAr}</h3>
-                  <p className="text-sm text-muted-foreground mb-2">{book.authorAr}</p>
-                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                    <Star className="w-3 h-3 fill-accent text-accent" />
-                    <span>{book.totalHadiths.toLocaleString('ar-EG')} حديث</span>
-                  </div>
-                </Card>
-              ))}
+              {hadithBooks.map((book) => {
+                const bookDownloaded = isDownloaded(book.id);
+                const isDownloading = downloading === book.id;
+
+                return (
+                  <Card
+                    key={book.id}
+                    className={`relative p-5 cursor-pointer transition-all hover:shadow-lg hover:scale-[1.02] ${
+                      selectedBook === book.id ? 'ring-2 ring-primary' : ''
+                    }`}
+                    onClick={() => {
+                      setSelectedBook(book.id);
+                      setCurrentPage(1);
+                      setSearchResults([]);
+                      setSearchQuery('');
+                    }}
+                  >
+                    {/* Download Status Badge */}
+                    {bookDownloaded && (
+                      <div className="absolute top-2 left-2 bg-green-500/10 text-green-600 rounded-full p-1">
+                        <CheckCircle className="w-4 h-4" />
+                      </div>
+                    )}
+
+                    <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${book.color} flex items-center justify-center mb-4`}>
+                      <BookOpen className="w-6 h-6 text-white" />
+                    </div>
+                    <h3 className="font-bold text-foreground mb-1">{book.nameAr}</h3>
+                    <p className="text-sm text-muted-foreground mb-2">{book.authorAr}</p>
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground mb-3">
+                      <Star className="w-3 h-3 fill-accent text-accent" />
+                      <span>{book.totalHadiths.toLocaleString('ar-EG')} حديث</span>
+                    </div>
+
+                    {/* Download/Delete Button */}
+                    {isDownloading ? (
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-sm text-primary">
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <span>جاري التنزيل...</span>
+                        </div>
+                        <Progress value={downloadProgress} className="h-2" />
+                        <span className="text-xs text-muted-foreground">{downloadProgress}%</span>
+                      </div>
+                    ) : bookDownloaded ? (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full gap-2 text-destructive hover:text-destructive hover:bg-destructive/10"
+                        onClick={(e) => handleDelete(book.id, e)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        حذف من التنزيلات
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full gap-2"
+                        onClick={(e) => handleDownload(book.id, e)}
+                        disabled={!!downloading}
+                      >
+                        <Download className="w-4 h-4" />
+                        تنزيل للقراءة بدون نت
+                      </Button>
+                    )}
+                  </Card>
+                );
+              })}
             </div>
           </section>
 
@@ -277,9 +360,17 @@ const HadithPage = () => {
 
               <TabsContent value="browse">
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl font-bold text-foreground">
-                    {getBookName(selectedBook)}
-                  </h2>
+                  <div className="flex items-center gap-3">
+                    <h2 className="text-xl font-bold text-foreground">
+                      {getBookName(selectedBook)}
+                    </h2>
+                    {isDownloaded(selectedBook) && (
+                      <span className="flex items-center gap-1 text-xs text-green-600 bg-green-500/10 px-2 py-1 rounded-full">
+                        <WifiOff className="w-3 h-3" />
+                        متاح بدون نت
+                      </span>
+                    )}
+                  </div>
                   <div className="flex items-center gap-2">
                     <Button
                       variant="outline"
@@ -303,7 +394,7 @@ const HadithPage = () => {
                   </div>
                 </div>
 
-                {loading ? (
+                {loadingHadiths ? (
                   <div className="space-y-4">
                     {[...Array(5)].map((_, i) => (
                       <Card key={i} className="p-6">
@@ -312,6 +403,23 @@ const HadithPage = () => {
                       </Card>
                     ))}
                   </div>
+                ) : hadiths.length === 0 ? (
+                  <Card className="p-12 text-center">
+                    <BookOpen className="w-16 h-16 mx-auto text-muted-foreground/30 mb-4" />
+                    <h3 className="text-lg font-semibold text-foreground mb-2">لا توجد أحاديث</h3>
+                    <p className="text-muted-foreground mb-4">
+                      قم بتنزيل الكتاب لتصفحه بدون انترنت
+                    </p>
+                    {!isDownloaded(selectedBook) && !downloading && (
+                      <Button 
+                        onClick={(e) => handleDownload(selectedBook, e)}
+                        className="gap-2"
+                      >
+                        <Download className="w-4 h-4" />
+                        تنزيل {getBookName(selectedBook)}
+                      </Button>
+                    )}
+                  </Card>
                 ) : (
                   <div className="space-y-4">
                     {hadiths.map((hadith, index) => (
