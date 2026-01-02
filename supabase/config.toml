@@ -14,3 +14,6 @@ verify_jwt = true
 
 [functions.prophet-story-audio]
 verify_jwt = true
+
+[functions.hadith-api]
+verify_jwt = false
