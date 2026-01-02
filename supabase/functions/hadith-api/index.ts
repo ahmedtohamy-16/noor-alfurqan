@@ -7,7 +7,7 @@ const corsHeaders = {
 
 const GITHUB_RAW_BASE = 'https://raw.githubusercontent.com/halimbahae/Hadith/main';
 
-// Book folder mappings
+// Correct file mappings based on actual GitHub repo
 const bookMappings: Record<string, { folder: string; fileWithDiacritics: string; fileWithoutDiacritics: string }> = {
   bukhari: {
     folder: 'Sahih_Al-Bukhari',
@@ -46,17 +46,17 @@ const bookMappings: Record<string, { folder: string; fileWithDiacritics: string;
   },
   ahmad: {
     folder: 'Musnad_Ahmad_Ibn-Hanbal',
-    fileWithDiacritics: 'musnad_ahmad_ibn_hanbal_ahadith_mushakkala.utf8.csv',
-    fileWithoutDiacritics: 'musnad_ahmad_ibn_hanbal_ahadith.utf8.csv'
+    fileWithDiacritics: 'musnad_ahmad_ibn-hanbal_ahadith_mushakkala.utf8.csv',
+    fileWithoutDiacritics: 'musnad_ahmad_ibn-hanbal_ahadith.utf8.csv'
   },
   darimi: {
     folder: 'Sunan_Al-Darimi',
-    fileWithDiacritics: 'sunan_al-darimi_ahadith_mushakkala.utf8.csv',
+    fileWithDiacritics: 'sunan_al-darimi_ahadith_mushakkala_mufassala.utf8.csv',
     fileWithoutDiacritics: 'sunan_al-darimi_ahadith.utf8.csv'
   }
 };
 
-// Simple CSV parser that handles the specific format
+// CSV parser that handles different separators
 function parseCSV(csvText: string): string[][] {
   const lines = csvText.split('\n');
   const result: string[][] = [];
@@ -64,7 +64,6 @@ function parseCSV(csvText: string): string[][] {
   for (const line of lines) {
     if (!line.trim()) continue;
     
-    // Split by tab or semicolon (common separators in these files)
     let fields: string[];
     if (line.includes('\t')) {
       fields = line.split('\t');
@@ -80,7 +79,7 @@ function parseCSV(csvText: string): string[][] {
   return result;
 }
 
-// Fetch and parse hadiths from GitHub
+// Fetch hadiths from GitHub
 async function fetchHadiths(bookId: string, start: number, limit: number, withDiacritics: boolean = true) {
   const mapping = bookMappings[bookId];
   if (!mapping) {
@@ -100,6 +99,7 @@ async function fetchHadiths(bookId: string, start: number, limit: number, withDi
   });
 
   if (!response.ok) {
+    console.error(`Failed to fetch ${url}: ${response.status} ${response.statusText}`);
     throw new Error(`Failed to fetch: ${response.status} ${response.statusText}`);
   }
 
@@ -113,17 +113,11 @@ async function fetchHadiths(bookId: string, start: number, limit: number, withDi
   const end = Math.min(start + limit, dataRows.length);
   const paginatedRows = dataRows.slice(start, end);
   
-  // Parse hadiths based on book type (with or without elaboration)
+  // Parse hadiths
   const hadiths = paginatedRows.map((row, index) => {
-    // Format varies by book:
-    // With elaboration: id, narrator, hadith_text, elaboration
-    // Without elaboration: id, hadith_text
-    // Some have: id, narrator, text
-    
     const hadithNumber = parseInt(row[0]) || (start + index + 1);
     
     if (row.length >= 4) {
-      // With elaboration format
       return {
         id: start + index + 1,
         bookId,
@@ -133,7 +127,6 @@ async function fetchHadiths(bookId: string, start: number, limit: number, withDi
         elaboration: row[3] || ''
       };
     } else if (row.length >= 3) {
-      // Narrator + text format
       return {
         id: start + index + 1,
         bookId,
@@ -142,7 +135,6 @@ async function fetchHadiths(bookId: string, start: number, limit: number, withDi
         text: row[2] || ''
       };
     } else {
-      // Simple format
       return {
         id: start + index + 1,
         bookId,
@@ -160,14 +152,13 @@ async function fetchHadiths(bookId: string, start: number, limit: number, withDi
   };
 }
 
-// Search within hadiths
+// Search hadiths
 async function searchHadiths(bookId: string, query: string, limit: number = 50) {
   const mapping = bookMappings[bookId];
   if (!mapping) {
     throw new Error(`Unknown book: ${bookId}`);
   }
 
-  // Use non-diacritics file for search
   const url = `${GITHUB_RAW_BASE}/${mapping.folder}/${mapping.fileWithoutDiacritics}`;
   
   console.log(`Searching in: ${url}`);
@@ -187,7 +178,6 @@ async function searchHadiths(bookId: string, query: string, limit: number = 50) 
   const rows = parseCSV(csvText);
   const dataRows = rows.slice(1);
   
-  // Search for query in the text
   const normalizedQuery = query.toLowerCase();
   const results: any[] = [];
   
