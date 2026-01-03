@@ -1,47 +1,65 @@
 import { useState, useEffect, createContext, useContext, ReactNode } from "react";
-import { User, Session } from "@supabase/supabase-js";
-import { supabase } from "@/integrations/supabase/client";
+import { 
+  onAuthChange, 
+  signIn, 
+  signUp, 
+  signOut as firebaseSignOut, 
+  getCurrentUser,
+  FirebaseUser 
+} from "@/lib/firebase";
 
 interface AuthContextType {
-  user: User | null;
-  session: Session | null;
+  user: FirebaseUser | null;
   isLoading: boolean;
+  signIn: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string, username?: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<FirebaseUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        setIsLoading(false);
-      }
-    );
+    // Check for existing user
+    const currentUser = getCurrentUser();
+    if (currentUser) {
+      setUser(currentUser);
+    }
 
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
+    // Listen for auth state changes
+    const unsubscribe = onAuthChange((firebaseUser) => {
+      setUser(firebaseUser);
       setIsLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => unsubscribe();
   }, []);
 
-  const signOut = async () => {
-    await supabase.auth.signOut();
+  const handleSignIn = async (email: string, password: string) => {
+    await signIn(email, password);
+  };
+
+  const handleSignUp = async (email: string, password: string, username?: string) => {
+    await signUp(email, password, username);
+  };
+
+  const handleSignOut = async () => {
+    await firebaseSignOut();
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, isLoading, signOut }}>
+    <AuthContext.Provider 
+      value={{ 
+        user, 
+        isLoading, 
+        signIn: handleSignIn, 
+        signUp: handleSignUp, 
+        signOut: handleSignOut 
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

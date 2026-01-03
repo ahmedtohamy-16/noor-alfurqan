@@ -1,7 +1,13 @@
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { toast } from "sonner";
+import { 
+  firestoreQuery, 
+  firestoreSet, 
+  firestoreDelete, 
+  COLLECTIONS,
+  Timestamp 
+} from "@/lib/firebase";
 
 interface Favorite {
   id: string;
@@ -25,13 +31,12 @@ export const useFavorites = () => {
     }
 
     try {
-      const { data, error } = await supabase
-        .from("favorites")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
+      const data = await firestoreQuery<Favorite>(
+        COLLECTIONS.FAVORITES,
+        [{ field: "user_id", op: "==", value: user.uid }],
+        "created_at",
+        "desc"
+      );
       setFavorites(data || []);
     } catch (error) {
       console.error("Error fetching favorites:", error);
@@ -47,7 +52,7 @@ export const useFavorites = () => {
       setFavorites([]);
       setIsLoading(false);
     }
-  }, [user?.id]);
+  }, [user?.uid]);
 
   const addFavorite = async (
     surahNumber: number,
@@ -61,21 +66,25 @@ export const useFavorites = () => {
     }
 
     try {
-      const { error } = await supabase.from("favorites").insert({
-        user_id: user.id,
+      // Check if already exists
+      const existing = favorites.find(
+        f => f.surah_number === surahNumber && f.ayah_number === ayahNumber
+      );
+      
+      if (existing) {
+        toast.info("الآية موجودة بالفعل في المفضلة");
+        return false;
+      }
+
+      const docId = `${user.uid}_${surahNumber}_${ayahNumber}`;
+      await firestoreSet(COLLECTIONS.FAVORITES, docId, {
+        user_id: user.uid,
         surah_number: surahNumber,
         surah_name: surahName,
         ayah_number: ayahNumber,
         ayah_text: ayahText,
+        created_at: new Date().toISOString(),
       });
-
-      if (error) {
-        if (error.code === "23505") {
-          toast.info("الآية موجودة بالفعل في المفضلة");
-          return false;
-        }
-        throw error;
-      }
 
       toast.success("تمت إضافة الآية للمفضلة");
       await fetchFavorites();
@@ -91,14 +100,8 @@ export const useFavorites = () => {
     if (!user) return false;
 
     try {
-      const { error } = await supabase
-        .from("favorites")
-        .delete()
-        .eq("user_id", user.id)
-        .eq("surah_number", surahNumber)
-        .eq("ayah_number", ayahNumber);
-
-      if (error) throw error;
+      const docId = `${user.uid}_${surahNumber}_${ayahNumber}`;
+      await firestoreDelete(COLLECTIONS.FAVORITES, docId);
 
       toast.success("تمت إزالة الآية من المفضلة");
       await fetchFavorites();

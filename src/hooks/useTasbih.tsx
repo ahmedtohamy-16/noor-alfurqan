@@ -1,6 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
+import { 
+  firestoreSet, 
+  firestoreQuery, 
+  COLLECTIONS 
+} from "@/lib/firebase";
 
 export interface TasbihStats {
   totalCount: number;
@@ -29,7 +33,6 @@ export const useTasbih = () => {
   useEffect(() => {
     const loadStats = async () => {
       if (!user) {
-        // Load from localStorage
         const stored = localStorage.getItem("tasbihStats");
         if (stored) {
           const parsed = JSON.parse(stored);
@@ -44,33 +47,34 @@ export const useTasbih = () => {
 
       setIsLoading(true);
       
-      // Get today's tasbih
-      const { data: todayData } = await supabase
-        .from("tasbih_stats")
-        .select("*")
-        .eq("user_id", user.id)
-        .eq("session_date", today);
+      try {
+        // Get all tasbih stats for user
+        const allData = await firestoreQuery<any>(
+          COLLECTIONS.TASBIH_STATS,
+          [{ field: "user_id", op: "==", value: user.uid }]
+        );
 
-      // Get all time stats
-      const { data: allData } = await supabase
-        .from("tasbih_stats")
-        .select("*")
-        .eq("user_id", user.id);
+        // Get today's stats
+        const todayData = allData.filter(d => d.session_date === today);
 
-      const todayCount = todayData?.reduce((sum, d) => sum + (d.count || 0), 0) || 0;
-      const totalCount = allData?.reduce((sum, d) => sum + (d.count || 0), 0) || 0;
+        const todayCount = todayData.reduce((sum, d) => sum + (d.count || 0), 0);
+        const totalCount = allData.reduce((sum, d) => sum + (d.count || 0), 0);
 
-      // Group by dhikr type
-      const dhikrMap = new Map<string, number>();
-      allData?.forEach((d) => {
-        const current = dhikrMap.get(d.dhikr_type || "سبحان الله") || 0;
-        dhikrMap.set(d.dhikr_type || "سبحان الله", current + (d.count || 0));
-      });
+        // Group by dhikr type
+        const dhikrMap = new Map<string, number>();
+        allData.forEach((d) => {
+          const current = dhikrMap.get(d.dhikr_type || "سبحان الله") || 0;
+          dhikrMap.set(d.dhikr_type || "سبحان الله", current + (d.count || 0));
+        });
 
-      const dhikrTypes = Array.from(dhikrMap.entries()).map(([type, count]) => ({ type, count }));
+        const dhikrTypes = Array.from(dhikrMap.entries()).map(([type, count]) => ({ type, count }));
 
-      setStats({ totalCount, todayCount, dhikrTypes });
-      setIsLoading(false);
+        setStats({ totalCount, todayCount, dhikrTypes });
+      } catch (error) {
+        console.error("Error loading stats:", error);
+      } finally {
+        setIsLoading(false);
+      }
     };
 
     loadStats();
@@ -79,7 +83,6 @@ export const useTasbih = () => {
   const increment = useCallback(() => {
     setCount((prev) => prev + 1);
     
-    // Vibration feedback if supported
     if (navigator.vibrate) {
       navigator.vibrate(10);
     }
@@ -96,14 +99,15 @@ export const useTasbih = () => {
     const newTotalCount = stats.totalCount + count;
 
     if (user) {
-      await supabase.from("tasbih_stats").insert({
-        user_id: user.id,
+      const docId = `${user.uid}_${today}_${Date.now()}`;
+      await firestoreSet(COLLECTIONS.TASBIH_STATS, docId, {
+        user_id: user.uid,
         count,
         dhikr_type: currentDhikr,
         session_date: today,
+        created_at: new Date().toISOString(),
       });
     } else {
-      // Save to localStorage
       const stored = localStorage.getItem("tasbihStats");
       const parsed = stored ? JSON.parse(stored) : { totalCount: 0, todayCount: 0, dhikrTypes: [] };
       
@@ -129,7 +133,6 @@ export const useTasbih = () => {
   }, [count, currentDhikr, stats, today, user]);
 
   const changeDhikr = useCallback((dhikr: string) => {
-    // Save current session before changing
     if (count > 0) {
       saveSession();
     }

@@ -7,7 +7,7 @@ import { reciters, type Reciter } from '@/data/reciters';
 import { cn } from '@/lib/utils';
 import { useGlobalAudio } from '@/hooks/useGlobalAudio';
 import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
+import { firestoreGet, firestoreSet, COLLECTIONS } from '@/lib/firebase';
 import { toast } from 'sonner';
 
 interface ReciterSettingsPanelProps {
@@ -38,11 +38,7 @@ const ReciterSettingsPanel = ({ surahNumber, surahName }: ReciterSettingsPanelPr
   useEffect(() => {
     const loadReciter = async () => {
       if (user) {
-        const { data } = await supabase
-          .from('user_reading_settings')
-          .select('selected_reciter')
-          .eq('user_id', user.id)
-          .single();
+        const data = await firestoreGet<any>(COLLECTIONS.USER_READING_SETTINGS, user.uid);
         
         if (data?.selected_reciter) {
           const reciter = reciters.find(r => r.id === data.selected_reciter);
@@ -64,13 +60,10 @@ const ReciterSettingsPanel = ({ surahNumber, surahName }: ReciterSettingsPanelPr
     
     // Save to database
     if (user) {
-      await supabase
-        .from('user_reading_settings')
-        .upsert({
-          user_id: user.id,
-          selected_reciter: reciter.id,
-          updated_at: new Date().toISOString(),
-        }, { onConflict: 'user_id' });
+      await firestoreSet(COLLECTIONS.USER_READING_SETTINGS, user.uid, {
+        user_id: user.uid,
+        selected_reciter: reciter.id,
+      });
     }
     
     // Save to localStorage
@@ -97,7 +90,6 @@ const ReciterSettingsPanel = ({ surahNumber, surahName }: ReciterSettingsPanelPr
   };
 
   const estimateSurahSize = (surahNum: number): string => {
-    // Rough estimates based on typical MP3 sizes
     const sizes: Record<number, number> = {
       1: 0.5, 2: 85, 3: 45, 4: 40, 5: 35, 6: 30, 7: 45, 8: 15, 9: 35, 10: 20,
     };
@@ -144,16 +136,13 @@ const ReciterSettingsPanel = ({ surahNumber, surahName }: ReciterSettingsPanelPr
         }
       }
       
-      // Store in IndexedDB or cache for offline use
       const blob = new Blob(chunks, { type: 'audio/mpeg' });
       const cacheKey = `quran-audio-${reciter.id}-${surahNumber}`;
       
-      // Store in Cache API
       const cache = await caches.open('quran-audio');
       const cacheResponse = new Response(blob);
       await cache.put(cacheKey, cacheResponse);
       
-      // Update offline reciters set
       const newOffline = new Set(offlineReciters);
       newOffline.add(`${reciter.id}-${surahNumber}`);
       setOfflineReciters(newOffline);

@@ -19,9 +19,16 @@ import {
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import Header from "@/components/Header";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { 
+  firestoreQuery, 
+  firestoreSet, 
+  firestoreDelete, 
+  COLLECTIONS,
+  getFirestoreDb
+} from "@/lib/firebase";
+import { collection, getDocs, query, orderBy } from "firebase/firestore";
 
 interface UserProfile {
   id: string;
@@ -79,122 +86,157 @@ const AdminPage = () => {
       return;
     }
 
-    const { data, error } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", user.id)
-      .eq("role", "admin")
-      .single();
+    try {
+      const roles = await firestoreQuery<any>(
+        'user_roles',
+        [
+          { field: "user_id", op: "==", value: user.uid },
+          { field: "role", op: "==", value: "admin" }
+        ]
+      );
 
-    if (error || !data) {
-      toast.error("ليس لديك صلاحية الوصول");
+      if (roles.length === 0) {
+        toast.error("ليس لديك صلاحية الوصول");
+        navigate("/");
+        return;
+      }
+
+      setIsAdmin(true);
+      await Promise.all([fetchUsers(), fetchBlockedUsers(), fetchStats()]);
+      setIsLoading(false);
+    } catch (error) {
+      console.error("Error checking admin:", error);
       navigate("/");
-      return;
     }
-
-    setIsAdmin(true);
-    await Promise.all([fetchUsers(), fetchBlockedUsers(), fetchStats()]);
-    setIsLoading(false);
   };
 
   const fetchUsers = async () => {
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .order("created_at", { ascending: false });
-
-    if (!error && data) {
+    try {
+      const db = getFirestoreDb();
+      const q = query(collection(db, COLLECTIONS.PROFILES), orderBy("created_at", "desc"));
+      const snapshot = await getDocs(q);
+      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as UserProfile));
       setUsers(data);
+    } catch (error) {
+      console.error("Error fetching users:", error);
     }
   };
 
   const fetchBlockedUsers = async () => {
-    const { data, error } = await supabase
-      .from("blocked_users")
-      .select("*")
-      .order("blocked_at", { ascending: false });
-
-    if (!error && data) {
+    try {
+      const data = await firestoreQuery<BlockedUser>(
+        'blocked_users',
+        [],
+        'blocked_at',
+        'desc'
+      );
       setBlockedUsers(data);
+    } catch (error) {
+      console.error("Error fetching blocked users:", error);
     }
   };
 
   const fetchStats = async () => {
-    const { data, error } = await supabase.rpc("get_usage_stats");
-    if (!error && data) {
-      setStats(data as unknown as UsageStats);
+    try {
+      // Calculate stats from Firestore
+      const db = getFirestoreDb();
+      const today = new Date().toISOString().split('T')[0];
+      
+      const [profilesSnap, readingSnap, tasbihSnap, favoritesSnap, blockedSnap] = await Promise.all([
+        getDocs(collection(db, COLLECTIONS.PROFILES)),
+        getDocs(collection(db, COLLECTIONS.READING_SESSIONS)),
+        getDocs(collection(db, COLLECTIONS.TASBIH_STATS)),
+        getDocs(collection(db, COLLECTIONS.FAVORITES)),
+        getDocs(collection(db, 'blocked_users')),
+      ]);
+
+      const todayReadingSessions = readingSnap.docs.filter(d => 
+        d.data().session_date === today
+      ).length;
+
+      const todayTasbihSessions = tasbihSnap.docs.filter(d => 
+        d.data().session_date === today
+      ).length;
+
+      setStats({
+        total_users: profilesSnap.size,
+        today_reading_sessions: todayReadingSessions,
+        today_tasbih_sessions: todayTasbihSessions,
+        total_favorites: favoritesSnap.size,
+        blocked_users_count: blockedSnap.size,
+      });
+    } catch (error) {
+      console.error("Error fetching stats:", error);
     }
   };
 
   const handleBlockUser = async () => {
     if (!userToBlock || !user) return;
 
-    const { error } = await supabase.from("blocked_users").insert({
-      user_id: userToBlock.id,
-      blocked_by: user.id,
-      reason: blockReason || null,
-    });
+    try {
+      const docId = `${userToBlock.id}_${Date.now()}`;
+      await firestoreSet('blocked_users', docId, {
+        user_id: userToBlock.id,
+        blocked_by: user.uid,
+        reason: blockReason || null,
+        blocked_at: new Date().toISOString(),
+      });
 
-    if (error) {
+      // Update profile
+      await firestoreSet(COLLECTIONS.PROFILES, userToBlock.id, {
+        is_blocked: true,
+      });
+
+      toast.success("تم حظر المستخدم");
+      setBlockDialogOpen(false);
+      setBlockReason("");
+      setUserToBlock(null);
+      await Promise.all([fetchUsers(), fetchBlockedUsers(), fetchStats()]);
+    } catch (error) {
+      console.error("Error blocking user:", error);
       toast.error("فشل في حظر المستخدم");
-      return;
     }
-
-    // Update profile
-    await supabase
-      .from("profiles")
-      .update({ is_blocked: true })
-      .eq("id", userToBlock.id);
-
-    toast.success("تم حظر المستخدم");
-    setBlockDialogOpen(false);
-    setBlockReason("");
-    setUserToBlock(null);
-    await Promise.all([fetchUsers(), fetchBlockedUsers(), fetchStats()]);
   };
 
   const handleUnblockUser = async (blockedUser: BlockedUser) => {
-    const { error } = await supabase
-      .from("blocked_users")
-      .delete()
-      .eq("id", blockedUser.id);
+    try {
+      await firestoreDelete('blocked_users', blockedUser.id);
+      await firestoreSet(COLLECTIONS.PROFILES, blockedUser.user_id, {
+        is_blocked: false,
+      });
 
-    if (error) {
+      toast.success("تم إلغاء الحظر");
+      await Promise.all([fetchUsers(), fetchBlockedUsers(), fetchStats()]);
+    } catch (error) {
+      console.error("Error unblocking user:", error);
       toast.error("فشل في إلغاء الحظر");
-      return;
     }
-
-    await supabase
-      .from("profiles")
-      .update({ is_blocked: false })
-      .eq("id", blockedUser.user_id);
-
-    toast.success("تم إلغاء الحظر");
-    await Promise.all([fetchUsers(), fetchBlockedUsers(), fetchStats()]);
   };
 
   const handleSendMessage = async () => {
     if (!user || (!messageRecipient && !isBroadcast)) return;
 
-    const { error } = await supabase.from("admin_messages").insert({
-      sender_id: user.id,
-      recipient_id: isBroadcast ? null : messageRecipient?.id,
-      subject: messageSubject,
-      message: messageContent,
-      is_broadcast: isBroadcast,
-    });
+    try {
+      const docId = `msg_${Date.now()}`;
+      await firestoreSet('admin_messages', docId, {
+        sender_id: user.uid,
+        recipient_id: isBroadcast ? null : messageRecipient?.id,
+        subject: messageSubject,
+        message: messageContent,
+        is_broadcast: isBroadcast,
+        created_at: new Date().toISOString(),
+      });
 
-    if (error) {
+      toast.success(isBroadcast ? "تم إرسال الرسالة للجميع" : "تم إرسال الرسالة");
+      setMessageDialogOpen(false);
+      setMessageSubject("");
+      setMessageContent("");
+      setMessageRecipient(null);
+      setIsBroadcast(false);
+    } catch (error) {
+      console.error("Error sending message:", error);
       toast.error("فشل في إرسال الرسالة");
-      return;
     }
-
-    toast.success(isBroadcast ? "تم إرسال الرسالة للجميع" : "تم إرسال الرسالة");
-    setMessageDialogOpen(false);
-    setMessageSubject("");
-    setMessageContent("");
-    setMessageRecipient(null);
-    setIsBroadcast(false);
   };
 
   const filteredUsers = users.filter(

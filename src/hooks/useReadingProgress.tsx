@@ -1,6 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
+import { 
+  firestoreGet, 
+  firestoreSet, 
+  COLLECTIONS 
+} from "@/lib/firebase";
 
 interface ReadingProgress {
   surah_number: number;
@@ -31,17 +35,7 @@ export const useReadingProgress = () => {
     if (!user) return;
 
     try {
-      const { data, error } = await supabase
-        .from("reading_progress")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("last_read_at", { ascending: false })
-        .limit(1)
-        .single();
-
-      if (error && error.code !== "PGRST116") {
-        console.error("Error fetching progress:", error);
-      }
+      const data = await firestoreGet<any>(COLLECTIONS.READING_PROGRESS, user.uid);
 
       if (data) {
         setLastRead({
@@ -53,7 +47,7 @@ export const useReadingProgress = () => {
         });
       }
     } catch (error) {
-      console.error("Error:", error);
+      console.error("Error fetching progress:", error);
     } finally {
       setIsLoading(false);
     }
@@ -78,16 +72,10 @@ export const useReadingProgress = () => {
 
     if (user) {
       try {
-        await supabase
-          .from("reading_progress")
-          .upsert({
-            user_id: user.id,
-            surah_number: surahNumber,
-            ayah_number: ayahNumber,
-            surah_name: surahName,
-            progress_percentage: progressPercentage,
-            last_read_at: new Date().toISOString(),
-          }, { onConflict: "user_id,surah_number" });
+        await firestoreSet(COLLECTIONS.READING_PROGRESS, user.uid, {
+          user_id: user.uid,
+          ...progress,
+        });
       } catch (error) {
         console.error("Error saving progress:", error);
       }
