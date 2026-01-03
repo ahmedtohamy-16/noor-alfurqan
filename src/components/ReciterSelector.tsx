@@ -9,9 +9,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { reciters, getReciterById } from "@/data/reciters";
-import { useReadingSettings } from "@/hooks/useReadingSettings";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
+import { firestoreGet, firestoreSet, COLLECTIONS } from "@/lib/firebase";
 
 interface ReciterSelectorProps {
   compact?: boolean;
@@ -25,12 +24,7 @@ const ReciterSelector = ({ compact = false }: ReciterSelectorProps) => {
   useEffect(() => {
     const loadReciter = async () => {
       if (user) {
-        const { data } = await supabase
-          .from("user_reading_settings")
-          .select("selected_reciter")
-          .eq("user_id", user.id)
-          .single();
-        
+        const data = await firestoreGet<any>(COLLECTIONS.USER_READING_SETTINGS, user.uid);
         if (data?.selected_reciter) {
           setSelectedReciter(data.selected_reciter);
         }
@@ -51,13 +45,10 @@ const ReciterSelector = ({ compact = false }: ReciterSelectorProps) => {
     localStorage.setItem("selectedReciter", value);
 
     if (user) {
-      await supabase
-        .from("user_reading_settings")
-        .upsert({
-          user_id: user.id,
-          selected_reciter: value,
-          updated_at: new Date().toISOString(),
-        }, { onConflict: "user_id" });
+      await firestoreSet(COLLECTIONS.USER_READING_SETTINGS, user.uid, {
+        user_id: user.uid,
+        selected_reciter: value,
+      });
     }
   };
 

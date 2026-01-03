@@ -1,6 +1,6 @@
 import { useState, useEffect, createContext, useContext, ReactNode } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
+import { firestoreGet, firestoreSet, COLLECTIONS } from "@/lib/firebase";
 
 export interface ReadingSettings {
   fontSize: number;
@@ -38,31 +38,32 @@ export const ReadingSettingsProvider = ({ children }: { children: ReactNode }) =
       setIsLoading(true);
       
       if (user) {
-        // Load from database
-        const { data, error } = await supabase
-          .from("user_reading_settings")
-          .select("*")
-          .eq("user_id", user.id)
-          .single();
+        try {
+          const data = await firestoreGet<any>(COLLECTIONS.USER_READING_SETTINGS, user.uid);
 
-        if (data && !error) {
-          setSettings({
-            fontSize: data.font_size || defaultSettings.fontSize,
-            lineHeight: Number(data.line_height) || defaultSettings.lineHeight,
-            theme: (data.theme as ReadingSettings["theme"]) || defaultSettings.theme,
-            fontFamily: (data.font_family as ReadingSettings["fontFamily"]) || defaultSettings.fontFamily,
-            showTranslation: data.show_translation ?? defaultSettings.showTranslation,
-            selectedTranslation: data.selected_translation || null,
-          });
-        } else {
-          // Load from localStorage as fallback
+          if (data) {
+            setSettings({
+              fontSize: data.font_size || defaultSettings.fontSize,
+              lineHeight: Number(data.line_height) || defaultSettings.lineHeight,
+              theme: (data.theme as ReadingSettings["theme"]) || defaultSettings.theme,
+              fontFamily: (data.font_family as ReadingSettings["fontFamily"]) || defaultSettings.fontFamily,
+              showTranslation: data.show_translation ?? defaultSettings.showTranslation,
+              selectedTranslation: data.selected_translation || null,
+            });
+          } else {
+            const stored = localStorage.getItem("readingSettings");
+            if (stored) {
+              setSettings({ ...defaultSettings, ...JSON.parse(stored) });
+            }
+          }
+        } catch (error) {
+          console.error("Error loading reading settings:", error);
           const stored = localStorage.getItem("readingSettings");
           if (stored) {
             setSettings({ ...defaultSettings, ...JSON.parse(stored) });
           }
         }
       } else {
-        // Load from localStorage
         const stored = localStorage.getItem("readingSettings");
         if (stored) {
           setSettings({ ...defaultSettings, ...JSON.parse(stored) });
@@ -79,25 +80,20 @@ export const ReadingSettingsProvider = ({ children }: { children: ReactNode }) =
     const updated = { ...settings, ...newSettings };
     setSettings(updated);
     
-    // Save to localStorage always
     localStorage.setItem("readingSettings", JSON.stringify(updated));
 
     if (user) {
-      // Save to database
-      const { error } = await supabase
-        .from("user_reading_settings")
-        .upsert({
-          user_id: user.id,
+      try {
+        await firestoreSet(COLLECTIONS.USER_READING_SETTINGS, user.uid, {
+          user_id: user.uid,
           font_size: updated.fontSize,
           line_height: updated.lineHeight,
           theme: updated.theme,
           font_family: updated.fontFamily,
           show_translation: updated.showTranslation,
           selected_translation: updated.selectedTranslation,
-          updated_at: new Date().toISOString(),
-        }, { onConflict: "user_id" });
-
-      if (error) {
+        });
+      } catch (error) {
         console.error("Error saving reading settings:", error);
       }
     }

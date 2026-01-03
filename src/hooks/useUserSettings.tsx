@@ -1,7 +1,12 @@
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { toast } from "sonner";
+import { 
+  firestoreGet, 
+  firestoreSet, 
+  COLLECTIONS, 
+  Timestamp 
+} from "@/lib/firebase";
 
 interface UserSettings {
   latitude: number | null;
@@ -43,14 +48,12 @@ const defaultSettings: UserSettings = {
   daily_wird_time: "06:00:00",
   prayer_method: 4,
   prayer_reminder_minutes: 15,
-  // Prayer defaults
   adhan_sound: "makkah",
   prayer_fajr_enabled: true,
   prayer_dhuhr_enabled: true,
   prayer_asr_enabled: true,
   prayer_maghrib_enabled: true,
   prayer_isha_enabled: true,
-  // Azkar defaults
   azkar_morning_enabled: true,
   azkar_morning_time: "06:00:00",
   azkar_evening_enabled: true,
@@ -85,49 +88,39 @@ export const useUserSettings = () => {
     if (!user) return;
 
     try {
-      const { data, error } = await supabase
-        .from("user_settings")
-        .select("*")
-        .eq("user_id", user.id)
-        .single();
-
-      if (error && error.code !== "PGRST116") {
-        console.error("Error fetching settings:", error);
-      }
+      const data = await firestoreGet<any>(COLLECTIONS.USER_SETTINGS, user.uid);
 
       if (data) {
         setSettings({
-          latitude: data.latitude,
-          longitude: data.longitude,
-          city_name: data.city_name,
+          latitude: data.latitude ?? null,
+          longitude: data.longitude ?? null,
+          city_name: data.city_name ?? null,
           timezone: data.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
           notifications_enabled: data.notifications_enabled || false,
           daily_wird_enabled: data.daily_wird_enabled || false,
           daily_wird_time: data.daily_wird_time || "06:00:00",
           prayer_method: data.prayer_method || 4,
           prayer_reminder_minutes: data.prayer_reminder_minutes || 15,
-          // Prayer settings
-          adhan_sound: (data as any).adhan_sound || "makkah",
-          prayer_fajr_enabled: (data as any).prayer_fajr_enabled ?? true,
-          prayer_dhuhr_enabled: (data as any).prayer_dhuhr_enabled ?? true,
-          prayer_asr_enabled: (data as any).prayer_asr_enabled ?? true,
-          prayer_maghrib_enabled: (data as any).prayer_maghrib_enabled ?? true,
-          prayer_isha_enabled: (data as any).prayer_isha_enabled ?? true,
-          // Azkar settings
-          azkar_morning_enabled: (data as any).azkar_morning_enabled ?? true,
-          azkar_morning_time: (data as any).azkar_morning_time || "06:00:00",
-          azkar_evening_enabled: (data as any).azkar_evening_enabled ?? true,
-          azkar_evening_time: (data as any).azkar_evening_time || "17:00:00",
-          azkar_sleep_enabled: (data as any).azkar_sleep_enabled ?? false,
-          azkar_sleep_time: (data as any).azkar_sleep_time || "22:00:00",
-          azkar_wakeup_enabled: (data as any).azkar_wakeup_enabled ?? false,
-          azkar_wakeup_time: (data as any).azkar_wakeup_time || "05:00:00",
-          azkar_prayer_enabled: (data as any).azkar_prayer_enabled ?? false,
-          azkar_prayer_delay_minutes: (data as any).azkar_prayer_delay_minutes || 10,
+          adhan_sound: data.adhan_sound || "makkah",
+          prayer_fajr_enabled: data.prayer_fajr_enabled ?? true,
+          prayer_dhuhr_enabled: data.prayer_dhuhr_enabled ?? true,
+          prayer_asr_enabled: data.prayer_asr_enabled ?? true,
+          prayer_maghrib_enabled: data.prayer_maghrib_enabled ?? true,
+          prayer_isha_enabled: data.prayer_isha_enabled ?? true,
+          azkar_morning_enabled: data.azkar_morning_enabled ?? true,
+          azkar_morning_time: data.azkar_morning_time || "06:00:00",
+          azkar_evening_enabled: data.azkar_evening_enabled ?? true,
+          azkar_evening_time: data.azkar_evening_time || "17:00:00",
+          azkar_sleep_enabled: data.azkar_sleep_enabled ?? false,
+          azkar_sleep_time: data.azkar_sleep_time || "22:00:00",
+          azkar_wakeup_enabled: data.azkar_wakeup_enabled ?? false,
+          azkar_wakeup_time: data.azkar_wakeup_time || "05:00:00",
+          azkar_prayer_enabled: data.azkar_prayer_enabled ?? false,
+          azkar_prayer_delay_minutes: data.azkar_prayer_delay_minutes || 10,
         });
       }
     } catch (error) {
-      console.error("Error:", error);
+      console.error("Error fetching settings:", error);
     } finally {
       setIsLoading(false);
     }
@@ -139,15 +132,10 @@ export const useUserSettings = () => {
 
     if (user) {
       try {
-        const { error } = await supabase
-          .from("user_settings")
-          .upsert({
-            user_id: user.id,
-            ...updated,
-            updated_at: new Date().toISOString(),
-          }, { onConflict: "user_id" });
-
-        if (error) throw error;
+        await firestoreSet(COLLECTIONS.USER_SETTINGS, user.uid, {
+          user_id: user.uid,
+          ...updated,
+        });
       } catch (error) {
         console.error("Error saving settings:", error);
         toast.error("حدث خطأ في حفظ الإعدادات");
@@ -158,7 +146,6 @@ export const useUserSettings = () => {
   };
 
   const updateLocation = async (lat: number, lng: number, cityName?: string) => {
-    // Detect timezone based on coordinates
     const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
     
     await updateSettings({

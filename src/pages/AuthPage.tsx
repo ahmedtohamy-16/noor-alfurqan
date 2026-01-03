@@ -4,7 +4,6 @@ import { Mail, Lock, User, ArrowRight, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
 const AuthPage = () => {
@@ -14,7 +13,7 @@ const AuthPage = () => {
   const [username, setUsername] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, signIn, signUp } = useAuth();
 
   // Redirect if already logged in
   useEffect(() => {
@@ -29,35 +28,24 @@ const AuthPage = () => {
 
     try {
       if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-        if (error) throw error;
+        await signIn(email, password);
         toast.success("تم تسجيل الدخول بنجاح");
         navigate("/");
       } else {
-        // Sign up with OTP
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: {
-              username: username || email.split("@")[0],
-            },
-            emailRedirectTo: window.location.origin,
-          },
-        });
-        if (error) throw error;
-        toast.success("تم إرسال رمز التحقق إلى بريدك الإلكتروني");
-        navigate("/verify-otp", { state: { email } });
+        await signUp(email, password, username || email.split("@")[0]);
+        toast.success("تم إنشاء الحساب بنجاح! تحقق من بريدك الإلكتروني للتأكيد");
+        navigate("/");
       }
     } catch (error: any) {
       console.error("Auth error:", error);
-      if (error.message === "Invalid login credentials") {
+      if (error.code === "auth/invalid-credential" || error.code === "auth/user-not-found") {
         toast.error("البريد الإلكتروني أو كلمة المرور غير صحيحة");
-      } else if (error.message.includes("already registered")) {
+      } else if (error.code === "auth/email-already-in-use") {
         toast.error("هذا البريد الإلكتروني مسجل مسبقاً");
+      } else if (error.code === "auth/weak-password") {
+        toast.error("كلمة المرور ضعيفة جداً");
+      } else if (error.code === "auth/invalid-email") {
+        toast.error("البريد الإلكتروني غير صالح");
       } else {
         toast.error(error.message || "حدث خطأ، حاول مرة أخرى");
       }

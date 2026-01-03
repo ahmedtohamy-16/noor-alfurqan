@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
+import { firestoreQuery, firestoreSet, firestoreDelete, COLLECTIONS } from "@/lib/firebase";
 import { toast } from "sonner";
 import Header from "@/components/Header";
 
@@ -83,14 +83,13 @@ const NotificationsPage = () => {
     
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
-        .from("notification_history")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false })
-        .limit(100);
-
-      if (error) throw error;
+      const data = await firestoreQuery<NotificationItem>(
+        COLLECTIONS.NOTIFICATION_HISTORY,
+        [{ field: "user_id", op: "==", value: user.uid }],
+        "created_at",
+        "desc",
+        100
+      );
       setNotifications(data || []);
     } catch (error) {
       console.error("Error fetching notifications:", error);
@@ -101,11 +100,7 @@ const NotificationsPage = () => {
 
   const markAsRead = async (id: string) => {
     try {
-      await supabase
-        .from("notification_history")
-        .update({ read: true })
-        .eq("id", id);
-      
+      await firestoreSet(COLLECTIONS.NOTIFICATION_HISTORY, id, { read: true });
       setNotifications(prev => 
         prev.map(n => n.id === id ? { ...n, read: true } : n)
       );
@@ -118,12 +113,10 @@ const NotificationsPage = () => {
     if (!user) return;
     
     try {
-      await supabase
-        .from("notification_history")
-        .update({ read: true })
-        .eq("user_id", user.id)
-        .eq("read", false);
-      
+      const unread = notifications.filter(n => !n.read);
+      await Promise.all(
+        unread.map(n => firestoreSet(COLLECTIONS.NOTIFICATION_HISTORY, n.id, { read: true }))
+      );
       setNotifications(prev => prev.map(n => ({ ...n, read: true })));
       toast.success("تم تحديد الكل كمقروء");
     } catch (error) {
@@ -133,11 +126,7 @@ const NotificationsPage = () => {
 
   const deleteNotification = async (id: string) => {
     try {
-      await supabase
-        .from("notification_history")
-        .delete()
-        .eq("id", id);
-      
+      await firestoreDelete(COLLECTIONS.NOTIFICATION_HISTORY, id);
       setNotifications(prev => prev.filter(n => n.id !== id));
       toast.success("تم حذف الإشعار");
     } catch (error) {
@@ -150,11 +139,9 @@ const NotificationsPage = () => {
     if (!user) return;
     
     try {
-      await supabase
-        .from("notification_history")
-        .delete()
-        .eq("user_id", user.id);
-      
+      await Promise.all(
+        notifications.map(n => firestoreDelete(COLLECTIONS.NOTIFICATION_HISTORY, n.id))
+      );
       setNotifications([]);
       toast.success("تم حذف جميع الإشعارات");
     } catch (error) {

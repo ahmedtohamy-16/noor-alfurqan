@@ -1,7 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { toast } from "sonner";
+import { 
+  firestoreGet, 
+  firestoreSet, 
+  COLLECTIONS 
+} from "@/lib/firebase";
 
 interface DailyWird {
   target_pages: number;
@@ -33,16 +37,8 @@ export const useDailyWird = () => {
     if (!user) return;
 
     try {
-      const { data, error } = await supabase
-        .from("daily_wird")
-        .select("*")
-        .eq("user_id", user.id)
-        .eq("target_date", today)
-        .single();
-
-      if (error && error.code !== "PGRST116") {
-        console.error("Error fetching wird:", error);
-      }
+      const docId = `${user.uid}_${today}`;
+      const data = await firestoreGet<any>(COLLECTIONS.DAILY_WIRD, docId);
 
       if (data) {
         setWird({
@@ -53,7 +49,7 @@ export const useDailyWird = () => {
         });
       }
     } catch (error) {
-      console.error("Error:", error);
+      console.error("Error fetching wird:", error);
     } finally {
       setIsLoading(false);
     }
@@ -71,19 +67,15 @@ export const useDailyWird = () => {
 
     if (user) {
       try {
-        await supabase
-          .from("daily_wird")
-          .upsert({
-            user_id: user.id,
-            target_pages: targetPages,
-            completed_pages: newWird.completed_pages,
-            is_completed: false,
-            target_date: today,
-          }, { onConflict: "user_id,target_date" });
+        const docId = `${user.uid}_${today}`;
+        await firestoreSet(COLLECTIONS.DAILY_WIRD, docId, {
+          user_id: user.uid,
+          ...newWird,
+        });
         
         toast.success("تم تحديث الورد اليومي");
       } catch (error) {
-        console.error("Error:", error);
+        console.error("Error saving wird:", error);
         toast.error("حدث خطأ في حفظ الورد");
       }
     } else {
@@ -107,21 +99,17 @@ export const useDailyWird = () => {
 
     if (user) {
       try {
-        await supabase
-          .from("daily_wird")
-          .upsert({
-            user_id: user.id,
-            target_pages: wird.target_pages,
-            completed_pages: newCompleted,
-            is_completed: isCompleted,
-            target_date: today,
-          }, { onConflict: "user_id,target_date" });
+        const docId = `${user.uid}_${today}`;
+        await firestoreSet(COLLECTIONS.DAILY_WIRD, docId, {
+          user_id: user.uid,
+          ...updatedWird,
+        });
 
         if (isCompleted) {
           toast.success("🎉 مبارك! أتممت وردك اليومي");
         }
       } catch (error) {
-        console.error("Error:", error);
+        console.error("Error updating wird:", error);
       }
     } else {
       localStorage.setItem(`dailyWird_${today}`, JSON.stringify(updatedWird));

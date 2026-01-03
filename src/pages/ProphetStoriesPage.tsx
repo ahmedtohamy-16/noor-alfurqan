@@ -15,7 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { prophetStories, languages, getStoryByLanguage, type ProphetStory, type ExtendedStory } from "@/data/prophetStories";
 import ProphetStoryViewer from "@/components/ProphetStoryViewer";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
+import { firestoreGet, firestoreSet, COLLECTIONS } from "@/lib/firebase";
 
 const ProphetStoriesPage = () => {
   const { user } = useAuth();
@@ -30,12 +30,7 @@ const ProphetStoriesPage = () => {
   useEffect(() => {
     const loadPreference = async () => {
       if (user) {
-        const { data } = await supabase
-          .from('user_story_preferences')
-          .select('preferred_language')
-          .eq('user_id', user.id)
-          .single();
-        
+        const data = await firestoreGet<any>('user_story_preferences', user.uid);
         if (data?.preferred_language) {
           setSelectedLanguage(data.preferred_language);
         }
@@ -49,13 +44,10 @@ const ProphetStoriesPage = () => {
     setSelectedLanguage(newLanguage);
     
     if (user) {
-      await supabase
-        .from('user_story_preferences')
-        .upsert({
-          user_id: user.id,
-          preferred_language: newLanguage,
-          updated_at: new Date().toISOString(),
-        }, { onConflict: 'user_id' });
+      await firestoreSet('user_story_preferences', user.uid, {
+        user_id: user.uid,
+        preferred_language: newLanguage,
+      });
     }
   };
 

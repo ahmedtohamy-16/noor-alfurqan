@@ -13,7 +13,7 @@ import { useUserSettings } from "@/hooks/useUserSettings";
 import { useNotifications } from "@/hooks/useNotifications";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { firestoreQuery, COLLECTIONS } from "@/lib/firebase";
 
 const SettingsPage = () => {
   const { theme, toggleTheme } = useTheme();
@@ -37,13 +37,19 @@ const SettingsPage = () => {
 
   const checkAdminStatus = async () => {
     if (!user) return;
-    const { data } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", user.id)
-      .eq("role", "admin")
-      .single();
-    setIsAdmin(!!data);
+    try {
+      // For now, check admin status in Firestore user_roles collection
+      const roles = await firestoreQuery<any>(
+        'user_roles',
+        [
+          { field: "user_id", op: "==", value: user.uid },
+          { field: "role", op: "==", value: "admin" }
+        ]
+      );
+      setIsAdmin(roles.length > 0);
+    } catch (error) {
+      console.error("Error checking admin status:", error);
+    }
   };
 
   const handleSignOut = async () => {
@@ -55,9 +61,6 @@ const SettingsPage = () => {
   const handleWirdTimeChange = async (time: string) => {
     setWirdTime(time);
     await updateSettings({ daily_wird_time: time + ":00" });
-
-    // Clean-slate: scheduling will be reimplemented.
-    // We only keep the stored time.
     toast.success("تم تحديث وقت الورد");
   };
 
@@ -65,7 +68,6 @@ const SettingsPage = () => {
     const next = !settings.daily_wird_enabled;
 
     if (next) {
-      // Ask for permission now so it's ready once we wire background/push again.
       const ok = permission === "granted" ? true : await requestPermission();
       if (!ok) {
         toast.error("لا يمكن تفعيل تذكير الورد بدون السماح بالإشعارات");
