@@ -7,7 +7,7 @@ import {
   signOut as firebaseSignOut,
   onAuthStateChanged,
   sendEmailVerification,
-  User as FirebaseUser,
+  User as FirebaseUserType,
   Auth
 } from "firebase/auth";
 import { 
@@ -26,7 +26,10 @@ import {
   onSnapshot,
   Timestamp,
   DocumentData,
-  Firestore
+  Firestore,
+  addDoc,
+  serverTimestamp,
+  QueryConstraint
 } from "firebase/firestore";
 import { getMessaging, getToken, onMessage, Messaging } from "firebase/messaging";
 
@@ -63,6 +66,29 @@ app = initializeFirebaseApp();
 auth = getAuth(app);
 db = getFirestore(app);
 
+// User Roles
+export type UserRole = "admin" | "teacher" | "student";
+
+// Firebase User with custom properties
+export interface FirebaseUser {
+  uid: string;
+  email: string | null;
+  displayName: string | null;
+  photoURL: string | null;
+  emailVerified: boolean;
+}
+
+// User Profile in Firestore
+export interface UserProfile {
+  uid: string;
+  email: string;
+  displayName: string;
+  photoURL: string | null;
+  role: UserRole;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
 // Get Firebase Auth
 export const getFirebaseAuth = (): Auth => auth;
 
@@ -75,16 +101,63 @@ export const getVapidKey = (): string => VAPID_KEY;
 // Check if Firebase is configured
 export const isFirebaseConfigured = (): boolean => true;
 
+// Collections
+export const COLLECTIONS = {
+  USERS: "users",
+  USER_ROLES: "user_roles",
+  PROFILES: "profiles",
+  FAVORITES: "favorites",
+  USER_SETTINGS: "user_settings",
+  READING_PROGRESS: "reading_progress",
+  READING_SESSIONS: "reading_sessions",
+  TASBIH_STATS: "tasbih_stats",
+  DAILY_WIRD: "daily_wird",
+  KHATMAHS: "khatmahs",
+  KHATMAH_PARTICIPANTS: "khatmah_participants",
+  NOTIFICATION_HISTORY: "notification_history",
+  PUSH_SUBSCRIPTIONS: "push_subscriptions",
+  USER_READING_SETTINGS: "user_reading_settings",
+  USER_AZKAR_PROGRESS: "user_azkar_progress",
+  LESSONS: "lessons",
+  SURAHS: "surahs",
+  AYAHS: "ayahs",
+};
+
 // ==================== AUTH FUNCTIONS ====================
 
-export const signUp = async (email: string, password: string, username?: string) => {
+export const signUp = async (
+  email: string, 
+  password: string, 
+  username?: string,
+  role: UserRole = "student"
+) => {
   const userCredential = await createUserWithEmailAndPassword(auth, email, password);
   const user = userCredential.user;
   
+  const displayName = username || email.split("@")[0];
+  
   // Create user profile in Firestore
-  await setDoc(doc(db, "profiles", user.uid), {
+  await setDoc(doc(db, COLLECTIONS.USERS, user.uid), {
+    uid: user.uid,
+    email: user.email,
+    displayName: displayName,
+    photoURL: null,
+    role: role,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp()
+  });
+
+  // Create user role entry (separate collection for security)
+  await setDoc(doc(db, COLLECTIONS.USER_ROLES, user.uid), {
+    uid: user.uid,
+    role: role,
+    createdAt: serverTimestamp()
+  });
+
+  // Also create in profiles for backward compatibility
+  await setDoc(doc(db, COLLECTIONS.PROFILES, user.uid), {
     id: user.uid,
-    username: username || email.split("@")[0],
+    username: displayName,
     avatar_url: null,
     created_at: Timestamp.now(),
   });
@@ -105,55 +178,172 @@ export const signOut = async () => {
 };
 
 export const onAuthChange = (callback: (user: FirebaseUser | null) => void) => {
-  return onAuthStateChanged(auth, callback);
+  return onAuthStateChanged(auth, (user) => {
+    if (user) {
+      callback({
+        uid: user.uid,
+        email: user.email,
+        displayName: user.displayName,
+        photoURL: user.photoURL,
+        emailVerified: user.emailVerified,
+      });
+    } else {
+      callback(null);
+    }
+  });
 };
 
 export const getCurrentUser = (): FirebaseUser | null => {
-  return auth.currentUser;
-};
-
-// ==================== FIRESTORE HELPER FUNCTIONS ====================
-
-// Collections
-export const COLLECTIONS = {
-  PROFILES: "profiles",
-  FAVORITES: "favorites",
-  USER_SETTINGS: "user_settings",
-  READING_PROGRESS: "reading_progress",
-  READING_SESSIONS: "reading_sessions",
-  TASBIH_STATS: "tasbih_stats",
-  DAILY_WIRD: "daily_wird",
-  KHATMAHS: "khatmahs",
-  KHATMAH_PARTICIPANTS: "khatmah_participants",
-  NOTIFICATION_HISTORY: "notification_history",
-  PUSH_SUBSCRIPTIONS: "push_subscriptions",
-  USER_READING_SETTINGS: "user_reading_settings",
-  USER_AZKAR_PROGRESS: "user_azkar_progress",
-};
-
-// Generic Firestore operations
-export const firestoreGet = async <T>(collectionName: string, docId: string): Promise<T | null> => {
-  const docRef = doc(db, collectionName, docId);
-  const docSnap = await getDoc(docRef);
-  if (docSnap.exists()) {
-    return { id: docSnap.id, ...docSnap.data() } as T;
+  const user = auth.currentUser;
+  if (user) {
+    return {
+      uid: user.uid,
+      email: user.email,
+      displayName: user.displayName,
+      photoURL: user.photoURL,
+      emailVerified: user.emailVerified,
+    };
   }
   return null;
 };
 
-export const firestoreSet = async (collectionName: string, docId: string, data: DocumentData) => {
-  const docRef = doc(db, collectionName, docId);
-  await setDoc(docRef, { ...data, updated_at: Timestamp.now() }, { merge: true });
+// ==================== USER ROLE FUNCTIONS ====================
+
+export const getUserRole = async (uid: string): Promise<UserRole | null> => {
+  try {
+    const roleDoc = await getDoc(doc(db, COLLECTIONS.USER_ROLES, uid));
+    if (roleDoc.exists()) {
+      return roleDoc.data().role as UserRole;
+    }
+    return null;
+  } catch (error) {
+    console.error("Error getting user role:", error);
+    return null;
+  }
 };
 
-export const firestoreUpdate = async (collectionName: string, docId: string, data: Partial<DocumentData>) => {
-  const docRef = doc(db, collectionName, docId);
-  await updateDoc(docRef, { ...data, updated_at: Timestamp.now() });
+export const getUserProfile = async (uid: string): Promise<UserProfile | null> => {
+  try {
+    const userDoc = await getDoc(doc(db, COLLECTIONS.USERS, uid));
+    if (userDoc.exists()) {
+      return userDoc.data() as UserProfile;
+    }
+    return null;
+  } catch (error) {
+    console.error("Error getting user profile:", error);
+    return null;
+  }
+};
+
+export const updateUserRole = async (uid: string, newRole: UserRole): Promise<void> => {
+  await updateDoc(doc(db, COLLECTIONS.USER_ROLES, uid), {
+    role: newRole,
+    updatedAt: serverTimestamp()
+  });
+  await updateDoc(doc(db, COLLECTIONS.USERS, uid), {
+    role: newRole,
+    updatedAt: serverTimestamp()
+  });
+};
+
+export const hasRole = async (uid: string, requiredRole: UserRole): Promise<boolean> => {
+  const role = await getUserRole(uid);
+  if (!role) return false;
+  
+  const roleHierarchy: Record<UserRole, number> = {
+    admin: 3,
+    teacher: 2,
+    student: 1
+  };
+  
+  return roleHierarchy[role] >= roleHierarchy[requiredRole];
+};
+
+export const isAdmin = async (uid: string): Promise<boolean> => {
+  return hasRole(uid, "admin");
+};
+
+export const isTeacher = async (uid: string): Promise<boolean> => {
+  return hasRole(uid, "teacher");
+};
+
+// ==================== FIRESTORE HELPER FUNCTIONS ====================
+
+export const firestoreGet = async <T>(collectionName: string, docId: string): Promise<T | null> => {
+  try {
+    const docRef = doc(db, collectionName, docId);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      return { id: docSnap.id, ...docSnap.data() } as T;
+    }
+    return null;
+  } catch (error) {
+    console.error(`Error getting ${collectionName}/${docId}:`, error);
+    return null;
+  }
+};
+
+export const firestoreSet = async (
+  collectionName: string, 
+  docId: string, 
+  data: DocumentData,
+  merge: boolean = true
+) => {
+  try {
+    const docRef = doc(db, collectionName, docId);
+    await setDoc(docRef, { 
+      ...data, 
+      updatedAt: serverTimestamp() 
+    }, { merge });
+  } catch (error) {
+    console.error(`Error setting ${collectionName}/${docId}:`, error);
+    throw error;
+  }
+};
+
+export const firestoreAdd = async (
+  collectionName: string,
+  data: DocumentData
+): Promise<string> => {
+  try {
+    const colRef = collection(db, collectionName);
+    const docRef = await addDoc(colRef, {
+      ...data,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    });
+    return docRef.id;
+  } catch (error) {
+    console.error(`Error adding to ${collectionName}:`, error);
+    throw error;
+  }
+};
+
+export const firestoreUpdate = async (
+  collectionName: string, 
+  docId: string, 
+  data: Partial<DocumentData>
+) => {
+  try {
+    const docRef = doc(db, collectionName, docId);
+    await updateDoc(docRef, { 
+      ...data, 
+      updatedAt: serverTimestamp() 
+    });
+  } catch (error) {
+    console.error(`Error updating ${collectionName}/${docId}:`, error);
+    throw error;
+  }
 };
 
 export const firestoreDelete = async (collectionName: string, docId: string) => {
-  const docRef = doc(db, collectionName, docId);
-  await deleteDoc(docRef);
+  try {
+    const docRef = doc(db, collectionName, docId);
+    await deleteDoc(docRef);
+  } catch (error) {
+    console.error(`Error deleting ${collectionName}/${docId}:`, error);
+    throw error;
+  }
 };
 
 export const firestoreQuery = async <T>(
@@ -163,20 +353,43 @@ export const firestoreQuery = async <T>(
   orderDirection: "asc" | "desc" = "desc",
   limitCount?: number
 ): Promise<T[]> => {
-  let q = collection(db, collectionName);
-  let constraints: any[] = conditions.map(c => where(c.field, c.op, c.value));
-  
-  if (orderByField) {
-    constraints.push(orderBy(orderByField, orderDirection));
+  try {
+    let q = collection(db, collectionName);
+    let constraints: any[] = conditions.map(c => where(c.field, c.op, c.value));
+    
+    if (orderByField) {
+      constraints.push(orderBy(orderByField, orderDirection));
+    }
+    if (limitCount) {
+      constraints.push(limit(limitCount));
+    }
+    
+    const queryRef = query(q, ...constraints);
+    const snapshot = await getDocs(queryRef);
+    
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as T));
+  } catch (error) {
+    console.error(`Error querying ${collectionName}:`, error);
+    return [];
   }
-  if (limitCount) {
-    constraints.push(limit(limitCount));
+};
+
+export const firestoreQueryWithConstraints = async <T>(
+  collectionName: string,
+  ...constraints: QueryConstraint[]
+): Promise<T[]> => {
+  try {
+    const colRef = collection(db, collectionName);
+    const q = query(colRef, ...constraints);
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.docs.map(doc => ({ 
+      id: doc.id, 
+      ...doc.data() 
+    })) as T[];
+  } catch (error) {
+    console.error(`Error querying ${collectionName}:`, error);
+    return [];
   }
-  
-  const queryRef = query(q, ...constraints);
-  const snapshot = await getDocs(queryRef);
-  
-  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as T));
 };
 
 // Subscribe to real-time updates
@@ -234,6 +447,6 @@ export const onForegroundMessage = async (callback: (payload: any) => void) => {
   return onMessage(msg, callback);
 };
 
-// Export instances
-export { app, auth, db, Timestamp };
-export type { FirebaseUser };
+// Export instances and utilities
+export { app, auth, db, Timestamp, collection, doc, query, where, orderBy, limit, getDocs, onSnapshot, serverTimestamp };
+export type { FirebaseUserType };
