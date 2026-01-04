@@ -52,7 +52,7 @@ const Index = () => {
     {
       icon: Sunrise,
       title: "الأذكار",
-      description: "أذكار الصباح والمساء والخ",
+      description: "أذكار الصباح والمساء و.. والخ",
       link: "/azkar",
       color: "bg-teal-500/10 text-teal-600",
     },
