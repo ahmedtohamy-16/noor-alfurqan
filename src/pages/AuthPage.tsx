@@ -1,16 +1,18 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Mail, Lock, User, ArrowRight, BookOpen } from "lucide-react";
+import { Mail, Lock, User, ArrowRight, BookOpen, GraduationCap, Users, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
+import { UserRole } from "@/lib/firebase";
 
 const AuthPage = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
+  const [selectedRole, setSelectedRole] = useState<UserRole>("student");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { user, signIn, signUp } = useAuth();
@@ -32,7 +34,7 @@ const AuthPage = () => {
         toast.success("تم تسجيل الدخول بنجاح");
         navigate("/");
       } else {
-        await signUp(email, password, username || email.split("@")[0]);
+        await signUp(email, password, username || email.split("@")[0], selectedRole);
         toast.success("تم إنشاء الحساب بنجاح! تحقق من بريدك الإلكتروني للتأكيد");
         navigate("/");
       }
@@ -53,6 +55,21 @@ const AuthPage = () => {
       setIsLoading(false);
     }
   };
+
+  const roles: { value: UserRole; label: string; icon: React.ReactNode; description: string }[] = [
+    { 
+      value: "student", 
+      label: "طالب", 
+      icon: <GraduationCap className="w-5 h-5" />,
+      description: "تعلم وتلاوة القرآن الكريم"
+    },
+    { 
+      value: "teacher", 
+      label: "معلم", 
+      icon: <Users className="w-5 h-5" />,
+      description: "تعليم وإدارة الدروس"
+    },
+  ];
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -90,16 +107,49 @@ const AuthPage = () => {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               {!isLogin && (
-                <div className="relative">
-                  <User className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                  <Input
-                    type="text"
-                    placeholder="اسم المستخدم"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    className="pr-10 text-right"
-                  />
-                </div>
+                <>
+                  <div className="relative">
+                    <User className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                    <Input
+                      type="text"
+                      placeholder="اسم المستخدم"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      className="pr-10 text-right"
+                    />
+                  </div>
+
+                  {/* Role Selection */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-foreground block text-right">
+                      نوع الحساب
+                    </label>
+                    <div className="grid grid-cols-2 gap-3">
+                      {roles.map((role) => (
+                        <button
+                          key={role.value}
+                          type="button"
+                          onClick={() => setSelectedRole(role.value)}
+                          className={`p-4 rounded-xl border-2 text-right transition-all ${
+                            selectedRole === role.value
+                              ? "border-primary bg-primary/10"
+                              : "border-border hover:border-primary/50"
+                          }`}
+                        >
+                          <div className="flex items-center justify-end gap-2 mb-1">
+                            <span className="font-medium text-foreground">{role.label}</span>
+                            <div className={`${
+                              selectedRole === role.value ? "text-primary" : "text-muted-foreground"
+                            }`}>
+                              {role.icon}
+                            </div>
+                          </div>
+                          <p className="text-xs text-muted-foreground">{role.description}</p>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </>
               )}
 
               <div className="relative">
@@ -155,6 +205,16 @@ const AuthPage = () => {
               </p>
             </div>
           </div>
+
+          {/* Role Info */}
+          {!isLogin && (
+            <div className="mt-4 p-4 bg-muted/50 rounded-xl">
+              <div className="flex items-center justify-end gap-2 text-sm text-muted-foreground">
+                <span>يمكن للمسؤول تغيير صلاحياتك لاحقاً</span>
+                <Shield className="w-4 h-4" />
+              </div>
+            </div>
+          )}
         </div>
       </main>
     </div>

@@ -1,215 +1,205 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
-  ArrowRight, Users, Ban, Mail, BarChart3, 
-  Search, Shield, Send, X, Check, AlertTriangle 
+  Users, 
+  BookOpen, 
+  Shield, 
+  BarChart3, 
+  ArrowRight,
+  GraduationCap,
+  UserCog,
+  Plus,
+  Trash2,
+  Edit,
+  Eye,
+  Ban,
+  Mail,
+  Search,
+  Send,
+  Check,
+  AlertTriangle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
-import Header from "@/components/Header";
-import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
+import { UserRole, UserProfile, firestoreSet, firestoreDelete, COLLECTIONS, getFirestoreDb } from "@/lib/firebase";
+import { getAllUsers, updateUserRole, countUsersByRole } from "@/services/userService";
 import { 
-  firestoreQuery, 
-  firestoreSet, 
-  firestoreDelete, 
-  COLLECTIONS,
-  getFirestoreDb
-} from "@/lib/firebase";
-import { collection, getDocs, query, orderBy } from "firebase/firestore";
-
-interface UserProfile {
-  id: string;
-  username: string | null;
-  avatar_url: string | null;
-  is_blocked: boolean;
-  created_at: string;
-}
-
-interface BlockedUser {
-  id: string;
-  user_id: string;
-  reason: string | null;
-  blocked_at: string;
-  profile?: UserProfile;
-}
-
-interface UsageStats {
-  total_users: number;
-  today_reading_sessions: number;
-  today_tasbih_sessions: number;
-  total_favorites: number;
-  blocked_users_count: number;
-}
+  getPublishedLessons, 
+  getLessonsByTeacher,
+  createLesson, 
+  deleteLesson,
+  togglePublishStatus,
+  Lesson 
+} from "@/services/lessonService";
+import { collection, getDocs } from "firebase/firestore";
 
 const AdminPage = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const { user, role, isAdmin, isTeacher, userProfile } = useAuth();
   const [users, setUsers] = useState<UserProfile[]>([]);
-  const [blockedUsers, setBlockedUsers] = useState<BlockedUser[]>([]);
-  const [stats, setStats] = useState<UsageStats | null>(null);
+  const [lessons, setLessons] = useState<Lesson[]>([]);
+  const [stats, setStats] = useState<Record<UserRole, number>>({ admin: 0, teacher: 0, student: 0 });
+  const [totalStats, setTotalStats] = useState({ users: 0, lessons: 0, favorites: 0 });
+  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   
+  // Lesson dialog
+  const [showLessonDialog, setShowLessonDialog] = useState(false);
+  const [newLesson, setNewLesson] = useState({
+    title: "",
+    description: "",
+    content: "",
+    category: "general" as Lesson["category"],
+    level: "beginner" as Lesson["level"],
+  });
+
   // Message dialog
   const [messageDialogOpen, setMessageDialogOpen] = useState(false);
   const [messageRecipient, setMessageRecipient] = useState<UserProfile | null>(null);
   const [messageSubject, setMessageSubject] = useState("");
   const [messageContent, setMessageContent] = useState("");
   const [isBroadcast, setIsBroadcast] = useState(false);
-  
-  // Block dialog
-  const [blockDialogOpen, setBlockDialogOpen] = useState(false);
-  const [userToBlock, setUserToBlock] = useState<UserProfile | null>(null);
-  const [blockReason, setBlockReason] = useState("");
 
   useEffect(() => {
-    checkAdminStatus();
-  }, [user]);
-
-  const checkAdminStatus = async () => {
     if (!user) {
       navigate("/auth");
       return;
     }
-
-    try {
-      const roles = await firestoreQuery<any>(
-        'user_roles',
-        [
-          { field: "user_id", op: "==", value: user.uid },
-          { field: "role", op: "==", value: "admin" }
-        ]
-      );
-
-      if (roles.length === 0) {
-        toast.error("ليس لديك صلاحية الوصول");
-        navigate("/");
-        return;
-      }
-
-      setIsAdmin(true);
-      await Promise.all([fetchUsers(), fetchBlockedUsers(), fetchStats()]);
-      setIsLoading(false);
-    } catch (error) {
-      console.error("Error checking admin:", error);
-      navigate("/");
+    
+    // Wait for role to be loaded
+    if (role === null && !isLoading) {
+      return;
     }
-  };
+    
+    loadData();
+  }, [user, role, navigate]);
 
-  const fetchUsers = async () => {
+  const loadData = async () => {
     try {
-      const db = getFirestoreDb();
-      const q = query(collection(db, COLLECTIONS.PROFILES), orderBy("created_at", "desc"));
-      const snapshot = await getDocs(q);
-      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as UserProfile));
-      setUsers(data);
-    } catch (error) {
-      console.error("Error fetching users:", error);
-    }
-  };
-
-  const fetchBlockedUsers = async () => {
-    try {
-      const data = await firestoreQuery<BlockedUser>(
-        'blocked_users',
-        [],
-        'blocked_at',
-        'desc'
-      );
-      setBlockedUsers(data);
-    } catch (error) {
-      console.error("Error fetching blocked users:", error);
-    }
-  };
-
-  const fetchStats = async () => {
-    try {
-      // Calculate stats from Firestore
-      const db = getFirestoreDb();
-      const today = new Date().toISOString().split('T')[0];
+      setIsLoading(true);
       
-      const [profilesSnap, readingSnap, tasbihSnap, favoritesSnap, blockedSnap] = await Promise.all([
-        getDocs(collection(db, COLLECTIONS.PROFILES)),
-        getDocs(collection(db, COLLECTIONS.READING_SESSIONS)),
-        getDocs(collection(db, COLLECTIONS.TASBIH_STATS)),
-        getDocs(collection(db, COLLECTIONS.FAVORITES)),
-        getDocs(collection(db, 'blocked_users')),
-      ]);
+      if (isAdmin) {
+        const [fetchedUsers, fetchedStats] = await Promise.all([
+          getAllUsers(),
+          countUsersByRole()
+        ]);
+        setUsers(fetchedUsers);
+        setStats(fetchedStats);
 
-      const todayReadingSessions = readingSnap.docs.filter(d => 
-        d.data().session_date === today
-      ).length;
-
-      const todayTasbihSessions = tasbihSnap.docs.filter(d => 
-        d.data().session_date === today
-      ).length;
-
-      setStats({
-        total_users: profilesSnap.size,
-        today_reading_sessions: todayReadingSessions,
-        today_tasbih_sessions: todayTasbihSessions,
-        total_favorites: favoritesSnap.size,
-        blocked_users_count: blockedSnap.size,
-      });
+        // Get additional stats
+        const db = getFirestoreDb();
+        const [lessonsSnap, favoritesSnap] = await Promise.all([
+          getDocs(collection(db, COLLECTIONS.LESSONS)),
+          getDocs(collection(db, COLLECTIONS.FAVORITES)),
+        ]);
+        
+        setTotalStats({
+          users: fetchedUsers.length,
+          lessons: lessonsSnap.size,
+          favorites: favoritesSnap.size,
+        });
+      }
+      
+      // Teachers and admins can see lessons
+      if (isTeacher || isAdmin) {
+        const fetchedLessons = isAdmin 
+          ? await getPublishedLessons()
+          : user ? await getLessonsByTeacher(user.uid) : [];
+        setLessons(fetchedLessons);
+      }
     } catch (error) {
-      console.error("Error fetching stats:", error);
+      console.error("Error loading data:", error);
+      toast.error("حدث خطأ في تحميل البيانات");
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleBlockUser = async () => {
-    if (!userToBlock || !user) return;
-
+  const handleRoleChange = async (userId: string, newRole: UserRole) => {
     try {
-      const docId = `${userToBlock.id}_${Date.now()}`;
-      await firestoreSet('blocked_users', docId, {
-        user_id: userToBlock.id,
-        blocked_by: user.uid,
-        reason: blockReason || null,
-        blocked_at: new Date().toISOString(),
-      });
-
-      // Update profile
-      await firestoreSet(COLLECTIONS.PROFILES, userToBlock.id, {
-        is_blocked: true,
-      });
-
-      toast.success("تم حظر المستخدم");
-      setBlockDialogOpen(false);
-      setBlockReason("");
-      setUserToBlock(null);
-      await Promise.all([fetchUsers(), fetchBlockedUsers(), fetchStats()]);
+      await updateUserRole(userId, newRole);
+      toast.success("تم تحديث الصلاحية بنجاح");
+      loadData();
     } catch (error) {
-      console.error("Error blocking user:", error);
-      toast.error("فشل في حظر المستخدم");
+      console.error("Error updating role:", error);
+      toast.error("حدث خطأ في تحديث الصلاحية");
     }
   };
 
-  const handleUnblockUser = async (blockedUser: BlockedUser) => {
-    try {
-      await firestoreDelete('blocked_users', blockedUser.id);
-      await firestoreSet(COLLECTIONS.PROFILES, blockedUser.user_id, {
-        is_blocked: false,
-      });
+  const handleCreateLesson = async () => {
+    if (!newLesson.title || !newLesson.content) {
+      toast.error("يرجى ملء جميع الحقول المطلوبة");
+      return;
+    }
 
-      toast.success("تم إلغاء الحظر");
-      await Promise.all([fetchUsers(), fetchBlockedUsers(), fetchStats()]);
+    try {
+      await createLesson({
+        ...newLesson,
+        teacherId: user!.uid,
+        teacherName: userProfile?.displayName || user?.displayName || "معلم",
+        isPublished: false,
+        viewCount: 0,
+      });
+      toast.success("تم إنشاء الدرس بنجاح");
+      setShowLessonDialog(false);
+      setNewLesson({ title: "", description: "", content: "", category: "general", level: "beginner" });
+      loadData();
     } catch (error) {
-      console.error("Error unblocking user:", error);
-      toast.error("فشل في إلغاء الحظر");
+      console.error("Error creating lesson:", error);
+      toast.error("حدث خطأ في إنشاء الدرس");
+    }
+  };
+
+  const handleDeleteLesson = async (lessonId: string) => {
+    try {
+      await deleteLesson(lessonId);
+      toast.success("تم حذف الدرس بنجاح");
+      loadData();
+    } catch (error) {
+      console.error("Error deleting lesson:", error);
+      toast.error("حدث خطأ في حذف الدرس");
+    }
+  };
+
+  const handleTogglePublish = async (lessonId: string) => {
+    try {
+      await togglePublishStatus(lessonId);
+      toast.success("تم تحديث حالة النشر");
+      loadData();
+    } catch (error) {
+      console.error("Error toggling publish:", error);
+      toast.error("حدث خطأ في تحديث الحالة");
     }
   };
 
@@ -220,7 +210,7 @@ const AdminPage = () => {
       const docId = `msg_${Date.now()}`;
       await firestoreSet('admin_messages', docId, {
         sender_id: user.uid,
-        recipient_id: isBroadcast ? null : messageRecipient?.id,
+        recipient_id: isBroadcast ? null : messageRecipient?.uid,
         subject: messageSubject,
         message: messageContent,
         is_broadcast: isBroadcast,
@@ -239,17 +229,36 @@ const AdminPage = () => {
     }
   };
 
+  const getRoleBadge = (userRole: UserRole) => {
+    const config = {
+      admin: { label: "مسؤول", variant: "destructive" as const },
+      teacher: { label: "معلم", variant: "default" as const },
+      student: { label: "طالب", variant: "secondary" as const },
+    };
+    return <Badge variant={config[userRole].variant}>{config[userRole].label}</Badge>;
+  };
+
   const filteredUsers = users.filter(
     (u) =>
-      u.username?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      u.id.includes(searchQuery)
+      u.displayName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      u.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      u.uid.includes(searchQuery)
   );
 
-  if (!isAdmin || isLoading) {
+  // Show loading state
+  if (isLoading) {
     return (
-      <div className="min-h-screen bg-background">
-        <Header />
-        <main className="container mx-auto px-4 py-8">
+      <div className="min-h-screen bg-background pb-20">
+        <header className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b border-border p-4">
+          <div className="flex items-center justify-between max-w-6xl mx-auto">
+            <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
+              <ArrowRight className="w-5 h-5" />
+            </Button>
+            <h1 className="text-xl font-bold text-foreground">لوحة الإدارة</h1>
+            <div className="w-10" />
+          </div>
+        </header>
+        <main className="max-w-6xl mx-auto p-4">
           <div className="space-y-4">
             <Skeleton className="h-12 w-48" />
             <Skeleton className="h-64 w-full" />
@@ -259,222 +268,329 @@ const AdminPage = () => {
     );
   }
 
+  // Access denied for non-teachers/non-admins
+  if (!isAdmin && !isTeacher) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <Card className="max-w-md w-full text-center">
+          <CardContent className="pt-6">
+            <Shield className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
+            <h2 className="text-xl font-bold mb-2">غير مصرح لك بالوصول</h2>
+            <p className="text-muted-foreground mb-4">
+              هذه الصفحة متاحة للمعلمين والمسؤولين فقط
+            </p>
+            <Button onClick={() => navigate("/")}>
+              <ArrowRight className="w-4 h-4 ml-2" />
+              العودة للرئيسية
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background pb-20">
-      <Header />
-
-      <main className="container mx-auto px-4 py-6 arabic-ui">
-        {/* Header */}
-        <div className="flex items-center gap-4 mb-6">
+      {/* Header */}
+      <header className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b border-border p-4">
+        <div className="flex items-center justify-between max-w-6xl mx-auto">
           <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
             <ArrowRight className="w-5 h-5" />
           </Button>
-          <div className="flex-1">
-            <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-              <Shield className="w-6 h-6 text-primary" />
-              لوحة الإدارة
-            </h1>
-          </div>
+          <h1 className="text-xl font-bold text-foreground flex items-center gap-2">
+            <Shield className="w-5 h-5 text-primary" />
+            {isAdmin ? "لوحة الإدارة" : "لوحة المعلم"}
+          </h1>
+          <div className="w-10" />
         </div>
+      </header>
 
-        {/* Stats Cards */}
-        {stats && (
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-            <Card className="p-4 text-center">
-              <Users className="w-6 h-6 text-primary mx-auto mb-2" />
-              <p className="text-2xl font-bold text-foreground">{stats.total_users}</p>
-              <p className="text-xs text-muted-foreground">المستخدمين</p>
+      <main className="max-w-6xl mx-auto p-4 space-y-6 arabic-ui">
+        {/* Stats Cards - Admin Only */}
+        {isAdmin && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div className="text-right">
+                    <p className="text-2xl font-bold">{stats.student}</p>
+                    <p className="text-sm text-muted-foreground">طالب</p>
+                  </div>
+                  <GraduationCap className="w-10 h-10 text-primary opacity-80" />
+                </div>
+              </CardContent>
             </Card>
-            <Card className="p-4 text-center">
-              <BarChart3 className="w-6 h-6 text-green-500 mx-auto mb-2" />
-              <p className="text-2xl font-bold text-foreground">{stats.today_reading_sessions}</p>
-              <p className="text-xs text-muted-foreground">جلسات القراءة اليوم</p>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div className="text-right">
+                    <p className="text-2xl font-bold">{stats.teacher}</p>
+                    <p className="text-sm text-muted-foreground">معلم</p>
+                  </div>
+                  <Users className="w-10 h-10 text-green-500 opacity-80" />
+                </div>
+              </CardContent>
             </Card>
-            <Card className="p-4 text-center">
-              <BarChart3 className="w-6 h-6 text-blue-500 mx-auto mb-2" />
-              <p className="text-2xl font-bold text-foreground">{stats.today_tasbih_sessions}</p>
-              <p className="text-xs text-muted-foreground">جلسات التسبيح اليوم</p>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div className="text-right">
+                    <p className="text-2xl font-bold">{totalStats.lessons}</p>
+                    <p className="text-sm text-muted-foreground">درس</p>
+                  </div>
+                  <BookOpen className="w-10 h-10 text-blue-500 opacity-80" />
+                </div>
+              </CardContent>
             </Card>
-            <Card className="p-4 text-center">
-              <BarChart3 className="w-6 h-6 text-amber-500 mx-auto mb-2" />
-              <p className="text-2xl font-bold text-foreground">{stats.total_favorites}</p>
-              <p className="text-xs text-muted-foreground">المفضلات</p>
-            </Card>
-            <Card className="p-4 text-center">
-              <Ban className="w-6 h-6 text-destructive mx-auto mb-2" />
-              <p className="text-2xl font-bold text-foreground">{stats.blocked_users_count}</p>
-              <p className="text-xs text-muted-foreground">محظورين</p>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div className="text-right">
+                    <p className="text-2xl font-bold">{totalStats.favorites}</p>
+                    <p className="text-sm text-muted-foreground">مفضلة</p>
+                  </div>
+                  <BarChart3 className="w-10 h-10 text-amber-500 opacity-80" />
+                </div>
+              </CardContent>
             </Card>
           </div>
         )}
 
-        {/* Broadcast Button */}
-        <div className="mb-6">
-          <Button
-            onClick={() => {
-              setIsBroadcast(true);
-              setMessageDialogOpen(true);
-            }}
-            className="gap-2"
-          >
-            <Send className="w-4 h-4" />
-            إرسال رسالة للجميع
-          </Button>
-        </div>
+        {/* Broadcast Button - Admin Only */}
+        {isAdmin && (
+          <div className="flex justify-end">
+            <Button
+              onClick={() => {
+                setIsBroadcast(true);
+                setMessageDialogOpen(true);
+              }}
+              className="gap-2"
+            >
+              <Send className="w-4 h-4" />
+              إرسال رسالة للجميع
+            </Button>
+          </div>
+        )}
 
         {/* Tabs */}
-        <Tabs defaultValue="users">
-          <TabsList className="grid w-full grid-cols-2 mb-6">
-            <TabsTrigger value="users" className="gap-2">
-              <Users className="w-4 h-4" />
-              المستخدمين ({users.length})
-            </TabsTrigger>
-            <TabsTrigger value="blocked" className="gap-2">
-              <Ban className="w-4 h-4" />
-              المحظورين ({blockedUsers.length})
-            </TabsTrigger>
+        <Tabs defaultValue="lessons" className="w-full">
+          <TabsList className={`grid w-full ${isAdmin ? "grid-cols-2" : "grid-cols-1"}`}>
+            <TabsTrigger value="lessons">الدروس</TabsTrigger>
+            {isAdmin && <TabsTrigger value="users">المستخدمين</TabsTrigger>}
           </TabsList>
 
-          <TabsContent value="users">
-            {/* Search */}
-            <div className="relative mb-4">
-              <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-              <Input
-                placeholder="ابحث عن مستخدم..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pr-12"
-              />
-            </div>
-
-            {/* Users List */}
-            <div className="space-y-3">
-              {filteredUsers.map((profile) => (
-                <Card key={profile.id} className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
-                        <Users className="w-5 h-5 text-primary" />
-                      </div>
-                      <div>
-                        <p className="font-medium text-foreground">
-                          {profile.username || "مستخدم"}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {new Date(profile.created_at || "").toLocaleDateString("ar")}
-                        </p>
-                      </div>
-                      {profile.is_blocked && (
-                        <span className="bg-destructive/10 text-destructive px-2 py-1 rounded text-xs">
-                          محظور
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => {
-                          setMessageRecipient(profile);
-                          setIsBroadcast(false);
-                          setMessageDialogOpen(true);
-                        }}
+          {/* Lessons Tab */}
+          <TabsContent value="lessons" className="space-y-4">
+            <div className="flex justify-between items-center">
+              <Dialog open={showLessonDialog} onOpenChange={setShowLessonDialog}>
+                <DialogTrigger asChild>
+                  <Button>
+                    <Plus className="w-4 h-4 ml-2" />
+                    درس جديد
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-lg">
+                  <DialogHeader>
+                    <DialogTitle className="text-right">إنشاء درس جديد</DialogTitle>
+                    <DialogDescription className="text-right">
+                      أضف درساً جديداً للطلاب
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <Input
+                      placeholder="عنوان الدرس"
+                      value={newLesson.title}
+                      onChange={(e) => setNewLesson({ ...newLesson, title: e.target.value })}
+                      className="text-right"
+                    />
+                    <Textarea
+                      placeholder="وصف الدرس"
+                      value={newLesson.description}
+                      onChange={(e) => setNewLesson({ ...newLesson, description: e.target.value })}
+                      className="text-right"
+                    />
+                    <Textarea
+                      placeholder="محتوى الدرس"
+                      value={newLesson.content}
+                      onChange={(e) => setNewLesson({ ...newLesson, content: e.target.value })}
+                      className="text-right min-h-[150px]"
+                    />
+                    <div className="grid grid-cols-2 gap-4">
+                      <Select
+                        value={newLesson.category}
+                        onValueChange={(v) => setNewLesson({ ...newLesson, category: v as any })}
                       >
-                        <Mail className="w-4 h-4" />
-                      </Button>
-                      {!profile.is_blocked && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => {
-                            setUserToBlock(profile);
-                            setBlockDialogOpen(true);
-                          }}
-                        >
-                          <Ban className="w-4 h-4 text-destructive" />
-                        </Button>
-                      )}
+                        <SelectTrigger>
+                          <SelectValue placeholder="التصنيف" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="tajweed">التجويد</SelectItem>
+                          <SelectItem value="tafsir">التفسير</SelectItem>
+                          <SelectItem value="memorization">الحفظ</SelectItem>
+                          <SelectItem value="general">عام</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Select
+                        value={newLesson.level}
+                        onValueChange={(v) => setNewLesson({ ...newLesson, level: v as any })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="المستوى" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="beginner">مبتدئ</SelectItem>
+                          <SelectItem value="intermediate">متوسط</SelectItem>
+                          <SelectItem value="advanced">متقدم</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
+                    <Button onClick={handleCreateLesson} className="w-full">
+                      إنشاء الدرس
+                    </Button>
                   </div>
-                </Card>
-              ))}
+                </DialogContent>
+              </Dialog>
+              <h3 className="text-lg font-semibold">الدروس ({lessons.length})</h3>
             </div>
-          </TabsContent>
 
-          <TabsContent value="blocked">
-            <div className="space-y-3">
-              {blockedUsers.length === 0 ? (
-                <Card className="p-8 text-center">
-                  <Check className="w-12 h-12 text-green-500 mx-auto mb-4" />
-                  <p className="text-muted-foreground">لا يوجد مستخدمين محظورين</p>
-                </Card>
-              ) : (
-                blockedUsers.map((blocked) => (
-                  <Card key={blocked.id} className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-medium text-foreground">
-                          {blocked.user_id.slice(0, 8)}...
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          السبب: {blocked.reason || "غير محدد"}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {new Date(blocked.blocked_at).toLocaleDateString("ar")}
-                        </p>
+            {lessons.length === 0 ? (
+              <Card>
+                <CardContent className="pt-6 text-center">
+                  <BookOpen className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground">لا توجد دروس بعد</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid gap-4">
+                {lessons.map((lesson) => (
+                  <Card key={lesson.id}>
+                    <CardContent className="pt-6">
+                      <div className="flex justify-between items-start">
+                        <div className="flex gap-2">
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => handleDeleteLesson(lesson.id!)}
+                          >
+                            <Trash2 className="w-4 h-4 text-destructive" />
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => handleTogglePublish(lesson.id!)}
+                          >
+                            <Eye className={`w-4 h-4 ${lesson.isPublished ? "text-green-500" : "text-muted-foreground"}`} />
+                          </Button>
+                        </div>
+                        <div className="text-right flex-1">
+                          <div className="flex items-center justify-end gap-2 mb-2">
+                            <Badge variant={lesson.isPublished ? "default" : "secondary"}>
+                              {lesson.isPublished ? "منشور" : "مسودة"}
+                            </Badge>
+                            <h4 className="font-semibold">{lesson.title}</h4>
+                          </div>
+                          <p className="text-sm text-muted-foreground mb-2">{lesson.description}</p>
+                          <div className="flex gap-2 justify-end">
+                            <Badge variant="outline">{lesson.category}</Badge>
+                            <Badge variant="outline">{lesson.level}</Badge>
+                            <span className="text-xs text-muted-foreground">
+                              {lesson.viewCount} مشاهدة
+                            </span>
+                          </div>
+                        </div>
                       </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleUnblockUser(blocked)}
-                      >
-                        إلغاء الحظر
-                      </Button>
-                    </div>
+                    </CardContent>
                   </Card>
-                ))
-              )}
-            </div>
+                ))}
+              </div>
+            )}
           </TabsContent>
-        </Tabs>
 
-        {/* Block Dialog */}
-        <Dialog open={blockDialogOpen} onOpenChange={setBlockDialogOpen}>
-          <DialogContent className="arabic-ui">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <AlertTriangle className="w-5 h-5 text-destructive" />
-                حظر المستخدم
-              </DialogTitle>
-              <DialogDescription>
-                هل أنت متأكد من حظر "{userToBlock?.username || "هذا المستخدم"}"؟
-              </DialogDescription>
-            </DialogHeader>
-            <div className="py-4">
-              <Textarea
-                placeholder="سبب الحظر (اختياري)"
-                value={blockReason}
-                onChange={(e) => setBlockReason(e.target.value)}
-              />
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setBlockDialogOpen(false)}>
-                إلغاء
-              </Button>
-              <Button variant="destructive" onClick={handleBlockUser}>
-                حظر
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+          {/* Users Tab - Admin Only */}
+          {isAdmin && (
+            <TabsContent value="users" className="space-y-4">
+              {/* Search */}
+              <div className="relative">
+                <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <Input
+                  placeholder="ابحث عن مستخدم..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pr-12"
+                />
+              </div>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-right flex items-center justify-end gap-2">
+                    <span>إدارة المستخدمين ({filteredUsers.length})</span>
+                    <UserCog className="w-5 h-5" />
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="text-right">الإجراءات</TableHead>
+                          <TableHead className="text-right">الصلاحية</TableHead>
+                          <TableHead className="text-right">البريد</TableHead>
+                          <TableHead className="text-right">الاسم</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredUsers.map((u) => (
+                          <TableRow key={u.uid}>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                <Select
+                                  value={u.role}
+                                  onValueChange={(v) => handleRoleChange(u.uid, v as UserRole)}
+                                  disabled={u.uid === user?.uid}
+                                >
+                                  <SelectTrigger className="w-28">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="student">طالب</SelectItem>
+                                    <SelectItem value="teacher">معلم</SelectItem>
+                                    <SelectItem value="admin">مسؤول</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => {
+                                    setMessageRecipient(u);
+                                    setIsBroadcast(false);
+                                    setMessageDialogOpen(true);
+                                  }}
+                                >
+                                  <Mail className="w-4 h-4" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                            <TableCell>{getRoleBadge(u.role)}</TableCell>
+                            <TableCell className="text-right">{u.email}</TableCell>
+                            <TableCell className="text-right font-medium">{u.displayName}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          )}
+        </Tabs>
 
         {/* Message Dialog */}
         <Dialog open={messageDialogOpen} onOpenChange={setMessageDialogOpen}>
           <DialogContent className="arabic-ui">
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
+              <DialogTitle className="flex items-center gap-2 justify-end">
+                {isBroadcast ? "إرسال رسالة للجميع" : `إرسال رسالة لـ ${messageRecipient?.displayName || "المستخدم"}`}
                 <Mail className="w-5 h-5 text-primary" />
-                {isBroadcast ? "إرسال رسالة للجميع" : `إرسال رسالة لـ ${messageRecipient?.username || "المستخدم"}`}
               </DialogTitle>
             </DialogHeader>
             <div className="space-y-4 py-4">
@@ -482,12 +598,14 @@ const AdminPage = () => {
                 placeholder="عنوان الرسالة"
                 value={messageSubject}
                 onChange={(e) => setMessageSubject(e.target.value)}
+                className="text-right"
               />
               <Textarea
                 placeholder="محتوى الرسالة"
                 value={messageContent}
                 onChange={(e) => setMessageContent(e.target.value)}
                 rows={5}
+                className="text-right"
               />
             </div>
             <DialogFooter>
