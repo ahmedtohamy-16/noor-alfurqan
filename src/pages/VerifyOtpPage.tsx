@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { ArrowRight, BookOpen, Mail } from "lucide-react";
+import { ArrowRight, Mail, CheckCircle2, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import {
   InputOTP,
   InputOTPGroup,
@@ -14,9 +15,13 @@ const VerifyOtpPage = () => {
   const [otp, setOtp] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
+  const [isVerified, setIsVerified] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const { signUp } = useAuth();
+  
   const email = location.state?.email || "";
+  const type = location.state?.type || "signup";
 
   useEffect(() => {
     if (!email) {
@@ -39,25 +44,50 @@ const VerifyOtpPage = () => {
 
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.verifyOtp({
-        email,
-        token: otp,
-        type: "signup",
+      // Verify OTP via edge function
+      const { data, error } = await supabase.functions.invoke("verify-otp", {
+        body: { email, otp },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
       });
 
       if (error) throw error;
 
-      toast.success("تم التحقق بنجاح! مرحباً بك");
-      navigate("/");
+      if (!data?.valid) {
+        toast.error(data?.error || "رمز التحقق غير صحيح");
+        if (data?.remainingAttempts !== undefined) {
+          toast.info(`المحاولات المتبقية: ${data.remainingAttempts}`);
+        }
+        return;
+      }
+
+      // OTP verified successfully
+      setIsVerified(true);
+
+      // If this is a signup verification, complete the registration
+      if (type === "signup") {
+        const pendingSignup = sessionStorage.getItem("pendingSignup");
+        if (pendingSignup) {
+          const { email: signupEmail, password, username, role } = JSON.parse(pendingSignup);
+          
+          await signUp(signupEmail, password, username, role);
+          sessionStorage.removeItem("pendingSignup");
+          
+          toast.success("تم إنشاء حسابك بنجاح! مرحباً بك في نور الفرقان");
+          
+          setTimeout(() => {
+            navigate("/");
+          }, 1500);
+        }
+      } else {
+        toast.success("تم التحقق بنجاح!");
+        setTimeout(() => {
+          navigate("/");
+        }, 1500);
+      }
     } catch (error: any) {
       console.error("OTP verification error:", error);
-      if (error.message.includes("expired")) {
-        toast.error("انتهت صلاحية الرمز. يرجى طلب رمز جديد");
-      } else if (error.message.includes("invalid")) {
-        toast.error("رمز التحقق غير صحيح");
-      } else {
-        toast.error(error.message || "حدث خطأ في التحقق");
-      }
+      toast.error(error.message || "حدث خطأ في التحقق");
     } finally {
       setIsLoading(false);
     }
@@ -68,15 +98,17 @@ const VerifyOtpPage = () => {
 
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.resend({
-        type: "signup",
-        email,
+      const { error } = await supabase.functions.invoke("verify-otp", {
+        body: { email, type },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
       });
 
       if (error) throw error;
 
       toast.success("تم إرسال رمز جديد إلى بريدك الإلكتروني");
       setResendCooldown(60);
+      setOtp("");
     } catch (error: any) {
       console.error("Resend OTP error:", error);
       toast.error(error.message || "حدث خطأ في إعادة الإرسال");
@@ -84,6 +116,20 @@ const VerifyOtpPage = () => {
       setIsLoading(false);
     }
   };
+
+  if (isVerified) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center px-4">
+        <div className="text-center">
+          <div className="w-24 h-24 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse">
+            <CheckCircle2 className="w-12 h-12 text-green-500" />
+          </div>
+          <h1 className="text-2xl font-bold text-foreground mb-2">تم التحقق بنجاح!</h1>
+          <p className="text-muted-foreground">جاري تحويلك...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -107,7 +153,7 @@ const VerifyOtpPage = () => {
               تحقق من بريدك
             </h1>
             <p className="text-muted-foreground">
-              أدخل رمز التحقق المرسل إلى
+              أرسلنا رمز تحقق مكون من 6 أرقام إلى
             </p>
             <p className="text-primary font-medium mt-1" dir="ltr">
               {email}
@@ -115,6 +161,12 @@ const VerifyOtpPage = () => {
           </div>
 
           <div className="bg-card border border-border rounded-2xl p-6 shadow-sm">
+            <div className="text-center mb-4">
+              <p className="text-sm text-muted-foreground">
+                أدخل الرمز المرسل من <span className="font-bold text-foreground">نور الفرقان</span>
+              </p>
+            </div>
+
             <div className="flex justify-center mb-6" dir="ltr">
               <InputOTP
                 maxLength={6}
@@ -149,13 +201,20 @@ const VerifyOtpPage = () => {
                 variant="ghost"
                 onClick={handleResendOtp}
                 disabled={isLoading || resendCooldown > 0}
-                className="text-primary"
+                className="text-primary gap-2"
               >
+                <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
                 {resendCooldown > 0
                   ? `إعادة الإرسال بعد ${resendCooldown} ثانية`
                   : "إعادة إرسال الرمز"}
               </Button>
             </div>
+          </div>
+
+          <div className="mt-6 text-center">
+            <p className="text-xs text-muted-foreground">
+              الرمز صالح لمدة 10 دقائق فقط
+            </p>
           </div>
         </div>
       </main>

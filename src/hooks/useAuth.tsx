@@ -1,16 +1,19 @@
 import { useState, useEffect, createContext, useContext, ReactNode } from "react";
 import { 
   onAuthChange, 
-  signIn, 
-  signUp, 
+  signIn as firebaseSignIn, 
+  signUp as firebaseSignUp, 
   signOut as firebaseSignOut, 
   getCurrentUser,
   getUserRole,
   getUserProfile,
   FirebaseUser,
   UserRole,
-  UserProfile
+  UserProfile,
+  firestoreQuery,
+  COLLECTIONS
 } from "@/lib/firebase";
+import { toast } from "sonner";
 
 interface AuthContextType {
   user: FirebaseUser | null;
@@ -19,10 +22,12 @@ interface AuthContextType {
   isLoading: boolean;
   isAdmin: boolean;
   isTeacher: boolean;
+  isBanned: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, username?: string, role?: UserRole) => Promise<void>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
+  checkUserBanned: (email: string) => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -32,6 +37,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [role, setRole] = useState<UserRole | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isBanned, setIsBanned] = useState(false);
 
   const loadUserData = async (uid: string) => {
     try {
@@ -41,6 +47,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       ]);
       setRole(fetchedRole);
       setUserProfile(fetchedProfile);
+
+      // Check if user is banned in Firestore
+      if (fetchedProfile && (fetchedProfile as any).isBanned) {
+        setIsBanned(true);
+        await firebaseSignOut();
+        toast.error("حسابك محظور. تواصل مع الإدارة للمزيد من المعلومات");
+        return;
+      }
     } catch (error) {
       console.error("Error loading user data:", error);
     }
@@ -62,6 +76,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       } else {
         setRole(null);
         setUserProfile(null);
+        setIsBanned(false);
       }
       setIsLoading(false);
     });
@@ -70,7 +85,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const handleSignIn = async (email: string, password: string) => {
-    await signIn(email, password);
+    try {
+      await firebaseSignIn(email, password);
+    } catch (error: any) {
+      // Check for disabled user (banned)
+      if (error.code === "auth/user-disabled") {
+        setIsBanned(true);
+        throw error;
+      }
+      throw error;
+    }
   };
 
   const handleSignUp = async (
@@ -79,18 +103,40 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     username?: string,
     userRole: UserRole = "student"
   ) => {
-    await signUp(email, password, username, userRole);
+    await firebaseSignUp(email, password, username, userRole);
   };
 
   const handleSignOut = async () => {
     await firebaseSignOut();
     setRole(null);
     setUserProfile(null);
+    setIsBanned(false);
   };
 
   const refreshProfile = async () => {
     if (user) {
       await loadUserData(user.uid);
+    }
+  };
+
+  // Check if a user is banned by email (before sign in)
+  const checkUserBanned = async (email: string): Promise<boolean> => {
+    try {
+      const users = await firestoreQuery<any>(
+        COLLECTIONS.USERS,
+        [{ field: "email", op: "==", value: email }],
+        undefined,
+        "desc",
+        1
+      );
+
+      if (users.length > 0 && users[0].isBanned) {
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error("Error checking banned status:", error);
+      return false;
     }
   };
 
@@ -103,10 +149,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         isLoading, 
         isAdmin: role === "admin",
         isTeacher: role === "teacher" || role === "admin",
+        isBanned,
         signIn: handleSignIn, 
         signUp: handleSignUp, 
         signOut: handleSignOut,
-        refreshProfile
+        refreshProfile,
+        checkUserBanned
       }}
     >
       {children}
