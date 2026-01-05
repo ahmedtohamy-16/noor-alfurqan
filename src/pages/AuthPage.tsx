@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Mail, Lock, User, ArrowRight, BookOpen, GraduationCap, Users, Shield } from "lucide-react";
+import { Mail, Lock, User, ArrowRight, BookOpen, GraduationCap, Users, Shield, Ban } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { UserRole } from "@/lib/firebase";
+import { supabase } from "@/integrations/supabase/client";
 
 const AuthPage = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -14,8 +15,9 @@ const AuthPage = () => {
   const [username, setUsername] = useState("");
   const [selectedRole, setSelectedRole] = useState<UserRole>("student");
   const [isLoading, setIsLoading] = useState(false);
+  const [isBanned, setIsBanned] = useState(false);
   const navigate = useNavigate();
-  const { user, signIn, signUp } = useAuth();
+  const { user, signIn, signUp, checkUserBanned } = useAuth();
 
   // Redirect if already logged in
   useEffect(() => {
@@ -27,19 +29,55 @@ const AuthPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setIsBanned(false);
 
     try {
       if (isLogin) {
+        // Check if user is banned before attempting login
+        const banned = await checkUserBanned(email);
+        if (banned) {
+          setIsBanned(true);
+          toast.error("حسابك محظور. تواصل مع الإدارة للمزيد من المعلومات");
+          setIsLoading(false);
+          return;
+        }
+
         await signIn(email, password);
         toast.success("تم تسجيل الدخول بنجاح");
         navigate("/");
       } else {
-        await signUp(email, password, username || email.split("@")[0], selectedRole);
-        toast.success("تم إنشاء الحساب بنجاح! تحقق من بريدك الإلكتروني للتأكيد");
-        navigate("/");
+        // Generate and send OTP for signup
+        const response = await supabase.functions.invoke("verify-otp", {
+          body: { email, type: "signup" },
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+        });
+
+        if (response.error) {
+          throw new Error(response.error.message);
+        }
+
+        // Store signup data temporarily
+        sessionStorage.setItem("pendingSignup", JSON.stringify({
+          email,
+          password,
+          username: username || email.split("@")[0],
+          role: selectedRole,
+        }));
+
+        toast.success("تم إرسال رمز التحقق إلى بريدك الإلكتروني");
+        navigate("/verify-otp", { state: { email, type: "signup" } });
       }
     } catch (error: any) {
       console.error("Auth error:", error);
+      
+      // Check for banned user error
+      if (error.code === "auth/user-disabled") {
+        setIsBanned(true);
+        toast.error("حسابك محظور. تواصل مع الإدارة للمزيد من المعلومات");
+        return;
+      }
+      
       if (error.code === "auth/invalid-credential" || error.code === "auth/user-not-found") {
         toast.error("البريد الإلكتروني أو كلمة المرور غير صحيحة");
       } else if (error.code === "auth/email-already-in-use") {
@@ -86,6 +124,19 @@ const AuthPage = () => {
 
       <main className="flex-1 flex items-center justify-center px-4 arabic-ui">
         <div className="w-full max-w-md">
+          {/* Banned Message */}
+          {isBanned && (
+            <div className="mb-6 p-4 bg-destructive/10 border border-destructive/30 rounded-xl">
+              <div className="flex items-center justify-center gap-3 text-destructive">
+                <Ban className="w-8 h-8" />
+                <div className="text-center">
+                  <h3 className="font-bold text-lg">حسابك محظور</h3>
+                  <p className="text-sm opacity-80">تواصل مع الإدارة للمزيد من المعلومات</p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Logo */}
           <div className="text-center mb-8">
             <div className="w-20 h-20 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
@@ -181,7 +232,7 @@ const AuthPage = () => {
                 type="submit"
                 className="w-full"
                 size="lg"
-                disabled={isLoading}
+                disabled={isLoading || isBanned}
               >
                 {isLoading
                   ? "جاري التحميل..."
@@ -197,7 +248,10 @@ const AuthPage = () => {
                 {isLogin ? "ليس لديك حساب؟" : "لديك حساب بالفعل؟"}
                 <button
                   type="button"
-                  onClick={() => setIsLogin(!isLogin)}
+                  onClick={() => {
+                    setIsLogin(!isLogin);
+                    setIsBanned(false);
+                  }}
                   className="text-primary font-medium mr-2 hover:underline"
                 >
                   {isLogin ? "إنشاء حساب" : "تسجيل الدخول"}
