@@ -36,8 +36,8 @@ const bookMappings: Record<string, { folder: string; fileWithDiacritics: string;
   },
   ibnmajah: {
     folder: 'Sunan_Ibn-Maja',
-    fileWithDiacritics: 'sunan_ibn_maja_ahadith_mushakkala_mufassala.utf8.csv',
-    fileWithoutDiacritics: 'sunan_ibn_maja_ahadith.utf8.csv'
+    fileWithDiacritics: 'sunan_ibn-maja_ahadith_mushakkala_mufassala.utf8.csv',
+    fileWithoutDiacritics: 'sunan_ibn-maja_ahadith.utf8.csv'
   },
   malik: {
     folder: 'Maliks_Muwataa',
