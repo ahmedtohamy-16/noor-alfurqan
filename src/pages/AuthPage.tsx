@@ -47,10 +47,17 @@ const AuthPage = () => {
         navigate("/");
       } else {
         // Generate and send OTP for signup
-        const response = await supabase.functions.invoke("verify-otp", {
-          body: { email, type: "signup" },
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        
+        // Store OTP in session for verification
+        sessionStorage.setItem("pendingOtp", JSON.stringify({
+          otp,
+          email: email.toLowerCase(),
+          expiresAt: Date.now() + 10 * 60 * 1000, // 10 minutes
+        }));
+
+        const response = await supabase.functions.invoke("send-otp", {
+          body: { email, otp, type: "signup" },
         });
 
         if (response.error) {
