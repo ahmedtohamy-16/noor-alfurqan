@@ -34,6 +34,10 @@ import NotificationSettingsPage from "./components/NotificationSettingsPage";
 import HadithPage from "./pages/HadithPage";
 import AdminPage from "./pages/AdminPage";
 import LessonsPage from "./pages/LessonsPage";
+import TeacherDashboard from "./pages/TeacherDashboard";
+import MessagesPage from "./pages/MessagesPage";
+import UserManagementPage from "./pages/UserManagementPage";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -74,6 +78,10 @@ const App = () => (
                     <Route path="/hadith" element={<HadithPage />} />
                     <Route path="/admin" element={<AdminPage />} />
                     <Route path="/lessons" element={<LessonsPage />} />
+                    <Route path="/teacher" element={<TeacherDashboard />} />
+                    <Route path="/messages" element={<MessagesPage />} />
+                    <Route path="/user-management" element={<UserManagementPage />} />
+                    <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                   <GlobalAudioPlayer />

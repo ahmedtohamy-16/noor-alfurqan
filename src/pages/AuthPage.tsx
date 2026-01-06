@@ -249,8 +249,17 @@ const AuthPage = () => {
               </Button>
             </form>
 
-            {/* Toggle */}
-            <div className="text-center mt-6 pt-6 border-t border-border">
+            {/* Forgot Password & Toggle */}
+            <div className="text-center mt-6 pt-6 border-t border-border space-y-3">
+              {isLogin && (
+                <button
+                  type="button"
+                  onClick={() => navigate("/forgot-password")}
+                  className="text-primary text-sm hover:underline"
+                >
+                  نسيت كلمة المرور؟
+                </button>
+              )}
               <p className="text-muted-foreground">
                 {isLogin ? "ليس لديك حساب؟" : "لديك حساب بالفعل؟"}
                 <button

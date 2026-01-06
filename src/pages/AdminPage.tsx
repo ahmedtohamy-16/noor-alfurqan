@@ -356,9 +356,25 @@ const AdminPage = () => {
           </div>
         )}
 
-        {/* Broadcast Button - Admin Only */}
+        {/* Admin Quick Actions */}
         {isAdmin && (
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2 flex-wrap">
+            <Button
+              variant="outline"
+              onClick={() => navigate("/user-management")}
+              className="gap-2"
+            >
+              <UserCog className="w-4 h-4" />
+              إدارة المستخدمين
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => navigate("/teacher")}
+              className="gap-2"
+            >
+              <GraduationCap className="w-4 h-4" />
+              لوحة المعلم
+            </Button>
             <Button
               onClick={() => {
                 setIsBroadcast(true);
