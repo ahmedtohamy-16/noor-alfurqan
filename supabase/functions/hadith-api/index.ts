@@ -41,8 +41,8 @@ const bookMappings: Record<string, { folder: string; fileWithDiacritics: string;
   },
   malik: {
     folder: 'Maliks_Muwataa',
-    fileWithDiacritics: 'mawtta_malik_ahadith_mushakkala_mufassala.utf8.csv',
-    fileWithoutDiacritics: 'mawtta_malik_ahadith.utf8.csv'
+    fileWithDiacritics: 'maliks_muwataa_ahadith_mushakkala_mufassala.utf8.csv',
+    fileWithoutDiacritics: 'maliks_muwataa_ahadith.utf8.csv'
   },
   ahmad: {
     folder: 'Musnad_Ahmad_Ibn-Hanbal',
