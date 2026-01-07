@@ -580,6 +580,36 @@ export type Database = {
         }
         Relationships: []
       }
+      otp_codes: {
+        Row: {
+          attempts: number
+          code: string
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          type: string
+        }
+        Insert: {
+          attempts?: number
+          code: string
+          created_at?: string
+          email: string
+          expires_at: string
+          id?: string
+          type?: string
+        }
+        Update: {
+          attempts?: number
+          code?: string
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          type?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -1119,6 +1149,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cleanup_expired_otps: { Args: never; Returns: undefined }
       generate_invite_code: { Args: never; Returns: string }
       get_usage_stats: { Args: never; Returns: Json }
       has_role: {
