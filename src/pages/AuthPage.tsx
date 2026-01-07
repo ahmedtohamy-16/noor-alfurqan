@@ -46,25 +46,25 @@ const AuthPage = () => {
         toast.success("تم تسجيل الدخول بنجاح");
         navigate("/");
       } else {
-        // Generate and send OTP for signup
-        const otp = Math.floor(100000 + Math.random() * 900000).toString();
-        
-        // Store OTP in session for verification
-        sessionStorage.setItem("pendingOtp", JSON.stringify({
-          otp,
-          email: email.toLowerCase(),
-          expiresAt: Date.now() + 10 * 60 * 1000, // 10 minutes
-        }));
+        // Generate OTP server-side (not client-side for security)
+        const response = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/verify-otp?action=generate`,
+          {
+            method: "POST",
+            headers: { 
+              "Content-Type": "application/json",
+              "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+            },
+            body: JSON.stringify({ email: email.toLowerCase(), type: "signup" }),
+          }
+        );
 
-        const response = await supabase.functions.invoke("send-otp", {
-          body: { email, otp, type: "signup" },
-        });
-
-        if (response.error) {
-          throw new Error(response.error.message);
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || "فشل في إرسال رمز التحقق");
         }
 
-        // Store signup data temporarily
+        // Store signup data temporarily (no OTP stored client-side)
         sessionStorage.setItem("pendingSignup", JSON.stringify({
           email,
           password,

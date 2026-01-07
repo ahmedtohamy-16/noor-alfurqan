@@ -105,6 +105,7 @@ const TeacherDashboard = () => {
 
   // File upload
   const [isUploading, setIsUploading] = useState(false);
+  const [signedUrls, setSignedUrls] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -149,13 +150,37 @@ const TeacherDashboard = () => {
 
       if (coursesRes.data) setCourses(coursesRes.data as unknown as Course[]);
       if (quizzesRes.data) setQuizzes(quizzesRes.data as unknown as Quiz[]);
-      if (filesRes.data) setFiles(filesRes.data as unknown as TeacherFile[]);
+      if (filesRes.data) {
+        const teacherFiles = filesRes.data as unknown as TeacherFile[];
+        setFiles(teacherFiles);
+        // Generate signed URLs for all files
+        await generateSignedUrls(teacherFiles);
+      }
     } catch (error) {
       console.error("Error loading data:", error);
       toast.error("حدث خطأ في تحميل البيانات");
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Generate signed URLs for secure file access (1 hour expiration)
+  const generateSignedUrls = async (teacherFiles: TeacherFile[]) => {
+    const urls: Record<string, string> = {};
+    
+    for (const file of teacherFiles) {
+      // file_url now stores the path, not the public URL
+      const filePath = file.file_url;
+      const { data, error } = await supabase.storage
+        .from("teacher-content")
+        .createSignedUrl(filePath, 3600); // 1 hour
+      
+      if (data && !error) {
+        urls[file.id] = data.signedUrl;
+      }
+    }
+    
+    setSignedUrls(urls);
   };
 
   const handleCreateCourse = async () => {
@@ -234,14 +259,11 @@ const TeacherDashboard = () => {
 
       if (uploadError) throw uploadError;
 
-      const { data: urlData } = supabase.storage
-        .from("teacher-content")
-        .getPublicUrl(fileName);
-
+      // Store the file path instead of public URL for signed URL generation
       const { error: dbError } = await supabase.from("teacher_files" as any).insert({
         teacher_id: user.uid,
         file_name: file.name,
-        file_url: urlData.publicUrl,
+        file_url: fileName, // Store the path, not public URL
         file_type: file.type,
         file_size: file.size,
       });
@@ -258,13 +280,10 @@ const TeacherDashboard = () => {
     }
   };
 
-  const handleDeleteFile = async (fileId: string, fileUrl: string) => {
+  const handleDeleteFile = async (fileId: string, filePath: string) => {
     try {
-      // Extract path from URL
-      const urlParts = fileUrl.split("/teacher-content/");
-      if (urlParts[1]) {
-        await supabase.storage.from("teacher-content").remove([urlParts[1]]);
-      }
+      // filePath is now the storage path, not the public URL
+      await supabase.storage.from("teacher-content").remove([filePath]);
 
       const { error } = await supabase.from("teacher_files" as any).delete().eq("id", fileId);
 
@@ -706,10 +725,10 @@ const TeacherDashboard = () => {
                           <Trash2 className="w-4 h-4 text-destructive" />
                         </Button>
                         <a
-                          href={file.file_url}
+                          href={signedUrls[file.id] || "#"}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center gap-3 flex-1 justify-end hover:text-primary transition-colors"
+                          className={`flex items-center gap-3 flex-1 justify-end transition-colors ${signedUrls[file.id] ? "hover:text-primary" : "opacity-50 pointer-events-none"}`}
                         >
                           <div className="text-right">
                             <p className="font-medium truncate max-w-[200px]">{file.file_name}</p>

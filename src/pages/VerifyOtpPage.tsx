@@ -45,13 +45,23 @@ const VerifyOtpPage = () => {
     setIsLoading(true);
     try {
       // Verify OTP via edge function
-      const { data, error } = await supabase.functions.invoke("verify-otp", {
-        body: { email, otp },
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-      });
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/verify-otp?action=verify`,
+        {
+          method: "POST",
+          headers: { 
+            "Content-Type": "application/json",
+            "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+          body: JSON.stringify({ email, otp }),
+        }
+      );
+      
+      const data = await response.json();
 
-      if (error) throw error;
+      if (!response.ok) {
+        throw new Error(data?.error || "فشل في التحقق من الرمز");
+      }
 
       if (!data?.valid) {
         toast.error(data?.error || "رمز التحقق غير صحيح");
@@ -98,13 +108,23 @@ const VerifyOtpPage = () => {
 
     setIsLoading(true);
     try {
-      const { error } = await supabase.functions.invoke("verify-otp", {
-        body: { email, type },
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-      });
+      // Request new OTP via edge function (generate action)
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/verify-otp?action=generate`,
+        {
+          method: "POST",
+          headers: { 
+            "Content-Type": "application/json",
+            "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+          body: JSON.stringify({ email, type }),
+        }
+      );
 
-      if (error) throw error;
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "فشل في إعادة إرسال الرمز");
+      }
 
       toast.success("تم إرسال رمز جديد إلى بريدك الإلكتروني");
       setResendCooldown(60);
