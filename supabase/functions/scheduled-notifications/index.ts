@@ -126,6 +126,18 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Verify cron secret token to prevent unauthorized access
+  const cronSecret = Deno.env.get("CRON_SECRET_TOKEN");
+  const authHeader = req.headers.get("X-Cron-Secret") || req.headers.get("Authorization")?.replace("Bearer ", "");
+  
+  if (cronSecret && authHeader !== cronSecret) {
+    console.warn("⚠️ Unauthorized access attempt to scheduled-notifications");
+    return new Response(
+      JSON.stringify({ error: "Unauthorized" }),
+      { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
   const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
