@@ -13,7 +13,7 @@ interface LocationPickerProps {
   currentCity?: string;
 }
 
-const MAPBOX_TOKEN = "pk.eyJ1IjoibG92YWJsZS1haSIsImEiOiJjbTVxOXBmYjEwMjVhMmtzODc5dmMxMHFxIn0.xXyJdYlCTJk-SMc4M9LXFQ";
+const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || "";
 
 const LocationPicker = ({ onLocationSelect, currentCity }: LocationPickerProps) => {
   const [isOpen, setIsOpen] = useState(false);

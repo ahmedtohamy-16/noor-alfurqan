@@ -1,13 +1,11 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type",
 };
-
-// In-memory OTP storage (for demo - in production use Redis or database)
-const otpStore = new Map<string, { otp: string; expiresAt: number; attempts: number }>();
 
 interface VerifyRequest {
   email: string;
@@ -24,12 +22,15 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+  const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
   const url = new URL(req.url);
   const action = url.searchParams.get("action");
 
   try {
     if (action === "generate") {
-      // Generate a new OTP
       const { email, type = "signup" }: GenerateRequest = await req.json();
 
       if (!email) {
@@ -39,34 +40,57 @@ const handler = async (req: Request): Promise<Response> => {
         );
       }
 
+      const normalizedEmail = email.toLowerCase().trim();
+
+      // Delete any existing OTPs for this email
+      await supabase
+        .from("otp_codes")
+        .delete()
+        .eq("email", normalizedEmail);
+
       // Generate 6-digit OTP
       const otp = Math.floor(100000 + Math.random() * 900000).toString();
       
-      // Store OTP with 10-minute expiration
-      otpStore.set(email.toLowerCase(), {
-        otp,
-        expiresAt: Date.now() + 10 * 60 * 1000, // 10 minutes
-        attempts: 0,
-      });
+      // Store OTP in database with 10-minute expiration
+      const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+      
+      const { error: insertError } = await supabase
+        .from("otp_codes")
+        .insert({
+          email: normalizedEmail,
+          code: otp,
+          type,
+          expires_at: expiresAt,
+          attempts: 0,
+        });
 
-      // Send OTP via email
-      const supabaseUrl = Deno.env.get("SUPABASE_URL") || Deno.env.get("VITE_SUPABASE_URL");
-      const supabaseKey = Deno.env.get("SUPABASE_ANON_KEY") || Deno.env.get("VITE_SUPABASE_PUBLISHABLE_KEY");
-
-      const sendResponse = await fetch(`${supabaseUrl}/functions/v1/send-otp`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${supabaseKey}`,
-        },
-        body: JSON.stringify({ email, otp, type }),
-      });
-
-      if (!sendResponse.ok) {
-        console.error("Failed to send OTP email");
+      if (insertError) {
+        console.error("Failed to store OTP:", insertError);
+        return new Response(
+          JSON.stringify({ error: "فشل في إنشاء رمز التحقق" }),
+          { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
       }
 
-      console.log(`✅ OTP generated for ${email}: ${otp}`);
+      // Send OTP via email
+      try {
+        const sendResponse = await fetch(`${supabaseUrl}/functions/v1/send-otp`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${supabaseServiceKey}`,
+          },
+          body: JSON.stringify({ email: normalizedEmail, otp, type }),
+        });
+
+        if (!sendResponse.ok) {
+          console.error("Failed to send OTP email:", await sendResponse.text());
+        }
+      } catch (emailError) {
+        console.error("Email sending error:", emailError);
+      }
+
+      console.log(`✅ OTP generated and stored for ${normalizedEmail}`);
 
       return new Response(
         JSON.stringify({ success: true, message: "تم إرسال رمز التحقق" }),
@@ -75,7 +99,6 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     if (action === "verify") {
-      // Verify OTP
       const { email, otp }: VerifyRequest = await req.json();
 
       if (!email || !otp) {
@@ -85,9 +108,16 @@ const handler = async (req: Request): Promise<Response> => {
         );
       }
 
-      const stored = otpStore.get(email.toLowerCase());
+      const normalizedEmail = email.toLowerCase().trim();
 
-      if (!stored) {
+      // Get OTP from database
+      const { data: otpRecord, error: fetchError } = await supabase
+        .from("otp_codes")
+        .select("*")
+        .eq("email", normalizedEmail)
+        .single();
+
+      if (fetchError || !otpRecord) {
         return new Response(
           JSON.stringify({ valid: false, error: "لم يتم العثور على رمز تحقق. اطلب رمزاً جديداً" }),
           { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
@@ -95,8 +125,8 @@ const handler = async (req: Request): Promise<Response> => {
       }
 
       // Check expiration
-      if (Date.now() > stored.expiresAt) {
-        otpStore.delete(email.toLowerCase());
+      if (new Date() > new Date(otpRecord.expires_at)) {
+        await supabase.from("otp_codes").delete().eq("email", normalizedEmail);
         return new Response(
           JSON.stringify({ valid: false, error: "انتهت صلاحية الرمز. اطلب رمزاً جديداً" }),
           { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
@@ -104,8 +134,8 @@ const handler = async (req: Request): Promise<Response> => {
       }
 
       // Check max attempts (5)
-      if (stored.attempts >= 5) {
-        otpStore.delete(email.toLowerCase());
+      if (otpRecord.attempts >= 5) {
+        await supabase.from("otp_codes").delete().eq("email", normalizedEmail);
         return new Response(
           JSON.stringify({ valid: false, error: "تجاوزت عدد المحاولات. اطلب رمزاً جديداً" }),
           { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
@@ -113,22 +143,27 @@ const handler = async (req: Request): Promise<Response> => {
       }
 
       // Verify OTP
-      if (stored.otp !== otp) {
-        stored.attempts++;
+      if (otpRecord.code !== otp) {
+        // Increment attempts
+        await supabase
+          .from("otp_codes")
+          .update({ attempts: otpRecord.attempts + 1 })
+          .eq("email", normalizedEmail);
+
         return new Response(
           JSON.stringify({ 
             valid: false, 
             error: "رمز التحقق غير صحيح",
-            remainingAttempts: 5 - stored.attempts 
+            remainingAttempts: 5 - (otpRecord.attempts + 1)
           }),
           { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
         );
       }
 
-      // OTP is valid - remove from store
-      otpStore.delete(email.toLowerCase());
+      // OTP is valid - delete from database
+      await supabase.from("otp_codes").delete().eq("email", normalizedEmail);
 
-      console.log(`✅ OTP verified successfully for ${email}`);
+      console.log(`✅ OTP verified successfully for ${normalizedEmail}`);
 
       return new Response(
         JSON.stringify({ valid: true, message: "تم التحقق بنجاح" }),
