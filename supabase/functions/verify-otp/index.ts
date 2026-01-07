@@ -48,8 +48,11 @@ const handler = async (req: Request): Promise<Response> => {
         .delete()
         .eq("email", normalizedEmail);
 
-      // Generate 6-digit OTP
-      const otp = Math.floor(100000 + Math.random() * 900000).toString();
+      // Generate 6-digit OTP using cryptographically secure random
+      const crypto = globalThis.crypto;
+      const array = new Uint32Array(1);
+      crypto.getRandomValues(array);
+      const otp = (100000 + (array[0] % 900000)).toString();
       
       // Store OTP in database with 10-minute expiration
       const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
