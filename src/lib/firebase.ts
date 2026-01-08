@@ -121,6 +121,15 @@ export const COLLECTIONS = {
   LESSONS: "lessons",
   SURAHS: "surahs",
   AYAHS: "ayahs",
+  CONVERSATIONS: "conversations",
+  MESSAGES: "messages",
+  COURSES: "courses",
+  QUIZZES: "quizzes",
+  TEACHER_FILES: "teacher_files",
+  QUIZ_QUESTIONS: "quiz_questions",
+  QUIZ_ATTEMPTS: "quiz_attempts",
+  COURSE_ENROLLMENTS: "course_enrollments",
+  COURSE_LESSONS: "course_lessons",
 };
 
 // ==================== AUTH FUNCTIONS ====================

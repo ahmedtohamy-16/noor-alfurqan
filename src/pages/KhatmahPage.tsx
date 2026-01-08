@@ -21,8 +21,15 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import Header from "@/components/Header";
-import { supabase } from "@/integrations/supabase/client";
-import type { User } from "@supabase/supabase-js";
+import { useAuth } from "@/hooks/useAuth";
+import { 
+  COLLECTIONS, 
+  firestoreQuery, 
+  firestoreAdd, 
+  firestoreSet,
+  firestoreGet,
+  firestoreUpdate
+} from "@/lib/firebase";
 
 interface Khatmah {
   id: string;
@@ -36,6 +43,7 @@ interface Khatmah {
 interface Participant {
   id: string;
   user_id: string;
+  khatmah_id: string;
   assigned_juz: number;
   is_completed: boolean;
   profiles?: {
@@ -43,8 +51,17 @@ interface Participant {
   };
 }
 
+const generateInviteCode = (): string => {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let result = "";
+  for (let i = 0; i < 6; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+};
+
 const KhatmahPage = () => {
-  const [user, setUser] = useState<User | null>(null);
+  const { user, isLoading: authLoading } = useAuth();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isJoinOpen, setIsJoinOpen] = useState(false);
   const [newKhatmahName, setNewKhatmahName] = useState("");
@@ -53,31 +70,38 @@ const KhatmahPage = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setUser(session?.user ?? null);
-      }
-    );
-
-    return () => subscription.unsubscribe();
-  }, []);
-
   // Fetch user's khatmahs
   const { data: khatmahs, isLoading } = useQuery({
-    queryKey: ["khatmahs", user?.id],
+    queryKey: ["khatmahs", user?.uid],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("khatmahs")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-      return data as Khatmah[];
+      if (!user) return [];
+      
+      // Get khatmahs created by user
+      const createdKhatmahs = await firestoreQuery<Khatmah>(
+        COLLECTIONS.KHATMAHS,
+        [{ field: "created_by", op: "==", value: user.uid }],
+        "created_at",
+        "desc"
+      );
+      
+      // Get khatmahs user is participating in
+      const participations = await firestoreQuery<Participant>(
+        COLLECTIONS.KHATMAH_PARTICIPANTS,
+        [{ field: "user_id", op: "==", value: user.uid }]
+      );
+      
+      const participatedKhatmahIds = participations.map(p => p.khatmah_id);
+      
+      // Fetch participated khatmahs
+      const participatedKhatmahs: Khatmah[] = [];
+      for (const khatmahId of participatedKhatmahIds) {
+        const khatmah = await firestoreGet<Khatmah>(COLLECTIONS.KHATMAHS, khatmahId);
+        if (khatmah && !createdKhatmahs.find(k => k.id === khatmah.id)) {
+          participatedKhatmahs.push(khatmah);
+        }
+      }
+      
+      return [...createdKhatmahs, ...participatedKhatmahs];
     },
     enabled: !!user,
   });
@@ -85,32 +109,27 @@ const KhatmahPage = () => {
   // Create khatmah mutation
   const createKhatmah = useMutation({
     mutationFn: async (name: string) => {
-      // Generate invite code
-      const { data: codeData, error: codeError } = await supabase.rpc(
-        "generate_invite_code"
-      );
-      if (codeError) throw codeError;
-
-      const { data, error } = await supabase
-        .from("khatmahs")
-        .insert({
-          name,
-          invite_code: codeData,
-          created_by: user!.id,
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      // Add creator as first participant with juz 1
-      await supabase.from("khatmah_participants").insert({
-        khatmah_id: data.id,
-        user_id: user!.id,
-        assigned_juz: 1,
+      if (!user) throw new Error("User not authenticated");
+      
+      const inviteCode = generateInviteCode();
+      
+      const khatmahId = await firestoreAdd(COLLECTIONS.KHATMAHS, {
+        name,
+        invite_code: inviteCode,
+        created_by: user.uid,
+        is_completed: false,
+        created_at: new Date().toISOString(),
       });
 
-      return data;
+      // Add creator as first participant with juz 1
+      await firestoreAdd(COLLECTIONS.KHATMAH_PARTICIPANTS, {
+        khatmah_id: khatmahId,
+        user_id: user.uid,
+        assigned_juz: 1,
+        is_completed: false,
+      });
+
+      return { id: khatmahId, invite_code: inviteCode };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["khatmahs"] });
@@ -124,22 +143,63 @@ const KhatmahPage = () => {
     },
   });
 
-  // Join khatmah mutation using secure RPC function
+  // Join khatmah mutation
   const joinKhatmah = useMutation({
     mutationFn: async (code: string) => {
-      const { data, error } = await supabase.rpc("join_khatmah_by_code", {
-        p_invite_code: code,
+      if (!user) throw new Error("User not authenticated");
+      
+      // Find khatmah by invite code
+      const khatmahs = await firestoreQuery<Khatmah>(
+        COLLECTIONS.KHATMAHS,
+        [{ field: "invite_code", op: "==", value: code.toUpperCase() }]
+      );
+      
+      if (khatmahs.length === 0) {
+        throw new Error("كود الدعوة غير صحيح");
+      }
+      
+      const khatmah = khatmahs[0];
+      
+      // Check if already a participant
+      const existingParticipation = await firestoreQuery<Participant>(
+        COLLECTIONS.KHATMAH_PARTICIPANTS,
+        [
+          { field: "khatmah_id", op: "==", value: khatmah.id },
+          { field: "user_id", op: "==", value: user.uid }
+        ]
+      );
+      
+      if (existingParticipation.length > 0) {
+        throw new Error("أنت مشارك بالفعل في هذه الختمة");
+      }
+      
+      // Get current participants to find next available juz
+      const participants = await firestoreQuery<Participant>(
+        COLLECTIONS.KHATMAH_PARTICIPANTS,
+        [{ field: "khatmah_id", op: "==", value: khatmah.id }]
+      );
+      
+      const assignedJuzs = participants.map(p => p.assigned_juz);
+      let availableJuz = 1;
+      for (let i = 1; i <= 30; i++) {
+        if (!assignedJuzs.includes(i)) {
+          availableJuz = i;
+          break;
+        }
+      }
+      
+      if (participants.length >= 30) {
+        throw new Error("الختمة مكتملة");
+      }
+      
+      await firestoreAdd(COLLECTIONS.KHATMAH_PARTICIPANTS, {
+        khatmah_id: khatmah.id,
+        user_id: user.uid,
+        assigned_juz: availableJuz,
+        is_completed: false,
       });
 
-      if (error) throw error;
-
-      const result = data as { success: boolean; error?: string; khatmah_id?: string; assigned_juz?: number };
-      
-      if (!result.success) {
-        throw new Error(result.error || "حدث خطأ");
-      }
-
-      return result;
+      return { khatmah_id: khatmah.id, assigned_juz: availableJuz };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["khatmahs"] });
@@ -168,6 +228,27 @@ const KhatmahPage = () => {
       .join("");
   };
 
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="container mx-auto px-4 py-6">
+          <div className="space-y-4">
+            {[...Array(3)].map((_, i) => (
+              <div
+                key={i}
+                className="bg-card rounded-xl p-4 animate-pulse border border-border"
+              >
+                <div className="h-6 bg-muted rounded w-1/3 mb-2" />
+                <div className="h-4 bg-muted rounded w-1/2" />
+              </div>
+            ))}
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   if (!user) {
     return (
       <div className="min-h-screen bg-background">
@@ -179,7 +260,7 @@ const KhatmahPage = () => {
             <p className="text-muted-foreground mb-8">
               سجل دخولك للمشاركة في ختمات جماعية مع أصدقائك وعائلتك
             </p>
-            <Link to="/profile">
+            <Link to="/auth">
               <Button size="lg" className="gap-2">
                 <LogIn className="w-5 h-5" />
                 تسجيل الدخول
@@ -292,7 +373,7 @@ const KhatmahPage = () => {
               <KhatmahCard
                 key={khatmah.id}
                 khatmah={khatmah}
-                userId={user.id}
+                userId={user.uid}
                 onCopyCode={copyCode}
                 copiedCode={copiedCode}
                 convertToArabicNumber={convertToArabicNumber}
@@ -334,14 +415,13 @@ const KhatmahCard = ({
   const { data: participants } = useQuery({
     queryKey: ["khatmah-participants", khatmah.id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("khatmah_participants")
-        .select("*")
-        .eq("khatmah_id", khatmah.id)
-        .order("assigned_juz");
-
-      if (error) throw error;
-      return data as Participant[];
+      const data = await firestoreQuery<Participant>(
+        COLLECTIONS.KHATMAH_PARTICIPANTS,
+        [{ field: "khatmah_id", op: "==", value: khatmah.id }],
+        "assigned_juz",
+        "asc"
+      );
+      return data;
     },
   });
 
@@ -350,15 +430,10 @@ const KhatmahCard = ({
       const myParticipation = participants?.find((p) => p.user_id === userId);
       if (!myParticipation) return;
 
-      const { error } = await supabase
-        .from("khatmah_participants")
-        .update({
-          is_completed: !myParticipation.is_completed,
-          completed_at: !myParticipation.is_completed ? new Date().toISOString() : null,
-        })
-        .eq("id", myParticipation.id);
-
-      if (error) throw error;
+      await firestoreUpdate(COLLECTIONS.KHATMAH_PARTICIPANTS, myParticipation.id, {
+        is_completed: !myParticipation.is_completed,
+        completed_at: !myParticipation.is_completed ? new Date().toISOString() : null,
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["khatmah-participants", khatmah.id] });

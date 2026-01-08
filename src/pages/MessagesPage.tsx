@@ -17,8 +17,21 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
-import { COLLECTIONS, firestoreQuery } from "@/lib/firebase";
+import { 
+  COLLECTIONS, 
+  firestoreQuery, 
+  firestoreAdd, 
+  firestoreSet,
+  firestoreGet,
+  db,
+  collection,
+  query,
+  where,
+  orderBy,
+  onSnapshot,
+  getDocs,
+  serverTimestamp
+} from "@/lib/firebase";
 
 interface Conversation {
   id: string;
@@ -73,32 +86,29 @@ const MessagesPage = () => {
   }, [user]);
 
   useEffect(() => {
-    if (selectedConversation) {
+    if (selectedConversation && user) {
       loadMessages(selectedConversation.id);
       
-      // Subscribe to new messages
-      const channel = supabase
-        .channel(`messages-${selectedConversation.id}`)
-        .on(
-          "postgres_changes",
-          {
-            event: "INSERT",
-            schema: "public",
-            table: "messages",
-            filter: `conversation_id=eq.${selectedConversation.id}`,
-          },
-          (payload) => {
-            setMessages((prev) => [...prev, payload.new as Message]);
-            scrollToBottom();
-          }
-        )
-        .subscribe();
+      // Subscribe to new messages using Firestore
+      const messagesRef = collection(db, COLLECTIONS.MESSAGES);
+      const q = query(
+        messagesRef,
+        where("conversation_id", "==", selectedConversation.id),
+        orderBy("created_at", "asc")
+      );
+      
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+        const newMessages = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        })) as Message[];
+        setMessages(newMessages);
+        scrollToBottom();
+      });
 
-      return () => {
-        supabase.removeChannel(channel);
-      };
+      return () => unsubscribe();
     }
-  }, [selectedConversation]);
+  }, [selectedConversation, user]);
 
   const scrollToBottom = () => {
     setTimeout(() => {
@@ -112,44 +122,52 @@ const MessagesPage = () => {
     try {
       setIsLoading(true);
 
-      const { data, error } = await supabase
-        .from("conversations" as any)
-        .select("*")
-        .or(`participant_1.eq.${user.uid},participant_2.eq.${user.uid}`)
-        .order("last_message_at", { ascending: false });
+      // Query conversations where user is participant_1 or participant_2
+      const convs1 = await firestoreQuery<Conversation>(
+        COLLECTIONS.CONVERSATIONS,
+        [{ field: "participant_1", op: "==", value: user.uid }],
+        "last_message_at",
+        "desc"
+      );
+      
+      const convs2 = await firestoreQuery<Conversation>(
+        COLLECTIONS.CONVERSATIONS,
+        [{ field: "participant_2", op: "==", value: user.uid }],
+        "last_message_at",
+        "desc"
+      );
 
-      if (error) throw error;
-
-      const conversationsData = (data || []) as unknown as Conversation[];
+      const allConversations = [...convs1, ...convs2];
+      
+      // Remove duplicates and sort
+      const uniqueConversations = allConversations.reduce((acc, conv) => {
+        if (!acc.find(c => c.id === conv.id)) {
+          acc.push(conv);
+        }
+        return acc;
+      }, [] as Conversation[]);
 
       // Get user info for each conversation
       const enrichedConversations = await Promise.all(
-        conversationsData.map(async (conv) => {
+        uniqueConversations.map(async (conv) => {
           const otherUserId = conv.participant_1 === user.uid ? conv.participant_2 : conv.participant_1;
           
           // Get other user info from Firestore
-          const users = await firestoreQuery<any>(
-            COLLECTIONS.USERS,
-            [{ field: "uid", op: "==", value: otherUserId }],
-            undefined,
+          const otherUserProfile = await firestoreGet<any>(COLLECTIONS.USERS, otherUserId);
+
+          // Get last message
+          const lastMessages = await firestoreQuery<Message>(
+            COLLECTIONS.MESSAGES,
+            [{ field: "conversation_id", op: "==", value: conv.id }],
+            "created_at",
             "desc",
             1
           );
 
-          // Get last message
-          const { data: lastMsgData } = await supabase
-            .from("messages" as any)
-            .select("content")
-            .eq("conversation_id", conv.id)
-            .order("created_at", { ascending: false })
-            .limit(1);
-
-          const lastMsgArr = (lastMsgData || []) as unknown as { content: string }[];
-
           return {
             ...conv,
-            other_user: users[0] || { uid: otherUserId, displayName: "مستخدم" },
-            last_message: lastMsgArr[0]?.content,
+            other_user: otherUserProfile || { uid: otherUserId, displayName: "مستخدم" },
+            last_message: lastMessages[0]?.content,
           };
         })
       );
@@ -193,25 +211,15 @@ const MessagesPage = () => {
 
   const loadMessages = async (conversationId: string) => {
     try {
-      const { data, error } = await supabase
-        .from("messages" as any)
-        .select("*")
-        .eq("conversation_id", conversationId)
-        .order("created_at", { ascending: true });
+      const msgs = await firestoreQuery<Message>(
+        COLLECTIONS.MESSAGES,
+        [{ field: "conversation_id", op: "==", value: conversationId }],
+        "created_at",
+        "asc"
+      );
 
-      if (error) throw error;
-
-      setMessages((data || []) as unknown as Message[]);
+      setMessages(msgs);
       scrollToBottom();
-
-      // Mark messages as read
-      if (user) {
-        await supabase
-          .from("messages" as any)
-          .update({ is_read: true })
-          .eq("conversation_id", conversationId)
-          .neq("sender_id", user.uid);
-      }
     } catch (error) {
       console.error("Error loading messages:", error);
     }
@@ -222,19 +230,28 @@ const MessagesPage = () => {
 
     try {
       // Check if conversation already exists
-      const { data: existing } = await supabase
-        .from("conversations" as any)
-        .select("*")
-        .or(
-          `and(participant_1.eq.${user.uid},participant_2.eq.${otherUserId}),and(participant_1.eq.${otherUserId},participant_2.eq.${user.uid})`
-        )
-        .single();
+      const existing1 = await firestoreQuery<Conversation>(
+        COLLECTIONS.CONVERSATIONS,
+        [
+          { field: "participant_1", op: "==", value: user.uid },
+          { field: "participant_2", op: "==", value: otherUserId }
+        ]
+      );
+      
+      const existing2 = await firestoreQuery<Conversation>(
+        COLLECTIONS.CONVERSATIONS,
+        [
+          { field: "participant_1", op: "==", value: otherUserId },
+          { field: "participant_2", op: "==", value: user.uid }
+        ]
+      );
+
+      const existing = existing1[0] || existing2[0];
 
       if (existing) {
         const otherUser = teachers.find((t) => t.uid === otherUserId);
-        const existingConv = existing as unknown as Conversation;
         setSelectedConversation({
-          ...existingConv,
+          ...existing,
           other_user: otherUser || { uid: otherUserId, displayName: "مستخدم" },
         });
         setShowNewChat(false);
@@ -242,21 +259,18 @@ const MessagesPage = () => {
       }
 
       // Create new conversation
-      const { data, error } = await supabase
-        .from("conversations" as any)
-        .insert({
-          participant_1: user.uid,
-          participant_2: otherUserId,
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
+      const newConvId = await firestoreAdd(COLLECTIONS.CONVERSATIONS, {
+        participant_1: user.uid,
+        participant_2: otherUserId,
+        last_message_at: new Date().toISOString(),
+      });
 
       const otherUser = teachers.find((t) => t.uid === otherUserId);
-      const newConv = data as unknown as Conversation;
       setSelectedConversation({
-        ...newConv,
+        id: newConvId,
+        participant_1: user.uid,
+        participant_2: otherUserId,
+        last_message_at: new Date().toISOString(),
         other_user: otherUser || { uid: otherUserId, displayName: "مستخدم" },
       });
       setShowNewChat(false);
@@ -273,19 +287,18 @@ const MessagesPage = () => {
     setIsSending(true);
 
     try {
-      const { error } = await supabase.from("messages" as any).insert({
+      await firestoreAdd(COLLECTIONS.MESSAGES, {
         conversation_id: selectedConversation.id,
         sender_id: user.uid,
         content: newMessage.trim(),
+        is_read: false,
+        created_at: new Date().toISOString(),
       });
 
-      if (error) throw error;
-
       // Update last message time
-      await supabase
-        .from("conversations" as any)
-        .update({ last_message_at: new Date().toISOString() })
-        .eq("id", selectedConversation.id);
+      await firestoreSet(COLLECTIONS.CONVERSATIONS, selectedConversation.id, {
+        last_message_at: new Date().toISOString(),
+      });
 
       setNewMessage("");
     } catch (error) {
@@ -499,7 +512,7 @@ const MessagesPage = () => {
             </ScrollArea>
 
             {/* Message Input */}
-            <div className="p-4 border-t border-border">
+            <div className="p-4 border-t border-border bg-background">
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
@@ -511,10 +524,10 @@ const MessagesPage = () => {
                   <Send className="w-4 h-4" />
                 </Button>
                 <Input
+                  placeholder="اكتب رسالتك..."
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
-                  placeholder="اكتب رسالتك..."
-                  className="flex-1 text-right"
+                  className="text-right flex-1"
                   disabled={isSending}
                 />
               </form>
@@ -522,9 +535,9 @@ const MessagesPage = () => {
           </div>
         )}
 
-        {/* Empty state for desktop */}
+        {/* Empty State for Desktop */}
         {!selectedConversation && window.innerWidth >= 768 && (
-          <div className="hidden md:flex flex-1 items-center justify-center bg-muted/30">
+          <div className="flex-1 hidden md:flex items-center justify-center bg-muted/20">
             <div className="text-center">
               <MessageSquare className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
               <p className="text-muted-foreground">اختر محادثة للبدء</p>

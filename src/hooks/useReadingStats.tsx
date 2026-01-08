@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
+import { COLLECTIONS, firestoreGet, firestoreSet } from "@/lib/firebase";
 
 interface ReadingStats {
   pagesRead: number;
