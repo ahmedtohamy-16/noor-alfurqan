@@ -1,5 +1,6 @@
 import { useState, useEffect, createContext, useContext, ReactNode } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "./useAuth";
+import { COLLECTIONS, firestoreGet, firestoreSet } from "@/lib/firebase";
 
 type Theme = "light" | "dark";
 
@@ -17,51 +18,21 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     if (stored === "dark" || stored === "light") return stored;
     return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
   });
-  const [userId, setUserId] = useState<string | null>(null);
+  const { user } = useAuth();
 
-  // Listen for auth state changes
+  // Load theme from Firestore when user logs in
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        const newUserId = session?.user?.id ?? null;
-        setUserId(newUserId);
-        
-        // Load theme from DB when user logs in
-        if (newUserId) {
-          setTimeout(() => {
-            loadThemeFromDB(newUserId);
-          }, 0);
-        }
-      }
-    );
-
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      const existingUserId = session?.user?.id ?? null;
-      setUserId(existingUserId);
-      if (existingUserId) {
-        loadThemeFromDB(existingUserId);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
+    if (user) {
+      loadThemeFromDB(user.uid);
+    }
+  }, [user]);
 
   const loadThemeFromDB = async (uid: string) => {
     try {
-      const { data, error } = await supabase
-        .from("user_settings")
-        .select("dark_mode")
-        .eq("user_id", uid)
-        .single();
+      const settings = await firestoreGet<any>(COLLECTIONS.USER_SETTINGS, uid);
       
-      if (error && error.code !== "PGRST116") {
-        console.error("Error loading theme:", error);
-        return;
-      }
-      
-      if (data && data.dark_mode !== null) {
-        const dbTheme = data.dark_mode ? "dark" : "light";
+      if (settings && settings.dark_mode !== undefined) {
+        const dbTheme = settings.dark_mode ? "dark" : "light";
         setThemeState(dbTheme);
         localStorage.setItem("theme", dbTheme);
       }
@@ -71,16 +42,13 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const saveThemeToDB = async (newTheme: Theme) => {
-    if (!userId) return;
+    if (!user) return;
     
     try {
-      await supabase
-        .from("user_settings")
-        .upsert({
-          user_id: userId,
-          dark_mode: newTheme === "dark",
-          updated_at: new Date().toISOString(),
-        }, { onConflict: "user_id" });
+      await firestoreSet(COLLECTIONS.USER_SETTINGS, user.uid, {
+        user_id: user.uid,
+        dark_mode: newTheme === "dark",
+      });
     } catch (error) {
       console.error("Error saving theme:", error);
     }

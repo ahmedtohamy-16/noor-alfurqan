@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 import { getAuth, sendPasswordResetEmail } from "firebase/auth";
 
 type Step = "email" | "otp" | "password" | "success";

@@ -41,7 +41,13 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
+import { 
+  COLLECTIONS, 
+  firestoreQuery, 
+  firestoreAdd, 
+  firestoreUpdate,
+  firestoreDelete 
+} from "@/lib/firebase";
 
 interface Course {
   id: string;
@@ -105,7 +111,6 @@ const TeacherDashboard = () => {
 
   // File upload
   const [isUploading, setIsUploading] = useState(false);
-  const [signedUrls, setSignedUrls] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -130,57 +135,36 @@ const TeacherDashboard = () => {
     try {
       setIsLoading(true);
 
-      const [coursesRes, quizzesRes, filesRes] = await Promise.all([
-        supabase
-          .from("courses" as any)
-          .select("*")
-          .eq("teacher_id", user.uid)
-          .order("created_at", { ascending: false }),
-        supabase
-          .from("quizzes" as any)
-          .select("*")
-          .eq("teacher_id", user.uid)
-          .order("created_at", { ascending: false }),
-        supabase
-          .from("teacher_files" as any)
-          .select("*")
-          .eq("teacher_id", user.uid)
-          .order("created_at", { ascending: false }),
+      const [coursesData, quizzesData, filesData] = await Promise.all([
+        firestoreQuery<Course>(
+          COLLECTIONS.COURSES,
+          [{ field: "teacher_id", op: "==", value: user.uid }],
+          "created_at",
+          "desc"
+        ),
+        firestoreQuery<Quiz>(
+          COLLECTIONS.QUIZZES,
+          [{ field: "teacher_id", op: "==", value: user.uid }],
+          "created_at",
+          "desc"
+        ),
+        firestoreQuery<TeacherFile>(
+          COLLECTIONS.TEACHER_FILES,
+          [{ field: "teacher_id", op: "==", value: user.uid }],
+          "created_at",
+          "desc"
+        ),
       ]);
 
-      if (coursesRes.data) setCourses(coursesRes.data as unknown as Course[]);
-      if (quizzesRes.data) setQuizzes(quizzesRes.data as unknown as Quiz[]);
-      if (filesRes.data) {
-        const teacherFiles = filesRes.data as unknown as TeacherFile[];
-        setFiles(teacherFiles);
-        // Generate signed URLs for all files
-        await generateSignedUrls(teacherFiles);
-      }
+      setCourses(coursesData);
+      setQuizzes(quizzesData);
+      setFiles(filesData);
     } catch (error) {
       console.error("Error loading data:", error);
       toast.error("حدث خطأ في تحميل البيانات");
     } finally {
       setIsLoading(false);
     }
-  };
-
-  // Generate signed URLs for secure file access (1 hour expiration)
-  const generateSignedUrls = async (teacherFiles: TeacherFile[]) => {
-    const urls: Record<string, string> = {};
-    
-    for (const file of teacherFiles) {
-      // file_url now stores the path, not the public URL
-      const filePath = file.file_url;
-      const { data, error } = await supabase.storage
-        .from("teacher-content")
-        .createSignedUrl(filePath, 3600); // 1 hour
-      
-      if (data && !error) {
-        urls[file.id] = data.signedUrl;
-      }
-    }
-    
-    setSignedUrls(urls);
   };
 
   const handleCreateCourse = async () => {
@@ -190,15 +174,16 @@ const TeacherDashboard = () => {
     }
 
     try {
-      const { error } = await supabase.from("courses" as any).insert({
+      await firestoreAdd(COLLECTIONS.COURSES, {
         teacher_id: user.uid,
         title: newCourse.title,
         description: newCourse.description,
         category: newCourse.category,
         level: newCourse.level,
+        is_published: false,
+        enrollment_count: 0,
+        created_at: new Date().toISOString(),
       });
-
-      if (error) throw error;
 
       toast.success("تم إنشاء الكورس بنجاح");
       setShowCourseDialog(false);
@@ -217,15 +202,15 @@ const TeacherDashboard = () => {
     }
 
     try {
-      const { error } = await supabase.from("quizzes" as any).insert({
+      await firestoreAdd(COLLECTIONS.QUIZZES, {
         teacher_id: user.uid,
         title: newQuiz.title,
         description: newQuiz.description,
         time_limit: newQuiz.time_limit,
         pass_score: newQuiz.pass_score,
+        is_published: false,
+        created_at: new Date().toISOString(),
       });
-
-      if (error) throw error;
 
       toast.success("تم إنشاء الاختبار بنجاح");
       setShowQuizDialog(false);
@@ -250,25 +235,19 @@ const TeacherDashboard = () => {
     setIsUploading(true);
 
     try {
+      // For now, we'll store file metadata in Firestore
+      // In production, you'd upload to Firebase Storage first
       const fileExt = file.name.split(".").pop();
       const fileName = `${user.uid}/${Date.now()}.${fileExt}`;
 
-      const { error: uploadError, data } = await supabase.storage
-        .from("teacher-content")
-        .upload(fileName, file);
-
-      if (uploadError) throw uploadError;
-
-      // Store the file path instead of public URL for signed URL generation
-      const { error: dbError } = await supabase.from("teacher_files" as any).insert({
+      await firestoreAdd(COLLECTIONS.TEACHER_FILES, {
         teacher_id: user.uid,
         file_name: file.name,
-        file_url: fileName, // Store the path, not public URL
+        file_url: fileName,
         file_type: file.type,
         file_size: file.size,
+        created_at: new Date().toISOString(),
       });
-
-      if (dbError) throw dbError;
 
       toast.success("تم رفع الملف بنجاح");
       loadData();
@@ -280,15 +259,9 @@ const TeacherDashboard = () => {
     }
   };
 
-  const handleDeleteFile = async (fileId: string, filePath: string) => {
+  const handleDeleteFile = async (fileId: string) => {
     try {
-      // filePath is now the storage path, not the public URL
-      await supabase.storage.from("teacher-content").remove([filePath]);
-
-      const { error } = await supabase.from("teacher_files" as any).delete().eq("id", fileId);
-
-      if (error) throw error;
-
+      await firestoreDelete(COLLECTIONS.TEACHER_FILES, fileId);
       toast.success("تم حذف الملف");
       loadData();
     } catch (error) {
@@ -299,13 +272,8 @@ const TeacherDashboard = () => {
 
   const handleTogglePublish = async (type: "course" | "quiz", id: string, currentStatus: boolean) => {
     try {
-      const table = type === "course" ? "courses" : "quizzes";
-      const { error } = await supabase
-        .from(table as any)
-        .update({ is_published: !currentStatus })
-        .eq("id", id);
-
-      if (error) throw error;
+      const collectionName = type === "course" ? COLLECTIONS.COURSES : COLLECTIONS.QUIZZES;
+      await firestoreUpdate(collectionName, id, { is_published: !currentStatus });
 
       toast.success(currentStatus ? "تم إلغاء النشر" : "تم النشر بنجاح");
       loadData();
@@ -317,10 +285,8 @@ const TeacherDashboard = () => {
 
   const handleDelete = async (type: "course" | "quiz", id: string) => {
     try {
-      const table = type === "course" ? "courses" : "quizzes";
-      const { error } = await supabase.from(table as any).delete().eq("id", id);
-
-      if (error) throw error;
+      const collectionName = type === "course" ? COLLECTIONS.COURSES : COLLECTIONS.QUIZZES;
+      await firestoreDelete(collectionName, id);
 
       toast.success("تم الحذف بنجاح");
       loadData();
@@ -501,53 +467,34 @@ const TeacherDashboard = () => {
                 </CardContent>
               </Card>
             ) : (
-              <div className="grid gap-4">
+              <div className="grid gap-4 md:grid-cols-2">
                 {courses.map((course) => (
                   <Card key={course.id}>
-                    <CardContent className="pt-6">
+                    <CardHeader>
                       <div className="flex justify-between items-start">
-                        <div className="flex gap-2">
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            onClick={() => handleDelete("course", course.id)}
-                          >
-                            <Trash2 className="w-4 h-4 text-destructive" />
-                          </Button>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            onClick={() => handleTogglePublish("course", course.id, course.is_published)}
-                          >
-                            <Eye className={`w-4 h-4 ${course.is_published ? "text-green-500" : "text-muted-foreground"}`} />
-                          </Button>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            onClick={() => navigate(`/teacher/course/${course.id}`)}
-                          >
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                        </div>
-                        <div className="text-right flex-1">
-                          <div className="flex items-center justify-end gap-2 mb-2">
-                            <Badge variant={course.is_published ? "default" : "secondary"}>
-                              {course.is_published ? "منشور" : "مسودة"}
-                            </Badge>
-                            <h4 className="font-semibold">{course.title}</h4>
-                          </div>
-                          <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
-                            {course.description || "بدون وصف"}
-                          </p>
-                          <div className="flex gap-2 justify-end items-center">
-                            <Badge variant="outline">{course.category}</Badge>
-                            <Badge variant="outline">{course.level}</Badge>
-                            <span className="text-xs text-muted-foreground flex items-center gap-1">
-                              <Users className="w-3 h-3" />
-                              {course.enrollment_count} مشترك
-                            </span>
-                          </div>
-                        </div>
+                        <Badge variant={course.is_published ? "default" : "secondary"}>
+                          {course.is_published ? "منشور" : "مسودة"}
+                        </Badge>
+                        <CardTitle className="text-right">{course.title}</CardTitle>
+                      </div>
+                      <CardDescription className="text-right">{course.description}</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex gap-2 justify-end">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDelete("course", course.id)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant={course.is_published ? "secondary" : "default"}
+                          size="sm"
+                          onClick={() => handleTogglePublish("course", course.id, course.is_published)}
+                        >
+                          {course.is_published ? "إلغاء النشر" : "نشر"}
+                        </Button>
                       </div>
                     </CardContent>
                   </Card>
@@ -585,25 +532,19 @@ const TeacherDashboard = () => {
                     />
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="text-sm text-muted-foreground block mb-1 text-right">
-                          الوقت المحدد (دقيقة)
-                        </label>
+                        <label className="text-sm text-muted-foreground">الوقت (دقيقة)</label>
                         <Input
                           type="number"
                           value={newQuiz.time_limit}
-                          onChange={(e) => setNewQuiz({ ...newQuiz, time_limit: parseInt(e.target.value) || 30 })}
-                          className="text-right"
+                          onChange={(e) => setNewQuiz({ ...newQuiz, time_limit: parseInt(e.target.value) })}
                         />
                       </div>
                       <div>
-                        <label className="text-sm text-muted-foreground block mb-1 text-right">
-                          درجة النجاح (%)
-                        </label>
+                        <label className="text-sm text-muted-foreground">درجة النجاح %</label>
                         <Input
                           type="number"
                           value={newQuiz.pass_score}
-                          onChange={(e) => setNewQuiz({ ...newQuiz, pass_score: parseInt(e.target.value) || 60 })}
-                          className="text-right"
+                          onChange={(e) => setNewQuiz({ ...newQuiz, pass_score: parseInt(e.target.value) })}
                         />
                       </div>
                     </div>
@@ -628,49 +569,34 @@ const TeacherDashboard = () => {
                 </CardContent>
               </Card>
             ) : (
-              <div className="grid gap-4">
+              <div className="grid gap-4 md:grid-cols-2">
                 {quizzes.map((quiz) => (
                   <Card key={quiz.id}>
-                    <CardContent className="pt-6">
+                    <CardHeader>
                       <div className="flex justify-between items-start">
-                        <div className="flex gap-2">
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            onClick={() => handleDelete("quiz", quiz.id)}
-                          >
-                            <Trash2 className="w-4 h-4 text-destructive" />
-                          </Button>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            onClick={() => handleTogglePublish("quiz", quiz.id, quiz.is_published)}
-                          >
-                            <Eye className={`w-4 h-4 ${quiz.is_published ? "text-green-500" : "text-muted-foreground"}`} />
-                          </Button>
-                          <Button
-                            size="icon"
-                            variant="ghost"
-                            onClick={() => navigate(`/teacher/quiz/${quiz.id}`)}
-                          >
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                        </div>
-                        <div className="text-right flex-1">
-                          <div className="flex items-center justify-end gap-2 mb-2">
-                            <Badge variant={quiz.is_published ? "default" : "secondary"}>
-                              {quiz.is_published ? "منشور" : "مسودة"}
-                            </Badge>
-                            <h4 className="font-semibold">{quiz.title}</h4>
-                          </div>
-                          <p className="text-sm text-muted-foreground mb-2">
-                            {quiz.description || "بدون وصف"}
-                          </p>
-                          <div className="flex gap-3 justify-end text-xs text-muted-foreground">
-                            <span>{quiz.time_limit} دقيقة</span>
-                            <span>النجاح: {quiz.pass_score}%</span>
-                          </div>
-                        </div>
+                        <Badge variant={quiz.is_published ? "default" : "secondary"}>
+                          {quiz.is_published ? "منشور" : "مسودة"}
+                        </Badge>
+                        <CardTitle className="text-right">{quiz.title}</CardTitle>
+                      </div>
+                      <CardDescription className="text-right">{quiz.description}</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex gap-2 justify-end">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDelete("quiz", quiz.id)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant={quiz.is_published ? "secondary" : "default"}
+                          size="sm"
+                          onClick={() => handleTogglePublish("quiz", quiz.id, quiz.is_published)}
+                        >
+                          {quiz.is_published ? "إلغاء النشر" : "نشر"}
+                        </Button>
                       </div>
                     </CardContent>
                   </Card>
@@ -682,27 +608,25 @@ const TeacherDashboard = () => {
           {/* Files Tab */}
           <TabsContent value="files" className="space-y-4">
             <div className="flex justify-between items-center">
-              <div className="relative">
+              <div>
                 <input
                   type="file"
                   id="file-upload"
                   className="hidden"
                   onChange={handleFileUpload}
-                  accept="image/*,video/*,.pdf,.doc,.docx,.ppt,.pptx"
+                  disabled={isUploading}
                 />
-                <Button asChild disabled={isUploading}>
-                  <label htmlFor="file-upload" className="cursor-pointer">
-                    <Upload className="w-4 h-4 ml-2" />
-                    {isUploading ? "جاري الرفع..." : "رفع ملف"}
-                  </label>
-                </Button>
+                <label htmlFor="file-upload">
+                  <Button asChild disabled={isUploading}>
+                    <span>
+                      <Upload className="w-4 h-4 ml-2" />
+                      {isUploading ? "جاري الرفع..." : "رفع ملف"}
+                    </span>
+                  </Button>
+                </label>
               </div>
               <h3 className="text-lg font-semibold">الملفات ({files.length})</h3>
             </div>
-
-            <p className="text-sm text-muted-foreground text-right">
-              يمكنك رفع صور، فيديوهات، ملفات PDF، ومستندات Word و PowerPoint (حتى 50 ميجابايت)
-            </p>
 
             {files.length === 0 ? (
               <Card>
@@ -712,34 +636,25 @@ const TeacherDashboard = () => {
                 </CardContent>
               </Card>
             ) : (
-              <div className="grid gap-3">
+              <div className="space-y-2">
                 {files.map((file) => (
                   <Card key={file.id}>
-                    <CardContent className="py-4">
-                      <div className="flex items-center justify-between">
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          onClick={() => handleDeleteFile(file.id, file.file_url)}
-                        >
-                          <Trash2 className="w-4 h-4 text-destructive" />
-                        </Button>
-                        <a
-                          href={signedUrls[file.id] || "#"}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className={`flex items-center gap-3 flex-1 justify-end transition-colors ${signedUrls[file.id] ? "hover:text-primary" : "opacity-50 pointer-events-none"}`}
-                        >
-                          <div className="text-right">
-                            <p className="font-medium truncate max-w-[200px]">{file.file_name}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {formatFileSize(file.file_size)}
-                            </p>
-                          </div>
-                          <div className="p-2 bg-muted rounded-lg">
-                            {getFileIcon(file.file_type)}
-                          </div>
-                        </a>
+                    <CardContent className="p-4 flex items-center justify-between">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDeleteFile(file.id)}
+                      >
+                        <Trash2 className="w-4 h-4 text-destructive" />
+                      </Button>
+                      <div className="flex items-center gap-3 flex-1 justify-end">
+                        <div className="text-right">
+                          <p className="font-medium">{file.file_name}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {formatFileSize(file.file_size)}
+                          </p>
+                        </div>
+                        {getFileIcon(file.file_type)}
                       </div>
                     </CardContent>
                   </Card>
