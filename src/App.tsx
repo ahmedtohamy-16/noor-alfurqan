@@ -45,8 +45,8 @@ const queryClient = new QueryClient();
 const App = () => (
   <HelmetProvider>
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <AuthProvider>
+      <AuthProvider>
+        <ThemeProvider>
           <ReadingSettingsProvider>
             <GlobalAudioProvider>
               <DownloadManagerProvider>
@@ -91,8 +91,8 @@ const App = () => (
               </DownloadManagerProvider>
             </GlobalAudioProvider>
           </ReadingSettingsProvider>
-        </AuthProvider>
-      </ThemeProvider>
+        </ThemeProvider>
+      </AuthProvider>
     </QueryClientProvider>
   </HelmetProvider>
 );
