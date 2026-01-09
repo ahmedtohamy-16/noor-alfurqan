@@ -26,8 +26,8 @@ const bookMappings: Record<string, { folder: string; fileWithDiacritics: string;
   },
   tirmidhi: {
     folder: 'Sunan_Al-Tirmidhi',
-    fileWithDiacritics: 'sunan_al-tirmizi_ahadith_mushakkala_mufassala.utf8.csv',
-    fileWithoutDiacritics: 'sunan_al-tirmizi_ahadith.utf8.csv'
+    fileWithDiacritics: 'sunan_al-tirmidhi_ahadith_mushakkala_mufassala.utf8.csv',
+    fileWithoutDiacritics: 'sunan_al-tirmidhi_ahadith.utf8.csv'
   },
   nasai: {
     folder: 'Sunan_Al-Nasai',
