@@ -8,7 +8,9 @@ import {
   onAuthStateChanged,
   sendEmailVerification,
   User as FirebaseUserType,
-  Auth
+  Auth,
+  browserLocalPersistence,
+  setPersistence
 } from "firebase/auth";
 import { 
   getFirestore, 
@@ -65,6 +67,11 @@ const initializeFirebaseApp = (): FirebaseApp => {
 app = initializeFirebaseApp();
 auth = getAuth(app);
 db = getFirestore(app);
+
+// Set persistence for Safari/iOS compatibility
+setPersistence(auth, browserLocalPersistence).catch((error) => {
+  console.warn("Could not set auth persistence:", error);
+});
 
 // User Roles
 export type UserRole = "admin" | "teacher" | "student";
@@ -419,8 +426,25 @@ export const firestoreSubscribe = <T>(
 
 // ==================== FCM MESSAGING ====================
 
+// Check if browser supports FCM (Safari iOS doesn't support it fully)
+const isSafariIOS = (): boolean => {
+  if (typeof window === "undefined") return false;
+  const ua = window.navigator.userAgent;
+  const iOS = /iPad|iPhone|iPod/.test(ua);
+  const webkit = /WebKit/.test(ua);
+  const isSafari = /Safari/.test(ua) && !/Chrome/.test(ua) && !/CriOS/.test(ua);
+  return iOS && webkit && isSafari;
+};
+
 export const initializeMessaging = async (): Promise<Messaging | null> => {
   if (typeof window === "undefined" || !("Notification" in window)) {
+    console.log("Notifications not supported in this environment");
+    return null;
+  }
+  
+  // Safari on iOS doesn't support Web Push notifications
+  if (isSafariIOS()) {
+    console.log("FCM not supported on Safari iOS");
     return null;
   }
   
