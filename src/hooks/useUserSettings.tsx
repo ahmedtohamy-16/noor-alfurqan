@@ -1,11 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "./useAuth";
 import { toast } from "sonner";
 import { 
   firestoreGet, 
   firestoreSet, 
-  COLLECTIONS, 
-  Timestamp 
+  COLLECTIONS
 } from "@/lib/firebase";
 
 interface UserSettings {
@@ -66,20 +65,63 @@ const defaultSettings: UserSettings = {
   azkar_prayer_delay_minutes: 10,
 };
 
+const SETTINGS_STORAGE_KEY = "userSettings";
+
+// Helper to get city name from coordinates
+const reverseGeocode = async (lat: number, lng: number): Promise<string> => {
+  try {
+    const response = await fetch(
+      `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=ar`
+    );
+    const data = await response.json();
+    return data.city || data.locality || data.principalSubdivision || "موقعك الحالي";
+  } catch {
+    return "موقعك الحالي";
+  }
+};
+
+// IP-based geolocation fallback
+const getLocationByIP = async (): Promise<{ lat: number; lng: number; city: string } | null> => {
+  try {
+    const response = await fetch("https://ipapi.co/json/");
+    const data = await response.json();
+    if (data.latitude && data.longitude) {
+      return {
+        lat: data.latitude,
+        lng: data.longitude,
+        city: data.city || "موقعك",
+      };
+    }
+  } catch (error) {
+    console.error("IP geolocation failed:", error);
+  }
+  return null;
+};
+
 export const useUserSettings = () => {
   const { user } = useAuth();
-  const [settings, setSettings] = useState<UserSettings>(defaultSettings);
+  const [settings, setSettings] = useState<UserSettings>(() => {
+    // Initialize from localStorage immediately
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem(SETTINGS_STORAGE_KEY);
+      if (saved) {
+        try {
+          return { ...defaultSettings, ...JSON.parse(saved) };
+        } catch {
+          return defaultSettings;
+        }
+      }
+    }
+    return defaultSettings;
+  });
   const [isLoading, setIsLoading] = useState(true);
 
+  // Fetch settings on mount or user change
   useEffect(() => {
     if (user) {
       fetchSettings();
     } else {
-      // Load from localStorage for non-authenticated users
-      const saved = localStorage.getItem("userSettings");
-      if (saved) {
-        setSettings(JSON.parse(saved));
-      }
+      // Already loaded from localStorage in initial state
       setIsLoading(false);
     }
   }, [user]);
@@ -91,7 +133,7 @@ export const useUserSettings = () => {
       const data = await firestoreGet<any>(COLLECTIONS.USER_SETTINGS, user.uid);
 
       if (data) {
-        setSettings({
+        const loadedSettings: UserSettings = {
           latitude: data.latitude ?? null,
           longitude: data.longitude ?? null,
           city_name: data.city_name ?? null,
@@ -117,7 +159,10 @@ export const useUserSettings = () => {
           azkar_wakeup_time: data.azkar_wakeup_time || "05:00:00",
           azkar_prayer_enabled: data.azkar_prayer_enabled ?? false,
           azkar_prayer_delay_minutes: data.azkar_prayer_delay_minutes || 10,
-        });
+        };
+        setSettings(loadedSettings);
+        // Also save to localStorage for offline/guest access
+        localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(loadedSettings));
       }
     } catch (error) {
       console.error("Error fetching settings:", error);
@@ -126,9 +171,12 @@ export const useUserSettings = () => {
     }
   };
 
-  const updateSettings = async (newSettings: Partial<UserSettings>) => {
+  const updateSettings = useCallback(async (newSettings: Partial<UserSettings>) => {
     const updated = { ...settings, ...newSettings };
     setSettings(updated);
+    
+    // Always save to localStorage
+    localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(updated));
 
     if (user) {
       try {
@@ -140,12 +188,10 @@ export const useUserSettings = () => {
         console.error("Error saving settings:", error);
         toast.error("حدث خطأ في حفظ الإعدادات");
       }
-    } else {
-      localStorage.setItem("userSettings", JSON.stringify(updated));
     }
-  };
+  }, [settings, user]);
 
-  const updateLocation = async (lat: number, lng: number, cityName?: string) => {
+  const updateLocation = useCallback(async (lat: number, lng: number, cityName?: string) => {
     const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
     
     await updateSettings({
@@ -155,10 +201,10 @@ export const useUserSettings = () => {
       timezone: detectedTimezone,
     });
     toast.success("تم تحديث الموقع بنجاح");
-  };
+  }, [updateSettings]);
 
-  const requestLocation = () => {
-    return new Promise<{ lat: number; lng: number }>((resolve, reject) => {
+  const requestLocation = useCallback((): Promise<{ lat: number; lng: number }> => {
+    return new Promise((resolve, reject) => {
       if (!navigator.geolocation) {
         reject(new Error("الموقع غير مدعوم"));
         return;
@@ -173,10 +219,48 @@ export const useUserSettings = () => {
         },
         (error) => {
           reject(error);
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0,
         }
       );
     });
-  };
+  }, []);
+
+  // Auto-detect location with GPS fallback to IP
+  const autoDetectLocation = useCallback(async (): Promise<boolean> => {
+    try {
+      // Try GPS first
+      const { lat, lng } = await requestLocation();
+      const cityName = await reverseGeocode(lat, lng);
+      await updateLocation(lat, lng, cityName);
+      return true;
+    } catch (gpsError: any) {
+      console.log("GPS failed, trying IP fallback:", gpsError);
+      
+      // Fallback to IP-based location
+      const ipLocation = await getLocationByIP();
+      if (ipLocation) {
+        await updateLocation(ipLocation.lat, ipLocation.lng, ipLocation.city);
+        toast.info("تم تحديد الموقع عبر IP");
+        return true;
+      }
+      
+      // Both failed
+      if (gpsError.code === 1) {
+        toast.error("تم رفض الوصول للموقع. يرجى السماح بالوصول من إعدادات المتصفح.");
+      } else if (gpsError.code === 2) {
+        toast.error("تعذر تحديد الموقع. تأكد من تفعيل خدمات الموقع.");
+      } else if (gpsError.code === 3) {
+        toast.error("انتهت مهلة تحديد الموقع. حاول مرة أخرى.");
+      } else {
+        toast.error("تعذر الحصول على الموقع.");
+      }
+      return false;
+    }
+  }, [requestLocation, updateLocation]);
 
   return {
     settings,
@@ -184,6 +268,7 @@ export const useUserSettings = () => {
     updateSettings,
     updateLocation,
     requestLocation,
+    autoDetectLocation,
     refetch: fetchSettings,
   };
 };

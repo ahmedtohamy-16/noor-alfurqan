@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
-import { MapPin, Clock } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { MapPin, Clock, Loader2 } from "lucide-react";
 import { useUserSettings } from "@/hooks/useUserSettings";
-import LocationButton from "./LocationButton";
+import LocationPickerDialog from "./LocationPickerDialog";
 
 // Widget IDs based on major cities - can be expanded
 const getCityWidgetId = (cityName: string | null, lat: number | null, lng: number | null): string => {
@@ -12,7 +13,6 @@ const getCityWidgetId = (cityName: string | null, lat: number | null, lng: numbe
   if (!cityName && !lat && !lng) return defaultId;
   
   // Map of known cities to their timesprayer.today widget IDs
-  // You can add more cities as needed
   const cityWidgetMap: Record<string, string> = {
     // Egypt
     "القاهرة": "8198",
@@ -103,8 +103,10 @@ interface PrayerTimesWidgetProps {
 }
 
 const PrayerTimesWidget = ({ showLocationButton = true, height = 320 }: PrayerTimesWidgetProps) => {
-  const { settings } = useUserSettings();
+  const { settings, autoDetectLocation, updateLocation } = useUserSettings();
   const [widgetId, setWidgetId] = useState<string>("8198");
+  const [isLoading, setIsLoading] = useState(false);
+  const [showPicker, setShowPicker] = useState(false);
   
   const hasLocation = settings.latitude && settings.longitude;
 
@@ -113,23 +115,64 @@ const PrayerTimesWidget = ({ showLocationButton = true, height = 320 }: PrayerTi
     setWidgetId(id);
   }, [settings.city_name, settings.latitude, settings.longitude]);
 
+  const handleAutoLocation = async () => {
+    setIsLoading(true);
+    try {
+      await autoDetectLocation();
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleLocationSelect = (lat: number, lng: number, city: string) => {
+    updateLocation(lat, lng, city);
+    setShowPicker(false);
+  };
+
   // No location set - show prompt
   if (!hasLocation && showLocationButton) {
     return (
-      <Card className="p-4 bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-orange-500/10 border-amber-500/20">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 bg-amber-500/20 rounded-full flex items-center justify-center">
-            <Clock className="w-5 h-5 text-amber-600" />
+      <>
+        <Card className="p-4 bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-orange-500/10 border-amber-500/20">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 bg-amber-500/20 rounded-full flex items-center justify-center">
+              <Clock className="w-5 h-5 text-amber-600" />
+            </div>
+            <div>
+              <p className="font-bold text-foreground">مواقيت الصلاة</p>
+              <p className="text-sm text-muted-foreground">يجب تحديد الموقع أولاً</p>
+            </div>
           </div>
-          <div>
-            <p className="font-bold text-foreground">مواقيت الصلاة</p>
-            <p className="text-sm text-muted-foreground">يجب تحديد الموقع أولاً</p>
+          <div className="flex gap-2">
+            <Button 
+              onClick={handleAutoLocation} 
+              className="flex-1 gap-2"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <MapPin className="w-4 h-4" />
+              )}
+              تحديد تلقائي
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => setShowPicker(true)}
+              className="flex-1"
+              disabled={isLoading}
+            >
+              اختيار يدوي
+            </Button>
           </div>
-        </div>
-        <div className="flex justify-center">
-          <LocationButton />
-        </div>
-      </Card>
+        </Card>
+
+        <LocationPickerDialog
+          open={showPicker}
+          onOpenChange={setShowPicker}
+          onLocationSelect={handleLocationSelect}
+        />
+      </>
     );
   }
 
