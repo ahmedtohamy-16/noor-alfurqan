@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
-import { Clock, MapPin, AlertCircle } from "lucide-react";
+import { Clock, MapPin, AlertCircle, Loader2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { useUserSettings } from "@/hooks/useUserSettings";
 import { Link } from "react-router-dom";
-import LocationButton from "./LocationButton";
+import LocationPickerDialog from "./LocationPickerDialog";
 
 // Get widget ID based on city
 const getCityWidgetId = (cityName: string | null): string => {
@@ -40,8 +41,10 @@ const getCityWidgetId = (cityName: string | null): string => {
 };
 
 const NextPrayerWidgetEnhanced = () => {
-  const { settings } = useUserSettings();
+  const { settings, autoDetectLocation, updateLocation } = useUserSettings();
   const [widgetId, setWidgetId] = useState<string>("8198");
+  const [isLoading, setIsLoading] = useState(false);
+  const [showPicker, setShowPicker] = useState(false);
 
   const hasLocation = settings.latitude && settings.longitude;
 
@@ -50,27 +53,68 @@ const NextPrayerWidgetEnhanced = () => {
     setWidgetId(id);
   }, [settings.city_name]);
 
+  const handleAutoLocation = async () => {
+    setIsLoading(true);
+    try {
+      await autoDetectLocation();
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleLocationSelect = (lat: number, lng: number, city: string) => {
+    updateLocation(lat, lng, city);
+    setShowPicker(false);
+  };
+
   // No location set - show prompt
   if (!hasLocation) {
     return (
-      <Card className="p-4 bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-orange-500/10 border-amber-500/20">
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-amber-500/20 rounded-full flex items-center justify-center">
-              <AlertCircle className="w-6 h-6 text-amber-600" />
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">مواقيت الصلاة</p>
-              <p className="font-bold text-foreground">يجب تحديد الموقع أولاً</p>
-              <p className="text-xs text-muted-foreground mt-1">لعرض أوقات الصلاة الدقيقة</p>
+      <>
+        <Card className="p-4 bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-orange-500/10 border-amber-500/20">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-amber-500/20 rounded-full flex items-center justify-center">
+                <AlertCircle className="w-6 h-6 text-amber-600" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">مواقيت الصلاة</p>
+                <p className="font-bold text-foreground">يجب تحديد الموقع أولاً</p>
+                <p className="text-xs text-muted-foreground mt-1">لعرض أوقات الصلاة الدقيقة</p>
+              </div>
             </div>
           </div>
           
-          <div className="flex-shrink-0">
-            <LocationButton />
+          <div className="flex gap-2 mt-4">
+            <Button 
+              onClick={handleAutoLocation} 
+              className="flex-1 gap-2"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <MapPin className="w-4 h-4" />
+              )}
+              تحديد تلقائي
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => setShowPicker(true)}
+              className="flex-1"
+              disabled={isLoading}
+            >
+              اختيار يدوي
+            </Button>
           </div>
-        </div>
-      </Card>
+        </Card>
+
+        <LocationPickerDialog
+          open={showPicker}
+          onOpenChange={setShowPicker}
+          onLocationSelect={handleLocationSelect}
+        />
+      </>
     );
   }
 

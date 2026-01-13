@@ -2,39 +2,17 @@ import { useState } from "react";
 import { MapPin, Navigation, Loader2, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useUserSettings } from "@/hooks/useUserSettings";
-import { toast } from "sonner";
 import LocationPickerDialog from "./LocationPickerDialog";
 
 const LocationSettings = () => {
-  const { settings, updateLocation, requestLocation } = useUserSettings();
+  const { settings, autoDetectLocation, updateLocation } = useUserSettings();
   const [isLoading, setIsLoading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const handleAutoLocation = async () => {
     setIsLoading(true);
     try {
-      const { lat, lng } = await requestLocation();
-      // Reverse geocode to get city name
-      try {
-        const response = await fetch(
-          `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=ar`
-        );
-        const data = await response.json();
-        const cityName = data.city || data.locality || data.principalSubdivision || "موقعك الحالي";
-        await updateLocation(lat, lng, cityName);
-      } catch {
-        await updateLocation(lat, lng, "موقعك الحالي");
-      }
-    } catch (error: any) {
-      if (error.code === 1) {
-        toast.error("تم رفض الوصول للموقع. يرجى السماح بالوصول من إعدادات المتصفح.");
-      } else if (error.code === 2) {
-        toast.error("تعذر تحديد الموقع. تأكد من تفعيل خدمات الموقع.");
-      } else if (error.code === 3) {
-        toast.error("انتهت مهلة تحديد الموقع. حاول مرة أخرى.");
-      } else {
-        toast.error("تعذر الحصول على الموقع. يرجى السماح بالوصول للموقع.");
-      }
+      await autoDetectLocation();
     } finally {
       setIsLoading(false);
     }

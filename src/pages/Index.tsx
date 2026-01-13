@@ -4,7 +4,6 @@ import {
   Clock,
   Star,
   Users,
-  Search,
   ChevronLeft,
   BookOpen,
   BarChart3,
@@ -18,7 +17,6 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/Header";
 import NextPrayerWidgetEnhanced from "@/components/NextPrayerWidgetEnhanced";
-import LocationButton from "@/components/LocationButton";
 import DailyHadithCard from "@/components/DailyHadithCard";
 import { useReadingProgress } from "@/hooks/useReadingProgress";
 import { useAuth } from "@/hooks/useAuth";
@@ -113,11 +111,6 @@ const Index = () => {
 
       {/* Hero Section */}
       <section className="relative bg-gradient-to-br from-primary/10 via-background to-accent/10 py-12 md:py-16">
-        {/* Location Button - Top Left */}
-        <div className="absolute top-4 left-4 z-10">
-          <LocationButton />
-        </div>
-
         <div className="container mx-auto px-4 text-center arabic-ui">
           <div className="max-w-2xl mx-auto">
             <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">نور الفرقان</h1>
