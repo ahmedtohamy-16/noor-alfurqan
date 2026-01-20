@@ -7,7 +7,7 @@ import {
   COLLECTIONS
 } from "@/lib/firebase";
 
-interface UserSettings {
+export interface UserSettings {
   latitude: number | null;
   longitude: number | null;
   city_name: string | null;
@@ -15,7 +15,9 @@ interface UserSettings {
   notifications_enabled: boolean;
   daily_wird_enabled: boolean;
   daily_wird_time: string;
+  // Prayer calculation settings
   prayer_method: number;
+  prayer_madhab: number; // 0 = Shafi'i (Standard), 1 = Hanafi
   prayer_reminder_minutes: number;
   // Prayer notification settings
   adhan_sound: string;
@@ -45,7 +47,8 @@ const defaultSettings: UserSettings = {
   notifications_enabled: false,
   daily_wird_enabled: false,
   daily_wird_time: "06:00:00",
-  prayer_method: 4,
+  prayer_method: 4, // Default: Umm Al-Qura
+  prayer_madhab: 0, // Default: Shafi'i (Standard)
   prayer_reminder_minutes: 15,
   adhan_sound: "makkah",
   prayer_fajr_enabled: true,
@@ -142,6 +145,7 @@ export const useUserSettings = () => {
           daily_wird_enabled: data.daily_wird_enabled || false,
           daily_wird_time: data.daily_wird_time || "06:00:00",
           prayer_method: data.prayer_method || 4,
+          prayer_madhab: data.prayer_madhab ?? 0,
           prayer_reminder_minutes: data.prayer_reminder_minutes || 15,
           adhan_sound: data.adhan_sound || "makkah",
           prayer_fajr_enabled: data.prayer_fajr_enabled ?? true,

@@ -17,6 +17,12 @@ import {
 import { countries, prayerMethods, type City } from "@/data/locationData";
 import { useUserSettings } from "@/hooks/useUserSettings";
 
+// Madhab options
+const madhabs = [
+  { id: 0, name: "شافعي / مالكي / حنبلي (العصر عند ظل المثل)" },
+  { id: 1, name: "حنفي (العصر عند ظل المثلين)" },
+];
+
 interface LocationPickerModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -28,6 +34,7 @@ const LocationPickerModal = ({ open, onOpenChange }: LocationPickerModalProps) =
   const [selectedCity, setSelectedCity] = useState<City | null>(null);
   const [isDetecting, setIsDetecting] = useState(false);
   const [selectedMethod, setSelectedMethod] = useState<number>(settings.prayer_method || 4);
+  const [selectedMadhab, setSelectedMadhab] = useState<number>(settings.prayer_madhab || 0);
 
   const handleAutoDetect = async () => {
     setIsDetecting(true);
@@ -54,7 +61,7 @@ const LocationPickerModal = ({ open, onOpenChange }: LocationPickerModalProps) =
   const handleConfirm = async () => {
     if (selectedCity) {
       await updateLocation(selectedCity.latitude, selectedCity.longitude, selectedCity.name_ar);
-      await updateSettings({ prayer_method: selectedMethod });
+      await updateSettings({ prayer_method: selectedMethod, prayer_madhab: selectedMadhab });
       onOpenChange(false);
     }
   };
@@ -154,6 +161,26 @@ const LocationPickerModal = ({ open, onOpenChange }: LocationPickerModalProps) =
                 {prayerMethods.map((method) => (
                   <SelectItem key={method.id} value={method.id.toString()}>
                     {method.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Madhab selector */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-foreground">مذهب صلاة العصر</label>
+            <Select
+              value={selectedMadhab.toString()}
+              onValueChange={(val) => setSelectedMadhab(parseInt(val))}
+            >
+              <SelectTrigger className="h-12">
+                <SelectValue placeholder="اختر المذهب" />
+              </SelectTrigger>
+              <SelectContent>
+                {madhabs.map((madhab) => (
+                  <SelectItem key={madhab.id} value={madhab.id.toString()}>
+                    {madhab.name}
                   </SelectItem>
                 ))}
               </SelectContent>

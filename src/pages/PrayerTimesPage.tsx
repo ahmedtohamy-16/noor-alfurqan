@@ -51,12 +51,13 @@ const prayers = [
 const fetchPrayerTimes = async (
   lat: number,
   lng: number,
-  method: number
+  method: number,
+  madhab: number
 ): Promise<PrayerTimesData> => {
   const today = new Date();
   const dateStr = `${today.getDate()}-${today.getMonth() + 1}-${today.getFullYear()}`;
   const response = await fetch(
-    `https://api.aladhan.com/v1/timings/${dateStr}?latitude=${lat}&longitude=${lng}&method=${method}`
+    `https://api.aladhan.com/v1/timings/${dateStr}?latitude=${lat}&longitude=${lng}&method=${method}&school=${madhab}`
   );
   const data = await response.json();
   return data.data.timings;
@@ -66,11 +67,12 @@ const fetchMonthlyPrayerTimes = async (
   lat: number,
   lng: number,
   method: number,
+  madhab: number,
   month: number,
   year: number
 ): Promise<MonthlyPrayerDay[]> => {
   const response = await fetch(
-    `https://api.aladhan.com/v1/calendar/${year}/${month}?latitude=${lat}&longitude=${lng}&method=${method}`
+    `https://api.aladhan.com/v1/calendar/${year}/${month}?latitude=${lat}&longitude=${lng}&method=${method}&school=${madhab}`
   );
   const data = await response.json();
   return data.data;
@@ -88,18 +90,19 @@ const PrayerTimesPage = () => {
   const lat = settings.latitude || 21.4225;
   const lng = settings.longitude || 39.8262;
   const method = settings.prayer_method || 4;
+  const madhab = settings.prayer_madhab || 0;
   const hasLocation = settings.latitude && settings.longitude;
 
   const { data: prayerTimes, isLoading } = useQuery({
-    queryKey: ["prayerTimes", lat, lng, method],
-    queryFn: () => fetchPrayerTimes(lat, lng, method),
+    queryKey: ["prayerTimes", lat, lng, method, madhab],
+    queryFn: () => fetchPrayerTimes(lat, lng, method, madhab),
     enabled: !!lat && !!lng,
     staleTime: 1000 * 60 * 60,
   });
 
   const { data: monthlyTimes } = useQuery({
-    queryKey: ["monthlyPrayerTimes", lat, lng, method, currentMonth, currentYear],
-    queryFn: () => fetchMonthlyPrayerTimes(lat, lng, method, currentMonth, currentYear),
+    queryKey: ["monthlyPrayerTimes", lat, lng, method, madhab, currentMonth, currentYear],
+    queryFn: () => fetchMonthlyPrayerTimes(lat, lng, method, madhab, currentMonth, currentYear),
     enabled: !!lat && !!lng,
     staleTime: 1000 * 60 * 60 * 24,
   });
