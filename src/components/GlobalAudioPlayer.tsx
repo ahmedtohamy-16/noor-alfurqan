@@ -114,8 +114,9 @@ const GlobalAudioPlayer = () => {
     <>
       <div
         className={cn(
-          'fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-lg border-t border-border shadow-2xl transition-all duration-300 z-50 arabic-ui',
-          isExpanded ? 'h-auto' : 'h-20'
+          'fixed left-0 right-0 bg-card/95 backdrop-blur-lg border-t border-border shadow-2xl transition-all duration-300 z-30 arabic-ui',
+          isExpanded ? 'h-auto bottom-16' : 'h-20 bottom-16',
+          'md:bottom-0' // On desktop, stick to bottom
         )}
       >
         <div className="container mx-auto px-4">
