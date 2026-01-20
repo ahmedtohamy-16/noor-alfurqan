@@ -291,7 +291,7 @@ const PrayerTimesPage = () => {
               {/* Countdown */}
               <div className="flex justify-center items-center gap-2">
                 <p className="text-sm text-muted-foreground">متبقي:</p>
-                <div className="flex items-center gap-1 text-3xl font-bold text-primary font-mono bg-primary/10 px-4 py-2 rounded-xl">
+                <div className="flex items-center gap-1 text-3xl font-bold text-primary font-mono bg-primary/10 px-4 py-2 rounded-xl" dir="ltr">
                   <span>{formatNumber(countdown.hours)}</span>
                   <span className="animate-pulse">:</span>
                   <span>{formatNumber(countdown.minutes)}</span>
