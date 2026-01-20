@@ -12,9 +12,14 @@ import {
   Share2, 
   Copy, 
   Check,
-  Sparkles
+  Sparkles,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
+
+const MAX_TEXT_LENGTH = 200; // Maximum characters before truncating
 
 const DailyHadithCard = () => {
   const { getRandomHadith, loading } = useHadith();
@@ -22,6 +27,7 @@ const DailyHadithCard = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [copied, setCopied] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   useEffect(() => {
     loadHadith();
@@ -36,6 +42,7 @@ const DailyHadithCard = () => {
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
+    setIsExpanded(false);
     const newHadith = await getRandomHadith();
     if (newHadith) {
       setCurrentHadith(newHadith);
@@ -78,6 +85,11 @@ const DailyHadithCard = () => {
       handleCopy();
     }
   };
+
+  const isLongText = currentHadith?.text?.length > MAX_TEXT_LENGTH;
+  const displayText = isLongText && !isExpanded 
+    ? currentHadith.text.slice(0, MAX_TEXT_LENGTH) + '...'
+    : currentHadith?.text;
 
   if (initialLoading && !currentHadith) {
     return (
@@ -149,13 +161,38 @@ const DailyHadithCard = () => {
               <div className="absolute -right-2 top-0 text-6xl text-primary/10 font-serif leading-none">
                 ❝
               </div>
-              <p className="quran-text text-lg md:text-xl leading-loose pr-6 text-foreground">
-                {currentHadith.text}
+              <p className={cn(
+                "quran-text text-lg md:text-xl leading-loose pr-6 text-foreground transition-all duration-300",
+                !isExpanded && isLongText && "line-clamp-4"
+              )}>
+                {displayText}
               </p>
               <div className="absolute -left-2 bottom-0 text-6xl text-primary/10 font-serif leading-none rotate-180">
                 ❝
               </div>
             </div>
+
+            {/* Read More Button */}
+            {isLongText && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsExpanded(!isExpanded)}
+                className="gap-2 text-primary hover:text-primary/80 mx-auto flex"
+              >
+                {isExpanded ? (
+                  <>
+                    <ChevronUp className="w-4 h-4" />
+                    إخفاء
+                  </>
+                ) : (
+                  <>
+                    <ChevronDown className="w-4 h-4" />
+                    قراءة المزيد
+                  </>
+                )}
+              </Button>
+            )}
 
             {/* Narrator */}
             {currentHadith.narrator && (
