@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, BookOpen, Headphones, Settings2, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { surahs } from "@/data/surahs";
-import { getAyahsBySurah } from "@/data/quranAyats";
+import { getAyahsBySurahAsync } from "@/data/quranAyats";
 import Header from "@/components/Header";
 import TafsirDialog from "@/components/TafsirDialog";
 import ShareAyahDialog from "@/components/ShareAyahDialog";
@@ -79,13 +79,22 @@ const SurahPage = () => {
 
   const surahInfo = surahs.find((s) => s.number === Number(surahNumber));
 
-  // Use local static data instead of API
+  const {
+    data: localAyahs = [],
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: ["surahLocalAyahs", surahNumber],
+    queryFn: () => getAyahsBySurahAsync(Number(surahNumber)),
+    enabled: !!surahNumber,
+    staleTime: 1000 * 60 * 60,
+  });
+
+  // Use local runtime-loaded data
   const surah = useMemo((): SurahData | null => {
     if (!surahNumber || !surahInfo) return null;
-    
-    const localAyahs = getAyahsBySurah(Number(surahNumber));
-    if (localAyahs.length === 0) return null;
-    
+    if (!localAyahs || localAyahs.length === 0) return null;
+
     return {
       number: surahInfo.number,
       name: surahInfo.name,
@@ -93,16 +102,17 @@ const SurahPage = () => {
       englishNameTranslation: surahInfo.englishNameTranslation,
       numberOfAyahs: surahInfo.numberOfAyahs,
       revelationType: surahInfo.revelationType,
-      ayahs: localAyahs.map((a, index) => ({
+      ayahs: localAyahs.map((a) => ({
         number: a.id,
         text: a.text_uthmani,
         numberInSurah: a.ayat_number_in_sura,
-      }))
+      })),
     };
-  }, [surahNumber, surahInfo]);
-  
-  const isLoading = false;
-  const error = !surah && surahNumber ? new Error("Surah not found") : null;
+  }, [surahNumber, surahInfo, localAyahs]);
+
+  const error = (isError || (!isLoading && !!surahNumber && !surah))
+    ? new Error("Surah not found")
+    : null;
 
   const { data: translationData } = useQuery({
     queryKey: ["translation", surahNumber, selectedTranslation],

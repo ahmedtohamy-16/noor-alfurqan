@@ -1,13 +1,14 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowRight, Book, Search, Hash, BookOpen } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import Header from "@/components/Header";
 import SurahCard from "@/components/SurahCard";
 import { surahs } from "@/data/surahs";
-import { searchAyahs, QuranAyah } from "@/data/quranAyats";
+import { searchAyahsAsync } from "@/data/quranAyats";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface AyahResult {
@@ -43,27 +44,27 @@ const QuranPage = () => {
     return matchesFilter && matchesSearch;
   });
 
-  // Search for ayahs using local data
-  const ayahResults = useMemo((): AyahResult[] => {
-    if (searchType !== "ayah" || searchQuery.trim().length < 2) return [];
-    
-    const results = searchAyahs(searchQuery);
-    return results.slice(0, 100).map(a => {
-      const surahInfo = surahs.find(s => s.number === a.sura_id);
-      return {
-        number: a.id,
-        text: a.text_uthmani,
-        numberInSurah: a.ayat_number_in_sura,
-        surah: {
-          number: a.sura_id,
-          name: surahInfo?.name || `سورة ${a.sura_id}`,
-          englishName: surahInfo?.englishName || `Surah ${a.sura_id}`,
-        }
-      };
-    });
-  }, [searchQuery, searchType]);
-  
-  const isSearching = false;
+  const { data: ayahResults = [], isLoading: isSearching } = useQuery({
+    queryKey: ["ayahSearch", searchQuery],
+    queryFn: async (): Promise<AyahResult[]> => {
+      const results = await searchAyahsAsync(searchQuery);
+      return results.slice(0, 100).map((a) => {
+        const surahInfo = surahs.find((s) => s.number === a.sura_id);
+        return {
+          number: a.id,
+          text: a.text_uthmani,
+          numberInSurah: a.ayat_number_in_sura,
+          surah: {
+            number: a.sura_id,
+            name: surahInfo?.name || `سورة ${a.sura_id}`,
+            englishName: surahInfo?.englishName || `Surah ${a.sura_id}`,
+          },
+        };
+      });
+    },
+    enabled: searchType === "ayah" && searchQuery.trim().length >= 2,
+    staleTime: 1000 * 60 * 5,
+  });
 
   // Check if query is a valid ayah reference (e.g., "2:255" for Ayat Al-Kursi)
   const parseAyahReference = (q: string) => {
