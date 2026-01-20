@@ -61,6 +61,7 @@ const SurahPage = () => {
   const { incrementPage } = useReadingStats();
   const [tafsirAyah, setTafsirAyah] = useState<{ number: number; text: string } | null>(null);
   const [shareAyah, setShareAyah] = useState<{ number: number; text: string } | null>(null);
+  const [highlightedForTafsir, setHighlightedForTafsir] = useState<number | null>(null);
   const [selectedTranslation, setSelectedTranslation] = useState<string | null>(null);
   const [displaySettings, setDisplaySettings] = useState<DisplaySettings>({
     fontSize: 24,
@@ -339,7 +340,10 @@ const SurahPage = () => {
                       globalAyahNumber={ayah.number}
                       isFavorite={isAyahFavorite}
                       onToggleFavorite={() => toggleFavorite(ayah, displayText)}
-                      onOpenTafsir={() => setTafsirAyah({ number: ayah.numberInSurah, text: displayText })}
+                      onOpenTafsir={() => {
+                        setTafsirAyah({ number: ayah.numberInSurah, text: displayText });
+                        setHighlightedForTafsir(ayah.numberInSurah);
+                      }}
                       onOpenShare={() => setShareAyah({ number: ayah.numberInSurah, text: displayText })}
                       onPlayAyah={() => playSpecificAyah(index)}
                       onDownloadAyah={() => {
@@ -354,13 +358,15 @@ const SurahPage = () => {
                           "rounded px-1 transition-all duration-300 cursor-pointer",
                           isCurrentlyPlaying || (highlightAyah && parseInt(highlightAyah) === ayah.numberInSurah)
                             ? "bg-primary/20 text-primary ring-2 ring-primary/30" 
+                            : highlightedForTafsir === ayah.numberInSurah
+                            ? "bg-amber-100 dark:bg-amber-900/30 ring-2 ring-amber-300 dark:ring-amber-700"
                             : "hover:bg-accent/10"
                         )}
                       >
                         {displayText}
                       </span>
                     </AyahOptionsMenu>
-                    <span className="inline-flex items-center justify-center w-8 h-8 mx-1 text-sm bg-primary/10 text-primary rounded-full font-arabic align-middle">
+                    <span className="inline-flex items-center justify-center min-w-[40px] min-h-[40px] md:min-w-[32px] md:min-h-[32px] w-10 h-10 md:w-8 md:h-8 mx-1 text-sm bg-primary/10 text-primary rounded-full font-arabic align-middle cursor-pointer active:scale-95 transition-transform touch-manipulation">
                       {convertToArabicNumber(ayah.numberInSurah)}
                     </span>
                     {selectedTranslation && translatedText && (
@@ -382,7 +388,7 @@ const SurahPage = () => {
         </div>
       </main>
       
-      {tafsirAyah && <TafsirDialog isOpen={!!tafsirAyah} onClose={() => setTafsirAyah(null)} surahNumber={Number(surahNumber)} ayahNumber={tafsirAyah.number} ayahText={tafsirAyah.text} />}
+      {tafsirAyah && <TafsirDialog isOpen={!!tafsirAyah} onClose={() => { setTafsirAyah(null); setHighlightedForTafsir(null); }} surahNumber={Number(surahNumber)} ayahNumber={tafsirAyah.number} ayahText={tafsirAyah.text} />}
       
       {shareAyah && surahInfo && <ShareAyahDialog isOpen={!!shareAyah} onClose={() => setShareAyah(null)} ayahText={shareAyah.text} surahName={surahInfo.name} ayahNumber={shareAyah.number} />}
 

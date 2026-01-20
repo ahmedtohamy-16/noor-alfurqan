@@ -116,7 +116,7 @@ const TafsirDialog = ({
         </div>
 
         {/* Tafsir Content */}
-        <ScrollArea className="h-[300px] rounded-xl border border-border p-4">
+        <ScrollArea className="h-[350px] rounded-xl border border-border p-4">
           {isLoading ? (
             <div className="space-y-2">
               <Skeleton className="h-4 w-full" />
@@ -124,11 +124,11 @@ const TafsirDialog = ({
               <Skeleton className="h-4 w-3/4" />
             </div>
           ) : error ? (
-            <p className="text-muted-foreground text-center py-8">
+            <p className="text-muted-foreground text-center py-8 text-lg">
               هذا التفسير غير متاح حالياً لهذه الآية
             </p>
           ) : (
-            <p className="text-foreground leading-relaxed text-base">
+            <p className="text-foreground leading-loose text-lg md:text-xl">
               {tafsir?.text || "لا يوجد تفسير متاح لهذه الآية"}
             </p>
           )}
