@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Clock, MapPin } from "lucide-react";
+import { Clock, MapPin, ChevronLeft } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { useUserSettings } from "@/hooks/useUserSettings";
 import { Link } from "react-router-dom";
+import LocationPickerModal from "./LocationPickerModal";
 
 interface PrayerTimesData {
   Fajr: string;
@@ -16,7 +17,6 @@ interface PrayerTimesData {
 
 const prayers = [
   { key: "Fajr", name: "الفجر" },
-  { key: "Sunrise", name: "الشروق" },
   { key: "Dhuhr", name: "الظهر" },
   { key: "Asr", name: "العصر" },
   { key: "Maghrib", name: "المغرب" },
@@ -37,14 +37,16 @@ const NextPrayerWidget = () => {
   const { settings } = useUserSettings();
   const [countdown, setCountdown] = useState({ hours: 0, minutes: 0, seconds: 0 });
   const [nextPrayer, setNextPrayer] = useState<{ name: string; time: string } | null>(null);
+  const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
 
-  const lat = settings.latitude || 21.4225;
-  const lng = settings.longitude || 39.8262;
+  const lat = settings.latitude;
+  const lng = settings.longitude;
   const method = settings.prayer_method || 4;
+  const hasLocation = lat && lng;
 
   const { data: prayerTimes } = useQuery({
     queryKey: ["prayerTimesWidget", lat, lng, method],
-    queryFn: () => fetchPrayerTimes(lat, lng, method),
+    queryFn: () => fetchPrayerTimes(lat!, lng!, method),
     enabled: !!lat && !!lng,
     staleTime: 1000 * 60 * 60,
   });
@@ -69,7 +71,6 @@ const NextPrayerWidget = () => {
       }
 
       if (!found) {
-        // Next prayer is Fajr tomorrow
         setNextPrayer({ name: "الفجر", time: prayerTimes.Fajr });
       }
     };
@@ -105,9 +106,35 @@ const NextPrayerWidget = () => {
     return () => clearInterval(interval);
   }, [prayerTimes, nextPrayer]);
 
-  if (!nextPrayer) return null;
-
   const formatNumber = (num: number) => num.toString().padStart(2, "0");
+
+  // Show location prompt if no location
+  if (!hasLocation) {
+    return (
+      <>
+        <Card
+          className="p-4 bg-gradient-to-br from-primary/10 via-primary/5 to-accent/10 border-primary/20 cursor-pointer hover:shadow-lg transition-all"
+          onClick={() => setIsLocationModalOpen(true)}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center">
+                <MapPin className="w-6 h-6 text-primary" />
+              </div>
+              <div>
+                <p className="font-bold text-foreground">مواقيت الصلاة</p>
+                <p className="text-sm text-muted-foreground">اضغط لتحديد موقعك</p>
+              </div>
+            </div>
+            <ChevronLeft className="w-5 h-5 text-muted-foreground" />
+          </div>
+        </Card>
+        <LocationPickerModal open={isLocationModalOpen} onOpenChange={setIsLocationModalOpen} />
+      </>
+    );
+  }
+
+  if (!nextPrayer) return null;
 
   return (
     <Link to="/prayer-times">
@@ -123,7 +150,7 @@ const NextPrayerWidget = () => {
               <p className="text-sm text-primary font-medium">{nextPrayer.time}</p>
             </div>
           </div>
-          
+
           <div className="text-center">
             <p className="text-xs text-muted-foreground mb-1">متبقي</p>
             <div className="flex items-center gap-1 text-xl font-bold text-primary font-mono">
@@ -135,7 +162,7 @@ const NextPrayerWidget = () => {
             </div>
           </div>
         </div>
-        
+
         {settings.city_name && (
           <div className="flex items-center gap-1 mt-2 text-xs text-muted-foreground">
             <MapPin className="w-3 h-3" />

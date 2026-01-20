@@ -11,11 +11,13 @@ import {
   ScrollText,
   Shield,
   Library,
+  Clock,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/Header";
 import DailyHadithCard from "@/components/DailyHadithCard";
+import NextPrayerWidget from "@/components/NextPrayerWidget";
 import { useReadingProgress } from "@/hooks/useReadingProgress";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -24,6 +26,13 @@ const Index = () => {
   const { user } = useAuth();
 
   const features = [
+    {
+      icon: Clock,
+      title: "مواقيت الصلاة",
+      description: "أوقات الصلاة والعداد التنازلي",
+      link: "/prayer-times",
+      color: "bg-emerald-500/10 text-emerald-600",
+    },
     {
       icon: Book,
       title: "القرآن الكريم",
@@ -131,6 +140,11 @@ const Index = () => {
       </section>
 
       <main className="container mx-auto px-4 py-8 arabic-ui">
+        {/* Next Prayer Widget */}
+        <section className="mb-6">
+          <NextPrayerWidget />
+        </section>
+
         {/* Daily Hadith Card - Featured at top */}
         <section className="mb-8">
           <DailyHadithCard />
