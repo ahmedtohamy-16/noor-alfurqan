@@ -193,7 +193,10 @@ const PrayerTimesPage = () => {
     if (!monthlyTimes || !calendarRef.current) return;
 
     try {
-      const { default: html2canvas } = await import("html2canvas");
+      // Dynamic import for html2canvas
+      const html2canvasModule = await import("html2canvas");
+      const html2canvas = html2canvasModule.default;
+      
       const canvas = await html2canvas(calendarRef.current, {
         backgroundColor: "#ffffff",
         scale: 2,
@@ -215,6 +218,7 @@ const PrayerTimesPage = () => {
       a.click();
       toast.success("تم تحميل الصورة بنجاح");
     } catch (error) {
+      console.error("Image export error:", error);
       toast.error("حدث خطأ في تحميل الصورة");
     }
   };
