@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { MapPin, Clock, Loader2 } from "lucide-react";
@@ -104,16 +104,13 @@ interface PrayerTimesWidgetProps {
 
 const PrayerTimesWidget = ({ showLocationButton = true, height = 320 }: PrayerTimesWidgetProps) => {
   const { settings, autoDetectLocation, updateLocation } = useUserSettings();
-  const [widgetId, setWidgetId] = useState<string>("8198");
   const [isLoading, setIsLoading] = useState(false);
   const [showPicker, setShowPicker] = useState(false);
   
   const hasLocation = settings.latitude && settings.longitude;
-
-  useEffect(() => {
-    const id = getCityWidgetId(settings.city_name || null, settings.latitude || null, settings.longitude || null);
-    setWidgetId(id);
-  }, [settings.city_name, settings.latitude, settings.longitude]);
+  
+  // Calculate widget ID directly from current settings
+  const widgetId = getCityWidgetId(settings.city_name || null, settings.latitude || null, settings.longitude || null);
 
   const handleAutoLocation = async () => {
     setIsLoading(true);

@@ -1,9 +1,10 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Book, Home, Heart, Clock, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const BottomNavigation = () => {
   const location = useLocation();
+  const navigate = useNavigate();
 
   const navItems = [
     { icon: Clock, label: "الصلاة", path: "/prayer-times" },
@@ -23,15 +24,20 @@ const BottomNavigation = () => {
     return location.pathname === path;
   };
 
+  const handleNavClick = (e: React.MouseEvent, path: string) => {
+    e.preventDefault();
+    navigate(path);
+  };
+
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-lg border-t border-border z-40 safe-area-pb">
       <div className="flex items-center justify-around h-16">
         {navItems.map((item) => (
-          <Link
+          <button
             key={item.path}
-            to={item.path}
+            onClick={(e) => handleNavClick(e, item.path)}
             className={cn(
-              "flex flex-col items-center justify-center w-full h-full gap-1 transition-colors",
+              "flex flex-col items-center justify-center w-full h-full gap-1 transition-colors border-none bg-transparent cursor-pointer",
               isActive(item.path)
                 ? "text-primary"
                 : "text-muted-foreground hover:text-foreground"
@@ -39,7 +45,7 @@ const BottomNavigation = () => {
           >
             <item.icon className={cn("w-5 h-5", isActive(item.path) && "scale-110")} />
             <span className="text-xs font-medium arabic-ui">{item.label}</span>
-          </Link>
+          </button>
         ))}
       </div>
     </nav>
