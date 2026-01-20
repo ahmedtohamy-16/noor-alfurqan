@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useSearchParams, Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,7 +8,7 @@ import Header from "@/components/Header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useReadingProgress } from "@/hooks/useReadingProgress";
 import { useReadingStats } from "@/hooks/useReadingStats";
-import { getAyahsByPage } from "@/data/quranAyats";
+import { getAyahsByPageAsync } from "@/data/quranAyats";
 import { surahs } from "@/data/surahs";
 
 const TOTAL_PAGES = 604;
@@ -20,27 +21,33 @@ const MushafPage = () => {
   const { saveProgress } = useReadingProgress();
   const { incrementPage } = useReadingStats();
 
-  // Use local static data instead of API
-  const pageAyahs = useMemo(() => {
-    const ayahs = getAyahsByPage(currentPage);
-    return ayahs.map(a => {
-      const surahInfo = surahs.find(s => s.number === a.sura_id);
-      return {
-        number: a.id,
-        text: a.text_uthmani,
-        numberInSurah: a.ayat_number_in_sura,
-        surah: {
-          number: a.sura_id,
-          name: surahInfo?.name || `سورة ${a.sura_id}`,
-          englishName: surahInfo?.englishName || `Surah ${a.sura_id}`,
-        },
-        page: a.page_number,
-      };
-    });
-  }, [currentPage]);
+  const {
+    data: pageAyahs = [],
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: ["mushafPageAyahs", currentPage],
+    queryFn: async () => {
+      const ayahs = await getAyahsByPageAsync(currentPage);
+      return ayahs.map((a) => {
+        const surahInfo = surahs.find((s) => s.number === a.sura_id);
+        return {
+          number: a.id,
+          text: a.text_uthmani,
+          numberInSurah: a.ayat_number_in_sura,
+          surah: {
+            number: a.sura_id,
+            name: surahInfo?.name || `سورة ${a.sura_id}`,
+            englishName: surahInfo?.englishName || `Surah ${a.sura_id}`,
+          },
+          page: a.page_number,
+        };
+      });
+    },
+    staleTime: 1000 * 60 * 60,
+  });
 
-  const isLoading = false;
-  const error = pageAyahs.length === 0;
+  const error = isError || pageAyahs.length === 0;
 
   // Update URL and track reading
   useEffect(() => {
