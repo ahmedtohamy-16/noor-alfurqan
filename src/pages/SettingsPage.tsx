@@ -6,7 +6,6 @@ import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import Header from "@/components/Header";
 import ReciterSelector from "@/components/ReciterSelector";
-import PrayerNotificationSettings from "@/components/PrayerNotificationSettings";
 import { useTheme } from "@/hooks/useTheme";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserSettings } from "@/hooks/useUserSettings";
@@ -120,7 +119,7 @@ const SettingsPage = () => {
                 <Bell className="w-5 h-5 text-primary" />
                 <div>
                   <p className="font-medium text-foreground">إعدادات التنبيهات</p>
-                  <p className="text-sm text-muted-foreground">تنبيهات الصلاة والأذكار والورد اليومي</p>
+                  <p className="text-sm text-muted-foreground">تنبيهات الأذكار والورد اليومي</p>
                 </div>
               </div>
               <ArrowRight className="w-5 h-5 text-muted-foreground rotate-180" />

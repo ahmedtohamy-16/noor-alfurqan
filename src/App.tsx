@@ -22,7 +22,6 @@ import AuthPage from "./pages/AuthPage";
 import VerifyOtpPage from "./pages/VerifyOtpPage";
 import ProfilePage from "./pages/ProfilePage";
 import SettingsPage from "./pages/SettingsPage";
-import PrayerTimesPage from "./pages/PrayerTimesPage";
 import ReadingStatsPage from "./pages/ReadingStatsPage";
 import DailyWirdPage from "./pages/DailyWirdPage";
 import TasbihPage from "./pages/TasbihPage";
@@ -66,7 +65,6 @@ const App = () => (
                     <Route path="/verify-otp" element={<VerifyOtpPage />} />
                     <Route path="/profile" element={<ProfilePage />} />
                     <Route path="/settings" element={<SettingsPage />} />
-                    <Route path="/prayer-times" element={<PrayerTimesPage />} />
                     <Route path="/reading-stats" element={<ReadingStatsPage />} />
                     <Route path="/daily-wird" element={<DailyWirdPage />} />
                     <Route path="/tasbih" element={<TasbihPage />} />

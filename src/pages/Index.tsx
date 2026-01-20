@@ -1,7 +1,6 @@
 import { Link } from "react-router-dom";
 import {
   Book,
-  Clock,
   Star,
   Users,
   ChevronLeft,
@@ -16,7 +15,6 @@ import {
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/Header";
-import NextPrayerWidgetEnhanced from "@/components/NextPrayerWidgetEnhanced";
 import DailyHadithCard from "@/components/DailyHadithCard";
 import { useReadingProgress } from "@/hooks/useReadingProgress";
 import { useAuth } from "@/hooks/useAuth";
@@ -96,13 +94,6 @@ const Index = () => {
       link: "/khatmah",
       color: "bg-blue-500/10 text-blue-600",
     },
-    {
-      icon: Clock,
-      title: "مواقيت الصلاة",
-      description: "أوقات الصلاة اليومية",
-      link: "/prayer-times",
-      color: "bg-orange-500/10 text-orange-600",
-    },
   ];
 
   return (
@@ -143,11 +134,6 @@ const Index = () => {
         {/* Daily Hadith Card - Featured at top */}
         <section className="mb-8">
           <DailyHadithCard />
-        </section>
-
-        {/* Next Prayer Widget */}
-        <section className="mb-8">
-          <NextPrayerWidgetEnhanced />
         </section>
 
         {/* Last Read Card */}
