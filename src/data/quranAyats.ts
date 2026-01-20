@@ -51,11 +51,27 @@ export const getAyah = (surahNumber: number, ayahNumber: number): QuranAyah | un
 /**
  * Search ayahs by text
  */
+// Normalize Arabic text by removing diacritics and normalizing characters
+const normalizeArabic = (text: string): string => {
+  return text
+    // Remove Arabic diacritics (tashkeel)
+    .replace(/[\u064B-\u0652\u0670\u0640]/g, '')
+    // Normalize alef variants to simple alef
+    .replace(/[أإآٱ]/g, 'ا')
+    // Normalize teh marbuta to heh
+    .replace(/ة/g, 'ه')
+    // Normalize alef maksura to yeh
+    .replace(/ى/g, 'ي')
+    // Remove tatweel
+    .replace(/ـ/g, '')
+    .trim();
+};
+
 export const searchAyahs = (query: string): QuranAyah[] => {
   if (!query.trim()) return [];
-  const normalizedQuery = query.trim();
+  const normalizedQuery = normalizeArabic(query.trim());
   return quranAyats.filter(ayah => 
-    ayah.text_uthmani.includes(normalizedQuery)
+    normalizeArabic(ayah.text_uthmani).includes(normalizedQuery)
   );
 };
 
