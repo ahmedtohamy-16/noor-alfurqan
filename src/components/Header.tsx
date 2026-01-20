@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import ThemeToggle from "./ThemeToggle";
 import { useAuth } from "@/hooks/useAuth";
+import HeaderLocationButton from "./HeaderLocationButton";
 
 const Header = () => {
   const location = useLocation();
@@ -23,14 +24,17 @@ const Header = () => {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow">
-              <span className="text-primary-foreground font-quran text-lg">ن</span>
-            </div>
-            <span className="font-arabic font-bold text-xl text-foreground hidden sm:block">
-              نور الفرقان
-            </span>
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link to="/" className="flex items-center gap-3 group">
+              <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-md group-hover:shadow-lg transition-shadow">
+                <span className="text-primary-foreground font-quran text-lg">ن</span>
+              </div>
+              <span className="font-arabic font-bold text-xl text-foreground hidden sm:block">
+                نور الفرقان
+              </span>
+            </Link>
+            <HeaderLocationButton />
+          </div>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-1 arabic-ui">

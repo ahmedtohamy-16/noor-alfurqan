@@ -37,6 +37,7 @@ import TeacherDashboard from "./pages/TeacherDashboard";
 import MessagesPage from "./pages/MessagesPage";
 import UserManagementPage from "./pages/UserManagementPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import PrayerTimesPage from "./pages/PrayerTimesPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -80,6 +81,7 @@ const App = () => (
                     <Route path="/messages" element={<MessagesPage />} />
                     <Route path="/user-management" element={<UserManagementPage />} />
                     <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                    <Route path="/prayer-times" element={<PrayerTimesPage />} />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
                   <GlobalAudioPlayer />
