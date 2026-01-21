@@ -64,7 +64,11 @@ const LocationPickerModal = ({ open, onOpenChange }: LocationPickerModalProps) =
   const handleConfirm = async () => {
     if (selectedCity) {
       await updateLocation(selectedCity.latitude, selectedCity.longitude, selectedCity.name_ar);
-      await updateSettings({ prayer_method: selectedMethod, prayer_madhab: selectedMadhab });
+      await updateSettings({ 
+        prayer_method: selectedMethod, 
+        prayer_madhab: selectedMadhab,
+        country_code: selectedCountry 
+      });
       onOpenChange(false);
     }
   };

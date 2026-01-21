@@ -1,9 +1,16 @@
-import { ArrowRight, Moon, Sun, LogOut, User, Clock, Shield, Bell } from "lucide-react";
+import { ArrowRight, Moon, Sun, LogOut, User, Clock, Shield, Bell, Sunrise } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import Header from "@/components/Header";
 import ReciterSelector from "@/components/ReciterSelector";
 import { useTheme } from "@/hooks/useTheme";
@@ -13,6 +20,7 @@ import { useNotifications } from "@/hooks/useNotifications";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
 import { firestoreQuery, COLLECTIONS } from "@/lib/firebase";
+import { countryHasDST, isInDSTForCountry, getDSTStatusText } from "@/utils/dstUtils";
 
 const SettingsPage = () => {
   const { theme, toggleTheme } = useTheme();
@@ -124,6 +132,63 @@ const SettingsPage = () => {
               </div>
               <ArrowRight className="w-5 h-5 text-muted-foreground rotate-180" />
             </Link>
+          </Card>
+
+          {/* DST (Daylight Saving Time) Settings */}
+          <Card className="p-4 space-y-4">
+            <div className="flex items-center gap-3">
+              <Sunrise className="w-5 h-5 text-primary" />
+              <div>
+                <p className="font-medium text-foreground">التوقيت الصيفي (DST)</p>
+                <p className="text-sm text-muted-foreground">
+                  {settings.country_code 
+                    ? getDSTStatusText(settings.country_code)
+                    : "حدد موقعك أولاً لضبط التوقيت"}
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-3 pt-2 border-t border-border">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">وضع التوقيت الصيفي</label>
+                <Select
+                  value={settings.dst_mode}
+                  onValueChange={(val: 'auto' | 'manual') => {
+                    updateSettings({ dst_mode: val });
+                    toast.success(val === 'auto' ? "تم التبديل للوضع التلقائي" : "تم التبديل للوضع اليدوي");
+                  }}
+                >
+                  <SelectTrigger className="h-10">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="auto">تلقائي (حسب الدولة)</SelectItem>
+                    <SelectItem value="manual">يدوي</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {settings.dst_mode === 'manual' && (
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-foreground">تفعيل التوقيت الصيفي (+1 ساعة)</span>
+                  <Switch
+                    checked={settings.dst_enabled}
+                    onCheckedChange={(checked) => {
+                      updateSettings({ dst_enabled: checked });
+                      toast.success(checked ? "تم تفعيل التوقيت الصيفي" : "تم إلغاء التوقيت الصيفي");
+                    }}
+                  />
+                </div>
+              )}
+
+              {settings.dst_mode === 'auto' && settings.country_code && (
+                <p className="text-xs text-muted-foreground bg-muted/50 p-2 rounded">
+                  {countryHasDST(settings.country_code) 
+                    ? `دولتك (${settings.country_code}) تطبق التوقيت الصيفي. ${isInDSTForCountry(settings.country_code) ? "حالياً: مُفعّل" : "حالياً: غير مُفعّل"}`
+                    : `دولتك (${settings.country_code}) لا تطبق التوقيت الصيفي.`}
+                </p>
+              )}
+            </div>
           </Card>
 
           {/* Daily Wird Settings */}
