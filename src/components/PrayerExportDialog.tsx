@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Download, Image, MapPin, Loader2, FileJson, X } from "lucide-react";
+import { Download, Image, MapPin, Loader2, FileJson, X, ChevronLeft, ChevronRight } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -19,6 +19,7 @@ import { countries, prayerMethods, type City } from "@/data/locationData";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { firestoreAdd, COLLECTIONS } from "@/lib/firebase";
+import ExportThemeSelector, { exportThemes, type ExportTheme } from "./ExportThemeSelector";
 
 interface MonthlyPrayerDay {
   date: {
@@ -76,6 +77,7 @@ const PrayerExportDialog = ({
   const [selectedCity, setSelectedCity] = useState<City | null>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [exportType, setExportType] = useState<"image" | "json" | null>(null);
+  const [selectedTheme, setSelectedTheme] = useState<ExportTheme>(exportThemes[0]);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const finalLat = useCustomLocation && selectedCity ? selectedCity.latitude : defaultLat;
@@ -109,6 +111,7 @@ const PrayerExportDialog = ({
       await firestoreAdd('export_logs', {
         user_id: user.uid,
         export_type: exportType,
+        theme: selectedTheme.id,
         location: {
           latitude: finalLat,
           longitude: finalLng,
@@ -177,7 +180,7 @@ const PrayerExportDialog = ({
     }
   };
 
-  // Export as high-quality image
+  // Export as high-quality image with theme
   const handleExportImage = async () => {
     setIsExporting(true);
     setExportType("image");
@@ -185,55 +188,67 @@ const PrayerExportDialog = ({
     try {
       const monthlyTimes = await fetchMonthlyTimes();
       
-      // Create high-resolution canvas
+      // Create 4K resolution canvas
       const canvas = document.createElement("canvas");
       const ctx = canvas.getContext("2d")!;
       
-      const scale = 3; // High resolution
+      const scale = 4; // 4K resolution
       const width = 1200;
-      const rowHeight = 40;
-      const headerHeight = 80;
-      const footerHeight = 100;
-      const padding = 30;
-      const tableHeaderHeight = 50;
+      const rowHeight = 42;
+      const headerHeight = 100;
+      const footerHeight = 120;
+      const padding = 40;
+      const tableHeaderHeight = 55;
       const height = headerHeight + tableHeaderHeight + (monthlyTimes.length * rowHeight) + footerHeight + padding * 2;
       
       canvas.width = width * scale;
       canvas.height = height * scale;
       ctx.scale(scale, scale);
       
-      // Background
-      ctx.fillStyle = "#ffffff";
+      // Background gradient based on theme
+      const bgGradient = ctx.createLinearGradient(0, 0, width, height);
+      bgGradient.addColorStop(0, selectedTheme.bgStart);
+      bgGradient.addColorStop(1, selectedTheme.bgEnd);
+      ctx.fillStyle = bgGradient;
       ctx.fillRect(0, 0, width, height);
       
-      // Header gradient
+      // Header with theme colors
+      const isLightTheme = selectedTheme.id === "classic-white";
       const headerGradient = ctx.createLinearGradient(0, 0, width, headerHeight);
-      headerGradient.addColorStop(0, "#059669");
-      headerGradient.addColorStop(1, "#10b981");
+      
+      if (selectedTheme.headerBg) {
+        // Parse linear gradient colors
+        const colors = selectedTheme.headerBg.match(/#[a-fA-F0-9]{6}/g) || [selectedTheme.accentColor, selectedTheme.accentColor];
+        headerGradient.addColorStop(0, colors[0]);
+        headerGradient.addColorStop(1, colors[1] || colors[0]);
+      } else {
+        headerGradient.addColorStop(0, selectedTheme.accentColor);
+        headerGradient.addColorStop(1, selectedTheme.borderColor);
+      }
       ctx.fillStyle = headerGradient;
       ctx.fillRect(0, 0, width, headerHeight);
       
       // Header text
-      ctx.fillStyle = "#ffffff";
-      ctx.font = "bold 28px 'Segoe UI', Arial, sans-serif";
+      ctx.fillStyle = isLightTheme ? "#ffffff" : selectedTheme.textColor;
+      ctx.font = "bold 32px 'Segoe UI', Arial, sans-serif";
       ctx.textAlign = "center";
-      ctx.fillText(`مواقيت الصلاة - ${finalCityName || ""}`, width / 2, 35);
+      ctx.fillText(`مواقيت الصلاة - ${finalCityName || ""}`, width / 2, 40);
       
       // Get Hijri month info from first day
       const firstDay = monthlyTimes[0];
       const hijriMonth = firstDay?.date?.hijri?.month?.ar || "";
       const hijriYear = firstDay?.date?.hijri?.year || "";
       
-      ctx.font = "20px 'Segoe UI', Arial, sans-serif";
+      ctx.font = "22px 'Segoe UI', Arial, sans-serif";
       ctx.fillText(
         `${hijriMonth} ${hijriYear}هـ - ${gregorianMonthNames[currentMonth - 1]} ${currentYear}م`,
         width / 2,
-        65
+        75
       );
       
-      // Table columns
+      // Table columns with Fajr included
       const columns = [
-        { label: "التاريخ", width: 180 },
+        { label: "التاريخ", width: 200 },
         { label: "الفجر", width: 100 },
         { label: "الشروق", width: 100 },
         { label: "الظهر", width: 100 },
@@ -246,18 +261,18 @@ const PrayerExportDialog = ({
       const tableStartX = (width - tableWidth) / 2;
       const tableStartY = headerHeight + padding;
       
-      // Table header
-      ctx.fillStyle = "#f0fdf4";
+      // Table header background
+      ctx.fillStyle = isLightTheme ? "#f0fdf4" : `${selectedTheme.accentColor}30`;
       ctx.fillRect(tableStartX, tableStartY, tableWidth, tableHeaderHeight);
       
       // Table header text
-      ctx.fillStyle = "#059669";
-      ctx.font = "bold 16px 'Segoe UI', Arial, sans-serif";
+      ctx.fillStyle = selectedTheme.accentColor;
+      ctx.font = "bold 18px 'Segoe UI', Arial, sans-serif";
       ctx.textAlign = "center";
       
       let xPos = tableStartX;
       columns.forEach((col) => {
-        ctx.fillText(col.label, xPos + col.width / 2, tableStartY + 32);
+        ctx.fillText(col.label, xPos + col.width / 2, tableStartY + 35);
         xPos += col.width;
       });
       
@@ -265,12 +280,16 @@ const PrayerExportDialog = ({
       monthlyTimes.forEach((day, index) => {
         const rowY = tableStartY + tableHeaderHeight + (index * rowHeight);
         
-        // Alternate row colors
-        ctx.fillStyle = index % 2 === 0 ? "#ffffff" : "#f9fafb";
+        // Alternate row colors based on theme
+        if (isLightTheme) {
+          ctx.fillStyle = index % 2 === 0 ? "#ffffff" : "#f9fafb";
+        } else {
+          ctx.fillStyle = index % 2 === 0 ? `${selectedTheme.bgEnd}` : `${selectedTheme.bgStart}40`;
+        }
         ctx.fillRect(tableStartX, rowY, tableWidth, rowHeight);
         
         // Row border
-        ctx.strokeStyle = "#e5e7eb";
+        ctx.strokeStyle = isLightTheme ? "#e5e7eb" : `${selectedTheme.borderColor}50`;
         ctx.lineWidth = 0.5;
         ctx.beginPath();
         ctx.moveTo(tableStartX, rowY + rowHeight);
@@ -278,8 +297,6 @@ const PrayerExportDialog = ({
         ctx.stroke();
         
         // Row data
-        ctx.fillStyle = "#374151";
-        ctx.font = "14px 'Segoe UI', Arial, sans-serif";
         ctx.textAlign = "center";
         
         const rowData = [
@@ -296,19 +313,19 @@ const PrayerExportDialog = ({
         rowData.forEach((text, i) => {
           // Date column - different style
           if (i === 0) {
-            ctx.font = "bold 12px 'Segoe UI', Arial, sans-serif";
-            ctx.fillStyle = "#1f2937";
+            ctx.font = "bold 13px 'Segoe UI', Arial, sans-serif";
+            ctx.fillStyle = selectedTheme.textColor;
           } else {
-            ctx.font = "14px 'Courier New', monospace";
-            ctx.fillStyle = "#059669";
+            ctx.font = "16px 'Courier New', monospace";
+            ctx.fillStyle = selectedTheme.accentColor;
           }
-          ctx.fillText(text, xPos + columns[i].width / 2, rowY + 26);
+          ctx.fillText(text, xPos + columns[i].width / 2, rowY + 28);
           xPos += columns[i].width;
         });
       });
       
       // Table border
-      ctx.strokeStyle = "#10b981";
+      ctx.strokeStyle = selectedTheme.borderColor;
       ctx.lineWidth = 2;
       ctx.strokeRect(
         tableStartX, 
@@ -318,34 +335,39 @@ const PrayerExportDialog = ({
       );
       
       // Footer
-      const footerY = tableStartY + tableHeaderHeight + (monthlyTimes.length * rowHeight) + 20;
+      const footerY = tableStartY + tableHeaderHeight + (monthlyTimes.length * rowHeight) + 25;
       
-      // Footer gradient
-      const footerGradient = ctx.createLinearGradient(0, footerY, 0, footerY + footerHeight - 20);
-      footerGradient.addColorStop(0, "#f0fdf4");
-      footerGradient.addColorStop(1, "#ffffff");
+      // Footer gradient background
+      const footerGradient = ctx.createLinearGradient(0, footerY, 0, footerY + footerHeight);
+      if (isLightTheme) {
+        footerGradient.addColorStop(0, "#f0fdf4");
+        footerGradient.addColorStop(1, "#ffffff");
+      } else {
+        footerGradient.addColorStop(0, `${selectedTheme.bgEnd}`);
+        footerGradient.addColorStop(1, selectedTheme.bgEnd);
+      }
       ctx.fillStyle = footerGradient;
       ctx.fillRect(0, footerY, width, footerHeight);
       
       // App branding
-      ctx.fillStyle = "#059669";
-      ctx.font = "bold 24px 'Segoe UI', Arial, sans-serif";
+      ctx.fillStyle = selectedTheme.accentColor;
+      ctx.font = "bold 28px 'Segoe UI', Arial, sans-serif";
       ctx.textAlign = "center";
-      ctx.fillText("نور الفرقان", width / 2, footerY + 35);
+      ctx.fillText("نور الفرقان", width / 2, footerY + 40);
       
-      ctx.fillStyle = "#6b7280";
-      ctx.font = "14px 'Segoe UI', Arial, sans-serif";
-      ctx.fillText("تطبيق لقراءة القرآن الكريم", width / 2, footerY + 58);
+      ctx.fillStyle = isLightTheme ? "#6b7280" : `${selectedTheme.textColor}80`;
+      ctx.font = "16px 'Segoe UI', Arial, sans-serif";
+      ctx.fillText("تطبيق لقراءة القرآن الكريم", width / 2, footerY + 68);
       
       // Download image
       const dataUrl = canvas.toDataURL("image/png", 1.0);
       const a = document.createElement("a");
       a.href = dataUrl;
-      a.download = `prayer-times-${finalCityName || "location"}-${hijriMonth || currentMonth}-${currentYear}.png`;
+      a.download = `prayer-times-${finalCityName || "location"}-${hijriMonth || currentMonth}-${currentYear}-4K.png`;
       a.click();
       
       await logExportAction("image");
-      toast.success("تم تحميل الصورة بنجاح");
+      toast.success("تم تحميل الصورة بجودة 4K");
       onOpenChange(false);
     } catch (error) {
       console.error("Image export error:", error);
@@ -356,16 +378,28 @@ const PrayerExportDialog = ({
     }
   };
 
+  const nextTheme = () => {
+    const currentIndex = exportThemes.findIndex((t) => t.id === selectedTheme.id);
+    const nextIndex = (currentIndex + 1) % exportThemes.length;
+    setSelectedTheme(exportThemes[nextIndex]);
+  };
+
+  const prevTheme = () => {
+    const currentIndex = exportThemes.findIndex((t) => t.id === selectedTheme.id);
+    const prevIndex = (currentIndex - 1 + exportThemes.length) % exportThemes.length;
+    setSelectedTheme(exportThemes[prevIndex]);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md arabic-ui" dir="rtl">
+      <DialogContent className="sm:max-w-lg arabic-ui max-h-[90vh] overflow-y-auto" dir="rtl">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold flex items-center gap-2">
             <Download className="w-5 h-5 text-primary" />
             تصدير مواقيت الصلاة
           </DialogTitle>
           <DialogDescription className="text-sm text-muted-foreground">
-            اختر الموقع ونوع التصدير للحصول على جدول المواقيت
+            اختر الموقع والثيم ونوع التصدير للحصول على جدول المواقيت
           </DialogDescription>
         </DialogHeader>
 
@@ -440,6 +474,9 @@ const PrayerExportDialog = ({
             </div>
           )}
 
+          {/* Theme selector */}
+          <ExportThemeSelector selectedTheme={selectedTheme} onSelectTheme={setSelectedTheme} />
+
           {/* Export buttons */}
           <div className="grid grid-cols-2 gap-3">
             <Button
@@ -453,7 +490,7 @@ const PrayerExportDialog = ({
               ) : (
                 <>
                   <Image className="w-5 h-5" />
-                  <span className="text-xs">تحميل كصورة</span>
+                  <span className="text-xs">تحميل صورة 4K</span>
                 </>
               )}
             </Button>
@@ -476,7 +513,7 @@ const PrayerExportDialog = ({
           </div>
 
           <p className="text-xs text-muted-foreground text-center">
-            سيتم تصدير مواقيت الشهر بالكامل بصيغة عالية الجودة
+            سيتم تصدير مواقيت الشهر بالكامل بصيغة عالية الجودة (4K)
           </p>
         </div>
         
