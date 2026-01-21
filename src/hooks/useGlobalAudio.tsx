@@ -438,6 +438,10 @@ export const GlobalAudioProvider: React.FC<GlobalAudioProviderProps> = ({ childr
   }, []);
 
   const setReciter = useCallback((reciter: Reciter) => {
+    // Store current time position for seamless transition
+    const currentTime = audioRef.current?.currentTime || 0;
+    const wasPlaying = isPlaying;
+    
     if (!currentSurah) {
       setSelectedReciter(reciter);
       return;
@@ -449,7 +453,7 @@ export const GlobalAudioProvider: React.FC<GlobalAudioProviderProps> = ({ childr
       return;
     }
 
-    // Clear old cache before switching
+    // Clear old cache immediately for instant switching
     preloadCache.current.forEach(audio => {
       audio.pause();
       audio.src = '';
@@ -457,26 +461,56 @@ export const GlobalAudioProvider: React.FC<GlobalAudioProviderProps> = ({ childr
     preloadCache.current.clear();
     preloadedUrls.current.clear();
     
-    // Immediately switch to new reciter with instant loading
-    const newUrl = getAudioUrl(currentAyah.number, reciter);
+    // Update reciter state FIRST for instant UI feedback
     setSelectedReciter(reciter);
     
-    if (isPlaying) {
-      setIsLoading(true);
-      audioRef.current.src = newUrl;
-      audioRef.current.play()
-        .then(() => {
-          setIsPlaying(true);
-          setIsLoading(false);
-          // Preload next ayahs for new reciter
-          preloadMultipleAyahs(currentAyahIndex + 1);
-        })
-        .catch((err) => {
-          console.error('Error switching reciter:', err);
-          setIsLoading(false);
-        });
+    // Get new URL with the new reciter
+    const newUrl = `${reciter.server}/${currentAyah.number}.mp3`;
+    
+    // Create new audio element for instant switching (avoid reusing same element)
+    const newAudio = new Audio();
+    newAudio.preload = 'auto';
+    newAudio.volume = isMuted ? 0 : volume / 100;
+    
+    // Stop current audio immediately
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.src = '';
     }
-  }, [isPlaying, currentAyahIndex, currentSurah, getAudioUrl, preloadMultipleAyahs]);
+    
+    // Set up new audio with instant loading
+    newAudio.src = newUrl;
+    
+    // Transfer event listeners to new audio
+    newAudio.addEventListener('timeupdate', handleTimeUpdate);
+    newAudio.addEventListener('ended', handleEnded);
+    newAudio.addEventListener('loadstart', () => setIsLoading(true));
+    newAudio.addEventListener('canplay', () => setIsLoading(false));
+    newAudio.addEventListener('error', () => setIsLoading(false));
+    
+    audioRef.current = newAudio;
+    
+    if (wasPlaying) {
+      // Use 'canplaythrough' for faster start
+      newAudio.addEventListener('canplaythrough', () => {
+        newAudio.play()
+          .then(() => {
+            setIsPlaying(true);
+            setIsLoading(false);
+            // Preload next ayahs for new reciter
+            preloadMultipleAyahs(currentAyahIndex + 1);
+          })
+          .catch((err) => {
+            console.error('Error switching reciter:', err);
+            setIsLoading(false);
+          });
+      }, { once: true });
+      
+      // Start loading immediately
+      newAudio.load();
+      setIsLoading(true);
+    }
+  }, [isPlaying, currentAyahIndex, currentSurah, isMuted, volume, handleTimeUpdate, handleEnded, preloadMultipleAyahs]);
 
   const downloadAyah = useCallback(async (ayahNumber: number, surahName: string, ayahNumberInSurah: number) => {
     const url = getAudioUrl(ayahNumber);

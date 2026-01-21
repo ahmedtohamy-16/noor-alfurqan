@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "./useAuth";
-import { firestoreGet, firestoreSet, COLLECTIONS } from "@/lib/firebase";
+import { firestoreGet, firestoreSet, firestoreDelete, COLLECTIONS } from "@/lib/firebase";
 import { Hadith } from "@/data/hadithBooks";
 
 const PINNED_HADITH_KEY = "pinnedDailyHadith";
+const PINNED_HADITH_COLLECTION = "pinned_hadiths";
 
 interface PinnedHadith extends Hadith {
   pinnedAt: string;
@@ -25,8 +26,9 @@ export const usePinnedHadith = () => {
 
     if (user) {
       try {
+        // Use dedicated collection for pinned hadiths
         const data = await firestoreGet<PinnedHadith>(
-          COLLECTIONS.USER_SETTINGS + "_pinned_hadith",
+          PINNED_HADITH_COLLECTION,
           user.uid
         );
         
@@ -38,7 +40,23 @@ export const usePinnedHadith = () => {
         }
       } catch (error) {
         console.error("Error loading pinned hadith:", error);
-        setPinnedHadith(null);
+        // Fallback to localStorage
+        const stored = localStorage.getItem(`${PINNED_HADITH_KEY}_${user.uid}`);
+        if (stored) {
+          try {
+            const data = JSON.parse(stored) as PinnedHadith;
+            if (data.pinnedDate === today) {
+              setPinnedHadith(data);
+            } else {
+              localStorage.removeItem(`${PINNED_HADITH_KEY}_${user.uid}`);
+              setPinnedHadith(null);
+            }
+          } catch {
+            setPinnedHadith(null);
+          }
+        } else {
+          setPinnedHadith(null);
+        }
       }
     } else {
       // Use localStorage for non-authenticated users
@@ -55,6 +73,8 @@ export const usePinnedHadith = () => {
         } catch {
           setPinnedHadith(null);
         }
+      } else {
+        setPinnedHadith(null);
       }
     }
     setIsLoading(false);
@@ -64,7 +84,7 @@ export const usePinnedHadith = () => {
     loadPinnedHadith();
   }, [loadPinnedHadith]);
 
-  const pinHadith = async (hadith: Hadith) => {
+  const pinHadith = async (hadith: Hadith): Promise<boolean> => {
     const today = getTodayDate();
     const pinned: PinnedHadith = {
       ...hadith,
@@ -72,37 +92,48 @@ export const usePinnedHadith = () => {
       pinnedDate: today,
     };
 
+    // Always save to localStorage first as backup
+    const storageKey = user ? `${PINNED_HADITH_KEY}_${user.uid}` : PINNED_HADITH_KEY;
+    localStorage.setItem(storageKey, JSON.stringify(pinned));
+
     if (user) {
       try {
-        await firestoreSet(COLLECTIONS.USER_SETTINGS + "_pinned_hadith", user.uid, pinned);
+        await firestoreSet(PINNED_HADITH_COLLECTION, user.uid, {
+          ...pinned,
+          user_id: user.uid,
+        });
       } catch (error) {
-        console.error("Error pinning hadith:", error);
+        console.error("Error pinning hadith to Firestore:", error);
+        // localStorage backup already saved above
       }
-    } else {
-      localStorage.setItem(PINNED_HADITH_KEY, JSON.stringify(pinned));
     }
 
     setPinnedHadith(pinned);
     return true;
   };
 
-  const unpinHadith = async () => {
+  const unpinHadith = async (): Promise<boolean> => {
+    // Clear localStorage first
+    const storageKey = user ? `${PINNED_HADITH_KEY}_${user.uid}` : PINNED_HADITH_KEY;
+    localStorage.removeItem(storageKey);
+
     if (user) {
       try {
-        await firestoreSet(COLLECTIONS.USER_SETTINGS + "_pinned_hadith", user.uid, null);
+        // Try to delete from Firestore
+        await firestoreDelete(PINNED_HADITH_COLLECTION, user.uid);
       } catch (error) {
-        console.error("Error unpinning hadith:", error);
+        console.error("Error unpinning hadith from Firestore:", error);
+        // Continue anyway since localStorage is cleared
       }
-    } else {
-      localStorage.removeItem(PINNED_HADITH_KEY);
     }
 
     setPinnedHadith(null);
     return true;
   };
 
-  const isPinned = (hadith: Hadith | null) => {
+  const isPinned = (hadith: Hadith | null): boolean => {
     if (!pinnedHadith || !hadith) return false;
+    // Compare by id and bookId for accurate matching
     return pinnedHadith.id === hadith.id && pinnedHadith.bookId === hadith.bookId;
   };
 

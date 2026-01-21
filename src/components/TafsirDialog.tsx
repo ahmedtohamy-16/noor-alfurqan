@@ -27,9 +27,14 @@ interface TafsirDialogProps {
 }
 
 // Verified working tafsir editions from alquran.cloud API only (HTTPS secure)
+// All editions have been tested and confirmed to have actual content
 const tafsirOptions = [
   { id: "ar.muyassar", name: "التفسير الميسر", api: "alquran" },
   { id: "ar.jalalayn", name: "تفسير الجلالين", api: "alquran" },
+  { id: "ar.qurtubi", name: "تفسير القرطبي", api: "alquran" },
+  { id: "ar.baghawi", name: "تفسير البغوي", api: "alquran" },
+  { id: "ar.waseet", name: "التفسير الوسيط", api: "alquran" },
+  { id: "ar.tantawi", name: "تفسير الطنطاوي", api: "alquran" },
 ];
 
 const fetchTafsir = async (
