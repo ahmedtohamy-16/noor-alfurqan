@@ -1,9 +1,10 @@
-import { ArrowRight, Moon, Sun, LogOut, User, Clock, Shield, Bell, Sunrise } from "lucide-react";
+import { ArrowRight, Moon, Sun, LogOut, User, Clock, Shield, Bell, Sunrise, Type } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
+import { Slider } from "@/components/ui/slider";
 import {
   Select,
   SelectContent,
@@ -16,16 +17,25 @@ import ReciterSelector from "@/components/ReciterSelector";
 import { useTheme } from "@/hooks/useTheme";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserSettings } from "@/hooks/useUserSettings";
+import { useReadingSettings } from "@/hooks/useReadingSettings";
 import { useNotifications } from "@/hooks/useNotifications";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
 import { firestoreQuery, COLLECTIONS } from "@/lib/firebase";
 import { countryHasDST, isInDSTForCountry, getDSTStatusText } from "@/utils/dstUtils";
 
+const fontOptions = [
+  { id: "Amiri", name: "خط Amiri", arabicName: "أميري" },
+  { id: "Scheherazade", name: "خط Scheherazade", arabicName: "شهرزاد" },
+  { id: "Noto Naskh", name: "خط Noto Naskh", arabicName: "نسخ" },
+  { id: "Uthmani", name: "الخط العثماني", arabicName: "عثماني" },
+];
+
 const SettingsPage = () => {
   const { theme, toggleTheme } = useTheme();
   const { user, signOut } = useAuth();
   const { settings, updateSettings } = useUserSettings();
+  const { settings: readingSettings, updateSettings: updateReadingSettings } = useReadingSettings();
   const { permission, requestPermission } = useNotifications();
   const navigate = useNavigate();
   const [wirdTime, setWirdTime] = useState("06:00");
@@ -210,6 +220,95 @@ const SettingsPage = () => {
                 <Input type="time" value={wirdTime} onChange={(e) => handleWirdTimeChange(e.target.value)} className="w-32" />
               </div>
             )}
+          </Card>
+
+          {/* Font Settings */}
+          <Card className="p-4 space-y-4">
+            <div className="flex items-center gap-3">
+              <Type className="w-5 h-5 text-primary" />
+              <div>
+                <p className="font-medium text-foreground">إعدادات الخطوط</p>
+                <p className="text-sm text-muted-foreground">تخصيص نوع وحجم الخط للآيات والأحاديث</p>
+              </div>
+            </div>
+
+            <div className="space-y-4 pt-2 border-t border-border">
+              {/* Font Family */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">نوع الخط</label>
+                <Select
+                  value={readingSettings.fontFamily}
+                  onValueChange={(val: "Amiri" | "Scheherazade" | "Noto Naskh" | "Uthmani") => {
+                    updateReadingSettings({ fontFamily: val });
+                    toast.success(`تم تغيير الخط إلى ${fontOptions.find(f => f.id === val)?.arabicName}`);
+                  }}
+                >
+                  <SelectTrigger className="h-10">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {fontOptions.map((font) => (
+                      <SelectItem key={font.id} value={font.id}>
+                        <span className="flex items-center gap-2">
+                          <span>{font.arabicName}</span>
+                          <span className="text-xs text-muted-foreground">({font.id})</span>
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Font Size */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium text-foreground">حجم الخط</label>
+                  <span className="text-sm text-muted-foreground">{readingSettings.fontSize}px</span>
+                </div>
+                <Slider
+                  value={[readingSettings.fontSize]}
+                  min={16}
+                  max={48}
+                  step={2}
+                  onValueChange={([val]) => updateReadingSettings({ fontSize: val })}
+                  className="w-full"
+                />
+              </div>
+
+              {/* Line Height */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium text-foreground">ارتفاع السطر</label>
+                  <span className="text-sm text-muted-foreground">{readingSettings.lineHeight}</span>
+                </div>
+                <Slider
+                  value={[readingSettings.lineHeight]}
+                  min={1.5}
+                  max={3}
+                  step={0.1}
+                  onValueChange={([val]) => updateReadingSettings({ lineHeight: val })}
+                  className="w-full"
+                />
+              </div>
+
+              {/* Preview */}
+              <div className="p-4 bg-muted/30 rounded-lg">
+                <p className="text-xs text-muted-foreground mb-2">معاينة:</p>
+                <p 
+                  className="text-foreground text-center"
+                  style={{ 
+                    fontFamily: readingSettings.fontFamily === "Noto Naskh" ? "'Noto Naskh Arabic', serif" 
+                      : readingSettings.fontFamily === "Scheherazade" ? "'Scheherazade New', serif"
+                      : readingSettings.fontFamily === "Uthmani" ? "'Amiri', serif"
+                      : "'Amiri', serif",
+                    fontSize: `${readingSettings.fontSize}px`,
+                    lineHeight: readingSettings.lineHeight
+                  }}
+                >
+                  بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
+                </p>
+              </div>
+            </div>
           </Card>
 
           {/* Reciter Selector */}
