@@ -4,7 +4,6 @@ import {
   Clock,
   MapPin,
   Download,
-  Image,
   ChevronLeft,
   ChevronRight,
   Settings,
@@ -19,7 +18,9 @@ import { Button } from "@/components/ui/button";
 import Header from "@/components/Header";
 import { useUserSettings } from "@/hooks/useUserSettings";
 import LocationPickerModal from "@/components/LocationPickerModal";
+import PrayerExportDialog from "@/components/PrayerExportDialog";
 import { toast } from "sonner";
+import { getDSTOffset, isInDSTForCountry, applyDSTToTime } from "@/utils/dstUtils";
 
 interface PrayerTimesData {
   Fajr: string;
@@ -81,6 +82,7 @@ const fetchMonthlyPrayerTimes = async (
 const PrayerTimesPage = () => {
   const { settings } = useUserSettings();
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
+  const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
   const [countdown, setCountdown] = useState({ hours: 0, minutes: 0, seconds: 0 });
   const [nextPrayer, setNextPrayer] = useState<{ name: string; time: string; key: string } | null>(null);
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth() + 1);
@@ -168,63 +170,7 @@ const PrayerTimesPage = () => {
 
   const formatNumber = (num: number) => num.toString().padStart(2, "0");
 
-  const handleExportJSON = () => {
-    if (!monthlyTimes) return;
-
-    const exportData = monthlyTimes.map((day) => ({
-      date: day.date.gregorian.date,
-      hijri: day.date.hijri.date,
-      fajr: day.timings.Fajr,
-      sunrise: day.timings.Sunrise,
-      dhuhr: day.timings.Dhuhr,
-      asr: day.timings.Asr,
-      maghrib: day.timings.Maghrib,
-      isha: day.timings.Isha,
-    }));
-
-    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `prayer-times-${currentMonth}-${currentYear}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast.success("تم تحميل الملف بنجاح");
-  };
-
-  const handleExportImage = async () => {
-    if (!monthlyTimes || !calendarRef.current) return;
-
-    try {
-      // Dynamic import for html2canvas
-      const html2canvasModule = await import("html2canvas");
-      const html2canvas = html2canvasModule.default;
-      
-      const canvas = await html2canvas(calendarRef.current, {
-        backgroundColor: "#ffffff",
-        scale: 2,
-      });
-
-      // Add watermark
-      const ctx = canvas.getContext("2d");
-      if (ctx) {
-        ctx.font = "bold 20px Arial";
-        ctx.fillStyle = "#10b981";
-        ctx.textAlign = "center";
-        ctx.fillText("نور الفرقان", canvas.width / 2, canvas.height - 20);
-      }
-
-      const url = canvas.toDataURL("image/png");
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `prayer-times-${currentMonth}-${currentYear}.png`;
-      a.click();
-      toast.success("تم تحميل الصورة بنجاح");
-    } catch (error) {
-      console.error("Image export error:", error);
-      toast.error("حدث خطأ في تحميل الصورة");
-    }
-  };
+  // Old export functions removed - now using PrayerExportDialog
 
   const monthNames = [
     "يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو",
@@ -370,15 +316,11 @@ const PrayerTimesPage = () => {
           </div>
         </div>
 
-        {/* Export buttons */}
-        <div className="flex gap-2 mb-4">
-          <Button variant="outline" onClick={handleExportJSON} className="gap-2">
+        {/* Export button */}
+        <div className="mb-4">
+          <Button variant="outline" onClick={() => setIsExportDialogOpen(true)} className="gap-2">
             <Download className="w-4 h-4" />
-            تحميل JSON
-          </Button>
-          <Button variant="outline" onClick={handleExportImage} className="gap-2">
-            <Image className="w-4 h-4" />
-            تحميل كصورة
+            تصدير المواقيت
           </Button>
         </div>
 
@@ -427,6 +369,17 @@ const PrayerTimesPage = () => {
       </main>
 
       <LocationPickerModal open={isLocationModalOpen} onOpenChange={setIsLocationModalOpen} />
+      <PrayerExportDialog
+        open={isExportDialogOpen}
+        onOpenChange={setIsExportDialogOpen}
+        currentMonth={currentMonth}
+        currentYear={currentYear}
+        defaultLat={lat}
+        defaultLng={lng}
+        defaultCityName={settings.city_name || undefined}
+        method={method}
+        madhab={madhab}
+      />
     </div>
   );
 };

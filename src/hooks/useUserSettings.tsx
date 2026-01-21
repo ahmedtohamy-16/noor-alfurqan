@@ -11,6 +11,7 @@ export interface UserSettings {
   latitude: number | null;
   longitude: number | null;
   city_name: string | null;
+  country_code: string | null; // Country code for DST detection
   timezone: string;
   notifications_enabled: boolean;
   daily_wird_enabled: boolean;
@@ -19,6 +20,9 @@ export interface UserSettings {
   prayer_method: number;
   prayer_madhab: number; // 0 = Shafi'i (Standard), 1 = Hanafi
   prayer_reminder_minutes: number;
+  // DST (Daylight Saving Time) settings
+  dst_mode: 'auto' | 'manual'; // Auto = detect by country, Manual = user control
+  dst_enabled: boolean; // Only used in manual mode
   // Prayer notification settings
   adhan_sound: string;
   prayer_fajr_enabled: boolean;
@@ -43,6 +47,7 @@ const defaultSettings: UserSettings = {
   latitude: null,
   longitude: null,
   city_name: null,
+  country_code: null,
   timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
   notifications_enabled: false,
   daily_wird_enabled: false,
@@ -50,6 +55,8 @@ const defaultSettings: UserSettings = {
   prayer_method: 4, // Default: Umm Al-Qura
   prayer_madhab: 0, // Default: Shafi'i (Standard)
   prayer_reminder_minutes: 15,
+  dst_mode: 'auto',
+  dst_enabled: false,
   adhan_sound: "makkah",
   prayer_fajr_enabled: true,
   prayer_dhuhr_enabled: true,
@@ -140,6 +147,7 @@ export const useUserSettings = () => {
           latitude: data.latitude ?? null,
           longitude: data.longitude ?? null,
           city_name: data.city_name ?? null,
+          country_code: data.country_code ?? null,
           timezone: data.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
           notifications_enabled: data.notifications_enabled || false,
           daily_wird_enabled: data.daily_wird_enabled || false,
@@ -147,6 +155,8 @@ export const useUserSettings = () => {
           prayer_method: data.prayer_method || 4,
           prayer_madhab: data.prayer_madhab ?? 0,
           prayer_reminder_minutes: data.prayer_reminder_minutes || 15,
+          dst_mode: data.dst_mode || 'auto',
+          dst_enabled: data.dst_enabled ?? false,
           adhan_sound: data.adhan_sound || "makkah",
           prayer_fajr_enabled: data.prayer_fajr_enabled ?? true,
           prayer_dhuhr_enabled: data.prayer_dhuhr_enabled ?? true,
