@@ -141,6 +141,18 @@ export const COLLECTIONS = {
 
 // ==================== AUTH FUNCTIONS ====================
 
+// Get device info for analytics
+const getDeviceInfo = (): string => {
+  if (typeof window === "undefined") return "unknown";
+  const ua = navigator.userAgent;
+  if (/iPad|iPhone|iPod/.test(ua)) return "iOS";
+  if (/Android/.test(ua)) return "Android";
+  if (/Windows/.test(ua)) return "Windows";
+  if (/Mac/.test(ua)) return "macOS";
+  if (/Linux/.test(ua)) return "Linux";
+  return "Other";
+};
+
 export const signUp = async (
   email: string, 
   password: string, 
@@ -151,14 +163,17 @@ export const signUp = async (
   const user = userCredential.user;
   
   const displayName = username || email.split("@")[0];
+  const deviceInfo = getDeviceInfo();
   
-  // Create user profile in Firestore
+  // Create user profile in Firestore with device info
   await setDoc(doc(db, COLLECTIONS.USERS, user.uid), {
     uid: user.uid,
     email: user.email,
     displayName: displayName,
     photoURL: null,
     role: role,
+    device_type: deviceInfo,
+    user_agent: typeof navigator !== "undefined" ? navigator.userAgent : null,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp()
   });

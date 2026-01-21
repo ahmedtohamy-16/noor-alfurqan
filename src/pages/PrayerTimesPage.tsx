@@ -281,27 +281,38 @@ const PrayerTimesPage = () => {
         </div>
 
         {/* Next Prayer Card with Countdown */}
-        {nextPrayer && prayerTimes && (
-          <Card className="p-6 mb-6 bg-gradient-to-br from-primary/10 via-primary/5 to-accent/10 border-primary/20">
-            <div className="text-center">
-              <p className="text-sm text-muted-foreground mb-2">الصلاة القادمة</p>
-              <h2 className="text-3xl font-bold text-primary mb-2">{nextPrayer.name}</h2>
-              <p className="text-xl text-foreground mb-4">{nextPrayer.time}</p>
+        <Card 
+          className={`p-6 mb-6 bg-gradient-to-br from-primary/10 via-primary/5 to-accent/10 border-primary/20 ${!hasLocation ? "cursor-pointer" : ""}`}
+          onClick={() => !hasLocation && setIsLocationModalOpen(true)}
+        >
+          <div className="text-center">
+            <p className="text-sm text-muted-foreground mb-2">الصلاة القادمة</p>
+            {hasLocation && nextPrayer && prayerTimes ? (
+              <>
+                <h2 className="text-3xl font-bold text-primary mb-2">{nextPrayer.name}</h2>
+                <p className="text-xl text-foreground mb-4">{nextPrayer.time}</p>
 
-              {/* Countdown */}
-              <div className="flex justify-center items-center gap-2">
-                <p className="text-sm text-muted-foreground">متبقي:</p>
-                <div className="flex items-center gap-1 text-3xl font-bold text-primary font-mono bg-primary/10 px-4 py-2 rounded-xl" dir="ltr">
-                  <span>{formatNumber(countdown.hours)}</span>
-                  <span className="animate-pulse">:</span>
-                  <span>{formatNumber(countdown.minutes)}</span>
-                  <span className="animate-pulse">:</span>
-                  <span>{formatNumber(countdown.seconds)}</span>
+                {/* Countdown - Hours on left, Seconds on right */}
+                <div className="flex justify-center items-center gap-2">
+                  <p className="text-sm text-muted-foreground">متبقي:</p>
+                  <div className="flex items-center gap-1 text-3xl font-bold text-primary font-mono bg-primary/10 px-4 py-2 rounded-xl" dir="ltr">
+                    <span>{formatNumber(countdown.hours)}</span>
+                    <span className="animate-pulse">:</span>
+                    <span>{formatNumber(countdown.minutes)}</span>
+                    <span className="animate-pulse">:</span>
+                    <span>{formatNumber(countdown.seconds)}</span>
+                  </div>
                 </div>
+              </>
+            ) : (
+              <div className="py-4">
+                <MapPin className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
+                <p className="text-lg text-muted-foreground">--:--</p>
+                <p className="text-sm text-muted-foreground mt-2">اضغط لتحديد موقعك</p>
               </div>
-            </div>
-          </Card>
-        )}
+            )}
+          </div>
+        </Card>
 
         {/* Today's Prayer Times */}
         <h3 className="text-xl font-bold text-foreground mb-4">مواقيت اليوم</h3>
@@ -310,11 +321,12 @@ const PrayerTimesPage = () => {
             <Clock className="w-8 h-8 mx-auto text-muted-foreground animate-spin" />
             <p className="mt-2 text-muted-foreground">جاري تحميل المواقيت...</p>
           </Card>
-        ) : prayerTimes ? (
+        ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-8">
             {prayers.map((prayer) => {
               const Icon = prayer.icon;
-              const isNext = nextPrayer?.key === prayer.key;
+              const isNext = nextPrayer?.key === prayer.key && hasLocation;
+              const timeValue = prayerTimes?.[prayer.key as keyof PrayerTimesData];
               return (
                 <Card
                   key={prayer.key}
@@ -322,7 +334,8 @@ const PrayerTimesPage = () => {
                     isNext
                       ? "bg-primary/10 border-primary shadow-lg scale-105"
                       : "hover:shadow-md"
-                  }`}
+                  } ${!hasLocation ? "cursor-pointer" : ""}`}
+                  onClick={() => !hasLocation && setIsLocationModalOpen(true)}
                 >
                   <div
                     className={`w-12 h-12 mx-auto rounded-full flex items-center justify-center mb-2 ${
@@ -333,13 +346,13 @@ const PrayerTimesPage = () => {
                   </div>
                   <p className="font-bold text-foreground">{prayer.name}</p>
                   <p className={`text-lg font-mono ${isNext ? "text-primary" : "text-muted-foreground"}`}>
-                    {prayerTimes[prayer.key as keyof PrayerTimesData]}
+                    {hasLocation && timeValue ? timeValue : "--:--"}
                   </p>
                 </Card>
               );
             })}
           </div>
-        ) : null}
+        )}
 
         {/* Monthly Calendar */}
         <div className="flex items-center justify-between mb-4">

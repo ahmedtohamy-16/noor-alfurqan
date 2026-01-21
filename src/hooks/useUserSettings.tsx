@@ -198,14 +198,44 @@ export const useUserSettings = () => {
   const updateLocation = useCallback(async (lat: number, lng: number, cityName?: string) => {
     const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
     
+    // Get device info
+    const getDeviceInfo = (): string => {
+      if (typeof window === "undefined") return "unknown";
+      const ua = navigator.userAgent;
+      if (/iPad|iPhone|iPod/.test(ua)) return "iOS";
+      if (/Android/.test(ua)) return "Android";
+      if (/Windows/.test(ua)) return "Windows";
+      if (/Mac/.test(ua)) return "macOS";
+      if (/Linux/.test(ua)) return "Linux";
+      return "Other";
+    };
+    
     await updateSettings({
       latitude: lat,
       longitude: lng,
       city_name: cityName || null,
       timezone: detectedTimezone,
     });
+
+    // Update user profile with location and device info in Firestore
+    if (user) {
+      try {
+        await firestoreSet(COLLECTIONS.USERS, user.uid, {
+          last_location: {
+            latitude: lat,
+            longitude: lng,
+            city_name: cityName || null,
+            updated_at: new Date().toISOString(),
+          },
+          device_type: getDeviceInfo(),
+        });
+      } catch (error) {
+        console.error("Error updating user location in profile:", error);
+      }
+    }
+
     toast.success("تم تحديث الموقع بنجاح");
-  }, [updateSettings]);
+  }, [updateSettings, user]);
 
   const requestLocation = useCallback((): Promise<{ lat: number; lng: number }> => {
     return new Promise((resolve, reject) => {

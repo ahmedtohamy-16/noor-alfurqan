@@ -8,6 +8,8 @@ const HeaderLocationButton = () => {
   const { settings } = useUserSettings();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const hasLocation = settings.city_name && settings.latitude && settings.longitude;
+
   return (
     <>
       <Button
@@ -17,11 +19,11 @@ const HeaderLocationButton = () => {
         className="gap-1.5 text-sm font-medium hover:bg-primary/10 px-2 sm:px-3"
       >
         <MapPin className="w-4 h-4 text-primary" />
-        <span className="hidden sm:inline max-w-[100px] truncate">
-          {settings.city_name || "لم يتم التحديد"}
+        <span className="hidden sm:inline max-w-[120px] truncate">
+          {hasLocation ? settings.city_name : "لم يتم التحديد"}
         </span>
-        <span className="sm:hidden">
-          {settings.city_name ? "📍" : "📍"}
+        <span className="sm:hidden text-xs">
+          {hasLocation ? settings.city_name : "الموقع"}
         </span>
       </Button>
 

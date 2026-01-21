@@ -153,7 +153,7 @@ const NextPrayerWidget = () => {
 
           <div className="text-center">
             <p className="text-xs text-muted-foreground mb-1">متبقي</p>
-            <div className="flex items-center gap-1 text-xl font-bold text-primary font-mono">
+            <div className="flex items-center gap-1 text-xl font-bold text-primary font-mono" dir="ltr">
               <span>{formatNumber(countdown.hours)}</span>
               <span className="animate-pulse">:</span>
               <span>{formatNumber(countdown.minutes)}</span>
