@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { MapPin, Navigation, ChevronDown, Loader2, Check } from "lucide-react";
+import { MapPin, Navigation, Loader2, Check, AlertCircle } from "lucide-react";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import {
@@ -35,6 +36,8 @@ const LocationPickerModal = ({ open, onOpenChange }: LocationPickerModalProps) =
   const [isDetecting, setIsDetecting] = useState(false);
   const [selectedMethod, setSelectedMethod] = useState<number>(settings.prayer_method || 4);
   const [selectedMadhab, setSelectedMadhab] = useState<number>(settings.prayer_madhab || 0);
+
+  const hasCurrentLocation = settings.city_name && settings.latitude && settings.longitude;
 
   const handleAutoDetect = async () => {
     setIsDetecting(true);
@@ -76,9 +79,38 @@ const LocationPickerModal = ({ open, onOpenChange }: LocationPickerModalProps) =
             <MapPin className="w-5 h-5 text-primary" />
             تحديد الموقع
           </DialogTitle>
+          <DialogDescription className="text-sm text-muted-foreground">
+            {hasCurrentLocation
+              ? "إذا كان هذا الموقع خاطئاً أو انتقلت لمكان آخر، يمكنك تحديثه الآن لضمان دقة المواعيد."
+              : "حدد موقعك للحصول على مواقيت الصلاة الدقيقة لمنطقتك."}
+          </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6 py-4">
+        <div className="space-y-5 py-4">
+          {/* Current location display - show at top if exists */}
+          {hasCurrentLocation && (
+            <div className="p-4 bg-primary/5 rounded-xl border border-primary/20">
+              <div className="flex items-center gap-2 mb-1">
+                <MapPin className="w-4 h-4 text-primary" />
+                <p className="text-sm text-muted-foreground">موقعك الحالي:</p>
+              </div>
+              <p className="font-bold text-lg text-foreground">{settings.city_name}</p>
+            </div>
+          )}
+
+          {/* No location warning */}
+          {!hasCurrentLocation && (
+            <div className="p-4 bg-amber-500/10 rounded-xl border border-amber-500/30 flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+              <div>
+                <p className="font-medium text-foreground">لم يتم تحديد الموقع</p>
+                <p className="text-sm text-muted-foreground">
+                  يجب تحديد موقعك لعرض مواقيت الصلاة بدقة
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Auto-detect button */}
           <Button
             onClick={handleAutoDetect}
@@ -94,7 +126,7 @@ const LocationPickerModal = ({ open, onOpenChange }: LocationPickerModalProps) =
             ) : (
               <>
                 <Navigation className="w-5 h-5" />
-                تحديد موقعي تلقائياً
+                تحديد تلقائي (GPS)
               </>
             )}
           </Button>
@@ -104,7 +136,7 @@ const LocationPickerModal = ({ open, onOpenChange }: LocationPickerModalProps) =
               <span className="w-full border-t border-border" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">أو اختر يدوياً</span>
+              <span className="bg-background px-2 text-muted-foreground">أو تحديد يدوي</span>
             </div>
           </div>
 
@@ -193,17 +225,6 @@ const LocationPickerModal = ({ open, onOpenChange }: LocationPickerModalProps) =
               <Check className="w-5 h-5" />
               تأكيد الموقع
             </Button>
-          )}
-
-          {/* Current location display */}
-          {settings.city_name && (
-            <div className="p-3 bg-primary/5 rounded-lg border border-primary/20">
-              <p className="text-sm text-muted-foreground">الموقع الحالي:</p>
-              <p className="font-bold text-foreground flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-primary" />
-                {settings.city_name}
-              </p>
-            </div>
           )}
         </div>
       </DialogContent>
