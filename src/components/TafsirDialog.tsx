@@ -26,42 +26,24 @@ interface TafsirDialogProps {
   ayahText: string;
 }
 
-// API tafsir editions that actually work
+// Verified working tafsir editions from alquran.cloud API only (HTTPS secure)
 const tafsirOptions = [
   { id: "ar.muyassar", name: "التفسير الميسر", api: "alquran" },
   { id: "ar.jalalayn", name: "تفسير الجلالين", api: "alquran" },
-  { id: "1", name: "التفسير الميسر", api: "quran-tafseer" },
-  { id: "2", name: "تفسير ابن كثير", api: "quran-tafseer" },
-  { id: "3", name: "تفسير الطبري", api: "quran-tafseer" },
-  { id: "4", name: "تفسير القرطبي", api: "quran-tafseer" },
-  { id: "5", name: "تفسير السعدي", api: "quran-tafseer" },
-  { id: "6", name: "تفسير البغوي", api: "quran-tafseer" },
-  { id: "7", name: "الوسيط لطنطاوي", api: "quran-tafseer" },
 ];
 
 const fetchTafsir = async (
   surahNumber: number,
   ayahNumber: number,
-  edition: string,
-  api: string
+  edition: string
 ) => {
-  if (api === "quran-tafseer") {
-    // Use quran-tafseer.com API
-    const response = await fetch(
-      `http://api.quran-tafseer.com/tafseer/${edition}/${surahNumber}/${ayahNumber}`
-    );
-    if (!response.ok) throw new Error("Tafsir not available");
-    const data = await response.json();
-    return { text: data.text };
-  } else {
-    // Use alquran.cloud API
-    const response = await fetch(
-      `https://api.alquran.cloud/v1/ayah/${surahNumber}:${ayahNumber}/${edition}`
-    );
-    if (!response.ok) throw new Error("Tafsir not available");
-    const data = await response.json();
-    return data.data;
-  }
+  // Use alquran.cloud API (HTTPS secure and reliable)
+  const response = await fetch(
+    `https://api.alquran.cloud/v1/ayah/${surahNumber}:${ayahNumber}/${edition}`
+  );
+  if (!response.ok) throw new Error("Tafsir not available");
+  const data = await response.json();
+  return data.data;
 };
 
 const TafsirDialog = ({
@@ -72,12 +54,10 @@ const TafsirDialog = ({
   ayahText,
 }: TafsirDialogProps) => {
   const [selectedTafsir, setSelectedTafsir] = useState(tafsirOptions[0].id);
-  
-  const selectedOption = tafsirOptions.find(t => t.id === selectedTafsir) || tafsirOptions[0];
 
   const { data: tafsir, isLoading, error } = useQuery({
     queryKey: ["tafsir", surahNumber, ayahNumber, selectedTafsir],
-    queryFn: () => fetchTafsir(surahNumber, ayahNumber, selectedTafsir, selectedOption.api),
+    queryFn: () => fetchTafsir(surahNumber, ayahNumber, selectedTafsir),
     enabled: isOpen,
     retry: 1,
   });

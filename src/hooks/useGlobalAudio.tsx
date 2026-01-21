@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useRef, useCallback, useEffect, ReactNode } from 'react';
-import { reciters, type Reciter } from '@/data/reciters';
+import { reciters, getVerifiedReciters, type Reciter } from '@/data/reciters';
 import { toast } from 'sonner';
 
 type RepeatMode = 'none' | 'single' | 'range';
@@ -73,6 +73,9 @@ interface GlobalAudioProviderProps {
   children: ReactNode;
 }
 
+// Number of ayahs to preload ahead for smooth playback
+const PRELOAD_AHEAD_COUNT = 3;
+
 export const GlobalAudioProvider: React.FC<GlobalAudioProviderProps> = ({ children }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -82,7 +85,7 @@ export const GlobalAudioProvider: React.FC<GlobalAudioProviderProps> = ({ childr
   const [duration, setDuration] = useState(0);
   const [volume, setVolumeState] = useState(80);
   const [isMuted, setIsMuted] = useState(false);
-  const [selectedReciter, setSelectedReciter] = useState<Reciter>(reciters[0]);
+  const [selectedReciter, setSelectedReciter] = useState<Reciter>(getVerifiedReciters()[0]);
   const [isExpanded, setIsExpanded] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const [repeatMode, setRepeatMode] = useState<RepeatMode>('none');
@@ -93,15 +96,16 @@ export const GlobalAudioProvider: React.FC<GlobalAudioProviderProps> = ({ childr
   const [playMode, setPlayMode] = useState<PlayMode>('surah');
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const preloadAudioRef = useRef<HTMLAudioElement | null>(null);
   const pendingPlayRef = useRef<number | null>(null);
+  
+  // Enhanced preloading: cache multiple audio elements for instant switching
+  const preloadCache = useRef<Map<string, HTMLAudioElement>>(new Map());
   const preloadedUrls = useRef<Set<string>>(new Set());
 
   // Initialize audio element
   useEffect(() => {
     if (!audioRef.current) {
       audioRef.current = new Audio();
-      preloadAudioRef.current = new Audio();
       audioRef.current.addEventListener('timeupdate', handleTimeUpdate);
       audioRef.current.addEventListener('ended', handleEnded);
       audioRef.current.addEventListener('loadstart', () => setIsLoading(true));
@@ -115,6 +119,12 @@ export const GlobalAudioProvider: React.FC<GlobalAudioProviderProps> = ({ childr
         audioRef.current.removeEventListener('timeupdate', handleTimeUpdate);
         audioRef.current.removeEventListener('ended', handleEnded);
       }
+      // Cleanup preload cache
+      preloadCache.current.forEach(audio => {
+        audio.pause();
+        audio.src = '';
+      });
+      preloadCache.current.clear();
     };
   }, []);
 
@@ -141,17 +151,41 @@ export const GlobalAudioProvider: React.FC<GlobalAudioProviderProps> = ({ childr
     return `${server}/${ayahNumber}.mp3`;
   }, [selectedReciter]);
 
-  // Preload next ayah
-  const preloadNextAyah = useCallback((nextIndex: number) => {
-    if (!currentSurah || !currentSurah.ayahs[nextIndex]) return;
+  // Enhanced preloading: preload multiple upcoming ayahs for instant switching
+  const preloadMultipleAyahs = useCallback((startIndex: number, count: number = PRELOAD_AHEAD_COUNT) => {
+    if (!currentSurah) return;
     
-    const ayah = currentSurah.ayahs[nextIndex];
-    const url = getAudioUrl(ayah.number);
-    
-    if (!preloadedUrls.current.has(url) && preloadAudioRef.current) {
-      preloadAudioRef.current.src = url;
-      preloadAudioRef.current.load();
-      preloadedUrls.current.add(url);
+    for (let i = 0; i < count; i++) {
+      const nextIndex = startIndex + i;
+      if (nextIndex >= currentSurah.ayahs.length) break;
+      
+      const ayah = currentSurah.ayahs[nextIndex];
+      const url = getAudioUrl(ayah.number);
+      
+      if (!preloadedUrls.current.has(url)) {
+        const preloadAudio = new Audio();
+        preloadAudio.preload = 'auto';
+        preloadAudio.src = url;
+        preloadAudio.load();
+        
+        // Store in cache for instant playback
+        preloadCache.current.set(url, preloadAudio);
+        preloadedUrls.current.add(url);
+        
+        // Clean up old entries if cache gets too large
+        if (preloadCache.current.size > 10) {
+          const firstKey = preloadCache.current.keys().next().value;
+          if (firstKey) {
+            const oldAudio = preloadCache.current.get(firstKey);
+            if (oldAudio) {
+              oldAudio.pause();
+              oldAudio.src = '';
+            }
+            preloadCache.current.delete(firstKey);
+            preloadedUrls.current.delete(firstKey);
+          }
+        }
+      }
     }
   }, [currentSurah, getAudioUrl]);
 
@@ -160,15 +194,15 @@ export const GlobalAudioProvider: React.FC<GlobalAudioProviderProps> = ({ childr
       setProgress(audioRef.current.currentTime);
       setDuration(audioRef.current.duration || 0);
       
-      // Preload next ayah when 70% through current
+      // Aggressive preloading: start at 50% for smoother transitions
       const percentComplete = audioRef.current.duration 
         ? (audioRef.current.currentTime / audioRef.current.duration) * 100 
         : 0;
-      if (percentComplete > 70 && currentSurah) {
-        preloadNextAyah(currentAyahIndex + 1);
+      if (percentComplete > 50 && currentSurah) {
+        preloadMultipleAyahs(currentAyahIndex + 1);
       }
     }
-  }, [currentSurah, currentAyahIndex, preloadNextAyah]);
+  }, [currentSurah, currentAyahIndex, preloadMultipleAyahs]);
 
   const handleEnded = useCallback(() => {
     if (!currentSurah) return;
@@ -244,23 +278,48 @@ export const GlobalAudioProvider: React.FC<GlobalAudioProviderProps> = ({ childr
   const playAyahInternal = useCallback(async (index: number) => {
     if (!currentSurah || !currentSurah.ayahs[index]) return;
 
-    setIsLoading(true);
     const ayah = currentSurah.ayahs[index];
     const url = getAudioUrl(ayah.number);
 
-    if (audioRef.current) {
-      audioRef.current.src = url;
+    // Check if audio is already preloaded in cache for instant playback
+    const cachedAudio = preloadCache.current.get(url);
+    
+    if (cachedAudio && cachedAudio.readyState >= 3) {
+      // Use cached audio for instant playback
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+      audioRef.current = cachedAudio;
+      audioRef.current.volume = isMuted ? 0 : volume / 100;
       try {
         await audioRef.current.play();
         setIsPlaying(true);
         setCurrentAyahIndex(index);
+        // Preload next batch
+        preloadMultipleAyahs(index + 1);
       } catch (error) {
-        console.error('Error playing audio:', error);
+        console.error('Error playing cached audio:', error);
         setIsPlaying(false);
       }
+    } else {
+      // Standard playback
+      setIsLoading(true);
+      if (audioRef.current) {
+        audioRef.current.src = url;
+        try {
+          await audioRef.current.play();
+          setIsPlaying(true);
+          setCurrentAyahIndex(index);
+          // Preload next batch
+          preloadMultipleAyahs(index + 1);
+        } catch (error) {
+          console.error('Error playing audio:', error);
+          setIsPlaying(false);
+        }
+      }
+      setIsLoading(false);
     }
-    setIsLoading(false);
-  }, [currentSurah, getAudioUrl]);
+  }, [currentSurah, getAudioUrl, isMuted, volume, preloadMultipleAyahs]);
 
   const playSurah = useCallback((surah: SurahInfo, startIndex: number = 0) => {
     setCurrentSurah(surah);
@@ -390,10 +449,17 @@ export const GlobalAudioProvider: React.FC<GlobalAudioProviderProps> = ({ childr
       return;
     }
 
-    // Immediately switch to new reciter
+    // Clear old cache before switching
+    preloadCache.current.forEach(audio => {
+      audio.pause();
+      audio.src = '';
+    });
+    preloadCache.current.clear();
+    preloadedUrls.current.clear();
+    
+    // Immediately switch to new reciter with instant loading
     const newUrl = getAudioUrl(currentAyah.number, reciter);
     setSelectedReciter(reciter);
-    preloadedUrls.current.clear();
     
     if (isPlaying) {
       setIsLoading(true);
@@ -402,13 +468,15 @@ export const GlobalAudioProvider: React.FC<GlobalAudioProviderProps> = ({ childr
         .then(() => {
           setIsPlaying(true);
           setIsLoading(false);
+          // Preload next ayahs for new reciter
+          preloadMultipleAyahs(currentAyahIndex + 1);
         })
         .catch((err) => {
           console.error('Error switching reciter:', err);
           setIsLoading(false);
         });
     }
-  }, [isPlaying, currentAyahIndex, currentSurah, getAudioUrl]);
+  }, [isPlaying, currentAyahIndex, currentSurah, getAudioUrl, preloadMultipleAyahs]);
 
   const downloadAyah = useCallback(async (ayahNumber: number, surahName: string, ayahNumberInSurah: number) => {
     const url = getAudioUrl(ayahNumber);

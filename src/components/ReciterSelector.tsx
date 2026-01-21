@@ -8,7 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { reciters, getReciterById } from "@/data/reciters";
+import { reciters, getReciterById, getVerifiedReciters } from "@/data/reciters";
 import { useAuth } from "@/hooks/useAuth";
 import { firestoreGet, firestoreSet, COLLECTIONS } from "@/lib/firebase";
 
@@ -53,6 +53,7 @@ const ReciterSelector = ({ compact = false }: ReciterSelectorProps) => {
   };
 
   const currentReciter = getReciterById(selectedReciter);
+  const verifiedReciters = getVerifiedReciters();
 
   if (compact) {
     return (
@@ -61,7 +62,7 @@ const ReciterSelector = ({ compact = false }: ReciterSelectorProps) => {
           <SelectValue placeholder="اختر القارئ" />
         </SelectTrigger>
         <SelectContent className="arabic-ui max-h-80">
-          {reciters.map((reciter) => (
+          {verifiedReciters.map((reciter) => (
             <SelectItem key={reciter.id} value={reciter.id}>
               {reciter.nameArabic}
             </SelectItem>
@@ -88,7 +89,7 @@ const ReciterSelector = ({ compact = false }: ReciterSelectorProps) => {
           <SelectValue placeholder="اختر القارئ" />
         </SelectTrigger>
         <SelectContent className="arabic-ui max-h-80">
-          {reciters.map((reciter) => (
+          {verifiedReciters.map((reciter) => (
             <SelectItem key={reciter.id} value={reciter.id}>
               <div className="flex flex-col items-start">
                 <span className="font-medium">{reciter.nameArabic}</span>
