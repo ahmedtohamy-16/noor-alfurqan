@@ -71,6 +71,7 @@ const ReciterSettingsPanel = ({ surahNumber, surahName }: ReciterSettingsPanelPr
   };
 
   const getReciterPath = (reciterId: string): string => {
+    // Mapping for quranicaudio.com download paths
     const paths: Record<string, string> = {
       'ar.alafasy': 'mishary_rashid_alafasy',
       'ar.husary': 'mahmood_khaleel_al-husaree',
@@ -79,12 +80,9 @@ const ReciterSettingsPanel = ({ surahNumber, surahName }: ReciterSettingsPanelPr
       'ar.sudais': 'abdurrahmaan_as-sudays',
       'ar.shaatree': 'abu_bakr_ash-shaatree',
       'ar.mahermuaiqly': 'maher_al_mueaqly',
-      'ar.hani_rifai': 'hani_ar-rifai',
-      'ar.ayyoub': 'muhammad_ayyoob',
+      'ar.hanirifai': 'hani_ar-rifai',
       'ar.shuraym': 'sa3ood_ash-shuraym',
       'ar.ahmedajamy': 'ahmed_ibn_ali_al-ajamy',
-      'ar.alialhuthaify': 'ali_abdur-rahman_al-huthaify',
-      'ar.abdulbari': 'abdullaah_basfar',
     };
     return paths[reciterId] || 'mishary_rashid_alafasy';
   };
