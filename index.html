@@ -23,9 +23,15 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://api.aladhan.com">
     <link rel="dns-prefetch" href="https://api.aladhan.com">
+    <!-- Firebase preconnect for faster auth -->
+    <link rel="preconnect" href="https://noor-al-furqan-e2bbc.firebaseapp.com">
+    <link rel="preconnect" href="https://www.googleapis.com">
+    <link rel="dns-prefetch" href="https://noor-al-furqan-e2bbc.firebaseapp.com">
+    <link rel="dns-prefetch" href="https://www.googleapis.com">
     
-    <!-- Arabic Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400;1,700&family=Scheherazade+New:wght@400;500;600;700&family=Noto+Naskh+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Arabic Fonts - Non-blocking with swap -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400;1,700&family=Scheherazade+New:wght@400;500;600;700&family=Noto+Naskh+Arabic:wght@400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400;1,700&family=Scheherazade+New:wght@400;500;600;700&family=Noto+Naskh+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet"></noscript>
     <meta property="og:title" content="نور الفرقان - موقع اسلامي">
   <meta name="twitter:title" content="نور الفرقان - موقع اسلامي">
   <meta property="og:description" content="تطبيق نور الفرقان لقراءة القرآن الكريم والاستماع إلى التلاوات المباركة. اقرأ القرآن بتدبر وخشوع.">
