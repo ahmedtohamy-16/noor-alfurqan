@@ -76,6 +76,16 @@ interface GlobalAudioProviderProps {
 // Number of ayahs to preload ahead for smooth playback
 const PRELOAD_AHEAD_COUNT = 3;
 
+// Helper to get initial reciter from localStorage
+const getInitialReciter = (): Reciter => {
+  const stored = localStorage.getItem("selectedReciter");
+  if (stored) {
+    const found = getVerifiedReciters().find(r => r.id === stored);
+    if (found) return found;
+  }
+  return getVerifiedReciters()[0];
+};
+
 export const GlobalAudioProvider: React.FC<GlobalAudioProviderProps> = ({ children }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -85,7 +95,7 @@ export const GlobalAudioProvider: React.FC<GlobalAudioProviderProps> = ({ childr
   const [duration, setDuration] = useState(0);
   const [volume, setVolumeState] = useState(80);
   const [isMuted, setIsMuted] = useState(false);
-  const [selectedReciter, setSelectedReciter] = useState<Reciter>(getVerifiedReciters()[0]);
+  const [selectedReciter, setSelectedReciter] = useState<Reciter>(getInitialReciter);
   const [isExpanded, setIsExpanded] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const [repeatMode, setRepeatMode] = useState<RepeatMode>('none');

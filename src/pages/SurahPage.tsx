@@ -9,7 +9,7 @@ import TafsirDialog from "@/components/TafsirDialog";
 import ShareAyahDialog from "@/components/ShareAyahDialog";
 import AyahOptionsMenu from "@/components/AyahOptionsMenu";
 import TranslationSelector from "@/components/TranslationSelector";
-import DisplaySettingsPanel, { type DisplaySettings, getThemeClasses } from "@/components/DisplaySettings";
+import DisplaySettingsPanel, { getThemeClasses } from "@/components/DisplaySettings";
 import ReciterSettingsPanel from "@/components/ReciterSettingsPanel";
 import { DownloadAudioDialog } from "@/components/DownloadAudioDialog";
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
@@ -17,6 +17,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useReadingProgress } from "@/hooks/useReadingProgress";
 import { useReadingStats } from "@/hooks/useReadingStats";
+import { useReadingSettings } from "@/hooks/useReadingSettings";
 import { useGlobalAudio } from "@/hooks/useGlobalAudio";
 import {
   Sheet,
@@ -59,17 +60,11 @@ const SurahPage = () => {
   const { addFavorite, removeFavorite, isFavorite } = useFavorites();
   const { saveProgress } = useReadingProgress();
   const { incrementPage } = useReadingStats();
+  const { settings: readingSettings, updateSettings } = useReadingSettings();
   const [tafsirAyah, setTafsirAyah] = useState<{ number: number; text: string } | null>(null);
   const [shareAyah, setShareAyah] = useState<{ number: number; text: string } | null>(null);
   const [highlightedForTafsir, setHighlightedForTafsir] = useState<number | null>(null);
-  const [selectedTranslation, setSelectedTranslation] = useState<string | null>(null);
-  const [displaySettings, setDisplaySettings] = useState<DisplaySettings>({
-    fontSize: 24,
-    lineHeight: 2,
-    theme: "simple",
-    fontFamily: "Amiri",
-    showTranslation: true,
-  });
+  const [selectedTranslation, setSelectedTranslation] = useState<string | null>(readingSettings.selectedTranslation);
   const [showDownloadDialog, setShowDownloadDialog] = useState(false);
   const [downloadType, setDownloadType] = useState<'surah' | 'ayah' | 'range'>('surah');
   const [downloadAyahNumber, setDownloadAyahNumber] = useState<number | null>(null);
@@ -267,8 +262,14 @@ const SurahPage = () => {
                   />
                 </div>
                 <DisplaySettingsPanel
-                  settings={displaySettings}
-                  onChange={setDisplaySettings}
+                  settings={{
+                    fontSize: readingSettings.fontSize,
+                    lineHeight: readingSettings.lineHeight,
+                    theme: readingSettings.theme,
+                    fontFamily: readingSettings.fontFamily,
+                    showTranslation: readingSettings.showTranslation,
+                  }}
+                  onChange={(newSettings) => updateSettings(newSettings)}
                 />
               </div>
             </SheetContent>
@@ -297,7 +298,7 @@ const SurahPage = () => {
 
         <div className={cn(
           "rounded-2xl p-4 md:p-8 shadow-sm border transition-all duration-300",
-          getThemeClasses(displaySettings.theme)
+          getThemeClasses(readingSettings.theme)
         )}>
           {isLoading ? (
             <div className="space-y-4">
@@ -319,14 +320,14 @@ const SurahPage = () => {
             <div 
               className={cn(
                 "quran-text leading-loose",
-                displaySettings.fontFamily === "Amiri" && "font-amiri",
-                displaySettings.fontFamily === "Scheherazade" && "font-scheherazade",
-                displaySettings.fontFamily === "Noto Naskh" && "font-noto-naskh",
-                displaySettings.fontFamily === "Uthmani" && "font-uthmani"
+                readingSettings.fontFamily === "Amiri" && "font-amiri",
+                readingSettings.fontFamily === "Scheherazade" && "font-scheherazade",
+                readingSettings.fontFamily === "Noto Naskh" && "font-noto-naskh",
+                readingSettings.fontFamily === "Uthmani" && "font-uthmani"
               )}
               style={{ 
-                fontSize: `${displaySettings.fontSize}px`,
-                lineHeight: displaySettings.lineHeight,
+                fontSize: `${readingSettings.fontSize}px`,
+                lineHeight: readingSettings.lineHeight,
               }}
             >
               {surah?.ayahs.map((ayah, index) => {

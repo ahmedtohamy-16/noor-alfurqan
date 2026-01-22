@@ -8,8 +8,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { reciters, getReciterById, getVerifiedReciters } from "@/data/reciters";
+import { getReciterById, getVerifiedReciters } from "@/data/reciters";
 import { useAuth } from "@/hooks/useAuth";
+import { useGlobalAudio } from "@/hooks/useGlobalAudio";
 import { firestoreGet, firestoreSet, COLLECTIONS } from "@/lib/firebase";
 
 interface ReciterSelectorProps {
@@ -18,20 +19,19 @@ interface ReciterSelectorProps {
 
 const ReciterSelector = ({ compact = false }: ReciterSelectorProps) => {
   const { user } = useAuth();
-  const [selectedReciter, setSelectedReciter] = useState("ar.alafasy");
+  const { selectedReciter, setReciter, isPlaying } = useGlobalAudio();
   const [isLoading, setIsLoading] = useState(true);
 
+  // Sync from Firestore on mount (for logged-in users)
   useEffect(() => {
     const loadReciter = async () => {
       if (user) {
         const data = await firestoreGet<any>(COLLECTIONS.USER_READING_SETTINGS, user.uid);
-        if (data?.selected_reciter) {
-          setSelectedReciter(data.selected_reciter);
-        }
-      } else {
-        const stored = localStorage.getItem("selectedReciter");
-        if (stored) {
-          setSelectedReciter(stored);
+        if (data?.selected_reciter && data.selected_reciter !== selectedReciter.id) {
+          const reciter = getVerifiedReciters().find(r => r.id === data.selected_reciter);
+          if (reciter) {
+            setReciter(reciter);
+          }
         }
       }
       setIsLoading(false);
@@ -41,9 +41,16 @@ const ReciterSelector = ({ compact = false }: ReciterSelectorProps) => {
   }, [user]);
 
   const handleReciterChange = async (value: string) => {
-    setSelectedReciter(value);
+    const reciter = getVerifiedReciters().find(r => r.id === value);
+    if (!reciter) return;
+    
+    // Update global audio state (this will be the source of truth)
+    setReciter(reciter);
+    
+    // Persist to localStorage (for offline/guest users)
     localStorage.setItem("selectedReciter", value);
 
+    // Persist to Firestore (for logged-in users)
     if (user) {
       await firestoreSet(COLLECTIONS.USER_READING_SETTINGS, user.uid, {
         user_id: user.uid,
@@ -52,16 +59,15 @@ const ReciterSelector = ({ compact = false }: ReciterSelectorProps) => {
     }
   };
 
-  const currentReciter = getReciterById(selectedReciter);
   const verifiedReciters = getVerifiedReciters();
 
   if (compact) {
     return (
-      <Select value={selectedReciter} onValueChange={handleReciterChange}>
+      <Select value={selectedReciter.id} onValueChange={handleReciterChange} disabled={isPlaying}>
         <SelectTrigger className="w-full">
           <SelectValue placeholder="اختر القارئ" />
         </SelectTrigger>
-        <SelectContent className="arabic-ui max-h-80">
+        <SelectContent className="arabic-ui max-h-80 bg-popover z-50">
           {verifiedReciters.map((reciter) => (
             <SelectItem key={reciter.id} value={reciter.id}>
               {reciter.nameArabic}
@@ -79,16 +85,16 @@ const ReciterSelector = ({ compact = false }: ReciterSelectorProps) => {
         <div>
           <p className="font-medium text-foreground">القارئ</p>
           <p className="text-sm text-muted-foreground">
-            {currentReciter?.nameArabic || "مشاري راشد العفاسي"}
+            {selectedReciter.nameArabic}
           </p>
         </div>
       </div>
 
-      <Select value={selectedReciter} onValueChange={handleReciterChange}>
+      <Select value={selectedReciter.id} onValueChange={handleReciterChange} disabled={isPlaying}>
         <SelectTrigger className="w-full">
           <SelectValue placeholder="اختر القارئ" />
         </SelectTrigger>
-        <SelectContent className="arabic-ui max-h-80">
+        <SelectContent className="arabic-ui max-h-80 bg-popover z-50">
           {verifiedReciters.map((reciter) => (
             <SelectItem key={reciter.id} value={reciter.id}>
               <div className="flex flex-col items-start">
@@ -99,6 +105,12 @@ const ReciterSelector = ({ compact = false }: ReciterSelectorProps) => {
           ))}
         </SelectContent>
       </Select>
+      
+      {isPlaying && (
+        <p className="text-xs text-muted-foreground mt-2 text-center">
+          أوقف التشغيل لتغيير القارئ
+        </p>
+      )}
     </Card>
   );
 };
