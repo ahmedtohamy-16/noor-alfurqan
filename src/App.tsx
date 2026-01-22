@@ -1,3 +1,4 @@
+import { Suspense, lazy } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -11,36 +12,50 @@ import { GlobalAudioProvider } from "@/hooks/useGlobalAudio";
 import { DownloadManagerProvider } from "@/components/DownloadManager";
 import BottomNavigation from "@/components/BottomNavigation";
 import GlobalAudioPlayer from "@/components/GlobalAudioPlayer";
+
+// Eager load critical pages
 import Index from "./pages/Index";
 import QuranPage from "./pages/QuranPage";
-import SurahPage from "./pages/SurahPage";
-import MushafPage from "./pages/MushafPage";
-import FavoritesPage from "./pages/FavoritesPage";
-import SearchPage from "./pages/SearchPage";
-import KhatmahPage from "./pages/KhatmahPage";
-import AuthPage from "./pages/AuthPage";
-import VerifyOtpPage from "./pages/VerifyOtpPage";
-import ProfilePage from "./pages/ProfilePage";
-import SettingsPage from "./pages/SettingsPage";
-import ReadingStatsPage from "./pages/ReadingStatsPage";
-import DailyWirdPage from "./pages/DailyWirdPage";
-import TasbihPage from "./pages/TasbihPage";
-import AzkarPage from "./pages/AzkarPage";
-import ProphetStoriesPage from "./pages/ProphetStoriesPage";
-import RuqyahPage from "./pages/RuqyahPage";
-import NotificationsPage from "./pages/NotificationsPage";
-import NotificationSettingsPage from "./components/NotificationSettingsPage";
-import HadithPage from "./pages/HadithPage";
-import AdminPage from "./pages/AdminPage";
-import LessonsPage from "./pages/LessonsPage";
-import TeacherDashboard from "./pages/TeacherDashboard";
-import MessagesPage from "./pages/MessagesPage";
-import UserManagementPage from "./pages/UserManagementPage";
-import ForgotPasswordPage from "./pages/ForgotPasswordPage";
-import PrayerTimesPage from "./pages/PrayerTimesPage";
-import NotFound from "./pages/NotFound";
+
+// Lazy load non-critical pages for code splitting
+const SurahPage = lazy(() => import("./pages/SurahPage"));
+const MushafPage = lazy(() => import("./pages/MushafPage"));
+const FavoritesPage = lazy(() => import("./pages/FavoritesPage"));
+const SearchPage = lazy(() => import("./pages/SearchPage"));
+const KhatmahPage = lazy(() => import("./pages/KhatmahPage"));
+const AuthPage = lazy(() => import("./pages/AuthPage"));
+const VerifyOtpPage = lazy(() => import("./pages/VerifyOtpPage"));
+const ProfilePage = lazy(() => import("./pages/ProfilePage"));
+const SettingsPage = lazy(() => import("./pages/SettingsPage"));
+const ReadingStatsPage = lazy(() => import("./pages/ReadingStatsPage"));
+const DailyWirdPage = lazy(() => import("./pages/DailyWirdPage"));
+const TasbihPage = lazy(() => import("./pages/TasbihPage"));
+const AzkarPage = lazy(() => import("./pages/AzkarPage"));
+const ProphetStoriesPage = lazy(() => import("./pages/ProphetStoriesPage"));
+const RuqyahPage = lazy(() => import("./pages/RuqyahPage"));
+const NotificationsPage = lazy(() => import("./pages/NotificationsPage"));
+const NotificationSettingsPage = lazy(() => import("./components/NotificationSettingsPage"));
+const HadithPage = lazy(() => import("./pages/HadithPage"));
+const AdminPage = lazy(() => import("./pages/AdminPage"));
+const LessonsPage = lazy(() => import("./pages/LessonsPage"));
+const TeacherDashboard = lazy(() => import("./pages/TeacherDashboard"));
+const MessagesPage = lazy(() => import("./pages/MessagesPage"));
+const UserManagementPage = lazy(() => import("./pages/UserManagementPage"));
+const ForgotPasswordPage = lazy(() => import("./pages/ForgotPasswordPage"));
+const PrayerTimesPage = lazy(() => import("./pages/PrayerTimesPage"));
+const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
+
+// Loading fallback for lazy-loaded routes
+const PageLoader = () => (
+  <div className="min-h-screen flex items-center justify-center bg-background">
+    <div className="animate-pulse text-center">
+      <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+      <p className="text-muted-foreground">جاري التحميل...</p>
+    </div>
+  </div>
+);
 
 const App = () => (
   <HelmetProvider>
@@ -54,36 +69,38 @@ const App = () => (
                   <Toaster />
                 <Sonner />
                 <BrowserRouter>
-                  <Routes>
-                    <Route path="/" element={<Index />} />
-                    <Route path="/quran" element={<QuranPage />} />
-                    <Route path="/surah/:surahNumber" element={<SurahPage />} />
-                    <Route path="/mushaf" element={<MushafPage />} />
-                    <Route path="/favorites" element={<FavoritesPage />} />
-                    <Route path="/search" element={<SearchPage />} />
-                    <Route path="/khatmah" element={<KhatmahPage />} />
-                    <Route path="/auth" element={<AuthPage />} />
-                    <Route path="/verify-otp" element={<VerifyOtpPage />} />
-                    <Route path="/profile" element={<ProfilePage />} />
-                    <Route path="/settings" element={<SettingsPage />} />
-                    <Route path="/reading-stats" element={<ReadingStatsPage />} />
-                    <Route path="/daily-wird" element={<DailyWirdPage />} />
-                    <Route path="/tasbih" element={<TasbihPage />} />
-                    <Route path="/azkar" element={<AzkarPage />} />
-                    <Route path="/prophet-stories" element={<ProphetStoriesPage />} />
-                    <Route path="/ruqyah" element={<RuqyahPage />} />
-                    <Route path="/notifications" element={<NotificationsPage />} />
-                    <Route path="/notification-settings" element={<NotificationSettingsPage />} />
-                    <Route path="/hadith" element={<HadithPage />} />
-                    <Route path="/admin" element={<AdminPage />} />
-                    <Route path="/lessons" element={<LessonsPage />} />
-                    <Route path="/teacher" element={<TeacherDashboard />} />
-                    <Route path="/messages" element={<MessagesPage />} />
-                    <Route path="/user-management" element={<UserManagementPage />} />
-                    <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-                    <Route path="/prayer-times" element={<PrayerTimesPage />} />
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
+                  <Suspense fallback={<PageLoader />}>
+                    <Routes>
+                      <Route path="/" element={<Index />} />
+                      <Route path="/quran" element={<QuranPage />} />
+                      <Route path="/surah/:surahNumber" element={<SurahPage />} />
+                      <Route path="/mushaf" element={<MushafPage />} />
+                      <Route path="/favorites" element={<FavoritesPage />} />
+                      <Route path="/search" element={<SearchPage />} />
+                      <Route path="/khatmah" element={<KhatmahPage />} />
+                      <Route path="/auth" element={<AuthPage />} />
+                      <Route path="/verify-otp" element={<VerifyOtpPage />} />
+                      <Route path="/profile" element={<ProfilePage />} />
+                      <Route path="/settings" element={<SettingsPage />} />
+                      <Route path="/reading-stats" element={<ReadingStatsPage />} />
+                      <Route path="/daily-wird" element={<DailyWirdPage />} />
+                      <Route path="/tasbih" element={<TasbihPage />} />
+                      <Route path="/azkar" element={<AzkarPage />} />
+                      <Route path="/prophet-stories" element={<ProphetStoriesPage />} />
+                      <Route path="/ruqyah" element={<RuqyahPage />} />
+                      <Route path="/notifications" element={<NotificationsPage />} />
+                      <Route path="/notification-settings" element={<NotificationSettingsPage />} />
+                      <Route path="/hadith" element={<HadithPage />} />
+                      <Route path="/admin" element={<AdminPage />} />
+                      <Route path="/lessons" element={<LessonsPage />} />
+                      <Route path="/teacher" element={<TeacherDashboard />} />
+                      <Route path="/messages" element={<MessagesPage />} />
+                      <Route path="/user-management" element={<UserManagementPage />} />
+                      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                      <Route path="/prayer-times" element={<PrayerTimesPage />} />
+                      <Route path="*" element={<NotFound />} />
+                    </Routes>
+                  </Suspense>
                   <GlobalAudioPlayer />
                   <BottomNavigation />
                   </BrowserRouter>
