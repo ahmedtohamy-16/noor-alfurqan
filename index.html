@@ -39,6 +39,10 @@
       body{font-family:'Amiri',Georgia,serif;background:#F8F6F1;margin:0}
       .quran-text{font-family:'Amiri',Georgia,serif;direction:rtl;text-align:justify;line-height:2.5}
       #root{min-height:100vh}
+      /* Critical skeleton for LCP */
+      .init-skeleton{padding:1rem;max-width:100%;animation:pulse 1.5s infinite}
+      .init-skeleton-text{height:1.5rem;background:linear-gradient(90deg,#e0e0e0 25%,#f0f0f0 50%,#e0e0e0 75%);background-size:200% 100%;border-radius:4px;margin:0.5rem 0}
+      @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
     </style>
     <meta property="og:title" content="نور الفرقان - موقع اسلامي">
   <meta name="twitter:title" content="نور الفرقان - موقع اسلامي">
@@ -48,7 +52,14 @@
 </head>
 
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- Initial skeleton for faster LCP - replaced by React -->
+      <div class="init-skeleton" style="padding:2rem;text-align:center">
+        <div class="init-skeleton-text" style="width:60%;margin:1rem auto"></div>
+        <div class="init-skeleton-text" style="width:80%;margin:1rem auto"></div>
+        <div class="init-skeleton-text" style="width:70%;margin:1rem auto"></div>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
