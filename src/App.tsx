@@ -1,4 +1,4 @@
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -10,6 +10,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { ReadingSettingsProvider } from "@/hooks/useReadingSettings";
 import { GlobalAudioProvider } from "@/hooks/useGlobalAudio";
 import { DownloadManagerProvider } from "@/components/DownloadManager";
+import { useGuestMigration } from "@/hooks/useGuestMigration";
 import BottomNavigation from "@/components/BottomNavigation";
 import GlobalAudioPlayer from "@/components/GlobalAudioPlayer";
 
@@ -57,6 +58,12 @@ const PageLoader = () => (
   </div>
 );
 
+// Component to handle guest data migration
+const GuestMigrationHandler = ({ children }: { children: React.ReactNode }) => {
+  useGuestMigration();
+  return <>{children}</>;
+};
+
 const App = () => (
   <HelmetProvider>
     <QueryClientProvider client={queryClient}>
@@ -66,44 +73,46 @@ const App = () => (
             <GlobalAudioProvider>
               <DownloadManagerProvider>
                 <TooltipProvider>
-                  <Toaster />
-                <Sonner />
-                <BrowserRouter>
-                  <Suspense fallback={<PageLoader />}>
-                    <Routes>
-                      <Route path="/" element={<Index />} />
-                      <Route path="/quran" element={<QuranPage />} />
-                      <Route path="/surah/:surahNumber" element={<SurahPage />} />
-                      <Route path="/mushaf" element={<MushafPage />} />
-                      <Route path="/favorites" element={<FavoritesPage />} />
-                      <Route path="/search" element={<SearchPage />} />
-                      <Route path="/khatmah" element={<KhatmahPage />} />
-                      <Route path="/auth" element={<AuthPage />} />
-                      {/* verify-otp route removed - using direct Firebase Auth */}
-                      <Route path="/profile" element={<ProfilePage />} />
-                      <Route path="/settings" element={<SettingsPage />} />
-                      <Route path="/reading-stats" element={<ReadingStatsPage />} />
-                      <Route path="/daily-wird" element={<DailyWirdPage />} />
-                      <Route path="/tasbih" element={<TasbihPage />} />
-                      <Route path="/azkar" element={<AzkarPage />} />
-                      <Route path="/prophet-stories" element={<ProphetStoriesPage />} />
-                      <Route path="/ruqyah" element={<RuqyahPage />} />
-                      <Route path="/notifications" element={<NotificationsPage />} />
-                      <Route path="/notification-settings" element={<NotificationSettingsPage />} />
-                      <Route path="/hadith" element={<HadithPage />} />
-                      <Route path="/admin" element={<AdminPage />} />
-                      <Route path="/lessons" element={<LessonsPage />} />
-                      <Route path="/teacher" element={<TeacherDashboard />} />
-                      <Route path="/messages" element={<MessagesPage />} />
-                      <Route path="/user-management" element={<UserManagementPage />} />
-                      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-                      <Route path="/prayer-times" element={<PrayerTimesPage />} />
-                      <Route path="*" element={<NotFound />} />
-                    </Routes>
-                  </Suspense>
-                  <GlobalAudioPlayer />
-                  <BottomNavigation />
-                  </BrowserRouter>
+                  <GuestMigrationHandler>
+                    <Toaster />
+                    <Sonner />
+                    <BrowserRouter>
+                      <Suspense fallback={<PageLoader />}>
+                        <Routes>
+                          <Route path="/" element={<Index />} />
+                          <Route path="/quran" element={<QuranPage />} />
+                          <Route path="/surah/:surahNumber" element={<SurahPage />} />
+                          <Route path="/mushaf" element={<MushafPage />} />
+                          <Route path="/favorites" element={<FavoritesPage />} />
+                          <Route path="/search" element={<SearchPage />} />
+                          <Route path="/khatmah" element={<KhatmahPage />} />
+                          <Route path="/auth" element={<AuthPage />} />
+                          {/* verify-otp route removed - using direct Firebase Auth */}
+                          <Route path="/profile" element={<ProfilePage />} />
+                          <Route path="/settings" element={<SettingsPage />} />
+                          <Route path="/reading-stats" element={<ReadingStatsPage />} />
+                          <Route path="/daily-wird" element={<DailyWirdPage />} />
+                          <Route path="/tasbih" element={<TasbihPage />} />
+                          <Route path="/azkar" element={<AzkarPage />} />
+                          <Route path="/prophet-stories" element={<ProphetStoriesPage />} />
+                          <Route path="/ruqyah" element={<RuqyahPage />} />
+                          <Route path="/notifications" element={<NotificationsPage />} />
+                          <Route path="/notification-settings" element={<NotificationSettingsPage />} />
+                          <Route path="/hadith" element={<HadithPage />} />
+                          <Route path="/admin" element={<AdminPage />} />
+                          <Route path="/lessons" element={<LessonsPage />} />
+                          <Route path="/teacher" element={<TeacherDashboard />} />
+                          <Route path="/messages" element={<MessagesPage />} />
+                          <Route path="/user-management" element={<UserManagementPage />} />
+                          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                          <Route path="/prayer-times" element={<PrayerTimesPage />} />
+                          <Route path="*" element={<NotFound />} />
+                        </Routes>
+                      </Suspense>
+                      <GlobalAudioPlayer />
+                      <BottomNavigation />
+                    </BrowserRouter>
+                  </GuestMigrationHandler>
                 </TooltipProvider>
               </DownloadManagerProvider>
             </GlobalAudioProvider>

@@ -1,4 +1,4 @@
-import { Heart, Trash2, BookOpen } from "lucide-react";
+import { Heart, Trash2, BookOpen, LogIn, CloudUpload } from "lucide-react";
 import { Link } from "react-router-dom";
 import Header from "@/components/Header";
 import { Button } from "@/components/ui/button";
@@ -19,22 +19,28 @@ const FavoritesPage = () => {
           الآيات المفضلة
         </h1>
 
-        {!user ? (
-          <div className="text-center py-16">
-            <div className="w-24 h-24 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
-              <Heart className="w-10 h-10 text-muted-foreground" />
+        {/* Guest mode banner - show when user has favorites but not logged in */}
+        {!user && favorites.length > 0 && (
+          <div className="max-w-2xl mx-auto mb-6 p-4 bg-primary/10 border border-primary/30 rounded-xl">
+            <div className="flex items-center justify-between gap-4">
+              <Link to="/auth">
+                <Button size="sm" className="gap-2">
+                  <LogIn className="w-4 h-4" />
+                  تسجيل الدخول
+                </Button>
+              </Link>
+              <div className="flex items-center gap-2 text-primary text-right">
+                <div>
+                  <p className="text-sm font-medium">احفظ مفضلتك للأبد</p>
+                  <p className="text-xs opacity-70">سجل دخولك لمزامنة البيانات عبر أجهزتك</p>
+                </div>
+                <CloudUpload className="w-5 h-5 flex-shrink-0" />
+              </div>
             </div>
-            <h2 className="text-xl font-bold text-foreground mb-2">
-              سجل دخولك لعرض المفضلة
-            </h2>
-            <p className="text-muted-foreground mb-6">
-              يجب تسجيل الدخول لحفظ وعرض الآيات المفضلة
-            </p>
-            <Link to="/auth">
-              <Button>تسجيل الدخول</Button>
-            </Link>
           </div>
-        ) : isLoading ? (
+        )}
+
+        {isLoading ? (
           <div className="max-w-2xl mx-auto space-y-4">
             {[...Array(3)].map((_, i) => (
               <Skeleton key={i} className="h-32 rounded-xl" />

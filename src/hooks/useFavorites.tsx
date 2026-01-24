@@ -8,6 +8,13 @@ import {
   COLLECTIONS,
   Timestamp 
 } from "@/lib/firebase";
+import {
+  saveGuestFavorite,
+  removeGuestFavorite,
+  isGuestFavorite,
+  getGuestData,
+  GUEST_STORAGE_KEYS,
+} from "@/services/guestDataService";
 
 interface Favorite {
   id: string;
@@ -25,7 +32,9 @@ export const useFavorites = () => {
 
   const fetchFavorites = async () => {
     if (!user) {
-      setFavorites([]);
+      // Load guest favorites from localStorage
+      const guestData = getGuestData();
+      setFavorites(guestData.favorites);
       setIsLoading(false);
       return;
     }
@@ -46,12 +55,7 @@ export const useFavorites = () => {
   };
 
   useEffect(() => {
-    if (user) {
-      fetchFavorites();
-    } else {
-      setFavorites([]);
-      setIsLoading(false);
-    }
+    fetchFavorites();
   }, [user?.uid]);
 
   const addFavorite = async (
@@ -60,11 +64,26 @@ export const useFavorites = () => {
     ayahNumber: number,
     ayahText: string
   ) => {
+    // Guest mode - save to localStorage
     if (!user) {
-      toast.error("يجب تسجيل الدخول لإضافة المفضلة");
-      return false;
+      const success = saveGuestFavorite({
+        surah_number: surahNumber,
+        surah_name: surahName,
+        ayah_number: ayahNumber,
+        ayah_text: ayahText,
+      });
+      
+      if (success) {
+        toast.success("تمت إضافة الآية للمفضلة");
+        await fetchFavorites(); // Refresh list
+        return true;
+      } else {
+        toast.info("الآية موجودة بالفعل في المفضلة");
+        return false;
+      }
     }
 
+    // Authenticated user - save to Firestore
     try {
       // Check if already exists
       const existing = favorites.find(
@@ -97,8 +116,17 @@ export const useFavorites = () => {
   };
 
   const removeFavorite = async (surahNumber: number, ayahNumber: number) => {
-    if (!user) return false;
+    // Guest mode - remove from localStorage
+    if (!user) {
+      const success = removeGuestFavorite(surahNumber, ayahNumber);
+      if (success) {
+        toast.success("تمت إزالة الآية من المفضلة");
+        await fetchFavorites();
+      }
+      return success;
+    }
 
+    // Authenticated user - remove from Firestore
     try {
       const docId = `${user.uid}_${surahNumber}_${ayahNumber}`;
       await firestoreDelete(COLLECTIONS.FAVORITES, docId);
@@ -114,6 +142,9 @@ export const useFavorites = () => {
   };
 
   const isFavorite = (surahNumber: number, ayahNumber: number) => {
+    if (!user) {
+      return isGuestFavorite(surahNumber, ayahNumber);
+    }
     return favorites.some(
       (fav) => fav.surah_number === surahNumber && fav.ayah_number === ayahNumber
     );
