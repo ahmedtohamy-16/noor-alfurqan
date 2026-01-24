@@ -24,7 +24,7 @@ const FavoritesPage = lazy(() => import("./pages/FavoritesPage"));
 const SearchPage = lazy(() => import("./pages/SearchPage"));
 const KhatmahPage = lazy(() => import("./pages/KhatmahPage"));
 const AuthPage = lazy(() => import("./pages/AuthPage"));
-const VerifyOtpPage = lazy(() => import("./pages/VerifyOtpPage"));
+// VerifyOtpPage removed - using direct Firebase Auth
 const ProfilePage = lazy(() => import("./pages/ProfilePage"));
 const SettingsPage = lazy(() => import("./pages/SettingsPage"));
 const ReadingStatsPage = lazy(() => import("./pages/ReadingStatsPage"));
@@ -79,7 +79,7 @@ const App = () => (
                       <Route path="/search" element={<SearchPage />} />
                       <Route path="/khatmah" element={<KhatmahPage />} />
                       <Route path="/auth" element={<AuthPage />} />
-                      <Route path="/verify-otp" element={<VerifyOtpPage />} />
+                      {/* verify-otp route removed - using direct Firebase Auth */}
                       <Route path="/profile" element={<ProfilePage />} />
                       <Route path="/settings" element={<SettingsPage />} />
                       <Route path="/reading-stats" element={<ReadingStatsPage />} />

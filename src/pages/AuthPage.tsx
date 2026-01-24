@@ -45,34 +45,10 @@ const AuthPage = () => {
         toast.success("تم تسجيل الدخول بنجاح");
         navigate("/");
       } else {
-        // Generate OTP server-side (not client-side for security)
-        const response = await fetch(
-          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/verify-otp?action=generate`,
-          {
-            method: "POST",
-            headers: { 
-              "Content-Type": "application/json",
-              "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-            },
-            body: JSON.stringify({ email: email.toLowerCase(), type: "signup" }),
-          }
-        );
-
-        if (!response.ok) {
-          const error = await response.json();
-          throw new Error(error.error || "فشل في إرسال رمز التحقق");
-        }
-
-        // Store signup data temporarily (no OTP stored client-side)
-        sessionStorage.setItem("pendingSignup", JSON.stringify({
-          email,
-          password,
-          username: username || email.split("@")[0],
-          role: selectedRole,
-        }));
-
-        toast.success("تم إرسال رمز التحقق إلى بريدك الإلكتروني");
-        navigate("/verify-otp", { state: { email, type: "signup" } });
+        // Direct signup with Firebase Auth (no OTP needed)
+        await signUp(email, password, username || email.split("@")[0], selectedRole);
+        toast.success("تم إنشاء حسابك بنجاح! مرحباً بك في نور الفرقان");
+        navigate("/");
       }
     } catch (error: any) {
       console.error("Auth error:", error);
@@ -89,7 +65,7 @@ const AuthPage = () => {
       } else if (error.code === "auth/email-already-in-use") {
         toast.error("هذا البريد الإلكتروني مسجل مسبقاً");
       } else if (error.code === "auth/weak-password") {
-        toast.error("كلمة المرور ضعيفة جداً");
+        toast.error("كلمة المرور ضعيفة جداً - يجب أن تكون 6 أحرف على الأقل");
       } else if (error.code === "auth/invalid-email") {
         toast.error("البريد الإلكتروني غير صالح");
       } else {
