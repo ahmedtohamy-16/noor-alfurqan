@@ -126,12 +126,23 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Verify cron secret token to prevent unauthorized access
+  // FAIL-SECURE: Require secret to be configured
   const cronSecret = Deno.env.get("CRON_SECRET_TOKEN");
-  const authHeader = req.headers.get("X-Cron-Secret") || req.headers.get("Authorization")?.replace("Bearer ", "");
-  
-  if (cronSecret && authHeader !== cronSecret) {
-    console.warn("⚠️ Unauthorized access attempt to scheduled-notifications");
+  if (!cronSecret) {
+    console.error("❌ CRON_SECRET_TOKEN not configured - denying access for security");
+    return new Response(
+      JSON.stringify({ error: "Server misconfiguration" }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+
+  // Single authentication method - only accept X-Cron-Secret header
+  const authHeader = req.headers.get("X-Cron-Secret");
+  if (authHeader !== cronSecret) {
+    console.warn("⚠️ Unauthorized cron access attempt", {
+      timestamp: new Date().toISOString(),
+      hasHeader: !!authHeader,
+    });
     return new Response(
       JSON.stringify({ error: "Unauthorized" }),
       { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
