@@ -3,7 +3,9 @@ import {
   onAuthChange, 
   signIn as firebaseSignIn, 
   signUp as firebaseSignUp, 
-  signOut as firebaseSignOut, 
+  signOut as firebaseSignOut,
+  signInWithGoogle as firebaseSignInWithGoogle,
+  handleGoogleRedirect,
   getCurrentUser,
   getUserRole,
   getUserProfile,
@@ -25,6 +27,7 @@ interface AuthContextType {
   isBanned: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, username?: string, role?: UserRole) => Promise<void>;
+  signInWithGoogle: (role?: UserRole) => Promise<void>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
   checkUserBanned: (email: string) => Promise<boolean>;
@@ -67,6 +70,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUser(currentUser);
       loadUserData(currentUser.uid);
     }
+
+    // Handle Google redirect result on mount
+    handleGoogleRedirect().then((redirectUser) => {
+      if (redirectUser) {
+        setUser({
+          uid: redirectUser.uid,
+          email: redirectUser.email,
+          displayName: redirectUser.displayName,
+          photoURL: redirectUser.photoURL,
+          emailVerified: redirectUser.emailVerified,
+        });
+        loadUserData(redirectUser.uid);
+      }
+    }).catch(console.error);
 
     // Listen for auth state changes
     const unsubscribe = onAuthChange(async (firebaseUser) => {
@@ -113,6 +130,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setIsBanned(false);
   };
 
+  const handleGoogleSignIn = async (userRole: UserRole = "student") => {
+    try {
+      await firebaseSignInWithGoogle(userRole);
+    } catch (error: any) {
+      if (error.code === "auth/popup-closed-by-user") {
+        // User closed the popup, don't show error
+        return;
+      }
+      throw error;
+    }
+  };
+
   const refreshProfile = async () => {
     if (user) {
       await loadUserData(user.uid);
@@ -151,7 +180,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         isTeacher: role === "teacher" || role === "admin",
         isBanned,
         signIn: handleSignIn, 
-        signUp: handleSignUp, 
+        signUp: handleSignUp,
+        signInWithGoogle: handleGoogleSignIn,
         signOut: handleSignOut,
         refreshProfile,
         checkUserBanned

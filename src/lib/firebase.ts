@@ -10,7 +10,11 @@ import {
   User as FirebaseUserType,
   Auth,
   browserLocalPersistence,
-  setPersistence
+  setPersistence,
+  GoogleAuthProvider,
+  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult
 } from "firebase/auth";
 import { 
   getFirestore, 
@@ -206,6 +210,115 @@ export const signIn = async (email: string, password: string) => {
 
 export const signOut = async () => {
   await firebaseSignOut(auth);
+};
+
+// ==================== GOOGLE OAuth ====================
+
+const googleProvider = new GoogleAuthProvider();
+googleProvider.setCustomParameters({
+  prompt: 'select_account'
+});
+
+export const signInWithGoogle = async (role: UserRole = "student") => {
+  try {
+    const result = await signInWithPopup(auth, googleProvider);
+    const user = result.user;
+    
+    // Check if user profile already exists
+    const existingProfile = await getDoc(doc(db, COLLECTIONS.USERS, user.uid));
+    
+    if (!existingProfile.exists()) {
+      // Create new user profile for first-time Google sign-in
+      const displayName = user.displayName || user.email?.split("@")[0] || "مستخدم";
+      const deviceInfo = getDeviceInfo();
+      
+      // Create user profile in Firestore
+      await setDoc(doc(db, COLLECTIONS.USERS, user.uid), {
+        uid: user.uid,
+        email: user.email,
+        displayName: displayName,
+        photoURL: user.photoURL,
+        role: role,
+        device_type: deviceInfo,
+        user_agent: typeof navigator !== "undefined" ? navigator.userAgent : null,
+        authProvider: 'google',
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+      
+      // Create user role entry
+      await setDoc(doc(db, COLLECTIONS.USER_ROLES, user.uid), {
+        uid: user.uid,
+        role: role,
+        createdAt: serverTimestamp()
+      });
+      
+      // Create profile for backward compatibility
+      await setDoc(doc(db, COLLECTIONS.PROFILES, user.uid), {
+        id: user.uid,
+        username: displayName.replace(/\s+/g, '_').toLowerCase() + '_' + Date.now().toString(36),
+        display_name: displayName,
+        avatar_url: user.photoURL,
+        created_at: Timestamp.now(),
+      });
+    }
+    
+    return user;
+  } catch (error: any) {
+    console.error("Google sign-in error:", error);
+    throw error;
+  }
+};
+
+// Handle redirect result for mobile devices
+export const handleGoogleRedirect = async (role: UserRole = "student") => {
+  try {
+    const result = await getRedirectResult(auth);
+    if (result) {
+      const user = result.user;
+      
+      // Check if user profile already exists
+      const existingProfile = await getDoc(doc(db, COLLECTIONS.USERS, user.uid));
+      
+      if (!existingProfile.exists()) {
+        const displayName = user.displayName || user.email?.split("@")[0] || "مستخدم";
+        const deviceInfo = getDeviceInfo();
+        
+        await setDoc(doc(db, COLLECTIONS.USERS, user.uid), {
+          uid: user.uid,
+          email: user.email,
+          displayName: displayName,
+          photoURL: user.photoURL,
+          role: role,
+          device_type: deviceInfo,
+          user_agent: typeof navigator !== "undefined" ? navigator.userAgent : null,
+          authProvider: 'google',
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        });
+        
+        await setDoc(doc(db, COLLECTIONS.USER_ROLES, user.uid), {
+          uid: user.uid,
+          role: role,
+          createdAt: serverTimestamp()
+        });
+        
+        await setDoc(doc(db, COLLECTIONS.PROFILES, user.uid), {
+          id: user.uid,
+          username: displayName.replace(/\s+/g, '_').toLowerCase() + '_' + Date.now().toString(36),
+          display_name: displayName,
+          avatar_url: user.photoURL,
+          created_at: Timestamp.now(),
+        });
+      }
+      
+      return user;
+    }
+    return null;
+  } catch (error: any) {
+    console.error("Google redirect error:", error);
+    throw error;
+  }
 };
 
 export const onAuthChange = (callback: (user: FirebaseUser | null) => void) => {

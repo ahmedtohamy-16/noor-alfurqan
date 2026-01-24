@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      account_recovery_requests: {
+        Row: {
+          admin_notes: string | null
+          created_at: string
+          evidence_description: string | null
+          id: string
+          request_type: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string
+          evidence_description?: string | null
+          id?: string
+          request_type: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string
+          evidence_description?: string | null
+          id?: string
+          request_type?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       admin_messages: {
         Row: {
           created_at: string | null
@@ -610,36 +649,87 @@ export type Database = {
         }
         Relationships: []
       }
+      profile_changes_log: {
+        Row: {
+          change_type: string
+          changed_at: string
+          created_at: string
+          id: string
+          ip_address: string | null
+          new_value: string | null
+          old_value: string | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          change_type: string
+          changed_at?: string
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          new_value?: string | null
+          old_value?: string | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          change_type?: string
+          changed_at?: string
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          new_value?: string | null
+          old_value?: string | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
           city_name: string | null
           created_at: string | null
+          display_name: string | null
+          displayname_change_count: number | null
           id: string
           is_blocked: boolean | null
+          last_displayname_change: string | null
+          last_username_change: string | null
           latitude: number | null
           longitude: number | null
           username: string | null
+          username_change_count: number | null
         }
         Insert: {
           avatar_url?: string | null
           city_name?: string | null
           created_at?: string | null
+          display_name?: string | null
+          displayname_change_count?: number | null
           id: string
           is_blocked?: boolean | null
+          last_displayname_change?: string | null
+          last_username_change?: string | null
           latitude?: number | null
           longitude?: number | null
           username?: string | null
+          username_change_count?: number | null
         }
         Update: {
           avatar_url?: string | null
           city_name?: string | null
           created_at?: string | null
+          display_name?: string | null
+          displayname_change_count?: number | null
           id?: string
           is_blocked?: boolean | null
+          last_displayname_change?: string | null
+          last_username_change?: string | null
           latitude?: number | null
           longitude?: number | null
           username?: string | null
+          username_change_count?: number | null
         }
         Relationships: []
       }
@@ -859,6 +949,45 @@ export type Database = {
           id?: string
           session_date?: string
           start_page?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      security_questions: {
+        Row: {
+          answer_1_hash: string
+          answer_2_hash: string
+          answer_3_hash: string | null
+          created_at: string
+          id: string
+          question_1: string
+          question_2: string
+          question_3: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          answer_1_hash: string
+          answer_2_hash: string
+          answer_3_hash?: string | null
+          created_at?: string
+          id?: string
+          question_1: string
+          question_2: string
+          question_3?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          answer_1_hash?: string
+          answer_2_hash?: string
+          answer_3_hash?: string | null
+          created_at?: string
+          id?: string
+          question_1?: string
+          question_2?: string
+          question_3?: string | null
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
