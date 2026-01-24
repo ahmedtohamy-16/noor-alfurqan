@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Mail, Lock, User, ArrowRight, BookOpen, GraduationCap, Users, Shield, Ban } from "lucide-react";
+import { Mail, Lock, User, ArrowRight, BookOpen, GraduationCap, Users, Shield, Ban, CloudUpload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { UserRole } from "@/lib/firebase";
+import { hasGuestData, getGuestDataSummary } from "@/services/guestDataService";
 
 const AuthPage = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -15,6 +16,7 @@ const AuthPage = () => {
   const [selectedRole, setSelectedRole] = useState<UserRole>("student");
   const [isLoading, setIsLoading] = useState(false);
   const [isBanned, setIsBanned] = useState(false);
+  const [guestDataInfo, setGuestDataInfo] = useState<{ hasData: boolean; summary: string }>({ hasData: false, summary: "" });
   const navigate = useNavigate();
   const { user, signIn, signUp, checkUserBanned } = useAuth();
 
@@ -25,10 +27,40 @@ const AuthPage = () => {
     }
   }, [user, navigate]);
 
+  // Check for guest data on mount
+  useEffect(() => {
+    const summary = getGuestDataSummary();
+    setGuestDataInfo(summary);
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setIsBanned(false);
+
+    // Client-side validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      toast.error("البريد الإلكتروني غير صالح");
+      setIsLoading(false);
+      return;
+    }
+
+    if (password.length < 6) {
+      toast.error("كلمة المرور يجب أن تكون 6 أحرف على الأقل");
+      setIsLoading(false);
+      return;
+    }
+
+    if (!isLogin && username) {
+      // Validate username: 3-50 characters, alphanumeric/Arabic only
+      const usernameRegex = /^[\u0600-\u06FFa-zA-Z0-9_\s]{3,50}$/;
+      if (!usernameRegex.test(username)) {
+        toast.error("اسم المستخدم يجب أن يكون 3-50 حرف (حروف عربية أو إنجليزية أو أرقام)");
+        setIsLoading(false);
+        return;
+      }
+    }
 
     try {
       if (isLogin) {
@@ -43,11 +75,13 @@ const AuthPage = () => {
 
         await signIn(email, password);
         toast.success("تم تسجيل الدخول بنجاح");
+        // Guest data migration happens automatically via useGuestMigration hook
         navigate("/");
       } else {
         // Direct signup with Firebase Auth (no OTP needed)
         await signUp(email, password, username || email.split("@")[0], selectedRole);
         toast.success("تم إنشاء حسابك بنجاح! مرحباً بك في نور الفرقان");
+        // Guest data migration happens automatically via useGuestMigration hook
         navigate("/");
       }
     } catch (error: any) {
@@ -68,6 +102,10 @@ const AuthPage = () => {
         toast.error("كلمة المرور ضعيفة جداً - يجب أن تكون 6 أحرف على الأقل");
       } else if (error.code === "auth/invalid-email") {
         toast.error("البريد الإلكتروني غير صالح");
+      } else if (error.code === "auth/too-many-requests") {
+        toast.error("تم إجراء محاولات كثيرة. حاول لاحقاً");
+      } else if (error.code === "auth/network-request-failed") {
+        toast.error("تحقق من اتصالك بالإنترنت");
       } else {
         toast.error(error.message || "حدث خطأ، حاول مرة أخرى");
       }
@@ -106,6 +144,20 @@ const AuthPage = () => {
 
       <main className="flex-1 flex items-center justify-center px-4 arabic-ui">
         <div className="w-full max-w-md">
+          {/* Guest Data Migration Info */}
+          {guestDataInfo.hasData && (
+            <div className="mb-6 p-4 bg-primary/10 border border-primary/30 rounded-xl">
+              <div className="flex items-center justify-center gap-3 text-primary">
+                <CloudUpload className="w-6 h-6 flex-shrink-0" />
+                <div className="text-right">
+                  <h3 className="font-bold text-sm">لديك بيانات محفوظة</h3>
+                  <p className="text-xs opacity-80">{guestDataInfo.summary}</p>
+                  <p className="text-xs opacity-60 mt-1">سيتم نقلها تلقائياً لحسابك بعد التسجيل</p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Banned Message */}
           {isBanned && (
             <div className="mb-6 p-4 bg-destructive/10 border border-destructive/30 rounded-xl">
