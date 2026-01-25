@@ -1,0 +1,284 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ============================================
+    // HELPER FUNCTIONS
+    // ============================================
+    
+    // Check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Check if user is the owner of the document
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Check if user has a specific role (admin, teacher, student)
+    // Reads from the user_roles collection
+    function hasRole(role) {
+      return isAuthenticated() && 
+        exists(/databases/$(database)/documents/user_roles/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/user_roles/$(request.auth.uid)).data.role == role;
+    }
+    
+    // Check if user is admin
+    function isAdmin() {
+      return hasRole('admin');
+    }
+    
+    // Check if user is teacher or admin
+    function isTeacherOrAdmin() {
+      return hasRole('teacher') || hasRole('admin');
+    }
+    
+    // ============================================
+    // USER MANAGEMENT
+    // ============================================
+    
+    // Users collection - profile data
+    match /users/{userId} {
+      // Users can read their own data, admins can read all
+      allow read: if isOwner(userId) || isAdmin();
+      
+      // Users can only create/update their own profile
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId) || isAdmin();
+      
+      // Only admins can delete users
+      allow delete: if isAdmin();
+    }
+    
+    // User roles collection - CRITICAL: Restrict write access
+    match /user_roles/{userId} {
+      // Anyone authenticated can read their own role
+      allow read: if isOwner(userId) || isAdmin();
+      
+      // ONLY admins can modify roles - prevents privilege escalation
+      allow create, update, delete: if isAdmin();
+    }
+    
+    // Profiles collection (Firebase Auth extended profiles)
+    match /Profiles/{docId} {
+      // Users can read their own profile, admins can read all
+      allow read: if isAuthenticated() && 
+        (resource.data.userId == request.auth.uid || isAdmin());
+      
+      // Users can only write their own profile
+      allow create: if isAuthenticated() && 
+        request.resource.data.userId == request.auth.uid;
+      allow update: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+      
+      // Only admins can delete profiles
+      allow delete: if isAdmin();
+    }
+    
+    // ============================================
+    // MESSAGING SYSTEM
+    // ============================================
+    
+    // Conversations - participants only
+    match /conversations/{conversationId} {
+      // Only participants can read conversations
+      allow read: if isAuthenticated() && 
+        (resource.data.participant_1 == request.auth.uid || 
+         resource.data.participant_2 == request.auth.uid);
+      
+      // Authenticated users can create conversations where they are participant_1
+      allow create: if isAuthenticated() && 
+        request.resource.data.participant_1 == request.auth.uid;
+      
+      // Only participants can update (e.g., last_message_at)
+      allow update: if isAuthenticated() && 
+        (resource.data.participant_1 == request.auth.uid || 
+         resource.data.participant_2 == request.auth.uid);
+      
+      // Participants can delete their conversations
+      allow delete: if isAuthenticated() && 
+        (resource.data.participant_1 == request.auth.uid || 
+         resource.data.participant_2 == request.auth.uid);
+    }
+    
+    // Messages - conversation participants only
+    match /messages/{messageId} {
+      // Allow read if user is participant in the referenced conversation
+      allow read: if isAuthenticated() && 
+        exists(/databases/$(database)/documents/conversations/$(resource.data.conversation_id)) &&
+        (get(/databases/$(database)/documents/conversations/$(resource.data.conversation_id)).data.participant_1 == request.auth.uid ||
+         get(/databases/$(database)/documents/conversations/$(resource.data.conversation_id)).data.participant_2 == request.auth.uid);
+      
+      // Users can only create messages as themselves
+      allow create: if isAuthenticated() && 
+        request.resource.data.sender_id == request.auth.uid;
+      
+      // Messages are immutable (no updates allowed)
+      allow update: if false;
+      
+      // Only sender can delete their own messages
+      allow delete: if isAuthenticated() && 
+        resource.data.sender_id == request.auth.uid;
+    }
+    
+    // ============================================
+    // EDUCATIONAL CONTENT
+    // ============================================
+    
+    // Courses - teachers/admins manage, everyone can read published
+    match /courses/{courseId} {
+      // Anyone can read published courses
+      allow read: if resource.data.is_published == true || 
+        isTeacherOrAdmin() ||
+        (isAuthenticated() && resource.data.teacher_id == request.auth.uid);
+      
+      // Only teachers and admins can create courses
+      allow create: if isTeacherOrAdmin() && 
+        request.resource.data.teacher_id == request.auth.uid;
+      
+      // Teachers can update their own courses, admins can update any
+      allow update: if isAdmin() || 
+        (isTeacherOrAdmin() && resource.data.teacher_id == request.auth.uid);
+      
+      // Teachers can delete their own courses, admins can delete any
+      allow delete: if isAdmin() || 
+        (isTeacherOrAdmin() && resource.data.teacher_id == request.auth.uid);
+    }
+    
+    // Course lessons
+    match /course_lessons/{lessonId} {
+      // Free lessons are public, others require enrollment or teacher/admin
+      allow read: if resource.data.is_free == true || isTeacherOrAdmin();
+      
+      // Only teachers/admins can manage lessons
+      allow create, update, delete: if isTeacherOrAdmin();
+    }
+    
+    // Quizzes - teachers manage, students can take published
+    match /quizzes/{quizId} {
+      // Anyone can read published quizzes, teachers can read their own
+      allow read: if resource.data.is_published == true || 
+        isTeacherOrAdmin() ||
+        (isAuthenticated() && resource.data.teacher_id == request.auth.uid);
+      
+      // Only teachers can create quizzes
+      allow create: if isTeacherOrAdmin() && 
+        request.resource.data.teacher_id == request.auth.uid;
+      
+      // Teachers can update their own quizzes
+      allow update: if isAdmin() || 
+        (isTeacherOrAdmin() && resource.data.teacher_id == request.auth.uid);
+      
+      // Teachers can delete their own quizzes
+      allow delete: if isAdmin() || 
+        (isTeacherOrAdmin() && resource.data.teacher_id == request.auth.uid);
+    }
+    
+    // Quiz questions
+    match /quiz_questions/{questionId} {
+      // Read access for published quiz questions
+      allow read: if isAuthenticated();
+      
+      // Only teachers can manage questions
+      allow create, update, delete: if isTeacherOrAdmin();
+    }
+    
+    // Quiz attempts - students can create and view their own
+    match /quiz_attempts/{attemptId} {
+      // Students can read their own attempts, teachers can read all
+      allow read: if isOwner(resource.data.student_id) || isTeacherOrAdmin();
+      
+      // Students can create attempts
+      allow create: if isAuthenticated() && 
+        request.resource.data.student_id == request.auth.uid;
+      
+      // Students can update their own attempts (submit answers)
+      allow update: if isOwner(resource.data.student_id);
+      
+      // No deletion allowed
+      allow delete: if false;
+    }
+    
+    // Teacher files
+    match /teacher_files/{fileId} {
+      // Published files are readable, teachers can read their own
+      allow read: if isAuthenticated();
+      
+      // Only teachers can manage their files
+      allow create: if isTeacherOrAdmin() && 
+        request.resource.data.teacher_id == request.auth.uid;
+      allow update, delete: if isTeacherOrAdmin() && 
+        resource.data.teacher_id == request.auth.uid;
+    }
+    
+    // Course enrollments
+    match /course_enrollments/{enrollmentId} {
+      // Students can read their own enrollments
+      allow read: if isOwner(resource.data.student_id) || isTeacherOrAdmin();
+      
+      // Students can enroll themselves
+      allow create: if isAuthenticated() && 
+        request.resource.data.student_id == request.auth.uid;
+      
+      // Only the enrolled student can update progress
+      allow update: if isOwner(resource.data.student_id);
+      
+      // No deletion (preserve enrollment history)
+      allow delete: if isAdmin();
+    }
+    
+    // ============================================
+    // LESSONS (Legacy/Simple)
+    // ============================================
+    
+    match /lessons/{lessonId} {
+      // Published lessons are public
+      allow read: if resource.data.is_published == true || isTeacherOrAdmin();
+      
+      // Only teachers/admins can manage
+      allow create, update, delete: if isTeacherOrAdmin();
+    }
+    
+    // ============================================
+    // KHATMAH (Group Quran Reading)
+    // ============================================
+    
+    match /khatmahs/{khatmahId} {
+      // Participants and creator can read
+      allow read: if isAuthenticated();
+      
+      // Authenticated users can create
+      allow create: if isAuthenticated() && 
+        request.resource.data.created_by == request.auth.uid;
+      
+      // Only creator can update/delete
+      allow update, delete: if isAuthenticated() && 
+        resource.data.created_by == request.auth.uid;
+    }
+    
+    match /khatmah_participants/{participantId} {
+      // Participants can read
+      allow read: if isAuthenticated();
+      
+      // Users can join (create participation)
+      allow create: if isAuthenticated() && 
+        request.resource.data.user_id == request.auth.uid;
+      
+      // Participants can update their own progress
+      allow update: if isOwner(resource.data.user_id);
+      
+      // Participants can leave
+      allow delete: if isOwner(resource.data.user_id);
+    }
+    
+    // ============================================
+    // DEFAULT DENY
+    // ============================================
+    
+    // Deny all other access by default
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
