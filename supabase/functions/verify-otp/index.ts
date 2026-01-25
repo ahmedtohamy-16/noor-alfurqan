@@ -42,11 +42,41 @@ const handler = async (req: Request): Promise<Response> => {
 
       const normalizedEmail = email.toLowerCase().trim();
 
-      // Delete any existing OTPs for this email
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(normalizedEmail) || normalizedEmail.length > 255) {
+        return new Response(
+          JSON.stringify({ error: "صيغة البريد الإلكتروني غير صحيحة" }),
+          { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
+      }
+
+      // TIME-BASED RATE LIMITING: Check for recent OTP (within 60 seconds)
+      const rateLimitWindow = new Date(Date.now() - 60 * 1000).toISOString();
+      const { data: recentOtp, error: rateCheckError } = await supabase
+        .from("otp_codes")
+        .select("created_at")
+        .eq("email", normalizedEmail)
+        .gte("created_at", rateLimitWindow)
+        .maybeSingle();
+
+      if (recentOtp) {
+        console.warn(`⚠️ Rate limit hit for ${normalizedEmail} - OTP requested too recently`);
+        return new Response(
+          JSON.stringify({ 
+            error: "يرجى الانتظار دقيقة قبل طلب رمز جديد",
+            retryAfter: 60
+          }),
+          { status: 429, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        );
+      }
+
+      // Delete only EXPIRED OTPs for this email (not all)
       await supabase
         .from("otp_codes")
         .delete()
-        .eq("email", normalizedEmail);
+        .eq("email", normalizedEmail)
+        .lt("expires_at", new Date().toISOString());
 
       // Generate 6-digit OTP using cryptographically secure random
       const crypto = globalThis.crypto;
