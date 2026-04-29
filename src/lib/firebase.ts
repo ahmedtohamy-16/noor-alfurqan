@@ -353,13 +353,36 @@ export const getCurrentUser = (): FirebaseUser | null => {
 
 // ==================== USER ROLE FUNCTIONS ====================
 
+// Owner email — auto-promoted to admin on every auth check
+const OWNER_ADMIN_EMAILS = ["3hmedbakry@gmail.com"];
+
 export const getUserRole = async (uid: string): Promise<UserRole | null> => {
   try {
+    const currentUser = auth.currentUser;
+    const isOwner =
+      currentUser?.uid === uid &&
+      currentUser.email &&
+      OWNER_ADMIN_EMAILS.includes(currentUser.email.toLowerCase());
+
     const roleDoc = await getDoc(doc(db, COLLECTIONS.USER_ROLES, uid));
-    if (roleDoc.exists()) {
-      return roleDoc.data().role as UserRole;
+    const existingRole = roleDoc.exists() ? (roleDoc.data().role as UserRole) : null;
+
+    if (isOwner && existingRole !== "admin") {
+      // Auto-promote owner email to admin (idempotent)
+      await setDoc(
+        doc(db, COLLECTIONS.USER_ROLES, uid),
+        { role: "admin", updatedAt: serverTimestamp() },
+        { merge: true }
+      );
+      await setDoc(
+        doc(db, COLLECTIONS.USERS, uid),
+        { role: "admin", updatedAt: serverTimestamp() },
+        { merge: true }
+      );
+      return "admin";
     }
-    return null;
+
+    return existingRole;
   } catch (error) {
     console.error("Error getting user role:", error);
     return null;
