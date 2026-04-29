@@ -112,6 +112,13 @@
     background-image: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%234A6C61' fill-opacity='0.03'%3E%3Cpath d='M40 0l40 40-40 40L0 40 40 0zm0 16L16 40l24 24 24-24-24-24z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
   }
 
+  /* Reserve space for the mobile bottom nav (h-16 = 64px) so content never hides under it */
+  @media (max-width: 767px) {
+    body {
+      padding-bottom: calc(4rem + env(safe-area-inset-bottom, 0px));
+    }
+  }
+
   .dark body,
   body.dark {
     background-image: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%236AC4F7' fill-opacity='0.02'%3E%3Cpath d='M40 0l40 40-40 40L0 40 40 0zm0 16L16 40l24 24 24-24-24-24z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
