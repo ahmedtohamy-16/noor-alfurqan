@@ -45,6 +45,13 @@ const UserManagementPage = lazy(() => import("./pages/UserManagementPage"));
 const ForgotPasswordPage = lazy(() => import("./pages/ForgotPasswordPage"));
 const PrayerTimesPage = lazy(() => import("./pages/PrayerTimesPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+// Social network layer
+const FeedPage = lazy(() => import("./pages/FeedPage"));
+const SocialProfilePage = lazy(() => import("./pages/SocialProfilePage"));
+const PostDetailsPage = lazy(() => import("./pages/PostDetailsPage"));
+const SocialSearchPage = lazy(() => import("./pages/SocialSearchPage"));
+const SupportPage = lazy(() => import("./pages/SupportPage"));
+const VerificationPage = lazy(() => import("./pages/VerificationPage"));
 
 const queryClient = new QueryClient();
 
@@ -106,6 +113,13 @@ const App = () => (
                           <Route path="/user-management" element={<UserManagementPage />} />
                           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                           <Route path="/prayer-times" element={<PrayerTimesPage />} />
+                          {/* Social network */}
+                          <Route path="/feed" element={<FeedPage />} />
+                          <Route path="/u/:username" element={<SocialProfilePage />} />
+                          <Route path="/post/:postId" element={<PostDetailsPage />} />
+                          <Route path="/social-search" element={<SocialSearchPage />} />
+                          <Route path="/support" element={<SupportPage />} />
+                          <Route path="/verification" element={<VerificationPage />} />
                           <Route path="*" element={<NotFound />} />
                         </Routes>
                       </Suspense>

@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Book, Search, Heart, Settings, Menu, Users } from "lucide-react";
+import { Book, Search, Heart, Settings, Menu, Users, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import ThemeToggle from "./ThemeToggle";
@@ -13,6 +13,7 @@ const Header = () => {
 
   const navLinks = [
     { path: "/", label: "الرئيسية", icon: Book },
+    { path: "/feed", label: "المجتمع", icon: MessageSquare },
     { path: "/search", label: "البحث", icon: Search },
     { path: "/khatmah", label: "الختمة", icon: Users },
     { path: "/favorites", label: "المفضلة", icon: Heart },

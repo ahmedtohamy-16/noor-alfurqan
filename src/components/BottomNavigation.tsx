@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Book, Home, Heart, RotateCcw } from "lucide-react";
+import { Book, Home, Users, RotateCcw, Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const BottomNavigation = () => {
@@ -8,6 +8,7 @@ const BottomNavigation = () => {
 
   const navItems = [
     { icon: Heart, label: "المفضلة", path: "/favorites" },
+    { icon: Users, label: "المجتمع", path: "/feed" },
     { icon: RotateCcw, label: "التسبيح", path: "/tasbih" },
     { icon: Book, label: "القرآن", path: "/quran" },
     { icon: Home, label: "الرئيسية", path: "/" },
