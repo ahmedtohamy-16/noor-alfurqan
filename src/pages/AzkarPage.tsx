@@ -81,7 +81,7 @@ const AzkarPage = () => {
       }, delay);
     };
 
-    const timeouts: NodeJS.Timeout[] = [];
+    const timeouts: ReturnType<typeof setTimeout>[] = [];
 
     if (morningReminderEnabled) {
       // Morning reminder at 6:00 AM
