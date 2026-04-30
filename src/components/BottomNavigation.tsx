@@ -2,9 +2,19 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Book, Home, Users, RotateCcw, Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+const HIDDEN_ROUTES = [
+  "/auth",
+  "/welcome",
+  "/splash",
+  "/forgot-password",
+  "/verification",
+];
+
 const BottomNavigation = () => {
   const location = useLocation();
   const navigate = useNavigate();
+
+  if (HIDDEN_ROUTES.includes(location.pathname)) return null;
 
   const navItems = [
     { icon: Heart, label: "المفضلة", path: "/favorites" },

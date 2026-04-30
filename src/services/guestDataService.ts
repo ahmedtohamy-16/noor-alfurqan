@@ -8,6 +8,7 @@ import {
   firestoreQuery,
   COLLECTIONS 
 } from "@/lib/firebase";
+import { getGuestId, clearGuestIdentity, GUEST_IDENTITY_KEYS } from "./guestIdentityService";
 
 // Storage keys for guest data
 export const GUEST_STORAGE_KEYS = {
