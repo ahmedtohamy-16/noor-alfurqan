@@ -76,6 +76,16 @@ const Header = () => {
 
           {/* Mobile Actions */}
           <div className="flex items-center gap-2 md:hidden">
+            {!user && guestName && (
+              <Link
+                to="/welcome"
+                className="flex items-center gap-1 text-xs text-muted-foreground bg-muted/60 px-2 py-1 rounded-full hover:bg-muted transition-colors"
+                title="تسجيل الدخول"
+              >
+                <UserCircle2 className="w-3.5 h-3.5" />
+                <span className="font-medium">{guestName}</span>
+              </Link>
+            )}
             <ThemeToggle />
             <Button
               variant="ghost"
