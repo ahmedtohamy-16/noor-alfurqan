@@ -5,20 +5,20 @@ import { useAuth } from "@/hooks/useAuth";
 
 const SplashScreen = () => {
   const navigate = useNavigate();
-  const { user, loading } = useAuth();
+  const { user, isLoading } = useAuth();
   const [showName, setShowName] = useState(false);
 
   useEffect(() => {
     const t1 = setTimeout(() => setShowName(true), 700);
     const t2 = setTimeout(() => {
-      if (loading) return;
+      if (isLoading) return;
       navigate(user ? "/" : "/welcome", { replace: true });
     }, 2200);
     return () => {
       clearTimeout(t1);
       clearTimeout(t2);
     };
-  }, [navigate, user, loading]);
+  }, [navigate, user, isLoading]);
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background overflow-hidden">
