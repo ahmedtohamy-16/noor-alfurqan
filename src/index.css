@@ -16,11 +16,12 @@
     --popover: 40 30% 98%;
     --popover-foreground: 0 0% 10%;
 
-    --primary: 160 20% 35%; /* Olive green #4A6C61 */
-    --primary-foreground: 40 33% 96%;
+    --primary: 207 100% 41%; /* Brand blue #0074CF */
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 207 100% 55%;
 
-    --secondary: 40 25% 92%;
-    --secondary-foreground: 160 20% 35%;
+    --secondary: 142 71% 45%; /* Brand green #22C55E */
+    --secondary-foreground: 0 0% 100%;
 
     --muted: 40 20% 90%;
     --muted-foreground: 0 0% 40%;
@@ -33,7 +34,7 @@
 
     --border: 40 20% 88%;
     --input: 40 20% 88%;
-    --ring: 160 20% 35%;
+    --ring: 207 100% 41%;
 
     --radius: 0.75rem;
 
@@ -48,12 +49,12 @@
 
     --sidebar-background: 40 30% 97%;
     --sidebar-foreground: 0 0% 10%;
-    --sidebar-primary: 160 20% 35%;
-    --sidebar-primary-foreground: 40 33% 96%;
+    --sidebar-primary: 207 100% 41%;
+    --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 40 25% 92%;
     --sidebar-accent-foreground: 0 0% 10%;
     --sidebar-border: 40 20% 88%;
-    --sidebar-ring: 160 20% 35%;
+    --sidebar-ring: 207 100% 41%;
   }
 
   .dark {
@@ -66,8 +67,9 @@
     --popover: 215 45% 18%;
     --popover-foreground: 0 0% 95%;
 
-    --primary: 199 75% 68%; /* Cyan accent #6AC4F7 */
-    --primary-foreground: 215 50% 12%;
+    --primary: 207 100% 60%; /* Brand blue (lighter for dark) */
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 207 100% 70%;
 
     --secondary: 215 40% 22%;
     --secondary-foreground: 0 0% 92%;
@@ -108,8 +110,8 @@
 
   body {
     @apply bg-background text-foreground;
-    font-family: 'Amiri', serif;
-    background-image: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%234A6C61' fill-opacity='0.03'%3E%3Cpath d='M40 0l40 40-40 40L0 40 40 0zm0 16L16 40l24 24 24-24-24-24z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    font-family: 'Cairo', 'Tajawal', 'Amiri', sans-serif;
+    background-image: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%230074CF' fill-opacity='0.03'%3E%3Cpath d='M40 0l40 40-40 40L0 40 40 0zm0 16L16 40l24 24 24-24-24-24z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
   }
 
   /* Reserve space for the mobile bottom nav (h-16 = 64px) so content never hides under it */
