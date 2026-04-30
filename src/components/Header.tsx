@@ -1,15 +1,24 @@
 import { Link, useLocation } from "react-router-dom";
-import { Book, Search, Heart, Settings, Menu, Users, MessageSquare } from "lucide-react";
+import { Book, Search, Heart, Settings, Menu, Users, MessageSquare, UserCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ThemeToggle from "./ThemeToggle";
 import { useAuth } from "@/hooks/useAuth";
 import HeaderLocationButton from "./HeaderLocationButton";
+import { getGuestDisplayName, getOrCreateGuestId } from "@/services/guestIdentityService";
 
 const Header = () => {
   const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { user } = useAuth();
+  const [guestName, setGuestName] = useState<string>("");
+
+  useEffect(() => {
+    if (!user) {
+      getOrCreateGuestId();
+      setGuestName(getGuestDisplayName());
+    }
+  }, [user]);
 
   const navLinks = [
     { path: "/", label: "الرئيسية", icon: Book },
@@ -67,6 +76,16 @@ const Header = () => {
 
           {/* Mobile Actions */}
           <div className="flex items-center gap-2 md:hidden">
+            {!user && guestName && (
+              <Link
+                to="/welcome"
+                className="flex items-center gap-1 text-xs text-muted-foreground bg-muted/60 px-2 py-1 rounded-full hover:bg-muted transition-colors"
+                title="تسجيل الدخول"
+              >
+                <UserCircle2 className="w-3.5 h-3.5" />
+                <span className="font-medium">{guestName}</span>
+              </Link>
+            )}
             <ThemeToggle />
             <Button
               variant="ghost"

@@ -8,6 +8,7 @@ import {
   firestoreQuery,
   COLLECTIONS 
 } from "@/lib/firebase";
+import { getGuestId, clearGuestIdentity, GUEST_IDENTITY_KEYS } from "./guestIdentityService";
 
 // Storage keys for guest data
 export const GUEST_STORAGE_KEYS = {
@@ -159,10 +160,24 @@ export const migrateGuestDataToUser = async (userId: string): Promise<{
   errors: string[];
 }> => {
   const guestData = getGuestData();
+  const guestId = getGuestId();
   const migratedItems: string[] = [];
   const errors: string[] = [];
 
   try {
+    // 0. Attach previous guest_id to user profile (audit trail)
+    if (guestId) {
+      try {
+        await firestoreSet(COLLECTIONS.USERS, userId, {
+          previous_guest_id: guestId,
+          migrated_at: new Date().toISOString(),
+        }, true);
+      } catch (e) {
+        // Non-fatal — continue with data migration
+        console.warn("Could not attach guest_id to profile:", e);
+      }
+    }
+
     // 1. Migrate favorites
     if (guestData.favorites.length > 0) {
       try {
@@ -289,6 +304,8 @@ export const clearGuestData = (): void => {
   // Also clear date-specific keys
   const today = new Date().toISOString().split("T")[0];
   localStorage.removeItem(`dailyWird_${today}`);
+  // Clear guest identity (id + display name)
+  clearGuestIdentity();
 };
 
 /**
