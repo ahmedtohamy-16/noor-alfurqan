@@ -189,7 +189,7 @@ const SocialHome = () => {
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    getPublicFeed(undefined, 5)
+    getPublicFeed(5)
       .then((res: any) => {
         if (cancelled) return;
         // getPublicFeed may return either an array or {posts, lastDoc}
