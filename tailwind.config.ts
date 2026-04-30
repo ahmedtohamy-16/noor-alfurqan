@@ -69,7 +69,8 @@ export default {
       },
       fontFamily: {
         quran: ["Amiri", "serif"],
-        arabic: ["Cairo", "sans-serif"],
+        arabic: ["Cairo", "Tajawal", "sans-serif"],
+        ui: ["Cairo", "Tajawal", "sans-serif"],
       },
       borderRadius: {
         lg: "var(--radius)",

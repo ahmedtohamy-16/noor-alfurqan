@@ -52,6 +52,8 @@ const PostDetailsPage = lazy(() => import("./pages/PostDetailsPage"));
 const SocialSearchPage = lazy(() => import("./pages/SocialSearchPage"));
 const SupportPage = lazy(() => import("./pages/SupportPage"));
 const VerificationPage = lazy(() => import("./pages/VerificationPage"));
+const WelcomePage = lazy(() => import("./pages/WelcomePage"));
+const SplashScreen = lazy(() => import("./pages/SplashScreen"));
 
 const queryClient = new QueryClient();
 
@@ -120,6 +122,8 @@ const App = () => (
                           <Route path="/social-search" element={<SocialSearchPage />} />
                           <Route path="/support" element={<SupportPage />} />
                           <Route path="/verification" element={<VerificationPage />} />
+                          <Route path="/welcome" element={<WelcomePage />} />
+                          <Route path="/splash" element={<SplashScreen />} />
                           <Route path="*" element={<NotFound />} />
                         </Routes>
                       </Suspense>
