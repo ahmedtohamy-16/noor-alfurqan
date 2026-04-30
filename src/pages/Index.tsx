@@ -1,4 +1,5 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 import {
   Book,
   Star,
@@ -23,7 +24,19 @@ import { useAuth } from "@/hooks/useAuth";
 
 const Index = () => {
   const { lastRead } = useReadingProgress();
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
+  const navigate = useNavigate();
+
+  // Show splash → welcome on first visit for guests
+  useEffect(() => {
+    if (isLoading) return;
+    if (user) return;
+    const seen = sessionStorage.getItem("noor:onboarded");
+    if (!seen) {
+      sessionStorage.setItem("noor:onboarded", "1");
+      navigate("/splash", { replace: true });
+    }
+  }, [user, isLoading, navigate]);
 
   const features = [
     {
