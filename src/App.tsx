@@ -11,6 +11,7 @@ import { ReadingSettingsProvider } from "@/hooks/useReadingSettings";
 import { GlobalAudioProvider } from "@/hooks/useGlobalAudio";
 import { DownloadManagerProvider } from "@/components/DownloadManager";
 import { useGuestMigration } from "@/hooks/useGuestMigration";
+import { HomeModeProvider } from "@/hooks/useHomeMode";
 import BottomNavigation from "@/components/BottomNavigation";
 import GlobalAudioPlayer from "@/components/GlobalAudioPlayer";
 
@@ -54,6 +55,8 @@ const SupportPage = lazy(() => import("./pages/SupportPage"));
 const VerificationPage = lazy(() => import("./pages/VerificationPage"));
 const WelcomePage = lazy(() => import("./pages/WelcomePage"));
 const SplashScreen = lazy(() => import("./pages/SplashScreen"));
+const ExplorePage = lazy(() => import("./pages/ExplorePage"));
+const CreatePostPage = lazy(() => import("./pages/CreatePostPage"));
 
 const queryClient = new QueryClient();
 
@@ -82,6 +85,7 @@ const App = () => (
             <GlobalAudioProvider>
               <DownloadManagerProvider>
                 <TooltipProvider>
+                  <HomeModeProvider>
                   <GuestMigrationHandler>
                     <Toaster />
                     <Sonner />
@@ -124,6 +128,8 @@ const App = () => (
                           <Route path="/verification" element={<VerificationPage />} />
                           <Route path="/welcome" element={<WelcomePage />} />
                           <Route path="/splash" element={<SplashScreen />} />
+                          <Route path="/explore" element={<ExplorePage />} />
+                          <Route path="/create-post" element={<CreatePostPage />} />
                           <Route path="*" element={<NotFound />} />
                         </Routes>
                       </Suspense>
@@ -131,6 +137,7 @@ const App = () => (
                       <BottomNavigation />
                     </BrowserRouter>
                   </GuestMigrationHandler>
+                  </HomeModeProvider>
                 </TooltipProvider>
               </DownloadManagerProvider>
             </GlobalAudioProvider>

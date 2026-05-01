@@ -65,10 +65,13 @@ const formatDate = (dateString: string) => {
   });
 };
 
+type FilterTab = "all" | "social" | "islamic";
+
 const NotificationsPage = () => {
   const { user } = useAuth();
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [filter, setFilter] = useState<FilterTab>("all");
 
   useEffect(() => {
     if (user) {
@@ -199,6 +202,27 @@ const NotificationsPage = () => {
           )}
         </div>
 
+        {/* Tabs (All / Social / Islamic) */}
+        <div className="flex items-center gap-2 mb-5 overflow-x-auto scrollbar-none">
+          {([
+            { key: "all", label: "All" },
+            { key: "social", label: "Social" },
+            { key: "islamic", label: "Islamic" },
+          ] as { key: FilterTab; label: string }[]).map((t) => (
+            <button
+              key={t.key}
+              onClick={() => setFilter(t.key)}
+              className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all border ${
+                filter === t.key
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-card text-foreground border-border"
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+
         {isLoading ? (
           <div className="space-y-3">
             {[1, 2, 3].map(i => (
@@ -224,7 +248,14 @@ const NotificationsPage = () => {
         ) : (
           <ScrollArea className="h-[calc(100vh-200px)]">
             <div className="space-y-3">
-              {notifications.map((notification) => (
+              {notifications
+                .filter((n) => {
+                  if (filter === "all") return true;
+                  const islamicTypes = ["wird", "prayer", "azkar"];
+                  const isIslamic = islamicTypes.includes(n.notification_type);
+                  return filter === "islamic" ? isIslamic : !isIslamic;
+                })
+                .map((notification) => (
                 <Card 
                   key={notification.id} 
                   className={`p-4 transition-all ${!notification.read ? 'bg-primary/5 border-primary/20' : ''}`}
