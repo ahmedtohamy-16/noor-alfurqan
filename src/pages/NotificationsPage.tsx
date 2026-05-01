@@ -248,7 +248,14 @@ const NotificationsPage = () => {
         ) : (
           <ScrollArea className="h-[calc(100vh-200px)]">
             <div className="space-y-3">
-              {notifications.map((notification) => (
+              {notifications
+                .filter((n) => {
+                  if (filter === "all") return true;
+                  const islamicTypes = ["wird", "prayer", "azkar"];
+                  const isIslamic = islamicTypes.includes(n.notification_type);
+                  return filter === "islamic" ? isIslamic : !isIslamic;
+                })
+                .map((notification) => (
                 <Card 
                   key={notification.id} 
                   className={`p-4 transition-all ${!notification.read ? 'bg-primary/5 border-primary/20' : ''}`}
