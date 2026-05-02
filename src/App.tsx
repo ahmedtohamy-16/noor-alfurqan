@@ -60,13 +60,10 @@ const CreatePostPage = lazy(() => import("./pages/CreatePostPage"));
 
 const queryClient = new QueryClient();
 
-// Loading fallback for lazy-loaded routes
+// Minimal loading fallback for lazy-loaded routes (avoid full-screen blocking spinner)
 const PageLoader = () => (
-  <div className="min-h-screen flex items-center justify-center bg-background">
-    <div className="animate-pulse text-center">
-      <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-      <p className="text-muted-foreground">جاري التحميل...</p>
-    </div>
+  <div className="min-h-[40vh] flex items-center justify-center">
+    <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
   </div>
 );
 
