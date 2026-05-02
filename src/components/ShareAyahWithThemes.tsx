@@ -29,7 +29,7 @@ const ShareAyahWithThemes = ({
   ayahNumber,
 }: ShareAyahWithThemesProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [selectedTheme, setSelectedTheme] = useState<ExportTheme>(exportThemes[2]); // Islamic green default
+  const [selectedTheme, setSelectedTheme] = useState<ExportTheme>(exportThemes[0]); // Noor blue default (#0074CF)
   const [selectedFont, setSelectedFont] = useState(fontOptions[0]);
   const [copied, setCopied] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);

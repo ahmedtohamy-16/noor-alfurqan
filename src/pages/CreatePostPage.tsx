@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { X, ImagePlus, Hash, MapPin, Globe, Lock, Users, Plus, Loader2, Image as ImageIcon, Video, BookOpen } from "lucide-react";
+import { X, Hash, MapPin, Globe, Lock, Users, Plus, Loader2, Image as ImageIcon, Video, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -22,6 +22,15 @@ import { cn } from "@/lib/utils";
 
 type PostType = "post" | "reel" | "islamic";
 
+interface UploadedItem {
+  url: string;
+  uploading: boolean;
+}
+
+const MAX_FILES = 4;
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif", "video/mp4", "video/quicktime"];
+
 const CreatePostPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -32,8 +41,9 @@ const CreatePostPage = () => {
   const [location, setLocation] = useState("");
   const [visibility, setVisibility] = useState<PostVisibility>("public");
   const [allowComments, setAllowComments] = useState(true);
-  const [imageUrls, setImageUrls] = useState<string[]>([]);
+  const [items, setItems] = useState<UploadedItem[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!user) {
     return (
@@ -57,12 +67,58 @@ const CreatePostPage = () => {
     return true;
   };
 
+  const handleFiles = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    const remaining = MAX_FILES - items.length;
+    const list = Array.from(files).slice(0, remaining);
+
+    for (const file of list) {
+      if (!ACCEPTED_TYPES.includes(file.type)) {
+        toast.error(`نوع غير مدعوم: ${file.name}`);
+        continue;
+      }
+      if (file.size > MAX_FILE_SIZE) {
+        toast.error(`${file.name} أكبر من 10MB`);
+        continue;
+      }
+      const placeholder: UploadedItem = { url: URL.createObjectURL(file), uploading: true };
+      setItems((p) => [...p, placeholder]);
+      try {
+        const ext = file.name.split(".").pop() || "bin";
+        const path = `${user.uid}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+        const { error } = await supabase.storage
+          .from("post-media")
+          .upload(path, file, { contentType: file.type, upsert: false });
+        if (error) throw error;
+        const { data: pub } = supabase.storage.from("post-media").getPublicUrl(path);
+        setItems((p) =>
+          p.map((it) =>
+            it === placeholder ? { url: pub.publicUrl, uploading: false } : it
+          )
+        );
+      } catch (e: any) {
+        console.error(e);
+        toast.error(e.message || `فشل رفع ${file.name}`);
+        setItems((p) => p.filter((it) => it !== placeholder));
+      }
+    }
+  };
+
+  const removeItem = (idx: number) => {
+    setItems((p) => p.filter((_, j) => j !== idx));
+  };
+
   const handleSubmit = async () => {
     if (!profile) {
       toast.error("يرجى إعداد حسابك الاجتماعي أولاً");
       return;
     }
-    if (!caption.trim() && imageUrls.length === 0) {
+    if (items.some((it) => it.uploading)) {
+      toast.error("في انتظار اكتمال رفع الصور...");
+      return;
+    }
+    const mediaUrls = items.filter((it) => !it.uploading).map((it) => it.url);
+    if (!caption.trim() && mediaUrls.length === 0) {
       toast.error("أضف نصاً أو صورة");
       return;
     }
@@ -77,7 +133,7 @@ const CreatePostPage = () => {
       }
       await createPost(profile, {
         content: fullContent,
-        media_urls: imageUrls,
+        media_urls: mediaUrls,
         visibility,
       });
       toast.success("تم النشر بنجاح");
@@ -89,19 +145,10 @@ const CreatePostPage = () => {
     }
   };
 
-  const handleAddImage = () => {
-    const url = prompt("الصق رابط الصورة (https://...):");
-    if (url && /^https?:\/\//.test(url)) {
-      setImageUrls((p) => [...p, url].slice(0, 4));
-    } else if (url) {
-      toast.error("رابط غير صالح");
-    }
-  };
-
   const types: { key: PostType; label: string; icon: any }[] = [
-    { key: "post", label: "Post", icon: ImageIcon },
-    { key: "reel", label: "Reel", icon: Video },
-    { key: "islamic", label: "Islamic Post", icon: BookOpen },
+    { key: "post", label: "منشور", icon: ImageIcon },
+    { key: "reel", label: "ريل", icon: Video },
+    { key: "islamic", label: "إسلامي", icon: BookOpen },
   ];
 
   return (
@@ -112,7 +159,7 @@ const CreatePostPage = () => {
           <button onClick={() => navigate(-1)} aria-label="إغلاق" className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-muted">
             <X className="w-5 h-5" />
           </button>
-          <h1 className="text-base font-bold">Create Post</h1>
+          <h1 className="text-base font-bold arabic-ui">إنشاء منشور</h1>
           <div className="w-9" />
         </div>
       </header>
@@ -137,15 +184,21 @@ const CreatePostPage = () => {
           ))}
         </div>
 
-        {/* Media */}
-        {imageUrls.length > 0 && (
-          <div className="grid grid-cols-1 gap-2">
-            {imageUrls.map((url, i) => (
-              <div key={i} className="relative rounded-xl overflow-hidden">
-                <img src={url} alt="" className="w-full aspect-video object-cover" />
+        {/* Media grid */}
+        {items.length > 0 && (
+          <div className={cn("grid gap-2", items.length === 1 ? "grid-cols-1" : "grid-cols-2")}>
+            {items.map((it, i) => (
+              <div key={i} className="relative rounded-xl overflow-hidden bg-muted aspect-square">
+                <img src={it.url} alt="" className="w-full h-full object-cover" />
+                {it.uploading && (
+                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                    <Loader2 className="w-6 h-6 text-white animate-spin" />
+                  </div>
+                )}
                 <button
-                  onClick={() => setImageUrls((p) => p.filter((_, j) => j !== i))}
+                  onClick={() => removeItem(i)}
                   className="absolute top-2 left-2 w-8 h-8 bg-black/60 text-white rounded-full flex items-center justify-center"
+                  aria-label="إزالة"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -154,12 +207,30 @@ const CreatePostPage = () => {
           </div>
         )}
 
+        {/* Hidden file input - opens device gallery / files */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept={ACCEPTED_TYPES.join(",")}
+          multiple
+          className="hidden"
+          onChange={(e) => {
+            handleFiles(e.target.files);
+            if (fileInputRef.current) fileInputRef.current.value = "";
+          }}
+        />
+
         <button
-          onClick={handleAddImage}
-          disabled={imageUrls.length >= 4}
-          className="w-full h-20 rounded-xl border-2 border-dashed border-border flex items-center justify-center text-muted-foreground hover:border-primary hover:text-primary transition-colors disabled:opacity-50"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={items.length >= MAX_FILES}
+          className="w-full h-20 rounded-xl border-2 border-dashed border-border flex flex-col items-center justify-center gap-1 text-muted-foreground hover:border-primary hover:text-primary transition-colors disabled:opacity-50"
         >
           <Plus className="w-6 h-6" />
+          <span className="text-xs">
+            {items.length >= MAX_FILES
+              ? `الحد الأقصى ${MAX_FILES} ملفات`
+              : "إضافة صور / فيديو من جهازك"}
+          </span>
         </button>
 
         {/* Caption */}
@@ -167,7 +238,7 @@ const CreatePostPage = () => {
           <Textarea
             value={caption}
             onChange={(e) => setCaption(e.target.value.slice(0, 2000))}
-            placeholder="Write a caption..."
+            placeholder="اكتب شيئاً..."
             rows={3}
             className="resize-none rounded-xl border-border bg-muted/30"
             dir="auto"
@@ -181,7 +252,7 @@ const CreatePostPage = () => {
           <Input
             value={hashtags}
             onChange={(e) => setHashtags(e.target.value)}
-            placeholder="Hashtags"
+            placeholder="هاشتاجات #example"
             className="border-0 px-0 h-7 focus-visible:ring-0 bg-transparent"
             dir="auto"
           />
@@ -193,7 +264,7 @@ const CreatePostPage = () => {
           <Input
             value={location}
             onChange={(e) => setLocation(e.target.value)}
-            placeholder="Add Location"
+            placeholder="إضافة موقع"
             className="border-0 px-0 h-7 focus-visible:ring-0 bg-transparent"
             dir="auto"
           />
@@ -206,18 +277,18 @@ const CreatePostPage = () => {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="public"><span className="flex items-center gap-2"><Globe className="w-3.5 h-3.5" /> Public</span></SelectItem>
-              <SelectItem value="friends"><span className="flex items-center gap-2"><Users className="w-3.5 h-3.5" /> Friends</span></SelectItem>
-              <SelectItem value="private"><span className="flex items-center gap-2"><Lock className="w-3.5 h-3.5" /> Private</span></SelectItem>
+              <SelectItem value="public"><span className="flex items-center gap-2"><Globe className="w-3.5 h-3.5" /> عام</span></SelectItem>
+              <SelectItem value="friends"><span className="flex items-center gap-2"><Users className="w-3.5 h-3.5" /> الأصدقاء</span></SelectItem>
+              <SelectItem value="private"><span className="flex items-center gap-2"><Lock className="w-3.5 h-3.5" /> خاص</span></SelectItem>
             </SelectContent>
           </Select>
-          <span className="text-sm">Who can view this post?</span>
+          <span className="text-sm">من يرى المنشور؟</span>
         </Card>
 
         {/* Allow comments */}
         <Card className="p-3 flex items-center justify-between gap-3">
           <Switch checked={allowComments} onCheckedChange={setAllowComments} />
-          <span className="text-sm">Allow Comments</span>
+          <span className="text-sm">السماح بالتعليقات</span>
         </Card>
 
         {needsSetup && (
@@ -237,10 +308,14 @@ const CreatePostPage = () => {
         <div className="container max-w-2xl mx-auto">
           <Button
             onClick={handleSubmit}
-            disabled={submitting || (!caption.trim() && imageUrls.length === 0)}
+            disabled={
+              submitting ||
+              items.some((it) => it.uploading) ||
+              (!caption.trim() && items.length === 0)
+            }
             className="w-full h-12 rounded-xl text-base font-bold"
           >
-            {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Share"}
+            {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "نشر"}
           </Button>
         </div>
       </div>
