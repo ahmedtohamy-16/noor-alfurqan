@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import {
   Clock,
   MapPin,
@@ -12,15 +13,18 @@ import {
   Sunset,
   Moon,
   CloudSun,
+  Calendar,
+  FileText,
+  Building2,
+  ArrowLeft,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import Header from "@/components/Header";
 import { useUserSettings } from "@/hooks/useUserSettings";
 import LocationPickerModal from "@/components/LocationPickerModal";
 import PrayerExportDialog from "@/components/PrayerExportDialog";
-import { toast } from "sonner";
-import { getDSTOffset, isInDSTForCountry, applyDSTToTime } from "@/utils/dstUtils";
+import mosqueBg from "@/assets/mosque-night-hero.jpg";
+import { cn } from "@/lib/utils";
 
 interface PrayerTimesData {
   Fajr: string;
@@ -31,63 +35,31 @@ interface PrayerTimesData {
   Isha: string;
 }
 
-interface MonthlyPrayerDay {
-  date: {
-    readable: string;
-    gregorian: { date: string; day: string };
-    hijri: { date: string; day: string; month: { ar: string } };
-  };
-  timings: PrayerTimesData;
-}
-
 const prayers = [
-  { key: "Fajr", name: "الفجر", icon: Moon },
-  { key: "Sunrise", name: "الشروق", icon: Sunrise },
-  { key: "Dhuhr", name: "الظهر", icon: Sun },
-  { key: "Asr", name: "العصر", icon: CloudSun },
-  { key: "Maghrib", name: "المغرب", icon: Sunset },
-  { key: "Isha", name: "العشاء", icon: Moon },
+  { key: "Fajr", name: "الفجر", icon: Moon, period: "ص" },
+  { key: "Sunrise", name: "الشروق", icon: Sunrise, period: "ص" },
+  { key: "Dhuhr", name: "الظهر", icon: Sun, period: "م" },
+  { key: "Asr", name: "العصر", icon: CloudSun, period: "م" },
+  { key: "Maghrib", name: "المغرب", icon: Sunset, period: "م" },
+  { key: "Isha", name: "العشاء", icon: Moon, period: "م" },
 ];
 
-const fetchPrayerTimes = async (
-  lat: number,
-  lng: number,
-  method: number,
-  madhab: number
-): Promise<PrayerTimesData> => {
+const fetchPrayerTimes = async (lat: number, lng: number, method: number, madhab: number): Promise<PrayerTimesData> => {
   const today = new Date();
   const dateStr = `${today.getDate()}-${today.getMonth() + 1}-${today.getFullYear()}`;
-  const response = await fetch(
-    `https://api.aladhan.com/v1/timings/${dateStr}?latitude=${lat}&longitude=${lng}&method=${method}&school=${madhab}`
-  );
-  const data = await response.json();
-  return data.data.timings;
-};
-
-const fetchMonthlyPrayerTimes = async (
-  lat: number,
-  lng: number,
-  method: number,
-  madhab: number,
-  month: number,
-  year: number
-): Promise<MonthlyPrayerDay[]> => {
-  const response = await fetch(
-    `https://api.aladhan.com/v1/calendar/${year}/${month}?latitude=${lat}&longitude=${lng}&method=${method}&school=${madhab}`
-  );
-  const data = await response.json();
-  return data.data;
+  const r = await fetch(`https://api.aladhan.com/v1/timings/${dateStr}?latitude=${lat}&longitude=${lng}&method=${method}&school=${madhab}`);
+  const d = await r.json();
+  return d.data.timings;
 };
 
 const PrayerTimesPage = () => {
+  const navigate = useNavigate();
   const { settings } = useUserSettings();
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
   const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
   const [countdown, setCountdown] = useState({ hours: 0, minutes: 0, seconds: 0 });
   const [nextPrayer, setNextPrayer] = useState<{ name: string; time: string; key: string } | null>(null);
-  const [currentMonth, setCurrentMonth] = useState(new Date().getMonth() + 1);
-  const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
-  const calendarRef = useRef<HTMLDivElement>(null);
+  const [hijriDate, setHijriDate] = useState<string>("");
 
   const lat = settings.latitude || 21.4225;
   const lng = settings.longitude || 39.8262;
@@ -95,285 +67,209 @@ const PrayerTimesPage = () => {
   const madhab = settings.prayer_madhab || 0;
   const hasLocation = settings.latitude && settings.longitude;
 
-  const { data: prayerTimes, isLoading } = useQuery({
+  const { data: prayerTimes } = useQuery({
     queryKey: ["prayerTimes", lat, lng, method, madhab],
     queryFn: () => fetchPrayerTimes(lat, lng, method, madhab),
     enabled: !!lat && !!lng,
     staleTime: 1000 * 60 * 60,
   });
 
-  const { data: monthlyTimes } = useQuery({
-    queryKey: ["monthlyPrayerTimes", lat, lng, method, madhab, currentMonth, currentYear],
-    queryFn: () => fetchMonthlyPrayerTimes(lat, lng, method, madhab, currentMonth, currentYear),
-    enabled: !!lat && !!lng,
-    staleTime: 1000 * 60 * 60 * 24,
-  });
+  useEffect(() => {
+    fetch(`https://api.aladhan.com/v1/gToH?date=${new Date().toLocaleDateString("en-GB").replace(/\//g, "-")}`)
+      .then((r) => r.json())
+      .then((d) => {
+        const h = d.data.hijri;
+        setHijriDate(`${h.weekday.ar}، ${h.day} ${h.month.ar} ${h.year}هـ`);
+      })
+      .catch(() => {});
+  }, []);
 
-  // Calculate next prayer and countdown
   useEffect(() => {
     if (!prayerTimes) return;
-
-    const updateNextPrayer = () => {
+    const update = () => {
       const now = new Date();
       let found = false;
-
-      for (const prayer of prayers) {
-        if (prayer.key === "Sunrise") continue; // Skip sunrise for next prayer
-        const timeStr = prayerTimes[prayer.key as keyof PrayerTimesData];
-        const [hours, minutes] = timeStr.split(":").map(Number);
-        const prayerDate = new Date();
-        prayerDate.setHours(hours, minutes, 0, 0);
-
-        if (prayerDate > now) {
-          setNextPrayer({ name: prayer.name, time: timeStr, key: prayer.key });
+      for (const p of prayers) {
+        if (p.key === "Sunrise") continue;
+        const [h, m] = (prayerTimes[p.key as keyof PrayerTimesData] as string).split(":").map(Number);
+        const d = new Date();
+        d.setHours(h, m, 0, 0);
+        if (d > now) {
+          setNextPrayer({ name: p.name, time: prayerTimes[p.key as keyof PrayerTimesData] as string, key: p.key });
           found = true;
           break;
         }
       }
-
-      if (!found) {
-        setNextPrayer({ name: "الفجر", time: prayerTimes.Fajr, key: "Fajr" });
-      }
+      if (!found) setNextPrayer({ name: "الفجر", time: prayerTimes.Fajr, key: "Fajr" });
     };
-
-    updateNextPrayer();
-    const interval = setInterval(updateNextPrayer, 60000);
-    return () => clearInterval(interval);
+    update();
+    const i = setInterval(update, 60000);
+    return () => clearInterval(i);
   }, [prayerTimes]);
 
-  // Countdown timer
   useEffect(() => {
-    if (!prayerTimes || !nextPrayer) return;
-
-    const updateCountdown = () => {
+    if (!nextPrayer) return;
+    const tick = () => {
       const now = new Date();
-      const [hours, minutes] = nextPrayer.time.split(":").map(Number);
-      const prayerDate = new Date();
-      prayerDate.setHours(hours, minutes, 0, 0);
-
-      if (prayerDate < now) {
-        prayerDate.setDate(prayerDate.getDate() + 1);
-      }
-
-      const diff = prayerDate.getTime() - now.getTime();
-      const h = Math.floor(diff / (1000 * 60 * 60));
-      const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-      const s = Math.floor((diff % (1000 * 60)) / 1000);
-
-      setCountdown({ hours: h, minutes: m, seconds: s });
+      const [h, m] = nextPrayer.time.split(":").map(Number);
+      const d = new Date();
+      d.setHours(h, m, 0, 0);
+      if (d < now) d.setDate(d.getDate() + 1);
+      const diff = d.getTime() - now.getTime();
+      setCountdown({
+        hours: Math.floor(diff / 3600000),
+        minutes: Math.floor((diff % 3600000) / 60000),
+        seconds: Math.floor((diff % 60000) / 1000),
+      });
     };
+    tick();
+    const i = setInterval(tick, 1000);
+    return () => clearInterval(i);
+  }, [nextPrayer]);
 
-    updateCountdown();
-    const interval = setInterval(updateCountdown, 1000);
-    return () => clearInterval(interval);
-  }, [prayerTimes, nextPrayer]);
-
-  const formatNumber = (num: number) => num.toString().padStart(2, "0");
-
-  // Old export functions removed - now using PrayerExportDialog
-
-  const monthNames = [
-    "يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو",
-    "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"
-  ];
-
-  const handlePrevMonth = () => {
-    if (currentMonth === 1) {
-      setCurrentMonth(12);
-      setCurrentYear(currentYear - 1);
-    } else {
-      setCurrentMonth(currentMonth - 1);
-    }
-  };
-
-  const handleNextMonth = () => {
-    if (currentMonth === 12) {
-      setCurrentMonth(1);
-      setCurrentYear(currentYear + 1);
-    } else {
-      setCurrentMonth(currentMonth + 1);
-    }
-  };
-
-  // Prompt location if not set
   useEffect(() => {
-    if (!hasLocation) {
-      setIsLocationModalOpen(true);
-    }
+    if (!hasLocation) setIsLocationModalOpen(true);
   }, [hasLocation]);
 
+  const fmt = (n: number) => n.toString().padStart(2, "0");
+  const monthNames = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
+  const today = new Date();
+  const formatTime = (t?: string) => (t ? t.split(" ")[0] : "--:--");
+
   return (
-    <div className="min-h-screen bg-background pb-24">
-      <Header />
-
-      <main className="container mx-auto px-4 py-6 arabic-ui" dir="rtl">
-        {/* Location header */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-2">
-            <MapPin className="w-5 h-5 text-primary" />
-            <span className="font-bold text-foreground">
-              {settings.city_name || "لم يتم تحديد الموقع"}
-            </span>
+    <div className="min-h-screen bg-background pb-28 arabic-ui" dir="rtl">
+      {/* Hero */}
+      <div className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${mosqueBg})` }} />
+        <div className="absolute inset-0 bg-gradient-to-b from-primary/90 via-primary/85 to-primary" />
+        <div className="relative px-4 pt-6 pb-32">
+          <div className="flex items-center justify-between mb-4">
+            <button onClick={() => navigate(-1)} className="w-10 h-10 rounded-full bg-white/15 backdrop-blur flex items-center justify-center text-white">
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+            <div className="text-center text-white">
+              <h1 className="text-2xl font-bold">مواقيت الصلاة</h1>
+              <button onClick={() => setIsLocationModalOpen(true)} className="flex items-center gap-1 mx-auto mt-1 text-sm opacity-90">
+                <MapPin className="w-3.5 h-3.5" />
+                {settings.city_name || "تحديد الموقع"}
+              </button>
+              <p className="text-xs opacity-75 mt-0.5">التوقيت: GMT{new Date().getTimezoneOffset() <= 0 ? "+" : "-"}{Math.abs(new Date().getTimezoneOffset() / 60)}</p>
+            </div>
+            <button onClick={() => setIsLocationModalOpen(true)} className="w-10 h-10 rounded-full bg-white/15 backdrop-blur flex items-center justify-center text-white">
+              <Settings className="w-5 h-5" />
+            </button>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setIsLocationModalOpen(true)}
-            className="gap-2"
-          >
-            <Settings className="w-4 h-4" />
-            تغيير
-          </Button>
         </div>
+      </div>
 
-        {/* Next Prayer Card with Countdown */}
-        <Card 
-          className={`p-6 mb-6 bg-gradient-to-br from-primary/10 via-primary/5 to-accent/10 border-primary/20 ${!hasLocation ? "cursor-pointer" : ""}`}
-          onClick={() => !hasLocation && setIsLocationModalOpen(true)}
-        >
-          <div className="text-center">
-            <p className="text-sm text-muted-foreground mb-2">الصلاة القادمة</p>
-            {hasLocation && nextPrayer && prayerTimes ? (
-              <>
-                <h2 className="text-3xl font-bold text-primary mb-2">{nextPrayer.name}</h2>
-                <p className="text-xl text-foreground mb-4">{nextPrayer.time}</p>
-
-                {/* Countdown - Hours on left, Seconds on right */}
-                <div className="flex justify-center items-center gap-2">
-                  <p className="text-sm text-muted-foreground">متبقي:</p>
-                  <div className="flex items-center gap-1 text-3xl font-bold text-primary font-mono bg-primary/10 px-4 py-2 rounded-xl" dir="ltr">
-                    <span>{formatNumber(countdown.hours)}</span>
-                    <span className="animate-pulse">:</span>
-                    <span>{formatNumber(countdown.minutes)}</span>
-                    <span className="animate-pulse">:</span>
-                    <span>{formatNumber(countdown.seconds)}</span>
-                  </div>
-                </div>
-              </>
-            ) : (
-              <div className="py-4">
-                <MapPin className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
-                <p className="text-lg text-muted-foreground">--:--</p>
-                <p className="text-sm text-muted-foreground mt-2">اضغط لتحديد موقعك</p>
+      <main className="container mx-auto px-4 -mt-24 relative z-10">
+        {/* Countdown card */}
+        <Card className="rounded-2xl border-0 shadow-2xl bg-gradient-to-br from-primary to-[hsl(216,80%,30%)] text-white p-5">
+          <div className="flex items-center justify-between gap-4">
+            <div className="text-center flex-1">
+              <p className="text-xs opacity-80 mb-2">الصلاة القادمة</p>
+              <h2 className="text-3xl font-bold mb-1">{nextPrayer?.name || "—"}</h2>
+              <p className="text-xs opacity-75">إن شاء الله</p>
+            </div>
+            <div className="w-px h-20 bg-white/20" />
+            <div className="text-center flex-1">
+              <p className="text-xs opacity-80 mb-2">الوقت المتبقي</p>
+              <p className="text-3xl font-bold tabular-nums tracking-wider" dir="ltr">
+                {fmt(countdown.hours)}:{fmt(countdown.minutes)}:{fmt(countdown.seconds)}
+              </p>
+              <div className="flex justify-center gap-4 text-[10px] opacity-75 mt-1" dir="ltr">
+                <span>ساعة</span>
+                <span>دقيقة</span>
+                <span>ثانية</span>
               </div>
-            )}
+            </div>
           </div>
         </Card>
 
-        {/* Today's Prayer Times */}
-        <h3 className="text-xl font-bold text-foreground mb-4">مواقيت اليوم</h3>
-        {isLoading ? (
-          <Card className="p-8 text-center">
-            <Clock className="w-8 h-8 mx-auto text-muted-foreground animate-spin" />
-            <p className="mt-2 text-muted-foreground">جاري تحميل المواقيت...</p>
-          </Card>
-        ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-8">
-            {prayers.map((prayer) => {
-              const Icon = prayer.icon;
-              const isNext = nextPrayer?.key === prayer.key && hasLocation;
-              const timeValue = prayerTimes?.[prayer.key as keyof PrayerTimesData];
+        {/* Today times */}
+        <Card className="rounded-2xl mt-5 p-5 border">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-bold">مواقيت اليوم</h3>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <Calendar className="w-4 h-4 text-primary" />
+              <div className="text-right">
+                {hijriDate && <p>{hijriDate}</p>}
+                <p>الموافق {today.getDate()} {monthNames[today.getMonth()]} {today.getFullYear()} م</p>
+              </div>
+            </div>
+          </div>
+          <div className="grid grid-cols-6 gap-2">
+            {prayers.map((p) => {
+              const Icon = p.icon;
+              const isNext = nextPrayer?.key === p.key;
+              const t = prayerTimes?.[p.key as keyof PrayerTimesData];
               return (
-                <Card
-                  key={prayer.key}
-                  className={`p-4 text-center transition-all ${
-                    isNext
-                      ? "bg-primary/10 border-primary shadow-lg scale-105"
-                      : "hover:shadow-md"
-                  } ${!hasLocation ? "cursor-pointer" : ""}`}
-                  onClick={() => !hasLocation && setIsLocationModalOpen(true)}
+                <div
+                  key={p.key}
+                  className={cn(
+                    "rounded-xl py-3 px-1 text-center transition-all",
+                    isNext ? "bg-primary text-primary-foreground shadow-md" : "bg-muted/40"
+                  )}
                 >
-                  <div
-                    className={`w-12 h-12 mx-auto rounded-full flex items-center justify-center mb-2 ${
-                      isNext ? "bg-primary text-primary-foreground" : "bg-muted"
-                    }`}
-                  >
-                    <Icon className="w-6 h-6" />
-                  </div>
-                  <p className="font-bold text-foreground">{prayer.name}</p>
-                  <p className={`text-lg font-mono ${isNext ? "text-primary" : "text-muted-foreground"}`}>
-                    {hasLocation && timeValue ? timeValue : "--:--"}
-                  </p>
-                </Card>
+                  <Icon className={cn("w-5 h-5 mx-auto mb-1.5", isNext ? "text-white" : "text-primary")} />
+                  <p className={cn("text-xs font-bold mb-1", isNext ? "text-white" : "text-foreground")}>{p.name}</p>
+                  <p className={cn("text-sm font-mono tabular-nums", isNext ? "text-white" : "text-foreground")}>{formatTime(t)}</p>
+                  <p className={cn("text-[10px]", isNext ? "text-white/80" : "text-muted-foreground")}>{p.period}</p>
+                </div>
               );
             })}
           </div>
-        )}
+        </Card>
 
-        {/* Monthly Calendar */}
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xl font-bold text-foreground">التقويم الشهري</h3>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="icon" onClick={handlePrevMonth}>
+        {/* Download monthly */}
+        <Card className="rounded-2xl mt-4 p-5 border">
+          <div className="flex items-center justify-between gap-4 mb-4">
+            <div className="flex-1">
+              <h3 className="font-bold text-foreground mb-1">تنزيل مواقيت الصلاة</h3>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                حمّل جدول مواقيت الصلاة لشهر {monthNames[today.getMonth()]} {today.getFullYear()}م لمدينة {settings.city_name || "—"}
+              </p>
+            </div>
+            <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center shrink-0">
+              <FileText className="w-7 h-7 text-primary" />
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between gap-2 mb-4 text-xs">
+            <Button variant="ghost" size="icon" className="w-8 h-8 rounded-full bg-muted">
               <ChevronRight className="w-4 h-4" />
             </Button>
-            <span className="font-medium min-w-[120px] text-center">
-              {monthNames[currentMonth - 1]} {currentYear}
-            </span>
-            <Button variant="outline" size="icon" onClick={handleNextMonth}>
+            <div className="text-center">
+              <p className="font-bold text-sm">{monthNames[today.getMonth()]} {today.getFullYear()}م</p>
+            </div>
+            <Button variant="ghost" size="icon" className="w-8 h-8 rounded-full bg-muted">
               <ChevronLeft className="w-4 h-4" />
             </Button>
           </div>
-        </div>
 
-        {/* Export button */}
-        <div className="mb-4">
-          <Button variant="outline" onClick={() => setIsExportDialogOpen(true)} className="gap-2">
-            <Download className="w-4 h-4" />
-            تصدير المواقيت
+          <div className="flex flex-wrap items-center justify-between gap-2 mb-4 text-[11px] text-muted-foreground">
+            <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />متوافق مع منطقتك</span>
+            <span className="flex items-center gap-1"><Building2 className="w-3 h-3" />يشمل ٦ صلوات يومياً</span>
+            <span className="flex items-center gap-1"><FileText className="w-3 h-3" />صيغة PDF جاهزة للطباعة</span>
+          </div>
+
+          <Button onClick={() => setIsExportDialogOpen(true)} className="w-full h-12 rounded-xl gap-2 text-base">
+            <Download className="w-5 h-5" />
+            تنزيل جدول الشهر (PDF)
           </Button>
-        </div>
+        </Card>
 
-        {/* Monthly table */}
-        <div ref={calendarRef} className="bg-card rounded-lg overflow-hidden border">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-muted">
-                <tr>
-                  <th className="p-3 text-right">التاريخ</th>
-                  <th className="p-3">الفجر</th>
-                  <th className="p-3">الشروق</th>
-                  <th className="p-3">الظهر</th>
-                  <th className="p-3">العصر</th>
-                  <th className="p-3">المغرب</th>
-                  <th className="p-3">العشاء</th>
-                </tr>
-              </thead>
-              <tbody>
-                {monthlyTimes?.map((day, index) => (
-                  <tr key={index} className="border-t border-border hover:bg-muted/50">
-                    <td className="p-3 text-right">
-                      <span className="font-medium">{day.date.gregorian.day}</span>
-                      <span className="text-xs text-muted-foreground mr-2">
-                        ({day.date.hijri.day} {day.date.hijri.month.ar})
-                      </span>
-                    </td>
-                    <td className="p-3 text-center font-mono">{day.timings.Fajr.split(" ")[0]}</td>
-                    <td className="p-3 text-center font-mono">{day.timings.Sunrise.split(" ")[0]}</td>
-                    <td className="p-3 text-center font-mono">{day.timings.Dhuhr.split(" ")[0]}</td>
-                    <td className="p-3 text-center font-mono">{day.timings.Asr.split(" ")[0]}</td>
-                    <td className="p-3 text-center font-mono">{day.timings.Maghrib.split(" ")[0]}</td>
-                    <td className="p-3 text-center font-mono">{day.timings.Isha.split(" ")[0]}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Watermark for image export */}
-          <div className="p-4 text-center bg-gradient-to-r from-primary/10 to-accent/10 border-t">
-            <p className="text-primary font-bold">نور الفرقان</p>
-            <p className="text-xs text-muted-foreground">تطبيق لقراءة القرآن الكريم</p>
-          </div>
-        </div>
+        <p className="text-center text-xs text-muted-foreground mt-4 px-2">
+          تتغير المواقيت تلقائياً حسب موقعك الجغرافي • آخر تحديث: {new Date().toLocaleTimeString("ar", { hour: "2-digit", minute: "2-digit" })}
+        </p>
       </main>
 
       <LocationPickerModal open={isLocationModalOpen} onOpenChange={setIsLocationModalOpen} />
       <PrayerExportDialog
         open={isExportDialogOpen}
         onOpenChange={setIsExportDialogOpen}
-        currentMonth={currentMonth}
-        currentYear={currentYear}
+        currentMonth={today.getMonth() + 1}
+        currentYear={today.getFullYear()}
         defaultLat={lat}
         defaultLng={lng}
         defaultCityName={settings.city_name || undefined}
