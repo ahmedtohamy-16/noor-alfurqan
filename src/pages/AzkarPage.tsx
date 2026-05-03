@@ -442,7 +442,7 @@ const AzkarPage = () => {
         <div className="relative overflow-hidden">
           <div
             className="absolute inset-0 bg-cover bg-center"
-            style={{ backgroundImage: "url(/src/assets/mosque-night-hero.jpg)" }}
+            style={{ backgroundImage: `url(${mosqueBg})` }}
           />
           <div className="absolute inset-0 bg-gradient-to-b from-primary/95 via-primary/85 to-primary" />
           <div className="relative px-4 pt-6 pb-20 arabic-ui" dir="rtl">
