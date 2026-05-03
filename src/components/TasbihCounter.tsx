@@ -1,19 +1,13 @@
 import { useState } from "react";
-import { RotateCcw, Save, ChevronDown } from "lucide-react";
+import { RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { useTasbih } from "@/hooks/useTasbih";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import tasbihBeads from "@/assets/tasbih-beads.png";
 
 const TasbihCounter = () => {
-  const { count, currentDhikr, increment, reset, saveSession, changeDhikr, dhikrOptions } = useTasbih();
+  const { count, increment, reset, saveSession } = useTasbih();
   const [isPressed, setIsPressed] = useState(false);
 
   const convertToArabicNumber = (num: number): string => {
@@ -25,83 +19,51 @@ const TasbihCounter = () => {
     increment();
     setIsPressed(true);
     setTimeout(() => setIsPressed(false), 100);
-  };
-
-  const handleSave = () => {
-    if (count > 0) {
-      saveSession();
-      toast.success(`تم حفظ ${convertToArabicNumber(count)} تسبيحة`);
+    if (count > 0 && (count + 1) % 33 === 0) {
+      toast.success(`✨ ${convertToArabicNumber((count + 1) / 33)} × ٣٣`);
     }
   };
 
   const handleReset = () => {
+    if (count > 0) saveSession();
     reset();
-    toast.info("تم إعادة العداد");
   };
 
   return (
-    <Card className="p-6 arabic-ui">
-      <div className="flex flex-col items-center">
-        {/* Dhikr Selector */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="text-xl font-bold mb-4 gap-2">
-              {currentDhikr}
-              <ChevronDown className="w-4 h-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="arabic-ui">
-            {dhikrOptions.map((dhikr) => (
-              <DropdownMenuItem
-                key={dhikr}
-                onClick={() => changeDhikr(dhikr)}
-                className={cn(
-                  "text-lg cursor-pointer",
-                  currentDhikr === dhikr && "bg-primary/10 text-primary"
-                )}
-              >
-                {dhikr}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-
-        {/* Counter Button */}
-        <button
-          onClick={handleClick}
-          className={cn(
-            "w-48 h-48 rounded-full bg-gradient-to-br from-primary to-primary/80 text-primary-foreground flex items-center justify-center shadow-2xl transition-all duration-150 select-none",
-            isPressed ? "scale-95 shadow-lg" : "scale-100 hover:scale-[1.02] active:scale-95"
-          )}
-        >
-          <span className="text-6xl font-bold">{convertToArabicNumber(count)}</span>
-        </button>
-
-        {/* Milestone indicator */}
-        {count > 0 && count % 33 === 0 && (
-          <p className="text-primary text-sm mt-2 animate-pulse">
-            ✨ {convertToArabicNumber(count / 33)} × ٣٣
-          </p>
+    <div className="relative arabic-ui">
+      <button
+        onClick={handleClick}
+        className={cn(
+          "relative w-full aspect-square max-w-sm mx-auto flex items-center justify-center select-none transition-transform duration-150",
+          isPressed ? "scale-[0.98]" : "active:scale-[0.98]"
         )}
-
-        {/* Action Buttons */}
-        <div className="flex gap-3 mt-6">
-          <Button variant="outline" size="lg" onClick={handleReset} className="gap-2">
-            <RotateCcw className="w-4 h-4" />
-            إعادة
-          </Button>
-          <Button size="lg" onClick={handleSave} className="gap-2" disabled={count === 0}>
-            <Save className="w-4 h-4" />
-            حفظ
-          </Button>
+        aria-label="عدّاد التسبيح"
+      >
+        <img
+          src={tasbihBeads}
+          alt=""
+          className="absolute inset-0 w-full h-full object-contain pointer-events-none drop-shadow-2xl"
+          loading="lazy"
+        />
+        <div className="relative z-10 flex flex-col items-center justify-center -mt-6">
+          <span className="text-7xl md:text-8xl font-bold text-foreground tabular-nums">
+            {convertToArabicNumber(count)}
+          </span>
+          <span className="text-sm text-muted-foreground mt-1">سبحة</span>
         </div>
+      </button>
 
-        {/* Quick info */}
-        <p className="text-sm text-muted-foreground mt-4">
-          اضغط على الدائرة للتسبيح
-        </p>
+      <div className="flex items-center justify-center mt-4">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={handleReset}
+          className="w-12 h-12 rounded-full bg-card border shadow-sm"
+        >
+          <RotateCcw className="w-5 h-5" />
+        </Button>
       </div>
-    </Card>
+    </div>
   );
 };
 
