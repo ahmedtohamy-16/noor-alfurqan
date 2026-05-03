@@ -428,74 +428,126 @@ const AzkarPage = () => {
 
   // Category List View
   if (!selectedCategory) {
-    return (
-      <div className="min-h-screen bg-background pb-20">
-        <Header />
+    const totalAdhkar = categories.reduce((s, c) => s + c.array.length, 0);
+    const completedKeys = Object.values(progress).filter((v, i) => v > 0).length;
+    const overallPct = Math.min(100, Math.round((completedKeys / Math.max(1, totalAdhkar)) * 100));
+    const featured = categories.slice(0, 10);
+    const arabic = (n: number) => n.toString().split("").map((d) => "٠١٢٣٤٥٦٧٨٩"[parseInt(d)] ?? d).join("");
 
-        <main className="container mx-auto px-4 py-6 arabic-ui">
-          <div className="flex items-center gap-4 mb-6">
-            <Link to="/">
-              <Button variant="ghost" size="icon">
-                <ArrowRight className="w-5 h-5" />
-              </Button>
-            </Link>
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">الأذكار والأدعية</h1>
-              <p className="text-muted-foreground text-sm">حصن المسلم - {categories.length} قسم</p>
+    return (
+      <div className="min-h-screen bg-background pb-24">
+        {/* Hero */}
+        <div className="relative overflow-hidden">
+          <div
+            className="absolute inset-0 bg-cover bg-center"
+            style={{ backgroundImage: "url(/src/assets/mosque-night-hero.jpg)" }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-primary/95 via-primary/85 to-primary" />
+          <div className="relative px-4 pt-6 pb-20 arabic-ui" dir="rtl">
+            <div className="flex items-center justify-between mb-4">
+              <button
+                onClick={toggleMorningReminder}
+                className="w-10 h-10 rounded-full bg-white/15 backdrop-blur flex items-center justify-center text-white"
+                aria-label="تذكير"
+              >
+                {morningReminderEnabled ? <Bell className="w-5 h-5" /> : <BellOff className="w-5 h-5" />}
+              </button>
+              <div className="text-center text-white">
+                <h1 className="text-3xl font-bold">الأذكار</h1>
+                <p className="text-sm opacity-90 mt-1">ذكر الله يطمئن القلب</p>
+              </div>
+              <Link
+                to="/notification-settings"
+                className="w-10 h-10 rounded-full bg-white/15 backdrop-blur flex items-center justify-center text-white"
+              >
+                <Settings className="w-5 h-5" />
+              </Link>
+            </div>
+
+            <div className="relative">
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="ابحث في الأذكار والأدعية والآداب..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pr-10 h-12 bg-white text-foreground rounded-2xl border-0 shadow-lg"
+              />
             </div>
           </div>
+        </div>
 
-          {/* Search Bar */}
-          <div className="relative mb-4">
-            <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder="ابحث في الأذكار..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pr-10"
-            />
-            {searchQuery && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="absolute left-1 top-1/2 transform -translate-y-1/2 h-8 w-8"
-                onClick={() => setSearchQuery("")}
+        <main className="container mx-auto px-4 -mt-12 relative z-10 arabic-ui" dir="rtl">
+          {/* Filter chips */}
+          <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
+            {[
+              { id: "fav", label: "المفضلة", icon: "⭐" },
+              { id: "recent", label: "الأخير", icon: "🕐" },
+              { id: "today", label: "اليوم", icon: "📅", active: true },
+              { id: "groups", label: "المجموعات", icon: "▥" },
+              { id: "advanced", label: "بحث متقدم", icon: "≡" },
+            ].map((c) => (
+              <button
+                key={c.id}
+                className={cn(
+                  "shrink-0 px-4 py-2 rounded-full text-sm font-medium border whitespace-nowrap transition-all",
+                  c.active
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "bg-card border-border text-foreground"
+                )}
               >
-                <X className="w-4 h-4" />
-              </Button>
-            )}
+                <span className="ml-1">{c.label}</span>
+                <span className="opacity-70">{c.icon}</span>
+              </button>
+            ))}
           </div>
 
-          {/* Quick Actions */}
-          <div className="flex flex-wrap gap-2 mb-4">
-            <Link to="/ruqyah">
-              <Button variant="outline" size="sm" className="gap-2">
-                <Shield className="w-4 h-4" />
-                الرقية الشرعية
-              </Button>
-            </Link>
-            <Button variant="outline" size="sm" className="gap-2" onClick={downloadAllAzkar}>
-              <Download className="w-4 h-4" />
-              تحميل الكل
-            </Button>
-            <Button
-              variant={morningReminderEnabled ? "default" : "outline"}
-              size="sm"
-              className="gap-2"
-              onClick={toggleMorningReminder}
-            >
-              {morningReminderEnabled ? <Bell className="w-4 h-4" /> : <BellOff className="w-4 h-4" />}
-              تذكير الصباح
-            </Button>
-            <Button
-              variant={eveningReminderEnabled ? "default" : "outline"}
-              size="sm"
-              className="gap-2"
-              onClick={toggleEveningReminder}
-            >
-              {eveningReminderEnabled ? <Bell className="w-4 h-4" /> : <BellOff className="w-4 h-4" />}
-              تذكير المساء
-            </Button>
+          {/* Progress card */}
+          <Card className="mt-3 p-5 rounded-2xl">
+            <div className="flex items-center gap-4">
+              <div className="text-right flex-1">
+                <p className="text-xs text-muted-foreground mb-1">الذكر التالي</p>
+                <h3 className="text-xl font-bold text-foreground">أذكار الصباح</h3>
+                <p className="text-xs text-muted-foreground mt-1">من {arabic(categories[0]?.array.length || 0)} ذكر</p>
+                <Button
+                  size="sm"
+                  className="mt-3 rounded-full gap-1"
+                  onClick={() => {
+                    setSelectedCategory(categories[0]);
+                    setCurrentIndex(0);
+                  }}
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  متابعة
+                </Button>
+              </div>
+              <div className="relative w-20 h-20 shrink-0">
+                <svg className="w-20 h-20 -rotate-90" viewBox="0 0 80 80">
+                  <circle cx="40" cy="40" r="34" stroke="hsl(var(--muted))" strokeWidth="6" fill="none" />
+                  <circle
+                    cx="40" cy="40" r="34"
+                    stroke="hsl(var(--primary))"
+                    strokeWidth="6"
+                    fill="none"
+                    strokeLinecap="round"
+                    strokeDasharray={`${(overallPct / 100) * 213.6} 213.6`}
+                  />
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="text-base font-bold text-primary">{arabic(overallPct)}%</span>
+                  <span className="text-[9px] text-muted-foreground">اليوم</span>
+                </div>
+              </div>
+              <div className="text-left">
+                <p className="font-quran text-base text-foreground leading-snug">فَاذْكُرُونِي أَذْكُرْكُمْ</p>
+                <p className="text-xs text-muted-foreground mt-1">البقرة: ١٥٢</p>
+              </div>
+            </div>
+          </Card>
+
+          {/* Categories grid header */}
+          <div className="flex items-center justify-between mt-6 mb-3">
+            <h3 className="font-bold text-foreground">أقسام الأذكار الرئيسية</h3>
+            <button className="text-xs text-primary">عرض الكل ›</button>
           </div>
 
           {filteredCategories.length === 0 ? (
@@ -503,57 +555,84 @@ const AzkarPage = () => {
               <p className="text-muted-foreground">لا توجد نتائج للبحث</p>
             </Card>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {filteredCategories.map((category) => {
-                const categoryProgress = getCategoryProgress(category);
+            <div className="grid grid-cols-3 sm:grid-cols-5 gap-2.5">
+              {featured.map((category, i) => {
+                const colors = [
+                  "bg-amber-100 dark:bg-amber-950/40 text-amber-600",
+                  "bg-blue-100 dark:bg-blue-950/40 text-blue-600",
+                  "bg-emerald-100 dark:bg-emerald-950/40 text-emerald-600",
+                  "bg-indigo-100 dark:bg-indigo-950/40 text-indigo-600",
+                  "bg-rose-100 dark:bg-rose-950/40 text-rose-600",
+                  "bg-green-100 dark:bg-green-950/40 text-green-600",
+                  "bg-sky-100 dark:bg-sky-950/40 text-sky-600",
+                  "bg-pink-100 dark:bg-pink-950/40 text-pink-600",
+                  "bg-orange-100 dark:bg-orange-950/40 text-orange-600",
+                  "bg-purple-100 dark:bg-purple-950/40 text-purple-600",
+                ];
                 return (
                   <Card
                     key={category.id}
-                    className="p-4 cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02] group"
+                    className="p-3 cursor-pointer hover:shadow-lg transition-all rounded-2xl"
                     onClick={() => {
                       setSelectedCategory(category);
                       setCurrentIndex(0);
                     }}
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-bold text-foreground text-sm truncate">{category.category}</h3>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {category.array.length} ذكر
-                        </p>
-                        {categoryProgress.total > 0 && (
-                          <div className="mt-2">
-                            <Progress value={categoryProgress.percentage} className="h-1" />
-                          </div>
-                        )}
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="shrink-0"
-                        onClick={(e) => downloadCategoryAudio(category, e)}
-                      >
-                        <Download className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="shrink-0"
-                        onClick={(e) => toggleCategoryAudio(category, e)}
-                      >
-                        {isCategoryAudioPlaying ? (
-                          <VolumeX className="w-4 h-4" />
-                        ) : (
-                          <Volume2 className="w-4 h-4" />
-                        )}
-                      </Button>
-                      <ChevronLeft className="w-5 h-5 text-muted-foreground shrink-0" />
+                    <div className={cn("w-12 h-12 rounded-xl mx-auto mb-2 flex items-center justify-center", colors[i % colors.length])}>
+                      <Bell className="w-6 h-6" />
                     </div>
+                    <h3 className="font-bold text-foreground text-xs text-center leading-tight line-clamp-2 min-h-[2rem]">
+                      {category.category}
+                    </h3>
+                    <p className="text-[10px] text-muted-foreground text-center mt-1">
+                      {arabic(category.array.length)} ذكر
+                    </p>
                   </Card>
                 );
               })}
             </div>
           )}
+
+          {/* All categories list */}
+          <Card className="mt-6 p-4 rounded-2xl">
+            <div className="flex items-center justify-between mb-3">
+              <button className="text-xs text-primary">عرض جميع الأقسام</button>
+              <h4 className="font-bold text-sm text-foreground">كل الأقسام ({arabic(categories.length)})</h4>
+            </div>
+            <div className="space-y-1">
+              {categories.slice(0, 5).map((cat) => (
+                <button
+                  key={cat.id}
+                  onClick={() => { setSelectedCategory(cat); setCurrentIndex(0); }}
+                  className="w-full flex items-center justify-between py-2.5 px-2 hover:bg-muted/50 rounded-lg transition-colors"
+                >
+                  <ChevronLeft className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-xs text-muted-foreground">{arabic(cat.array.length)}</span>
+                  <span className="flex-1 text-right text-sm font-medium text-foreground mr-3">{cat.category}</span>
+                </button>
+              ))}
+            </div>
+          </Card>
+
+          {/* Bottom actions */}
+          <div className="grid grid-cols-5 gap-2 mt-5">
+            {[
+              { icon: Download, label: "تنزيل الأذكار", action: downloadAllAzkar },
+              { icon: Share2, label: "مشاركة تطبيق", action: () => navigator.share?.({ url: window.location.origin }) },
+              { icon: Volume2, label: "أذكار الصوت", action: () => {} },
+              { icon: ChevronLeft, label: "عداد التسبيح", action: () => {} },
+              { icon: Bell, label: "ذكر عشوائي", action: () => {} },
+            ].map((b, i) => (
+              <button
+                key={i}
+                onClick={b.action}
+                className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-card border hover:bg-muted/50 transition-colors"
+              >
+                <b.icon className="w-5 h-5 text-primary" />
+                <span className="text-[10px] text-foreground text-center leading-tight">{b.label}</span>
+              </button>
+            ))}
+          </div>
         </main>
       </div>
     );
