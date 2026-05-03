@@ -14,6 +14,7 @@ import { useDownloadManager } from "@/components/DownloadManager";
 import { useNotifications } from "@/hooks/useNotifications";
 
 const AUDIO_BASE_URL = "https://raw.githubusercontent.com/rn0x/Adhkar-json/main";
+import mosqueBg from "@/assets/mosque-night-hero.jpg";
 
 interface DhikrItem {
   id: number;
