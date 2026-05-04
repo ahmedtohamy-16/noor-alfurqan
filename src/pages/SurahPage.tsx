@@ -276,20 +276,50 @@ const SurahPage = () => {
           </Sheet>
         </div>
 
-        <div className="bg-gradient-to-br from-primary/10 to-accent/10 rounded-2xl p-6 mb-8 text-center">
-          <div className="flex flex-wrap items-center justify-center gap-3 mb-4">
-            <div className="inline-flex items-center gap-2 bg-background/80 backdrop-blur-sm px-4 py-2 rounded-full">
-              <BookOpen className="w-4 h-4 text-primary" />
-              <span className="text-sm text-muted-foreground">{surahInfo?.revelationType === "Meccan" ? "سورة مكية" : "سورة مدنية"}</span>
+        {/* Juz / Hizb / Page markers */}
+        {localAyahs && localAyahs.length > 0 && (
+          <div className="grid grid-cols-3 gap-2 mb-4">
+            <div className="rounded-xl bg-primary/10 border border-primary/20 px-3 py-2 text-center">
+              <div className="text-[10px] text-muted-foreground">الجزء</div>
+              <div className="text-base font-bold text-primary">{convertToArabicNumber(localAyahs[0].juz_number)}</div>
             </div>
-            <Button 
+            <div className="rounded-xl bg-accent/10 border border-accent/20 px-3 py-2 text-center">
+              <div className="text-[10px] text-muted-foreground">الحزب</div>
+              <div className="text-base font-bold text-accent-foreground">{convertToArabicNumber(localAyahs[0].hizb_number)}</div>
+            </div>
+            <div className="rounded-xl bg-muted/60 border border-border px-3 py-2 text-center">
+              <div className="text-[10px] text-muted-foreground">الصفحة</div>
+              <div className="text-base font-bold text-foreground">{convertToArabicNumber(localAyahs[0].page_number)}</div>
+            </div>
+          </div>
+        )}
+
+        {/* Listen to full surah - prominent card */}
+        <div className="relative overflow-hidden rounded-2xl mb-6 bg-gradient-to-br from-primary to-primary/80 text-primary-foreground p-5 shadow-lg">
+          <div className="absolute -right-8 -top-8 w-32 h-32 rounded-full bg-white/10 blur-2xl" />
+          <div className="absolute -left-8 -bottom-8 w-32 h-32 rounded-full bg-white/10 blur-2xl" />
+          <div className="relative flex items-center gap-4">
+            <button
               onClick={playSurahFromStart}
-              className="gap-2 rounded-full"
-              size="sm"
+              className="w-14 h-14 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center active:scale-95 transition-transform shrink-0 hover:bg-white/30"
+              aria-label="استمع للسورة كاملة"
             >
-              <Headphones className="w-4 h-4" />
-              استمع للسورة كاملة
-            </Button>
+              <Headphones className="w-7 h-7" />
+            </button>
+            <div className="flex-1 min-w-0 text-right">
+              <div className="text-sm opacity-90">استماع للسورة كاملة</div>
+              <div className="text-lg font-bold truncate">{surahInfo?.name}</div>
+              <div className="text-xs opacity-80 mt-0.5">
+                {convertToArabicNumber(surahInfo?.numberOfAyahs || 0)} آية • {surahInfo?.revelationType === "Meccan" ? "مكية" : "مدنية"}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-gradient-to-br from-primary/10 to-accent/10 rounded-2xl p-6 mb-8 text-center">
+          <div className="inline-flex items-center gap-2 bg-background/80 backdrop-blur-sm px-4 py-2 rounded-full mb-4">
+            <BookOpen className="w-4 h-4 text-primary" />
+            <span className="text-sm text-muted-foreground">{surahInfo?.revelationType === "Meccan" ? "سورة مكية" : "سورة مدنية"}</span>
           </div>
           {surahNumber !== "9" && surahNumber !== "1" && (
             <p className="text-2xl md:text-3xl font-quran text-foreground">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</p>
