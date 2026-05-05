@@ -10,7 +10,6 @@ import {
   Compass,
   CircleDot,
   Sparkles,
-  Plus,
   MoreHorizontal,
   PenLine,
 } from "lucide-react";
