@@ -135,7 +135,7 @@ const IslamicHome = ({ lastRead }: { lastRead: any }) => {
 
       {/* Services Grid 4x2 */}
       <section>
-        <h2 className="text-base font-bold text-foreground mb-3 text-center">Islamic Services</h2>
+        <h2 className="text-base font-bold text-foreground mb-3 text-center arabic-ui">الخدمات الإسلامية</h2>
         <div className="grid grid-cols-4 gap-3">
           {services.map((s) => (
             <Link key={s.title} to={s.link}>
