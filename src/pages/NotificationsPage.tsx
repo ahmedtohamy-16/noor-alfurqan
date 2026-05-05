@@ -205,9 +205,9 @@ const NotificationsPage = () => {
         {/* Tabs (All / Social / Islamic) */}
         <div className="flex items-center gap-2 mb-5 overflow-x-auto scrollbar-none">
           {([
-            { key: "all", label: "All" },
-            { key: "social", label: "Social" },
-            { key: "islamic", label: "Islamic" },
+            { key: "all", label: "الكل" },
+            { key: "social", label: "اجتماعي" },
+            { key: "islamic", label: "إسلامي" },
           ] as { key: FilterTab; label: string }[]).map((t) => (
             <button
               key={t.key}

@@ -234,10 +234,13 @@ const ExplorePage = () => {
                 <Loader2 className="w-5 h-5 animate-spin text-primary" />
               </div>
             ) : visiblePosts.length === 0 ? (
-              <Card className="p-6 text-center">
-                <Inbox className="w-10 h-10 mx-auto text-muted-foreground/50 mb-2" />
+              <Card className="p-8 text-center">
+                <Inbox className="w-12 h-12 mx-auto text-muted-foreground/50 mb-3" />
+                <h3 className="font-bold text-foreground mb-1">
+                  {isSearching ? "لا توجد نتائج" : "لا توجد منشورات"}
+                </h3>
                 <p className="text-sm text-muted-foreground">
-                  {isSearching ? "لا يوجد منشورات تطابق بحثك" : "لا يوجد منشورات حتى الآن"}
+                  {isSearching ? "جرّب كلمات بحث مختلفة" : "لم يقم أحد بنشر شيء بعد"}
                 </p>
               </Card>
             ) : (
