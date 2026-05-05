@@ -75,12 +75,20 @@ const Header = () => {
                 <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-secondary" />
               </button>
 
-              {/* Greeting (center) */}
+              {/* Center: greeting (first 3 min for registered users) OR app name */}
               <div className="text-center flex-1 px-2">
-                <p className="text-sm font-bold text-foreground arabic-ui truncate">
-                  السلام عليكم، {displayName}
-                </p>
-                <p className="text-[11px] text-muted-foreground">{greeting.en}</p>
+                {showGreeting && user && displayName ? (
+                  <>
+                    <p className="text-sm font-bold text-foreground arabic-ui truncate">
+                      السلام عليكم، {displayName}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground arabic-ui">{greeting}</p>
+                  </>
+                ) : (
+                  <h1 className="font-arabic font-bold text-lg text-foreground truncate">
+                    نور الفرقان
+                  </h1>
+                )}
               </div>
 
               {/* Menu */}
