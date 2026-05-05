@@ -64,7 +64,7 @@ const Index = () => {
 };
 
 const ModeToggle = ({ mode, setMode }: { mode: HomeMode; setMode: (m: HomeMode) => void }) => (
-  <div className="grid grid-cols-2 bg-muted/60 rounded-2xl p-1 mb-5">
+  <div className="grid grid-cols-2 bg-muted/60 rounded-2xl p-1 mb-5 arabic-ui">
     <button
       type="button"
       onClick={() => setMode("islamic")}
@@ -75,7 +75,7 @@ const ModeToggle = ({ mode, setMode }: { mode: HomeMode; setMode: (m: HomeMode) 
           : "text-muted-foreground"
       )}
     >
-      Islamic
+      إسلامي
     </button>
     <button
       type="button"
@@ -87,7 +87,7 @@ const ModeToggle = ({ mode, setMode }: { mode: HomeMode; setMode: (m: HomeMode) 
           : "text-muted-foreground"
       )}
     >
-      Social
+      اجتماعي
     </button>
   </div>
 );
