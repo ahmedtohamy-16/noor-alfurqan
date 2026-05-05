@@ -5,33 +5,48 @@ import { useEffect, useState } from "react";
 import ThemeToggle from "./ThemeToggle";
 import { useAuth } from "@/hooks/useAuth";
 import HeaderLocationButton from "./HeaderLocationButton";
-import { getGuestDisplayName, getOrCreateGuestId } from "@/services/guestIdentityService";
 
 const getGreeting = () => {
   const h = new Date().getHours();
-  if (h >= 4 && h < 12) return { en: "Good Morning!", ar: "صباح الخير" };
-  if (h >= 12 && h < 17) return { en: "Good Afternoon!", ar: "نهارك سعيد" };
-  if (h >= 17 && h < 21) return { en: "Good Evening!", ar: "مساء الخير" };
-  return { en: "Peaceful Night", ar: "ليلة هانئة" };
+  if (h >= 4 && h < 12) return "صباح الخير";
+  if (h >= 12 && h < 17) return "نهارك سعيد";
+  if (h >= 17 && h < 21) return "مساء الخير";
+  return "ليلة هانئة";
 };
+
+const GREETING_KEY = "noor:appStartTs";
+const GREETING_DURATION_MS = 3 * 60 * 1000; // 3 minutes
 
 const Header = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { user } = useAuth();
-  const [guestName, setGuestName] = useState<string>("");
+  const { user, userProfile } = useAuth();
+  const [showGreeting, setShowGreeting] = useState(true);
 
+  // Track app-start time for the 3-minute greeting window
   useEffect(() => {
-    if (!user) {
-      getOrCreateGuestId();
-      setGuestName(getGuestDisplayName());
+    let start = Number(sessionStorage.getItem(GREETING_KEY) || 0);
+    if (!start) {
+      start = Date.now();
+      sessionStorage.setItem(GREETING_KEY, String(start));
     }
-  }, [user]);
+    const elapsed = Date.now() - start;
+    if (elapsed >= GREETING_DURATION_MS) {
+      setShowGreeting(false);
+      return;
+    }
+    const t = setTimeout(() => setShowGreeting(false), GREETING_DURATION_MS - elapsed);
+    return () => clearTimeout(t);
+  }, []);
 
   const isHome = location.pathname === "/";
   const greeting = getGreeting();
-  const displayName = user?.displayName?.split(" ")[0] || guestName || "ضيف";
+  // Use full registered display name (no split). Guests get no salam at all.
+  const displayName =
+    (userProfile as any)?.display_name ||
+    user?.displayName ||
+    "";
 
   const navLinks = [
     { path: "/", label: "الرئيسية", icon: Book },
