@@ -183,37 +183,7 @@ const SocialHome = () => {
   const goCreate = () => (user ? navigate("/create-post") : navigate("/auth"));
 
   return (
-    <div className="space-y-5 animate-[fade-in_0.3s_ease-out]">
-      {/* Stories strip */}
-      <section>
-        <div className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-none -mx-1 px-1">
-          <button
-            onClick={goCreate}
-            className="flex flex-col items-center gap-1.5 shrink-0 group"
-          >
-            <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center border-2 border-dashed border-primary/40 group-hover:border-primary transition-colors relative">
-              <Plus className="w-6 h-6 text-primary" />
-            </div>
-            <span className="text-xs text-muted-foreground">Your Story</span>
-          </button>
-          {["Ahmed", "Sara", "Mohammed", "Yousef", "Nour"].map((name, i) => (
-            <button key={name} className="flex flex-col items-center gap-1.5 shrink-0">
-              <div className={cn(
-                "w-16 h-16 rounded-full p-[2.5px]",
-                i % 2 === 0
-                  ? "bg-gradient-to-br from-primary via-secondary to-primary"
-                  : "bg-gradient-to-br from-amber-400 via-rose-500 to-primary"
-              )}>
-                <div className="w-full h-full rounded-full bg-card flex items-center justify-center text-base font-bold text-foreground">
-                  {name[0]}
-                </div>
-              </div>
-              <span className="text-xs text-muted-foreground">{name}</span>
-            </button>
-          ))}
-        </div>
-      </section>
-
+    <div className="space-y-5 animate-[fade-in_0.3s_ease-out] arabic-ui">
       {/* Quick post composer trigger */}
       <Card
         className="p-3 cursor-pointer hover:bg-muted/30 transition-colors"
@@ -221,12 +191,12 @@ const SocialHome = () => {
       >
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold">
-            {(user?.displayName || "ض")[0]}
+            {((user as any)?.displayName || "ض")[0]}
           </div>
           <div className="flex-1 text-right text-muted-foreground text-sm">
             شارك خاطرة، آية، أو صورة...
           </div>
-          <Button size="icon" className="rounded-full">
+          <Button size="icon" className="rounded-full" aria-label="إنشاء منشور">
             <PenLine className="w-4 h-4" />
           </Button>
         </div>
@@ -236,9 +206,9 @@ const SocialHome = () => {
       <section>
         <div className="flex items-center justify-between mb-3">
           <Link to="/feed" className="text-xs text-primary hover:underline font-medium">
-            See all →
+            عرض الكل ←
           </Link>
-          <h2 className="text-base font-bold text-foreground">Latest Posts</h2>
+          <h2 className="text-base font-bold text-foreground">أحدث المنشورات</h2>
         </div>
 
         {loading ? (
@@ -270,10 +240,14 @@ const SocialHome = () => {
             </div>
           </div>
         ) : (
-          <Card className="p-6 text-center">
-            <Users className="w-10 h-10 text-muted-foreground mx-auto mb-2 opacity-50" />
-            <p className="text-sm text-muted-foreground mb-3">لا توجد منشورات بعد. كن أول من ينشر!</p>
-            <Button size="sm" onClick={goCreate}>ابدأ الآن</Button>
+          <Card className="p-8 text-center">
+            <Users className="w-12 h-12 text-muted-foreground mx-auto mb-3 opacity-50" />
+            <h3 className="font-bold text-foreground mb-1">لا توجد منشورات بعد</h3>
+            <p className="text-sm text-muted-foreground mb-4">كن أول من يشارك خاطرة أو آية مع المجتمع</p>
+            <Button size="sm" onClick={goCreate} className="gap-1">
+              <PenLine className="w-4 h-4" />
+              ابدأ منشورك الأول
+            </Button>
           </Card>
         )}
       </section>
