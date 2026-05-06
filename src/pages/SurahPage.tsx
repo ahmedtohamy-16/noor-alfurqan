@@ -123,7 +123,43 @@ const SurahPage = () => {
     }
   }, [surah?.number]); // Only trigger on surah change
 
-  // Scroll to highlighted ayah from favorites
+  // Persist audio listening progress per surah (localStorage)
+  const audioProgressKey = surah ? `noor:audioProgress:${surah.number}` : null;
+
+  useEffect(() => {
+    if (!audioProgressKey) return;
+    if (
+      globalAudio.currentSurah?.number === surah?.number &&
+      globalAudio.currentAyahIndex >= 0
+    ) {
+      try {
+        localStorage.setItem(
+          audioProgressKey,
+          JSON.stringify({
+            ayahIndex: globalAudio.currentAyahIndex,
+            updatedAt: Date.now(),
+          }),
+        );
+      } catch {}
+    }
+  }, [globalAudio.currentAyahIndex, globalAudio.currentSurah?.number, surah?.number, audioProgressKey]);
+
+  // Restore last listened ayah on mount of this surah
+  const [resumeIndex, setResumeIndex] = useState<number | null>(null);
+  useEffect(() => {
+    if (!audioProgressKey || !surah) return;
+    try {
+      const raw = localStorage.getItem(audioProgressKey);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (typeof parsed?.ayahIndex === "number" && parsed.ayahIndex > 0) {
+          setResumeIndex(parsed.ayahIndex);
+        }
+      }
+    } catch {}
+  }, [audioProgressKey, surah?.number]);
+
+  // Scroll to highlighted ayah from favorites/verse-of-the-day
   useEffect(() => {
     if (highlightAyah && surah) {
       const ayahNum = parseInt(highlightAyah);
