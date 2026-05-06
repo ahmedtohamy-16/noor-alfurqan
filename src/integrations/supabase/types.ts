@@ -128,6 +128,27 @@ export type Database = {
         }
         Relationships: []
       }
+      asma_favorites: {
+        Row: {
+          asma_number: number
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          asma_number: number
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          asma_number?: number
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       audio_generation_log: {
         Row: {
           created_at: string | null
