@@ -352,6 +352,39 @@ const SurahPage = () => {
           </div>
         </div>
 
+        {/* Resume listening banner */}
+        {resumeIndex !== null && surah && globalAudio.currentSurah?.number !== surah.number && (
+          <div className="mb-6 rounded-xl border border-primary/30 bg-primary/5 p-3 flex items-center justify-between gap-3">
+            <div className="text-right text-sm">
+              <div className="font-semibold text-foreground">متابعة الاستماع</div>
+              <div className="text-xs text-muted-foreground">
+                توقفت عند الآية {convertToArabicNumber(surah.ayahs[resumeIndex]?.numberInSurah || resumeIndex + 1)}
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => {
+                  if (audioProgressKey) localStorage.removeItem(audioProgressKey);
+                  setResumeIndex(null);
+                }}
+              >
+                إلغاء
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => {
+                  playSpecificAyah(resumeIndex);
+                  setResumeIndex(null);
+                }}
+              >
+                متابعة
+              </Button>
+            </div>
+          </div>
+        )}
+
         <div className="bg-gradient-to-br from-primary/10 to-accent/10 rounded-2xl p-6 mb-8 text-center">
           <div className="inline-flex items-center gap-2 bg-background/80 backdrop-blur-sm px-4 py-2 rounded-full mb-4">
             <BookOpen className="w-4 h-4 text-primary" />
