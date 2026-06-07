@@ -12,6 +12,11 @@ export interface TasbihStats {
   dhikrTypes: { type: string; count: number }[];
 }
 
+export interface TasbihAppearance {
+  beadSpeed: number; // ms transition duration (150 - 800)
+  markerCount: number; // divider markers count (2 - 11)
+}
+
 const defaultDhikrs = [
   "سبحان الله",
   "الحمد لله",
@@ -21,12 +26,33 @@ const defaultDhikrs = [
   "أستغفر الله",
 ];
 
+const APPEARANCE_KEY = "tasbihAppearance";
+
+const defaultAppearance: TasbihAppearance = {
+  beadSpeed: 300,
+  markerCount: 3,
+};
+
 export const useTasbih = () => {
   const { user } = useAuth();
   const [count, setCount] = useState(0);
   const [currentDhikr, setCurrentDhikr] = useState(defaultDhikrs[0]);
   const [stats, setStats] = useState<TasbihStats>({ totalCount: 0, todayCount: 0, dhikrTypes: [] });
   const [isLoading, setIsLoading] = useState(false);
+  const [appearance, setAppearance] = useState<TasbihAppearance>(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem(APPEARANCE_KEY);
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          return { ...defaultAppearance, ...parsed };
+        } catch {
+          return defaultAppearance;
+        }
+      }
+    }
+    return defaultAppearance;
+  });
 
   const today = new Date().toISOString().split("T")[0];
 
@@ -139,15 +165,25 @@ export const useTasbih = () => {
     setCurrentDhikr(dhikr);
   }, [count, saveSession]);
 
+  const updateAppearance = useCallback((updates: Partial<TasbihAppearance>) => {
+    setAppearance((prev) => {
+      const next = { ...prev, ...updates };
+      localStorage.setItem(APPEARANCE_KEY, JSON.stringify(next));
+      return next;
+    });
+  }, []);
+
   return {
     count,
     currentDhikr,
     stats,
     isLoading,
+    appearance,
     increment,
     reset,
     saveSession,
     changeDhikr,
+    updateAppearance,
     dhikrOptions: defaultDhikrs,
   };
 };
