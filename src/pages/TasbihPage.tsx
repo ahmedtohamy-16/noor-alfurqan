@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { ChevronLeft, BarChart3, Menu, Edit, Plus, Clock } from "lucide-react";
+import { ChevronLeft, BarChart3, Menu, Edit, Plus, Clock, Settings2, Rabbit, Turtle, Gauge } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Slider } from "@/components/ui/slider";
 import TasbihCounter from "@/components/TasbihCounter";
 import { useTasbih } from "@/hooks/useTasbih";
 import mosqueBg from "@/assets/mosque-night-hero.jpg";
@@ -18,9 +19,10 @@ const quickDhikrs = [
 ];
 
 const TasbihPage = () => {
-  const { stats, currentDhikr, changeDhikr, count } = useTasbih();
+  const { stats, currentDhikr, changeDhikr, count, increment, reset, saveSession, appearance, updateAppearance } = useTasbih();
   const [dailyGoal, setDailyGoal] = useState(1000);
   const [greeting, setGreeting] = useState("مساء الخير");
+  const [showSettings, setShowSettings] = useState(false);
 
   useEffect(() => {
     const stored = localStorage.getItem("tasbih_daily_goal");
@@ -37,6 +39,8 @@ const TasbihPage = () => {
   };
 
   const goalProgress = Math.min(100, Math.round((stats.todayCount / dailyGoal) * 100));
+
+  const speedLabel = appearance.beadSpeed <= 180 ? "سريع" : appearance.beadSpeed >= 500 ? "بطيء" : "متوسط";
 
   return (
     <div className="min-h-screen bg-background pb-28">
@@ -73,7 +77,81 @@ const TasbihPage = () => {
       <main className="container mx-auto px-4 -mt-24 relative z-10 arabic-ui" dir="rtl">
         {/* Counter card */}
         <Card className="bg-white dark:bg-card rounded-3xl p-6 shadow-2xl border-0">
-          <TasbihCounter />
+          <TasbihCounter
+            count={count}
+            increment={increment}
+            reset={reset}
+            saveSession={saveSession}
+            appearance={appearance}
+          />
+        </Card>
+
+        {/* Appearance Settings */}
+        <Card className="mt-4 p-5">
+          <button
+            onClick={() => setShowSettings((s) => !s)}
+            className="flex items-center justify-between w-full"
+          >
+            <div className="flex items-center gap-2">
+              <Settings2 className="w-4 h-4 text-primary" />
+              <h3 className="font-bold text-foreground">تخصيص السبحة</h3>
+            </div>
+            <ChevronLeft className={cn("w-4 h-4 text-muted-foreground transition-transform", showSettings && "-rotate-90")} />
+          </button>
+
+          {showSettings && (
+            <div className="mt-4 space-y-5 animate-fade-in">
+              {/* Speed */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Gauge className="w-4 h-4" />
+                    <span>سرعة حركة الخرز</span>
+                  </div>
+                  <span className="text-xs font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+                    {speedLabel}
+                  </span>
+                </div>
+                <Slider
+                  value={[appearance.beadSpeed]}
+                  onValueChange={([v]) => updateAppearance({ beadSpeed: v })}
+                  min={100}
+                  max={800}
+                  step={50}
+                  className="w-full"
+                />
+                <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
+                  <span className="flex items-center gap-0.5"><Rabbit className="w-3 h-3" /> سريع</span>
+                  <span className="flex items-center gap-0.5"><Turtle className="w-3 h-3" /> بطيء</span>
+                </div>
+              </div>
+
+              {/* Markers */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <div className="w-4 h-4 rounded-full border-2 border-primary/40" />
+                    <span>عدد العلامات</span>
+                  </div>
+                  <span className="text-xs font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+                    {arabic(appearance.markerCount)}
+                  </span>
+                </div>
+                <Slider
+                  value={[appearance.markerCount]}
+                  onValueChange={([v]) => updateAppearance({ markerCount: v })}
+                  min={0}
+                  max={11}
+                  step={1}
+                  className="w-full"
+                />
+                <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
+                  <span>بدون</span>
+                  <span>١١ علامة</span>
+                </div>
+              </div>
+            </div>
+          )}
         </Card>
 
         {/* Quick adhkar */}
