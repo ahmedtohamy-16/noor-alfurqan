@@ -165,15 +165,25 @@ export const useTasbih = () => {
     setCurrentDhikr(dhikr);
   }, [count, saveSession]);
 
+  const updateAppearance = useCallback((updates: Partial<TasbihAppearance>) => {
+    setAppearance((prev) => {
+      const next = { ...prev, ...updates };
+      localStorage.setItem(APPEARANCE_KEY, JSON.stringify(next));
+      return next;
+    });
+  }, []);
+
   return {
     count,
     currentDhikr,
     stats,
     isLoading,
+    appearance,
     increment,
     reset,
     saveSession,
     changeDhikr,
+    updateAppearance,
     dhikrOptions: defaultDhikrs,
   };
 };
