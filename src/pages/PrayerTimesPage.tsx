@@ -164,14 +164,25 @@ const PrayerTimesPage = () => {
 
       <main className="container mx-auto px-4 -mt-24 relative z-10">
         {/* Countdown card */}
-        <Card className="rounded-2xl border-0 shadow-2xl bg-gradient-to-br from-primary to-[hsl(216,80%,30%)] text-white p-5">
-          <div className="flex items-center justify-between gap-4">
+        <Card className="relative overflow-hidden rounded-2xl border-0 shadow-2xl bg-gradient-to-br from-primary to-[hsl(216,80%,30%)] text-white p-5 animate-fade-in">
+          {/* Decorative pattern */}
+          <svg className="absolute -top-8 -left-8 w-40 h-40 opacity-10" viewBox="0 0 100 100" fill="none">
+            <circle cx="50" cy="50" r="45" stroke="white" strokeWidth="0.5" />
+            <circle cx="50" cy="50" r="35" stroke="white" strokeWidth="0.5" />
+            <path d="M50 5 L57 43 L95 50 L57 57 L50 95 L43 57 L5 50 L43 43 Z" fill="white" />
+          </svg>
+          <svg className="absolute -bottom-10 -right-10 w-44 h-44 opacity-10" viewBox="0 0 100 100" fill="none">
+            <polygon points="50,5 95,30 95,70 50,95 5,70 5,30" stroke="white" strokeWidth="0.5" />
+            <polygon points="50,20 80,35 80,65 50,80 20,65 20,35" stroke="white" strokeWidth="0.5" />
+          </svg>
+
+          <div className="relative flex items-center justify-between gap-4">
             <div className="text-center flex-1">
               <p className="text-xs opacity-80 mb-2">الصلاة القادمة</p>
               <h2 className="text-3xl font-bold mb-1">{nextPrayer?.name || "—"}</h2>
-              <p className="text-xs opacity-75">إن شاء الله</p>
+              <p className="text-sm opacity-90 font-mono">{nextPrayer ? formatTime(nextPrayer.time) : "—"}</p>
             </div>
-            <div className="w-px h-20 bg-white/20" />
+            <div className="w-px h-24 bg-white/20" />
             <div className="text-center flex-1">
               <p className="text-xs opacity-80 mb-2">الوقت المتبقي</p>
               <p className="text-3xl font-bold tabular-nums tracking-wider" dir="ltr">
