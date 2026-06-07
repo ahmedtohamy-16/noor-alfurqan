@@ -1,14 +1,21 @@
 import { useState, useMemo } from "react";
 import { RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useTasbih } from "@/hooks/useTasbih";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import type { TasbihAppearance } from "@/hooks/useTasbih";
 
 const BEADS = 33;
 
-const TasbihCounter = () => {
-  const { count, increment, reset, saveSession } = useTasbih();
+interface TasbihCounterProps {
+  count: number;
+  increment: () => void;
+  reset: () => void;
+  saveSession: () => void;
+  appearance: TasbihAppearance;
+}
+
+const TasbihCounter = ({ count, increment, reset, saveSession, appearance }: TasbihCounterProps) => {
   const [isPressed, setIsPressed] = useState(false);
 
   const arabic = (n: number): string =>
@@ -32,6 +39,17 @@ const TasbihCounter = () => {
     if (count > 0) saveSession();
     reset();
   };
+
+  // Marker positions based on markerCount
+  const markerIndices = useMemo(() => {
+    const indices: number[] = [];
+    if (appearance.markerCount <= 0) return indices;
+    const step = BEADS / appearance.markerCount;
+    for (let i = 0; i < appearance.markerCount; i++) {
+      indices.push(Math.round(i * step) % BEADS);
+    }
+    return indices;
+  }, [appearance.markerCount]);
 
   // Generate beads on a circle
   const radius = 130; // px from center
@@ -58,8 +76,11 @@ const TasbihCounter = () => {
 
         {/* Rotating beads ring */}
         <div
-          className="absolute inset-0 transition-transform duration-300 ease-out"
-          style={{ transform: `rotate(${rotation}deg)` }}
+          className="absolute inset-0 transition-transform ease-out"
+          style={{
+            transform: `rotate(${rotation}deg)`,
+            transitionDuration: `${appearance.beadSpeed}ms`,
+          }}
         >
           <div className="relative w-full h-full">
             {/* Thread (subtle circle) */}
@@ -78,7 +99,7 @@ const TasbihCounter = () => {
             {beads.map(({ i, x, y }) => {
               const isActive = i === activeBead;
               const isPast = count > 0 && i < activeBead;
-              const isMarker = i === 0 || i === 11 || i === 22; // dividers every 11
+              const isMarker = markerIndices.includes(i);
               return (
                 <div
                   key={i}
@@ -89,7 +110,7 @@ const TasbihCounter = () => {
                 >
                   <div
                     className={cn(
-                      "rounded-full transition-all duration-300 shadow-md",
+                      "rounded-full transition-all ease-out shadow-md",
                       isMarker ? "ring-1 ring-primary/40" : "",
                       isActive
                         ? "bg-gradient-to-br from-primary to-primary/70 scale-150 shadow-primary/50"
@@ -100,6 +121,7 @@ const TasbihCounter = () => {
                     style={{
                       width: isMarker ? beadSize + 4 : beadSize,
                       height: isMarker ? beadSize + 4 : beadSize,
+                      transitionDuration: `${appearance.beadSpeed}ms`,
                     }}
                   />
                 </div>
