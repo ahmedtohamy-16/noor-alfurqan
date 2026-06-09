@@ -187,8 +187,8 @@ const PrayerTimesPage = () => {
       settings.prayer_fajr_enabled, settings.prayer_dhuhr_enabled, settings.prayer_asr_enabled,
       settings.prayer_maghrib_enabled, settings.prayer_isha_enabled, playAdhan, getAdhanUrl]);
 
-  const { updateLocation } = useUserSettings();
   const locationBusy = isDetecting || isFetchingTimes;
+
 
   const handleAutoDetect = async () => {
     if (locationBusy) return;
