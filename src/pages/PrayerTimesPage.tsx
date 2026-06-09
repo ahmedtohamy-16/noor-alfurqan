@@ -231,34 +231,36 @@ const PrayerTimesPage = () => {
     >
       <div className="mx-auto w-full max-w-[420px] px-4 pt-5 flex flex-col gap-5">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2">
           <button
             onClick={() => setIsLocationModalOpen(true)}
-            className={cn("w-10 h-10 flex items-center justify-center rounded-full border transition", palette.chip)}
-            aria-label="إعدادات الموقع"
+            className={cn(
+              "flex items-center gap-2 rounded-full border transition px-3 h-10 max-w-[60%]",
+              palette.chip,
+              hasLocation && "border-blue-500/30"
+            )}
+            aria-label="تغيير الموقع"
           >
-            <Settings className="w-5 h-5 opacity-70" />
+            <span className={cn(
+              "w-6 h-6 rounded-full flex items-center justify-center shrink-0",
+              hasLocation ? "bg-blue-600 text-white" : "bg-amber-500/20 text-amber-500"
+            )}>
+              <MapPin className="w-3.5 h-3.5" />
+            </span>
+            <span className="text-xs font-bold truncate">
+              {hasLocation ? settings.city_name : "حدد موقعك"}
+            </span>
           </button>
-          <div className="text-center">
-            <h1 className="text-xl font-bold tracking-tight">مواقيت الصلاة</h1>
-            <button
-              onClick={() => setIsLocationModalOpen(true)}
-              className={cn("flex items-center justify-center gap-1 mt-1 text-xs hover:opacity-100 transition", palette.subText)}
-            >
-              <MapPin className="w-3 h-3" />
-              <span>{settings.city_name || "تحديد الموقع"}</span>
-              <span className="mx-1 text-[10px] opacity-60">|</span>
-              <span dir="ltr">{tzLabel}</span>
-            </button>
-          </div>
+          <h1 className="text-base font-bold tracking-tight">مواقيت الصلاة</h1>
           <button
             onClick={() => navigate(-1)}
-            className={cn("w-10 h-10 flex items-center justify-center rounded-full border transition", palette.chip)}
+            className={cn("w-10 h-10 flex items-center justify-center rounded-full border transition shrink-0", palette.chip)}
             aria-label="رجوع"
           >
             <ChevronRight className="w-5 h-5 opacity-70" />
           </button>
         </div>
+
 
         {/* Hero countdown */}
         <div className={cn("relative px-4 py-8 rounded-3xl overflow-hidden bg-gradient-to-br shadow-xl", palette.heroGrad,
