@@ -290,32 +290,84 @@ const PrayerTimesPage = () => {
           </div>
         </div>
 
-        {/* Location card */}
-        <div className={cn("rounded-3xl p-4 border", palette.card)}>
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-3">
-              <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", palette.iconBg)}>
-                <MapPin className={cn("w-5 h-5", palette.iconColor)} />
+        {/* Location card — two states */}
+        {hasLocation ? (
+          <div className={cn("rounded-3xl p-4 border", palette.card)}>
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="relative shrink-0">
+                  <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center", palette.iconBg)}>
+                    <MapPin className={cn("w-6 h-6", palette.iconColor)} />
+                  </div>
+                  <span className="absolute -bottom-0.5 -left-0.5 w-3.5 h-3.5 rounded-full bg-green-500 border-2 border-background" />
+                </div>
+                <div className="min-w-0">
+                  <p className={cn("text-[10px] mb-0.5", palette.subText)}>موقعك الحالي</p>
+                  <h2 className="font-bold text-base truncate">{settings.city_name}</h2>
+                  <p className={cn("text-[10px]", palette.subText)} dir="ltr">{tzLabel}</p>
+                </div>
               </div>
-              <div>
-                <h2 className="font-bold text-base">الموقع</h2>
-                <p className={cn("text-[11px]", palette.subText)}>{settings.city_name || "لم يتم التحديد"}</p>
+              <div className="flex flex-col gap-1.5 shrink-0">
+                <Button
+                  onClick={() => setIsLocationModalOpen(true)}
+                  variant="outline"
+                  size="sm"
+                  className="h-8 gap-1 rounded-full text-[10px] px-2.5"
+                >
+                  <Settings className="w-3 h-3" />
+                  تغيير
+                </Button>
+                <Button
+                  onClick={handleAutoDetect}
+                  disabled={isDetecting}
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 gap-1 rounded-full text-[10px] px-2.5"
+                >
+                  <Navigation className="w-3 h-3" />
+                  {isDetecting ? "..." : "تحديث GPS"}
+                </Button>
               </div>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-2">
-            <Button onClick={handleAutoDetect} disabled={isDetecting} variant="outline"
-              className="h-11 gap-1.5 rounded-xl text-xs">
-              <Navigation className="w-4 h-4" />
-              {isDetecting ? "جاري التحديد..." : "تلقائي"}
-            </Button>
-            <Button onClick={() => setIsLocationModalOpen(true)} variant="outline"
-              className="h-11 gap-1.5 rounded-xl text-xs">
-              <MapPin className="w-4 h-4" />
-              اختيار مدينة
-            </Button>
+        ) : (
+          <div className={cn(
+            "relative rounded-3xl p-5 border-2 border-dashed overflow-hidden",
+            isDark ? "border-amber-500/40 bg-amber-500/5" : "border-amber-500/50 bg-amber-50"
+          )}>
+            <div className="absolute -top-8 -left-8 w-32 h-32 bg-amber-400/20 rounded-full blur-2xl pointer-events-none" />
+            <div className="relative flex flex-col items-center text-center gap-3">
+              <div className="w-16 h-16 rounded-2xl bg-amber-500/20 flex items-center justify-center animate-pulse">
+                <MapPin className="w-8 h-8 text-amber-500" />
+              </div>
+              <div>
+                <h2 className="font-bold text-base mb-1">لم تحدد موقعك بعد</h2>
+                <p className={cn("text-xs leading-relaxed max-w-[260px]", palette.subText)}>
+                  لعرض مواقيت الصلاة بدقة لمنطقتك يرجى تحديد موقعك الجغرافي
+                </p>
+              </div>
+              <div className="grid grid-cols-2 gap-2 w-full mt-1">
+                <Button
+                  onClick={handleAutoDetect}
+                  disabled={isDetecting}
+                  className={cn("h-11 gap-1.5 rounded-xl text-xs font-bold", palette.btn)}
+                >
+                  <Navigation className="w-4 h-4" />
+                  {isDetecting ? "جاري التحديد..." : "تلقائي (GPS)"}
+                </Button>
+                <Button
+                  onClick={() => setIsLocationModalOpen(true)}
+                  variant="outline"
+                  className="h-11 gap-1.5 rounded-xl text-xs font-bold border-amber-500/40"
+                >
+                  <MapPin className="w-4 h-4" />
+                  اختيار مدينة
+                </Button>
+              </div>
+            </div>
           </div>
-        </div>
+        )}
+
 
         {/* Today's times */}
         <div className={cn("rounded-3xl p-5 border", palette.card)}>
