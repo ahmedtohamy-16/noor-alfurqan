@@ -425,14 +425,19 @@ const PrayerTimesPage = () => {
 
 
         {/* Today's times */}
-        <div className={cn("rounded-3xl p-5 border", palette.card)}>
+        <div className={cn("relative rounded-3xl p-5 border", palette.card)}>
           <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-3">
               <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", palette.iconBg)}>
                 <Calendar className={cn("w-5 h-5", palette.iconColor)} />
               </div>
               <div>
-                <h2 className="font-bold text-base">مواقيت اليوم</h2>
+                <h2 className="font-bold text-base flex items-center gap-1.5">
+                  مواقيت اليوم
+                  {isFetchingTimes && !isLoadingTimes && (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin opacity-60" />
+                  )}
+                </h2>
                 <p className={cn("text-[10px]", palette.subText)}>{hijriDate || "—"}</p>
               </div>
             </div>
@@ -441,25 +446,40 @@ const PrayerTimesPage = () => {
             </span>
           </div>
 
-          <div className="grid grid-cols-3 gap-2">
-            {prayers.map((p) => {
-              const Icon = p.icon;
-              const isNext = nextPrayer?.key === p.key;
-              const t = prayerTimes?.[p.key as keyof PrayerTimesData];
-              return (
-                <div key={p.key} className={cn(
-                  "rounded-2xl p-3 flex flex-col items-center gap-1 transition-all",
-                  isNext ? palette.activePrayer : palette.inactivePrayer
-                )}>
-                  <Icon className={cn("w-5 h-5 mb-1", isNext ? "text-white" : "opacity-60")} />
-                  <span className={cn("text-xs font-medium", isNext ? "text-white" : "opacity-70")}>{p.name}</span>
-                  <span className={cn("text-sm font-bold font-mono", isNext ? "text-white" : "opacity-80")}>{formatTime(t)}</span>
-                  <span className={cn("text-[9px]", isNext ? "text-white/70" : "opacity-40")}>{p.period}</span>
-                </div>
-              );
-            })}
-          </div>
+          {isLoadingTimes ? (
+            <div className="grid grid-cols-3 gap-2">
+              {prayers.map((p) => (
+                <div
+                  key={p.key}
+                  className={cn(
+                    "rounded-2xl p-3 h-[92px] animate-pulse",
+                    palette.inactivePrayer
+                  )}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className={cn("grid grid-cols-3 gap-2 transition-opacity", isFetchingTimes && "opacity-60")}>
+              {prayers.map((p) => {
+                const Icon = p.icon;
+                const isNext = nextPrayer?.key === p.key;
+                const t = prayerTimes?.[p.key as keyof PrayerTimesData];
+                return (
+                  <div key={p.key} className={cn(
+                    "rounded-2xl p-3 flex flex-col items-center gap-1 transition-all",
+                    isNext ? palette.activePrayer : palette.inactivePrayer
+                  )}>
+                    <Icon className={cn("w-5 h-5 mb-1", isNext ? "text-white" : "opacity-60")} />
+                    <span className={cn("text-xs font-medium", isNext ? "text-white" : "opacity-70")}>{p.name}</span>
+                    <span className={cn("text-sm font-bold font-mono", isNext ? "text-white" : "opacity-80")}>{formatTime(t)}</span>
+                    <span className={cn("text-[9px]", isNext ? "text-white/70" : "opacity-40")}>{p.period}</span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
+
 
         {/* Reminders & Adhan card */}
         <div className={cn("rounded-3xl p-5 border space-y-4", palette.card)}>
