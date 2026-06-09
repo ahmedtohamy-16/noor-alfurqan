@@ -33,6 +33,8 @@ import { useTheme } from "@/hooks/useTheme";
 import { useAdhanAudio, adhanSounds, type AdhanSoundId } from "@/hooks/useAdhanAudio";
 import LocationPickerModal from "@/components/LocationPickerModal";
 import PrayerExportDialog from "@/components/PrayerExportDialog";
+import CitySearchCombobox from "@/components/CitySearchCombobox";
+
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
