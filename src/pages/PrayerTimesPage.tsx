@@ -82,12 +82,13 @@ const PrayerTimesPage = () => {
   const madhab = settings.prayer_madhab || 0;
   const hasLocation = settings.latitude && settings.longitude;
 
-  const { data: prayerTimes } = useQuery({
+  const { data: prayerTimes, isLoading: isLoadingTimes, isFetching: isFetchingTimes } = useQuery({
     queryKey: ["prayerTimes", lat, lng, method, madhab],
     queryFn: () => fetchPrayerTimes(lat, lng, method, madhab),
     enabled: !!lat && !!lng,
     staleTime: 1000 * 60 * 60,
   });
+
 
   useEffect(() => {
     fetch(`https://api.aladhan.com/v1/gToH?date=${new Date().toLocaleDateString("en-GB").replace(/\//g, "-")}`)
