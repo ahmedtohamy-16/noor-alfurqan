@@ -17,7 +17,9 @@ import {
   BellOff,
   Navigation,
   Play,
+  Loader2,
 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -31,6 +33,8 @@ import { useTheme } from "@/hooks/useTheme";
 import { useAdhanAudio, adhanSounds, type AdhanSoundId } from "@/hooks/useAdhanAudio";
 import LocationPickerModal from "@/components/LocationPickerModal";
 import PrayerExportDialog from "@/components/PrayerExportDialog";
+import CitySearchCombobox from "@/components/CitySearchCombobox";
+
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -64,7 +68,7 @@ const fetchPrayerTimes = async (lat: number, lng: number, method: number, madhab
 
 const PrayerTimesPage = () => {
   const navigate = useNavigate();
-  const { settings, updateSettings, autoDetectLocation } = useUserSettings();
+  const { settings, updateSettings, updateLocation, autoDetectLocation } = useUserSettings();
   const { theme } = useTheme();
   const { playAdhan, previewAdhan, getAdhanUrl, stopAdhan } = useAdhanAudio();
   const isDark = theme === "dark";
@@ -82,12 +86,13 @@ const PrayerTimesPage = () => {
   const madhab = settings.prayer_madhab || 0;
   const hasLocation = settings.latitude && settings.longitude;
 
-  const { data: prayerTimes } = useQuery({
+  const { data: prayerTimes, isLoading: isLoadingTimes, isFetching: isFetchingTimes } = useQuery({
     queryKey: ["prayerTimes", lat, lng, method, madhab],
     queryFn: () => fetchPrayerTimes(lat, lng, method, madhab),
     enabled: !!lat && !!lng,
     staleTime: 1000 * 60 * 60,
   });
+
 
   useEffect(() => {
     fetch(`https://api.aladhan.com/v1/gToH?date=${new Date().toLocaleDateString("en-GB").replace(/\//g, "-")}`)
@@ -186,11 +191,32 @@ const PrayerTimesPage = () => {
       settings.prayer_fajr_enabled, settings.prayer_dhuhr_enabled, settings.prayer_asr_enabled,
       settings.prayer_maghrib_enabled, settings.prayer_isha_enabled, playAdhan, getAdhanUrl]);
 
+  const locationBusy = isDetecting || isFetchingTimes;
+
+
   const handleAutoDetect = async () => {
+    if (locationBusy) return;
     setIsDetecting(true);
     await autoDetectLocation();
     setIsDetecting(false);
   };
+
+  const handleCityPick = async (city: { latitude: number; longitude: number; name_ar: string; country_code: string }) => {
+    if (locationBusy) return;
+    // Prevent redundant update (same city already selected)
+    if (
+      settings.city_name === city.name_ar &&
+      Math.abs((settings.latitude || 0) - city.latitude) < 0.001 &&
+      Math.abs((settings.longitude || 0) - city.longitude) < 0.001
+    ) {
+      return;
+    }
+    setIsDetecting(true);
+    await updateLocation(city.latitude, city.longitude, city.name_ar);
+    await updateSettings({ country_code: city.country_code });
+    setIsDetecting(false);
+  };
+
 
   const fmt = (n: number) => n.toString().padStart(2, "0");
   const today = new Date();
@@ -292,17 +318,25 @@ const PrayerTimesPage = () => {
 
         {/* Location card — two states */}
         {hasLocation ? (
-          <div className={cn("rounded-3xl p-4 border", palette.card)}>
+          <div className={cn("rounded-3xl p-4 border space-y-3", palette.card)}>
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3 min-w-0">
                 <div className="relative shrink-0">
                   <div className={cn("w-12 h-12 rounded-2xl flex items-center justify-center", palette.iconBg)}>
-                    <MapPin className={cn("w-6 h-6", palette.iconColor)} />
+                    {locationBusy ? (
+                      <Loader2 className={cn("w-6 h-6 animate-spin", palette.iconColor)} />
+                    ) : (
+                      <MapPin className={cn("w-6 h-6", palette.iconColor)} />
+                    )}
                   </div>
-                  <span className="absolute -bottom-0.5 -left-0.5 w-3.5 h-3.5 rounded-full bg-green-500 border-2 border-background" />
+                  {!locationBusy && (
+                    <span className="absolute -bottom-0.5 -left-0.5 w-3.5 h-3.5 rounded-full bg-green-500 border-2 border-background" />
+                  )}
                 </div>
                 <div className="min-w-0">
-                  <p className={cn("text-[10px] mb-0.5", palette.subText)}>موقعك الحالي</p>
+                  <p className={cn("text-[10px] mb-0.5", palette.subText)}>
+                    {locationBusy ? "جاري التحديث..." : "موقعك الحالي"}
+                  </p>
                   <h2 className="font-bold text-base truncate">{settings.city_name}</h2>
                   <p className={cn("text-[10px]", palette.subText)} dir="ltr">{tzLabel}</p>
                 </div>
@@ -312,6 +346,7 @@ const PrayerTimesPage = () => {
                   onClick={() => setIsLocationModalOpen(true)}
                   variant="outline"
                   size="sm"
+                  disabled={locationBusy}
                   className="h-8 gap-1 rounded-full text-[10px] px-2.5"
                 >
                   <Settings className="w-3 h-3" />
@@ -319,16 +354,22 @@ const PrayerTimesPage = () => {
                 </Button>
                 <Button
                   onClick={handleAutoDetect}
-                  disabled={isDetecting}
+                  disabled={locationBusy}
                   variant="ghost"
                   size="sm"
                   className="h-7 gap-1 rounded-full text-[10px] px-2.5"
                 >
-                  <Navigation className="w-3 h-3" />
+                  {isDetecting ? <Loader2 className="w-3 h-3 animate-spin" /> : <Navigation className="w-3 h-3" />}
                   {isDetecting ? "..." : "تحديث GPS"}
                 </Button>
               </div>
             </div>
+            <CitySearchCombobox
+              onSelect={handleCityPick}
+              loading={locationBusy}
+              disabled={locationBusy}
+              placeholder="ابحث عن مدينة أخرى..."
+            />
           </div>
         ) : (
           <div className={cn(
@@ -338,30 +379,43 @@ const PrayerTimesPage = () => {
             <div className="absolute -top-8 -left-8 w-32 h-32 bg-amber-400/20 rounded-full blur-2xl pointer-events-none" />
             <div className="relative flex flex-col items-center text-center gap-3">
               <div className="w-16 h-16 rounded-2xl bg-amber-500/20 flex items-center justify-center animate-pulse">
-                <MapPin className="w-8 h-8 text-amber-500" />
+                {locationBusy ? (
+                  <Loader2 className="w-8 h-8 text-amber-500 animate-spin" />
+                ) : (
+                  <MapPin className="w-8 h-8 text-amber-500" />
+                )}
               </div>
               <div>
-                <h2 className="font-bold text-base mb-1">لم تحدد موقعك بعد</h2>
+                <h2 className="font-bold text-base mb-1">
+                  {locationBusy ? "جاري تحديد الموقع..." : "لم تحدد موقعك بعد"}
+                </h2>
                 <p className={cn("text-xs leading-relaxed max-w-[260px]", palette.subText)}>
-                  لعرض مواقيت الصلاة بدقة لمنطقتك يرجى تحديد موقعك الجغرافي
+                  ابحث عن مدينتك أو استخدم تحديد الموقع التلقائي لعرض المواقيت بدقة
                 </p>
               </div>
-              <div className="grid grid-cols-2 gap-2 w-full mt-1">
+              <CitySearchCombobox
+                onSelect={handleCityPick}
+                loading={locationBusy}
+                disabled={locationBusy}
+                className="w-full"
+              />
+              <div className="grid grid-cols-2 gap-2 w-full">
                 <Button
                   onClick={handleAutoDetect}
-                  disabled={isDetecting}
+                  disabled={locationBusy}
                   className={cn("h-11 gap-1.5 rounded-xl text-xs font-bold", palette.btn)}
                 >
-                  <Navigation className="w-4 h-4" />
+                  {isDetecting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Navigation className="w-4 h-4" />}
                   {isDetecting ? "جاري التحديد..." : "تلقائي (GPS)"}
                 </Button>
                 <Button
                   onClick={() => setIsLocationModalOpen(true)}
                   variant="outline"
+                  disabled={locationBusy}
                   className="h-11 gap-1.5 rounded-xl text-xs font-bold border-amber-500/40"
                 >
                   <MapPin className="w-4 h-4" />
-                  اختيار مدينة
+                  مزيد من الخيارات
                 </Button>
               </div>
             </div>
@@ -369,15 +423,21 @@ const PrayerTimesPage = () => {
         )}
 
 
+
         {/* Today's times */}
-        <div className={cn("rounded-3xl p-5 border", palette.card)}>
+        <div className={cn("relative rounded-3xl p-5 border", palette.card)}>
           <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-3">
               <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", palette.iconBg)}>
                 <Calendar className={cn("w-5 h-5", palette.iconColor)} />
               </div>
               <div>
-                <h2 className="font-bold text-base">مواقيت اليوم</h2>
+                <h2 className="font-bold text-base flex items-center gap-1.5">
+                  مواقيت اليوم
+                  {isFetchingTimes && !isLoadingTimes && (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin opacity-60" />
+                  )}
+                </h2>
                 <p className={cn("text-[10px]", palette.subText)}>{hijriDate || "—"}</p>
               </div>
             </div>
@@ -386,25 +446,40 @@ const PrayerTimesPage = () => {
             </span>
           </div>
 
-          <div className="grid grid-cols-3 gap-2">
-            {prayers.map((p) => {
-              const Icon = p.icon;
-              const isNext = nextPrayer?.key === p.key;
-              const t = prayerTimes?.[p.key as keyof PrayerTimesData];
-              return (
-                <div key={p.key} className={cn(
-                  "rounded-2xl p-3 flex flex-col items-center gap-1 transition-all",
-                  isNext ? palette.activePrayer : palette.inactivePrayer
-                )}>
-                  <Icon className={cn("w-5 h-5 mb-1", isNext ? "text-white" : "opacity-60")} />
-                  <span className={cn("text-xs font-medium", isNext ? "text-white" : "opacity-70")}>{p.name}</span>
-                  <span className={cn("text-sm font-bold font-mono", isNext ? "text-white" : "opacity-80")}>{formatTime(t)}</span>
-                  <span className={cn("text-[9px]", isNext ? "text-white/70" : "opacity-40")}>{p.period}</span>
-                </div>
-              );
-            })}
-          </div>
+          {isLoadingTimes ? (
+            <div className="grid grid-cols-3 gap-2">
+              {prayers.map((p) => (
+                <div
+                  key={p.key}
+                  className={cn(
+                    "rounded-2xl p-3 h-[92px] animate-pulse",
+                    palette.inactivePrayer
+                  )}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className={cn("grid grid-cols-3 gap-2 transition-opacity", isFetchingTimes && "opacity-60")}>
+              {prayers.map((p) => {
+                const Icon = p.icon;
+                const isNext = nextPrayer?.key === p.key;
+                const t = prayerTimes?.[p.key as keyof PrayerTimesData];
+                return (
+                  <div key={p.key} className={cn(
+                    "rounded-2xl p-3 flex flex-col items-center gap-1 transition-all",
+                    isNext ? palette.activePrayer : palette.inactivePrayer
+                  )}>
+                    <Icon className={cn("w-5 h-5 mb-1", isNext ? "text-white" : "opacity-60")} />
+                    <span className={cn("text-xs font-medium", isNext ? "text-white" : "opacity-70")}>{p.name}</span>
+                    <span className={cn("text-sm font-bold font-mono", isNext ? "text-white" : "opacity-80")}>{formatTime(t)}</span>
+                    <span className={cn("text-[9px]", isNext ? "text-white/70" : "opacity-40")}>{p.period}</span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
+
 
         {/* Reminders & Adhan card */}
         <div className={cn("rounded-3xl p-5 border space-y-4", palette.card)}>
