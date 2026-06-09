@@ -187,11 +187,32 @@ const PrayerTimesPage = () => {
       settings.prayer_fajr_enabled, settings.prayer_dhuhr_enabled, settings.prayer_asr_enabled,
       settings.prayer_maghrib_enabled, settings.prayer_isha_enabled, playAdhan, getAdhanUrl]);
 
+  const { updateLocation } = useUserSettings();
+  const locationBusy = isDetecting || isFetchingTimes;
+
   const handleAutoDetect = async () => {
+    if (locationBusy) return;
     setIsDetecting(true);
     await autoDetectLocation();
     setIsDetecting(false);
   };
+
+  const handleCityPick = async (city: { latitude: number; longitude: number; name_ar: string; country_code: string }) => {
+    if (locationBusy) return;
+    // Prevent redundant update (same city already selected)
+    if (
+      settings.city_name === city.name_ar &&
+      Math.abs((settings.latitude || 0) - city.latitude) < 0.001 &&
+      Math.abs((settings.longitude || 0) - city.longitude) < 0.001
+    ) {
+      return;
+    }
+    setIsDetecting(true);
+    await updateLocation(city.latitude, city.longitude, city.name_ar);
+    await updateSettings({ country_code: city.country_code });
+    setIsDetecting(false);
+  };
+
 
   const fmt = (n: number) => n.toString().padStart(2, "0");
   const today = new Date();
