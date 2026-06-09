@@ -64,7 +64,7 @@ const fetchPrayerTimes = async (lat: number, lng: number, method: number, madhab
 
 const PrayerTimesPage = () => {
   const navigate = useNavigate();
-  const { settings, updateSettings, autoDetectLocation } = useUserSettings();
+  const { settings, updateSettings, updateLocation, autoDetectLocation } = useUserSettings();
   const { theme } = useTheme();
   const { playAdhan, previewAdhan, getAdhanUrl, stopAdhan } = useAdhanAudio();
   const isDark = theme === "dark";
