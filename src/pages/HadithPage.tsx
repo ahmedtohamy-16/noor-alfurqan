@@ -345,11 +345,12 @@ const HadithPage = () => {
 
         {shareHadith && (
           <HadithShareDialog
-            open={shareOpen}
-            onOpenChange={setShareOpen}
-            hadith={shareHadith}
-            fontSize={22}
-            fontFamily={"Amiri" as any}
+            isOpen={shareOpen}
+            onClose={() => setShareOpen(false)}
+            hadithText={shareHadith.text}
+            bookName={getBookById(shareHadith.bookId)?.nameAr || ""}
+            hadithNumber={shareHadith.hadithNumber}
+            narrator={shareHadith.narrator}
           />
         )}
       </div>
