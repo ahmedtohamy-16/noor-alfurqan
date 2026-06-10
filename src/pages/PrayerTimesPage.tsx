@@ -293,19 +293,6 @@ const PrayerTimesPage = () => {
       setIsDetecting(false);
     }
   };
-    // Prevent redundant update (same city already selected)
-    if (
-      settings.city_name === city.name_ar &&
-      Math.abs((settings.latitude || 0) - city.latitude) < 0.001 &&
-      Math.abs((settings.longitude || 0) - city.longitude) < 0.001
-    ) {
-      return;
-    }
-    setIsDetecting(true);
-    await updateLocation(city.latitude, city.longitude, city.name_ar);
-    await updateSettings({ country_code: city.country_code });
-    setIsDetecting(false);
-  };
 
 
   const fmt = (n: number) => n.toString().padStart(2, "0");
