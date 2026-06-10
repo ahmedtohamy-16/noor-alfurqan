@@ -1,507 +1,355 @@
-import { useState, useEffect, useCallback } from 'react';
-import { Helmet } from 'react-helmet-async';
-import Header from '@/components/Header';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { TooltipProvider } from '@/components/ui/tooltip';
-import { useHadith } from '@/hooks/useHadith';
-import { useReadingSettings } from '@/hooks/useReadingSettings';
-import { hadithBooks, Hadith, getBookById } from '@/data/hadithBooks';
-import HadithShareDialog from '@/components/HadithShareDialog';
-import HadithFontControls from '@/components/hadith/HadithFontControls';
-import HadithDetailsModal from '@/components/hadith/HadithDetailsModal';
-import HadithHeroSection from '@/components/hadith/HadithHeroSection';
-import HadithFeaturedCard from '@/components/hadith/HadithFeaturedCard';
-import HadithBookSelector from '@/components/hadith/HadithBookSelector';
-import HadithInfiniteList from '@/components/hadith/HadithInfiniteList';
-import HadithLibraryCard from '@/components/hadith/HadithLibraryCard';
-import { 
-  BookMarked,
-  Library,
-  HardDrive,
-  BookOpen,
-  Layers
-} from 'lucide-react';
-import { toast } from 'sonner';
+import { useEffect, useMemo, useState, useCallback } from "react";
+import { Helmet } from "react-helmet-async";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 
-// Debounce hook
+import { useHadith } from "@/hooks/useHadith";
+import { useHadithBookmarks } from "@/hooks/useHadithBookmarks";
+import { useHadithShareCount } from "@/hooks/useHadithShareCount";
+import { useHadithOfTheDay } from "@/hooks/useHadithOfTheDay";
+
+import {
+  hadithBooks,
+  getBookById,
+  type Hadith,
+} from "@/data/hadithBooks";
+import { HADITH_TOPICS } from "@/data/hadithTopics";
+import { normalizeArabic } from "@/lib/arabicNormalize";
+
+import HadithPageHeader from "@/components/hadith/HadithPageHeader";
+import HadithOfTheDayCard from "@/components/hadith/HadithOfTheDayCard";
+import HadithSearchBar from "@/components/hadith/HadithSearchBar";
+import HadithBookTabs from "@/components/hadith/HadithBookTabs";
+import HadithTopicChips from "@/components/hadith/HadithTopicChips";
+import HadithSortMenu, { type HadithSort } from "@/components/hadith/HadithSortMenu";
+import HadithCardV2 from "@/components/hadith/HadithCardV2";
+import HadithSkeleton from "@/components/hadith/HadithSkeleton";
+import HadithBackToTop from "@/components/hadith/HadithBackToTop";
+import HadithDetailsSheet from "@/components/hadith/HadithDetailsSheet";
+import HadithShareDialog from "@/components/HadithShareDialog";
+
+import { Tabs, TabsContent } from "@/components/ui/tabs";
+
+const ITEMS_PER_PAGE = 20;
+
 function useDebounce<T>(value: T, delay: number): T {
-  const [debouncedValue, setDebouncedValue] = useState<T>(value);
-
+  const [v, setV] = useState(value);
   useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedValue(value);
-    }, delay);
-
-    return () => {
-      clearTimeout(handler);
-    };
+    const id = setTimeout(() => setV(value), delay);
+    return () => clearTimeout(id);
   }, [value, delay]);
-
-  return debouncedValue;
+  return v;
 }
 
 const HadithPage = () => {
-  const { 
-    loading,
-    downloading, 
-    downloadProgress, 
-    downloadedBooks,
-    storageStats,
-    fetchHadiths,
-    searchHadiths,
-    downloadBook, 
-    deleteBook,
-    isDownloaded,
-    getRandomHadith,
-    refreshDownloadedBooks
-  } = useHadith();
+  const { fetchHadiths, searchHadiths } = useHadith();
+  const { bookmarks, isBookmarked, toggle: toggleBookmark } = useHadithBookmarks();
+  const { incrementShare, fetchTopShared } = useHadithShareCount();
+  const { hadith: hadithOfDay, loading: loadingDay } = useHadithOfTheDay();
 
-  const { settings, updateSettings } = useReadingSettings();
-  
-  // States
-  const [selectedBook, setSelectedBook] = useState(hadithBooks[0].id);
+  const [selectedBook, setSelectedBook] = useState<string>("bukhari"); // 'all' supported
+  const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
+  const [sort, setSort] = useState<HadithSort>("default");
+
   const [hadiths, setHadiths] = useState<Hadith[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalHadiths, setTotalHadiths] = useState(0);
   const [hasMore, setHasMore] = useState(false);
-  
-  const [searchQuery, setSearchQuery] = useState('');
+  const [loadingList, setLoadingList] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const debouncedQuery = useDebounce(searchQuery, 300);
+  const isSearchMode = debouncedQuery.trim().length > 0;
   const [searchResults, setSearchResults] = useState<Hadith[]>([]);
   const [isSearching, setIsSearching] = useState(false);
-  
+
   const [copiedId, setCopiedId] = useState<number | null>(null);
-  const [randomHadith, setRandomHadith] = useState<Hadith | null>(null);
-  const [loadingRandom, setLoadingRandom] = useState(false);
-  const [loadingHadiths, setLoadingHadiths] = useState(false);
-  const [loadingMore, setLoadingMore] = useState(false);
-  
-  const [selectedHadith, setSelectedHadith] = useState<Hadith | null>(null);
+
+  const [detailsHadith, setDetailsHadith] = useState<Hadith | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
-  
-  // Share dialog states
-  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+
   const [shareHadith, setShareHadith] = useState<Hadith | null>(null);
+  const [shareOpen, setShareOpen] = useState(false);
 
-  // Font settings
-  type FontFamily = 'Amiri' | 'Scheherazade' | 'Noto Naskh' | 'Uthmani';
-  const [hadithFontSize, setHadithFontSize] = useState(settings.fontSize || 22);
-  const [hadithFontFamily, setHadithFontFamily] = useState<FontFamily>(settings.fontFamily || 'Amiri');
-
-  // Tab state
-  const [activeTab, setActiveTab] = useState<'browse' | 'library'>('browse');
-
-  const ITEMS_PER_PAGE = 20;
-  
-  // Debounced search query for real-time search
-  const debouncedSearchQuery = useDebounce(searchQuery, 400);
-  const isSearchMode = debouncedSearchQuery.trim().length > 0;
-
-  // Load downloaded books on mount
+  // Load list when book changes
   useEffect(() => {
-    refreshDownloadedBooks();
-  }, [refreshDownloadedBooks]);
-
-  // Load hadiths when book changes (reset to page 1)
-  useEffect(() => {
-    if (!isSearchMode) {
-      setCurrentPage(1);
-      setHadiths([]);
-      loadHadiths(1, true);
-    }
-  }, [selectedBook]);
-
-  // Load more when page changes
-  useEffect(() => {
-    if (!isSearchMode && currentPage > 1) {
-      loadHadiths(currentPage, false);
-    }
-  }, [currentPage]);
-  
-  // Real-time search when query changes
-  useEffect(() => {
-    if (debouncedSearchQuery.trim()) {
-      performSearch(debouncedSearchQuery);
-    } else {
-      setSearchResults([]);
-    }
-  }, [debouncedSearchQuery, selectedBook]);
-
-  // Load random hadith on mount
-  useEffect(() => {
-    loadRandomHadith();
-  }, []);
-
-  const loadHadiths = async (page: number, reset: boolean) => {
-    if (reset) {
-      setLoadingHadiths(true);
-    } else {
-      setLoadingMore(true);
-    }
-    
-    try {
-      const data = await fetchHadiths(selectedBook, page, ITEMS_PER_PAGE);
-      
-      if (reset) {
+    if (isSearchMode) return;
+    let cancelled = false;
+    setLoadingList(true);
+    setHadiths([]);
+    setCurrentPage(1);
+    (async () => {
+      try {
+        const bookId =
+          selectedBook === "all" ? hadithBooks[0].id : selectedBook;
+        const data = await fetchHadiths(bookId, 1, ITEMS_PER_PAGE);
+        if (cancelled) return;
         setHadiths(data.hadiths);
-      } else {
-        setHadiths(prev => [...prev, ...data.hadiths]);
+        setHasMore(data.hasMore);
+      } finally {
+        if (!cancelled) setLoadingList(false);
       }
-      
-      setTotalHadiths(data.total);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedBook, isSearchMode, fetchHadiths]);
+
+  // Load more
+  const handleLoadMore = useCallback(async () => {
+    if (loadingMore || !hasMore || isSearchMode) return;
+    setLoadingMore(true);
+    try {
+      const bookId = selectedBook === "all" ? hadithBooks[0].id : selectedBook;
+      const data = await fetchHadiths(bookId, currentPage + 1, ITEMS_PER_PAGE);
+      setHadiths((prev) => [...prev, ...data.hadiths]);
+      setCurrentPage((p) => p + 1);
       setHasMore(data.hasMore);
-    } catch (error) {
-      console.error('Error loading hadiths:', error);
-      if (reset) setHadiths([]);
     } finally {
-      setLoadingHadiths(false);
       setLoadingMore(false);
     }
-  };
+  }, [loadingMore, hasMore, isSearchMode, selectedBook, currentPage, fetchHadiths]);
 
-  const handleLoadMore = useCallback(() => {
-    if (!loadingMore && hasMore) {
-      setCurrentPage(prev => prev + 1);
-    }
-  }, [loadingMore, hasMore]);
-
-  const performSearch = async (query: string) => {
-    if (!query.trim()) return;
-    
-    setIsSearching(true);
-    try {
-      const data = await searchHadiths(selectedBook, query);
-      setSearchResults(data.results);
-    } catch {
+  // Search
+  useEffect(() => {
+    if (!isSearchMode) {
       setSearchResults([]);
+      return;
     }
-    setIsSearching(false);
-  };
+    let cancelled = false;
+    setIsSearching(true);
+    (async () => {
+      try {
+        const bookId =
+          selectedBook === "all" ? hadithBooks[0].id : selectedBook;
+        const res = await searchHadiths(bookId, debouncedQuery);
+        if (!cancelled) setSearchResults(res.results || []);
+      } finally {
+        if (!cancelled) setIsSearching(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [debouncedQuery, isSearchMode, selectedBook, searchHadiths]);
 
-  const clearSearch = () => {
-    setSearchQuery('');
-    setSearchResults([]);
-  };
+  // Topic filtering (client-side on currently loaded items)
+  const filteredByTopic = useMemo(() => {
+    const base = isSearchMode ? searchResults : hadiths;
+    if (selectedTopics.length === 0) return base;
+    const keywordSets = selectedTopics
+      .map((id) => HADITH_TOPICS.find((t) => t.id === id)?.keywords || [])
+      .filter((k) => k.length > 0);
+    if (keywordSets.length === 0) return base;
+    return base.filter((h) => {
+      const nText = normalizeArabic(h.text + " " + (h.narrator || ""));
+      return keywordSets.some((set) => set.some((kw) => nText.includes(kw)));
+    });
+  }, [hadiths, searchResults, selectedTopics, isSearchMode]);
 
-  const handleCopy = async (hadith: Hadith) => {
-    const book = getBookById(hadith.bookId);
-    const bookName = book?.nameAr || '';
-    const text = `${hadith.text}\n\n— ${bookName} (${hadith.hadithNumber})`;
-    
+  // Sort
+  const [topShared, setTopShared] = useState<Record<string, number>>({});
+  useEffect(() => {
+    if (sort !== "most_shared") return;
+    const bookId = selectedBook === "all" ? null : selectedBook;
+    fetchTopShared(bookId, 200).then((rows) => {
+      const map: Record<string, number> = {};
+      rows.forEach((r) => {
+        map[`${r.bookId}::${r.hadithNumber}`] = r.count;
+      });
+      setTopShared(map);
+    });
+  }, [sort, selectedBook, fetchTopShared]);
+
+  const displayed = useMemo(() => {
+    const arr = [...filteredByTopic];
+    switch (sort) {
+      case "most_shared": {
+        return arr.sort((a, b) => {
+          const ka = topShared[`${a.bookId}::${a.hadithNumber}`] || 0;
+          const kb = topShared[`${b.bookId}::${b.hadithNumber}`] || 0;
+          return kb - ka;
+        });
+      }
+      case "random": {
+        return arr.sort(() => Math.random() - 0.5);
+      }
+      case "by_narrator": {
+        return arr.sort((a, b) =>
+          (a.narrator || "").localeCompare(b.narrator || "", "ar")
+        );
+      }
+      default:
+        return arr;
+    }
+  }, [filteredByTopic, sort, topShared]);
+
+  // Actions
+  const handleCopy = async (h: Hadith) => {
+    const book = getBookById(h.bookId);
+    const text = `${h.text}\n\n— ${book?.nameAr || ""} (${h.hadithNumber})`;
     try {
       await navigator.clipboard.writeText(text);
-      setCopiedId(hadith.id);
-      toast.success('تم نسخ الحديث');
-      setTimeout(() => setCopiedId(null), 2000);
+      setCopiedId(h.id);
+      toast.success("تم نسخ الحديث");
+      setTimeout(() => setCopiedId(null), 1800);
     } catch {
-      toast.error('فشل في النسخ');
+      toast.error("فشل في النسخ");
     }
   };
 
-  const handleShare = async (hadith: Hadith) => {
-    const book = getBookById(hadith.bookId);
-    const bookName = book?.nameAr || '';
-    const text = `${hadith.text}\n\n— ${bookName} (${hadith.hadithNumber})`;
-    
-    if (navigator.share) {
-      try {
-        await navigator.share({ title: 'حديث نبوي', text });
-      } catch {
-        // User cancelled
-      }
-    } else {
-      handleCopy(hadith);
-    }
+  const handleShare = async (h: Hadith) => {
+    incrementShare(h.bookId, h.hadithNumber);
+    setShareHadith(h);
+    setShareOpen(true);
   };
 
-  const handleShareAsImage = (hadith: Hadith) => {
-    setShareHadith(hadith);
-    setShareDialogOpen(true);
-  };
-
-  const loadRandomHadith = async () => {
-    setLoadingRandom(true);
-    try {
-      const hadith = await getRandomHadith();
-      setRandomHadith(hadith);
-    } catch {
-      // Silent fail
-    }
-    setLoadingRandom(false);
-  };
-
-  const handleDownload = async (bookId: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    const success = await downloadBook(bookId);
-    if (success) {
-      toast.success('تم تنزيل الكتاب بنجاح');
-    } else {
-      toast.error('فشل في تنزيل الكتاب');
-    }
-  };
-
-  const handleDelete = async (bookId: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    await deleteBook(bookId);
-    toast.success('تم حذف الكتاب');
-  };
-
-  const selectBook = (bookId: string) => {
-    setSelectedBook(bookId);
-    setSearchQuery('');
-    setSearchResults([]);
-    setActiveTab('browse');
-  };
-
-  const openDetails = (hadith: Hadith) => {
-    setSelectedHadith(hadith);
+  const handleOpenDetails = (h: Hadith) => {
+    setDetailsHadith(h);
     setDetailsOpen(true);
   };
 
-  const handleFontSizeChange = (size: number) => {
-    setHadithFontSize(size);
-    updateSettings({ fontSize: size });
+  const handleToggleBookmark = async (h: Hadith) => {
+    await toggleBookmark({
+      bookId: h.bookId,
+      hadithNumber: h.hadithNumber,
+      text: h.text,
+      narrator: h.narrator,
+      grade: h.grade,
+    });
   };
 
-  const handleFontFamilyChange = (family: string) => {
-    const validFamilies: FontFamily[] = ['Amiri', 'Scheherazade', 'Noto Naskh', 'Uthmani'];
-    if (validFamilies.includes(family as FontFamily)) {
-      setHadithFontFamily(family as FontFamily);
-      updateSettings({ fontFamily: family as FontFamily });
-    }
-  };
-
-  const currentBookData = getBookById(selectedBook);
-  const displayedHadiths = isSearchMode ? searchResults : hadiths;
+  // Infinite scroll sentinel
+  useEffect(() => {
+    if (isSearchMode) return;
+    const onScroll = () => {
+      const nearBottom =
+        window.innerHeight + window.scrollY >=
+        document.documentElement.scrollHeight - 600;
+      if (nearBottom && !loadingMore && hasMore) handleLoadMore();
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [handleLoadMore, isSearchMode, loadingMore, hasMore]);
 
   return (
     <TooltipProvider>
       <Helmet>
         <title>الأحاديث النبوية الشريفة | نور الفرقان</title>
-        <meta name="description" content="مكتبة الأحاديث النبوية من الكتب التسعة بتشكيل كامل وتصدير بجودة 4K" />
+        <meta
+          name="description"
+          content="مكتبة الأحاديث النبوية الشريفة من الكتب التسعة مع بحث ذكي عربي وحديث اليوم"
+        />
       </Helmet>
 
-      <div className="min-h-screen bg-background pb-24">
-        {/* Islamic pattern background overlay */}
-        <div className="fixed inset-0 islamic-pattern opacity-30 pointer-events-none" />
-        
-        <Header />
+      <div className="min-h-screen bg-background pb-28" dir="rtl">
+        <div className="fixed inset-0 islamic-pattern opacity-[0.04] pointer-events-none" />
 
-        {/* Hero Section with Search */}
-        <HadithHeroSection
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          onClearSearch={clearSearch}
-          isSearching={isSearching}
-          searchResultsCount={searchResults.length}
-          isSearchMode={isSearchMode}
-        />
+        <HadithPageHeader bookmarkCount={bookmarks.length} />
 
-        <main className="container mx-auto px-4 py-8 arabic-ui relative z-10">
-          {/* Featured Random Hadith */}
-          <div className="mb-10">
-            <HadithFeaturedCard
-              hadith={randomHadith}
-              isLoading={loadingRandom}
-              copiedId={copiedId}
-              fontSize={hadithFontSize}
-              fontFamily={hadithFontFamily}
-              onRefresh={loadRandomHadith}
-              onCopy={handleCopy}
-              onShare={handleShare}
-              onViewDetails={openDetails}
-              onShareAsImage={handleShareAsImage}
-            />
+        <main className="relative z-10 space-y-5">
+          <HadithOfTheDayCard
+            hadith={hadithOfDay}
+            loading={loadingDay}
+            onShare={handleShare}
+          />
+
+          <HadithSearchBar
+            value={searchQuery}
+            onChange={setSearchQuery}
+            onClear={() => setSearchQuery("")}
+            isSearching={isSearching}
+            resultsCount={searchResults.length}
+            showCount={isSearchMode && !isSearching}
+          />
+
+          <HadithBookTabs
+            selectedBookId={selectedBook}
+            onSelect={setSelectedBook}
+          />
+
+          <HadithTopicChips
+            selected={selectedTopics}
+            onToggle={(id) =>
+              setSelectedTopics((prev) =>
+                prev.includes(id)
+                  ? prev.filter((x) => x !== id)
+                  : [...prev, id]
+              )
+            }
+          />
+
+          <div className="flex items-center justify-between px-4">
+            <span className="text-xs text-muted-foreground">
+              {displayed.length.toLocaleString("ar-EG")} حديث
+            </span>
+            <HadithSortMenu value={sort} onChange={setSort} />
           </div>
 
-          {/* Main Tabs */}
-          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="space-y-8">
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <TabsList className="bg-card/80 backdrop-blur-sm p-1.5 h-14 border-2 border-border/40 shadow-lg">
-                <TabsTrigger 
-                  value="browse" 
-                  className="gap-2.5 h-11 px-6 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg rounded-lg transition-all"
-                >
-                  <BookMarked className="w-5 h-5" />
-                  <span className="font-bold">تصفح الأحاديث</span>
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="library" 
-                  className="gap-2.5 h-11 px-6 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg rounded-lg transition-all"
-                >
-                  <Layers className="w-5 h-5" />
-                  <span className="font-bold">المكتبة</span>
-                </TabsTrigger>
-              </TabsList>
-
-              {/* Font Controls & Stats */}
-              <div className="flex items-center gap-3">
-                <HadithFontControls
-                  fontSize={hadithFontSize}
-                  fontFamily={hadithFontFamily}
-                  onFontSizeChange={handleFontSizeChange}
-                  onFontFamilyChange={handleFontFamilyChange}
-                />
-                
-                <Badge 
-                  variant="secondary" 
-                  className="gap-2 py-2.5 px-4 hidden sm:flex bg-card/80 backdrop-blur-sm border border-border/40"
-                >
-                  <HardDrive className="w-4 h-4 text-emerald-500" />
-                  <span className="font-bold">{storageStats.totalHadiths.toLocaleString('ar-EG')}</span>
-                  <span className="text-muted-foreground">حديث محفوظ</span>
-                </Badge>
-              </div>
+          {/* List */}
+          {loadingList || (isSearchMode && isSearching) ? (
+            <HadithSkeleton />
+          ) : displayed.length === 0 ? (
+            <div className="px-6 py-16 text-center">
+              <p
+                className="text-base font-bold mb-2"
+                style={{ fontFamily: "'Amiri', 'Scheherazade New', serif" }}
+              >
+                لا توجد نتائج
+              </p>
+              <p className="text-xs text-muted-foreground">
+                جرّب كلمة أخرى أو غيّر الكتاب/الموضوع
+              </p>
             </div>
+          ) : (
+            <div className="space-y-4 px-4">
+              {displayed.map((h, i) => (
+                <HadithCardV2
+                  key={`${h.bookId}-${h.hadithNumber}-${h.id}`}
+                  hadith={h}
+                  index={i}
+                  searchQuery={isSearchMode ? debouncedQuery : undefined}
+                  isBookmarked={isBookmarked({ bookId: h.bookId, hadithNumber: h.hadithNumber })}
+                  isCopied={copiedId === h.id}
+                  onToggleBookmark={() => handleToggleBookmark(h)}
+                  onCopy={() => handleCopy(h)}
+                  onShare={() => handleShare(h)}
+                  onOpenDetails={() => handleOpenDetails(h)}
+                />
+              ))}
 
-            {/* Browse Tab */}
-            <TabsContent value="browse" className="space-y-6 mt-0">
-              {/* Book Selector */}
-              <HadithBookSelector
-                books={hadithBooks}
-                selectedBookId={selectedBook}
-                onSelectBook={selectBook}
-                isDownloaded={isDownloaded}
-                isSearchMode={isSearchMode}
-                onClearSearch={clearSearch}
-              />
-
-              {/* Section header */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <h2 className="text-xl font-bold text-foreground">
-                    {isSearchMode ? 'نتائج البحث' : currentBookData?.nameAr}
-                  </h2>
-                  {isSearchMode && (
-                    <Badge variant="secondary" className="bg-primary/10 text-primary">
-                      {searchResults.length} نتيجة
-                    </Badge>
-                  )}
-                  {!isSearchMode && isDownloaded(selectedBook) && (
-                    <Badge variant="outline" className="gap-1.5 text-emerald-600 border-emerald-500/30 bg-emerald-500/10">
-                      متاح بدون نت
-                    </Badge>
+              {!isSearchMode && hasMore && (
+                <div className="py-6 flex justify-center">
+                  {loadingMore ? (
+                    <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                  ) : (
+                    <Button variant="outline" onClick={handleLoadMore} className="rounded-full">
+                      تحميل المزيد
+                    </Button>
                   )}
                 </div>
-              </div>
-
-              {/* Infinite Scroll Hadith List */}
-              <HadithInfiniteList
-                hadiths={displayedHadiths}
-                isLoading={loadingHadiths}
-                isLoadingMore={loadingMore}
-                hasMore={!isSearchMode && hasMore}
-                onLoadMore={handleLoadMore}
-                fontSize={hadithFontSize}
-                fontFamily={hadithFontFamily}
-                onCopy={handleCopy}
-                onShare={handleShare}
-                onViewDetails={openDetails}
-                onShareAsImage={handleShareAsImage}
-                copiedId={copiedId}
-                emptyMessage={isSearchMode ? 'لا توجد نتائج' : 'لا توجد أحاديث'}
-                emptySubMessage={
-                  isSearchMode 
-                    ? 'جرب كلمات بحث مختلفة أو اختر كتاباً آخر' 
-                    : 'قم بتنزيل الكتاب لتصفحه بدون اتصال بالإنترنت'
-                }
-                showDownloadButton={!isSearchMode && !isDownloaded(selectedBook) && !downloading}
-                onDownload={() => handleDownload(selectedBook, { stopPropagation: () => {} } as React.MouseEvent)}
-              />
-            </TabsContent>
-
-            {/* Library Tab */}
-            <TabsContent value="library" className="mt-0">
-              <div className="mb-8">
-                <h2 className="text-2xl font-bold text-foreground mb-3">الكتب التسعة</h2>
-                <p className="text-muted-foreground">
-                  مكتبة شاملة من أمهات كتب الحديث الشريف — اختر كتاباً للتصفح أو التنزيل
-                </p>
-              </div>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {hadithBooks.map((book) => (
-                  <HadithLibraryCard
-                    key={book.id}
-                    book={book}
-                    isSelected={selectedBook === book.id}
-                    isDownloaded={isDownloaded(book.id)}
-                    isDownloading={downloading === book.id}
-                    downloadProgress={downloadProgress}
-                    onSelect={selectBook}
-                    onDownload={handleDownload}
-                    onDelete={handleDelete}
-                  />
-                ))}
-              </div>
-
-              {/* Stats summary */}
-              <Card className="mt-10 p-6 bg-gradient-to-br from-card via-card to-muted/20 border-2 border-border/40 shadow-xl">
-                <div className="flex flex-wrap items-center justify-between gap-6 text-sm">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                      <Library className="w-6 h-6 text-primary" />
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground block text-xs mb-0.5">إجمالي الأحاديث</span>
-                      <span className="font-bold text-xl text-foreground">
-                        {hadithBooks.reduce((sum, b) => sum + b.totalHadiths, 0).toLocaleString('ar-EG')}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center">
-                      <HardDrive className="w-6 h-6 text-emerald-600" />
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground block text-xs mb-0.5">محفوظ محلياً</span>
-                      <span className="font-bold text-xl text-foreground">
-                        {storageStats.totalHadiths.toLocaleString('ar-EG')}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center">
-                      <BookOpen className="w-6 h-6 text-accent" />
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground block text-xs mb-0.5">الكتب المحفوظة</span>
-                      <span className="font-bold text-xl text-foreground">
-                        {storageStats.booksCount} من {hadithBooks.length}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </Card>
-            </TabsContent>
-          </Tabs>
+              )}
+            </div>
+          )}
         </main>
 
-        {/* Hadith Details Modal */}
-        <HadithDetailsModal
-          hadith={selectedHadith}
-          isOpen={detailsOpen}
-          onClose={() => setDetailsOpen(false)}
-          fontSize={hadithFontSize}
-          fontFamily={hadithFontFamily}
-          onCopy={handleCopy}
-          onShare={handleShare}
-          onShareAsImage={handleShareAsImage}
+        <HadithBackToTop />
+
+        <HadithDetailsSheet
+          open={detailsOpen}
+          onOpenChange={setDetailsOpen}
+          hadith={detailsHadith}
         />
 
-        {/* Share as Image Dialog */}
         {shareHadith && (
           <HadithShareDialog
-            isOpen={shareDialogOpen}
-            onClose={() => {
-              setShareDialogOpen(false);
-              setShareHadith(null);
-            }}
-            hadithText={shareHadith.text}
-            bookName={getBookById(shareHadith.bookId)?.nameAr || ''}
-            hadithNumber={shareHadith.hadithNumber}
-            narrator={shareHadith.narrator}
+            open={shareOpen}
+            onOpenChange={setShareOpen}
+            hadith={shareHadith}
+            fontSize={22}
+            fontFamily={"Amiri" as any}
           />
         )}
       </div>
