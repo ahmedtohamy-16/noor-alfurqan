@@ -239,18 +239,60 @@ const PrayerTimesPage = () => {
       settings.prayer_fajr_enabled, settings.prayer_dhuhr_enabled, settings.prayer_asr_enabled,
       settings.prayer_maghrib_enabled, settings.prayer_isha_enabled, playAdhan, getAdhanUrl]);
 
-  const locationBusy = isDetecting || isFetchingTimes;
+  const locationBusy = isDetecting || isFetchingTimes || isSavingSettings;
 
+  // Wrapped settings update — acquires lock so location-update actions cannot fire mid-write
+  const safeUpdateSettings = async (patch: Parameters<typeof updateSettings>[0]) => {
+    if (locationBusy) {
+      toast.info("يرجى الانتظار حتى انتهاء التحديث الحالي");
+      return;
+    }
+    setIsSavingSettings(true);
+    try {
+      await updateSettings(patch);
+    } finally {
+      setIsSavingSettings(false);
+    }
+  };
 
   const handleAutoDetect = async () => {
     if (locationBusy) return;
     setIsDetecting(true);
-    await autoDetectLocation();
-    setIsDetecting(false);
+    try {
+      const ok = await autoDetectLocation();
+      if (!ok) {
+        toast.error("تعذّر تحديد موقعك", {
+          description: "يمكنك إعادة المحاولة أو اختيار مدينتك يدوياً.",
+          duration: 9000,
+          action: { label: "إعادة المحاولة", onClick: () => handleAutoDetect() },
+        });
+      }
+    } finally {
+      setIsDetecting(false);
+    }
   };
 
   const handleCityPick = async (city: { latitude: number; longitude: number; name_ar: string; country_code: string }) => {
     if (locationBusy) return;
+    if (
+      settings.city_name === city.name_ar &&
+      Math.abs((settings.latitude || 0) - city.latitude) < 0.001 &&
+      Math.abs((settings.longitude || 0) - city.longitude) < 0.001
+    ) {
+      return;
+    }
+    setIsDetecting(true);
+    try {
+      await updateLocation(city.latitude, city.longitude, city.name_ar);
+      await updateSettings({ country_code: city.country_code });
+    } catch {
+      toast.error("تعذّر تحديث الموقع", {
+        action: { label: "إعادة المحاولة", onClick: () => handleCityPick(city) },
+      });
+    } finally {
+      setIsDetecting(false);
+    }
+  };
     // Prevent redundant update (same city already selected)
     if (
       settings.city_name === city.name_ar &&
