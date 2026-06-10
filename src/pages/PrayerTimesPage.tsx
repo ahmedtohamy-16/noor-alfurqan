@@ -58,12 +58,43 @@ const prayers = [
 
 const monthNames = ["يناير","فبراير","مارس","أبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"];
 
+const PRAYER_CACHE_PREFIX = "prayerTimesCache:v1:";
+const CACHE_TTL_MS = 1000 * 60 * 60 * 6; // 6 hours
+
+const cacheKey = (lat: number, lng: number, method: number, madhab: number, dateStr: string) =>
+  `${PRAYER_CACHE_PREFIX}${lat.toFixed(3)}|${lng.toFixed(3)}|${method}|${madhab}|${dateStr}`;
+
+const readCache = (key: string): PrayerTimesData | null => {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as { ts: number; data: PrayerTimesData };
+    if (Date.now() - parsed.ts > CACHE_TTL_MS) return null;
+    return parsed.data;
+  } catch {
+    return null;
+  }
+};
+
+const writeCache = (key: string, data: PrayerTimesData) => {
+  try {
+    localStorage.setItem(key, JSON.stringify({ ts: Date.now(), data }));
+  } catch {}
+};
+
 const fetchPrayerTimes = async (lat: number, lng: number, method: number, madhab: number): Promise<PrayerTimesData> => {
   const today = new Date();
   const dateStr = `${today.getDate()}-${today.getMonth() + 1}-${today.getFullYear()}`;
+  const key = cacheKey(lat, lng, method, madhab, dateStr);
+  const cached = readCache(key);
+  if (cached) return cached;
   const r = await fetch(`https://api.aladhan.com/v1/timings/${dateStr}?latitude=${lat}&longitude=${lng}&method=${method}&school=${madhab}`);
+  if (!r.ok) throw new Error(`Prayer API error: ${r.status}`);
   const d = await r.json();
-  return d.data.timings;
+  const timings = d?.data?.timings;
+  if (!timings) throw new Error("بيانات المواقيت غير متاحة");
+  writeCache(key, timings);
+  return timings;
 };
 
 const PrayerTimesPage = () => {
