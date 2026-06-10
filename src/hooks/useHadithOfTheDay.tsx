@@ -13,7 +13,6 @@ export const useHadithOfTheDay = () => {
   useEffect(() => {
     const todayKey = new Date().toISOString().slice(0, 10);
 
-    // Try cache first
     try {
       const cached = localStorage.getItem(STORAGE_KEY);
       if (cached) {
@@ -29,7 +28,6 @@ export const useHadithOfTheDay = () => {
     let cancelled = false;
     (async () => {
       try {
-        // Deterministic pick using date seed
         const seed = todayKey.split("-").reduce((a, b) => a + parseInt(b, 10), 0);
         const book = hadithBooks[seed % hadithBooks.length];
         const totalSafe = Math.max(1, Math.min(book.totalHadiths, 5000));
@@ -37,4 +35,30 @@ export const useHadithOfTheDay = () => {
         const page = Math.floor(targetIndex / 20) + 1;
         const data = await fetchHadiths(book.id, page, 20);
         const list = data?.hadiths || [];
-        const picked = list[targetIndex % Math.max(list.length, 1)] || list[0]
+        const picked = list.length
+          ? list[targetIndex % list.length]
+          : null;
+        if (cancelled) return;
+        if (picked) {
+          setHadith(picked);
+          try {
+            localStorage.setItem(
+              STORAGE_KEY,
+              JSON.stringify({ date: todayKey, hadith: picked })
+            );
+          } catch {}
+        }
+      } catch (e) {
+        console.error("Hadith of the day failed", e);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [fetchHadiths]);
+
+  return { hadith, loading };
+};
