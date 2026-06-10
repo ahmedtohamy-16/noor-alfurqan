@@ -58,12 +58,43 @@ const prayers = [
 
 const monthNames = ["يناير","فبراير","مارس","أبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"];
 
+const PRAYER_CACHE_PREFIX = "prayerTimesCache:v1:";
+const CACHE_TTL_MS = 1000 * 60 * 60 * 6; // 6 hours
+
+const cacheKey = (lat: number, lng: number, method: number, madhab: number, dateStr: string) =>
+  `${PRAYER_CACHE_PREFIX}${lat.toFixed(3)}|${lng.toFixed(3)}|${method}|${madhab}|${dateStr}`;
+
+const readCache = (key: string): PrayerTimesData | null => {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as { ts: number; data: PrayerTimesData };
+    if (Date.now() - parsed.ts > CACHE_TTL_MS) return null;
+    return parsed.data;
+  } catch {
+    return null;
+  }
+};
+
+const writeCache = (key: string, data: PrayerTimesData) => {
+  try {
+    localStorage.setItem(key, JSON.stringify({ ts: Date.now(), data }));
+  } catch {}
+};
+
 const fetchPrayerTimes = async (lat: number, lng: number, method: number, madhab: number): Promise<PrayerTimesData> => {
   const today = new Date();
   const dateStr = `${today.getDate()}-${today.getMonth() + 1}-${today.getFullYear()}`;
+  const key = cacheKey(lat, lng, method, madhab, dateStr);
+  const cached = readCache(key);
+  if (cached) return cached;
   const r = await fetch(`https://api.aladhan.com/v1/timings/${dateStr}?latitude=${lat}&longitude=${lng}&method=${method}&school=${madhab}`);
+  if (!r.ok) throw new Error(`Prayer API error: ${r.status}`);
   const d = await r.json();
-  return d.data.timings;
+  const timings = d?.data?.timings;
+  if (!timings) throw new Error("بيانات المواقيت غير متاحة");
+  writeCache(key, timings);
+  return timings;
 };
 
 const PrayerTimesPage = () => {
@@ -86,12 +117,29 @@ const PrayerTimesPage = () => {
   const madhab = settings.prayer_madhab || 0;
   const hasLocation = settings.latitude && settings.longitude;
 
-  const { data: prayerTimes, isLoading: isLoadingTimes, isFetching: isFetchingTimes } = useQuery({
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
+
+  const { data: prayerTimes, isLoading: isLoadingTimes, isFetching: isFetchingTimes, error: prayerError, refetch: refetchPrayer } = useQuery({
     queryKey: ["prayerTimes", lat, lng, method, madhab],
     queryFn: () => fetchPrayerTimes(lat, lng, method, madhab),
     enabled: !!lat && !!lng,
     staleTime: 1000 * 60 * 60,
+    gcTime: 1000 * 60 * 60 * 6,
+    retry: 1,
   });
+
+  // Error alert with retry button on fetch failure
+  useEffect(() => {
+    if (!prayerError) return;
+    toast.error("تعذّر تحديث مواقيت الصلاة", {
+      description: "تحقق من الاتصال بالإنترنت وحاول مرة أخرى.",
+      duration: 10000,
+      action: {
+        label: "إعادة المحاولة",
+        onClick: () => refetchPrayer(),
+      },
+    });
+  }, [prayerError, refetchPrayer]);
 
 
   useEffect(() => {
@@ -191,19 +239,41 @@ const PrayerTimesPage = () => {
       settings.prayer_fajr_enabled, settings.prayer_dhuhr_enabled, settings.prayer_asr_enabled,
       settings.prayer_maghrib_enabled, settings.prayer_isha_enabled, playAdhan, getAdhanUrl]);
 
-  const locationBusy = isDetecting || isFetchingTimes;
+  const locationBusy = isDetecting || isFetchingTimes || isSavingSettings;
 
+  // Wrapped settings update — acquires lock so location-update actions cannot fire mid-write
+  const safeUpdateSettings = async (patch: Parameters<typeof updateSettings>[0]) => {
+    if (locationBusy) {
+      toast.info("يرجى الانتظار حتى انتهاء التحديث الحالي");
+      return;
+    }
+    setIsSavingSettings(true);
+    try {
+      await updateSettings(patch);
+    } finally {
+      setIsSavingSettings(false);
+    }
+  };
 
   const handleAutoDetect = async () => {
     if (locationBusy) return;
     setIsDetecting(true);
-    await autoDetectLocation();
-    setIsDetecting(false);
+    try {
+      const ok = await autoDetectLocation();
+      if (!ok) {
+        toast.error("تعذّر تحديد موقعك", {
+          description: "يمكنك إعادة المحاولة أو اختيار مدينتك يدوياً.",
+          duration: 9000,
+          action: { label: "إعادة المحاولة", onClick: () => handleAutoDetect() },
+        });
+      }
+    } finally {
+      setIsDetecting(false);
+    }
   };
 
   const handleCityPick = async (city: { latitude: number; longitude: number; name_ar: string; country_code: string }) => {
     if (locationBusy) return;
-    // Prevent redundant update (same city already selected)
     if (
       settings.city_name === city.name_ar &&
       Math.abs((settings.latitude || 0) - city.latitude) < 0.001 &&
@@ -212,9 +282,16 @@ const PrayerTimesPage = () => {
       return;
     }
     setIsDetecting(true);
-    await updateLocation(city.latitude, city.longitude, city.name_ar);
-    await updateSettings({ country_code: city.country_code });
-    setIsDetecting(false);
+    try {
+      await updateLocation(city.latitude, city.longitude, city.name_ar);
+      await updateSettings({ country_code: city.country_code });
+    } catch {
+      toast.error("تعذّر تحديث الموقع", {
+        action: { label: "إعادة المحاولة", onClick: () => handleCityPick(city) },
+      });
+    } finally {
+      setIsDetecting(false);
+    }
   };
 
 
@@ -496,10 +573,11 @@ const PrayerTimesPage = () => {
             <button
               onClick={() => {
                 const newVal = !settings.notifications_enabled;
-                updateSettings({ notifications_enabled: newVal });
+                safeUpdateSettings({ notifications_enabled: newVal });
                 if (!newVal) stopAdhan();
               }}
-              className={cn("w-10 h-10 rounded-full flex items-center justify-center transition",
+              disabled={locationBusy}
+              className={cn("w-10 h-10 rounded-full flex items-center justify-center transition disabled:opacity-50",
                 settings.notifications_enabled ? "bg-blue-600 text-white" : palette.chip)}
             >
               {settings.notifications_enabled ? <Bell className="w-4 h-4" /> : <BellOff className="w-4 h-4" />}
@@ -510,7 +588,8 @@ const PrayerTimesPage = () => {
             <label className={cn("text-xs font-medium", palette.subText)}>تذكير قبل الأذان</label>
             <Select
               value={String(settings.prayer_reminder_minutes ?? 15)}
-              onValueChange={(v) => updateSettings({ prayer_reminder_minutes: parseInt(v) })}
+              onValueChange={(v) => safeUpdateSettings({ prayer_reminder_minutes: parseInt(v) })}
+              disabled={locationBusy}
             >
               <SelectTrigger className="h-11 rounded-xl"><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -528,7 +607,8 @@ const PrayerTimesPage = () => {
             <div className="flex gap-2">
               <Select
                 value={settings.adhan_sound || "makkah"}
-                onValueChange={(v) => updateSettings({ adhan_sound: v })}
+                onValueChange={(v) => safeUpdateSettings({ adhan_sound: v })}
+                disabled={locationBusy}
               >
                 <SelectTrigger className="h-11 rounded-xl flex-1"><SelectValue /></SelectTrigger>
                 <SelectContent>
