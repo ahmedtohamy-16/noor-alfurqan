@@ -607,7 +607,8 @@ const PrayerTimesPage = () => {
             <div className="flex gap-2">
               <Select
                 value={settings.adhan_sound || "makkah"}
-                onValueChange={(v) => updateSettings({ adhan_sound: v })}
+                onValueChange={(v) => safeUpdateSettings({ adhan_sound: v })}
+                disabled={locationBusy}
               >
                 <SelectTrigger className="h-11 rounded-xl flex-1"><SelectValue /></SelectTrigger>
                 <SelectContent>
