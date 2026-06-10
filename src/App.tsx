@@ -38,6 +38,7 @@ const RuqyahPage = lazy(() => import("./pages/RuqyahPage"));
 const NotificationsPage = lazy(() => import("./pages/NotificationsPage"));
 const NotificationSettingsPage = lazy(() => import("./components/NotificationSettingsPage"));
 const HadithPage = lazy(() => import("./pages/HadithPage"));
+const HadithBookmarksPage = lazy(() => import("./pages/HadithBookmarksPage"));
 const AdminPage = lazy(() => import("./pages/AdminPage"));
 const LessonsPage = lazy(() => import("./pages/LessonsPage"));
 const TeacherDashboard = lazy(() => import("./pages/TeacherDashboard"));
@@ -110,6 +111,7 @@ const App = () => (
                           <Route path="/notifications" element={<NotificationsPage />} />
                           <Route path="/notification-settings" element={<NotificationSettingsPage />} />
                           <Route path="/hadith" element={<HadithPage />} />
+                          <Route path="/hadith/bookmarks" element={<HadithBookmarksPage />} />
                           <Route path="/admin" element={<AdminPage />} />
                           <Route path="/lessons" element={<LessonsPage />} />
                           <Route path="/teacher" element={<TeacherDashboard />} />
