@@ -117,12 +117,29 @@ const PrayerTimesPage = () => {
   const madhab = settings.prayer_madhab || 0;
   const hasLocation = settings.latitude && settings.longitude;
 
-  const { data: prayerTimes, isLoading: isLoadingTimes, isFetching: isFetchingTimes } = useQuery({
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
+
+  const { data: prayerTimes, isLoading: isLoadingTimes, isFetching: isFetchingTimes, error: prayerError, refetch: refetchPrayer } = useQuery({
     queryKey: ["prayerTimes", lat, lng, method, madhab],
     queryFn: () => fetchPrayerTimes(lat, lng, method, madhab),
     enabled: !!lat && !!lng,
     staleTime: 1000 * 60 * 60,
+    gcTime: 1000 * 60 * 60 * 6,
+    retry: 1,
   });
+
+  // Error alert with retry button on fetch failure
+  useEffect(() => {
+    if (!prayerError) return;
+    toast.error("تعذّر تحديث مواقيت الصلاة", {
+      description: "تحقق من الاتصال بالإنترنت وحاول مرة أخرى.",
+      duration: 10000,
+      action: {
+        label: "إعادة المحاولة",
+        onClick: () => refetchPrayer(),
+      },
+    });
+  }, [prayerError, refetchPrayer]);
 
 
   useEffect(() => {
