@@ -573,10 +573,11 @@ const PrayerTimesPage = () => {
             <button
               onClick={() => {
                 const newVal = !settings.notifications_enabled;
-                updateSettings({ notifications_enabled: newVal });
+                safeUpdateSettings({ notifications_enabled: newVal });
                 if (!newVal) stopAdhan();
               }}
-              className={cn("w-10 h-10 rounded-full flex items-center justify-center transition",
+              disabled={locationBusy}
+              className={cn("w-10 h-10 rounded-full flex items-center justify-center transition disabled:opacity-50",
                 settings.notifications_enabled ? "bg-blue-600 text-white" : palette.chip)}
             >
               {settings.notifications_enabled ? <Bell className="w-4 h-4" /> : <BellOff className="w-4 h-4" />}
@@ -587,7 +588,8 @@ const PrayerTimesPage = () => {
             <label className={cn("text-xs font-medium", palette.subText)}>تذكير قبل الأذان</label>
             <Select
               value={String(settings.prayer_reminder_minutes ?? 15)}
-              onValueChange={(v) => updateSettings({ prayer_reminder_minutes: parseInt(v) })}
+              onValueChange={(v) => safeUpdateSettings({ prayer_reminder_minutes: parseInt(v) })}
+              disabled={locationBusy}
             >
               <SelectTrigger className="h-11 rounded-xl"><SelectValue /></SelectTrigger>
               <SelectContent>
