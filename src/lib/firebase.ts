@@ -141,6 +141,7 @@ export const COLLECTIONS = {
   QUIZ_ATTEMPTS: "quiz_attempts",
   COURSE_ENROLLMENTS: "course_enrollments",
   COURSE_LESSONS: "course_lessons",
+  HADITH_BOOKMARKS: "hadith_bookmarks",
 };
 
 // ==================== AUTH FUNCTIONS ====================
