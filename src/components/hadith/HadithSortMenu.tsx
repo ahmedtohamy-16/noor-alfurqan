@@ -34,7 +34,7 @@ const HadithSortMenu = ({ value, onChange }: Props) => {
           <span>{LABELS[value]}</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" dir="rtl" className="min-w-[180px]">
+      <DropdownMenuContent align="end" className="min-w-[180px]">
         {(Object.keys(LABELS) as HadithSort[]).map((k) => (
           <DropdownMenuItem
             key={k}
