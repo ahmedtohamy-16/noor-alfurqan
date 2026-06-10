@@ -465,6 +465,33 @@ export type Database = {
         }
         Relationships: []
       }
+      hadith_shares: {
+        Row: {
+          book_id: string
+          created_at: string
+          hadith_number: number
+          id: string
+          share_count: number
+          updated_at: string
+        }
+        Insert: {
+          book_id: string
+          created_at?: string
+          hadith_number: number
+          id?: string
+          share_count?: number
+          updated_at?: string
+        }
+        Update: {
+          book_id?: string
+          created_at?: string
+          hadith_number?: number
+          id?: string
+          share_count?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       khatmah_participants: {
         Row: {
           assigned_juz: number
@@ -1308,6 +1335,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      increment_hadith_share: {
+        Args: { p_book_id: string; p_hadith_number: number }
+        Returns: number
       }
       join_khatmah_by_code: { Args: { p_invite_code: string }; Returns: Json }
     }
