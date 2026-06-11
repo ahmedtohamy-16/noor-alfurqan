@@ -63,6 +63,7 @@ import {
   Lesson 
 } from "@/services/lessonService";
 import { collection, getDocs } from "firebase/firestore";
+import ProAdminsManager from "@/components/pro/ProAdminsManager";
 
 const AdminPage = () => {
   const navigate = useNavigate();
@@ -390,9 +391,10 @@ const AdminPage = () => {
 
         {/* Tabs */}
         <Tabs defaultValue="lessons" className="w-full">
-          <TabsList className={`grid w-full ${isAdmin ? "grid-cols-2" : "grid-cols-1"}`}>
+          <TabsList className={`grid w-full ${isAdmin ? "grid-cols-3" : "grid-cols-1"}`}>
             <TabsTrigger value="lessons">الدروس</TabsTrigger>
             {isAdmin && <TabsTrigger value="users">المستخدمين</TabsTrigger>}
+            {isAdmin && <TabsTrigger value="pro">Pro</TabsTrigger>}
           </TabsList>
 
           {/* Lessons Tab */}
@@ -596,6 +598,12 @@ const AdminPage = () => {
                   </div>
                 </CardContent>
               </Card>
+            </TabsContent>
+          )}
+
+          {isAdmin && (
+            <TabsContent value="pro" className="space-y-4">
+              <ProAdminsManager />
             </TabsContent>
           )}
         </Tabs>
