@@ -374,7 +374,25 @@ service cloud.firestore {
       allow update: if isAdmin();
       allow delete: if isAdmin();
     }
-    
+
+    // ============================================
+    // PRO SUBSCRIPTION
+    // ============================================
+
+    // Admin allowlist for free Pro access — readable by all authed users
+    // (client checks if current user's email/uid is in the list), writable by admins only.
+    match /pro_config/{docId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // Per-user Pro status — user can read own doc, only admins can write.
+    match /pro_users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow write: if isAdmin();
+    }
+
+
     // ============================================
     // DEFAULT DENY
     // ============================================

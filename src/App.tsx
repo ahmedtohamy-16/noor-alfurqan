@@ -12,6 +12,7 @@ import { GlobalAudioProvider } from "@/hooks/useGlobalAudio";
 import { DownloadManagerProvider } from "@/components/DownloadManager";
 import { useGuestMigration } from "@/hooks/useGuestMigration";
 import { HomeModeProvider } from "@/hooks/useHomeMode";
+import { ProProvider } from "@/hooks/usePro";
 import BottomNavigation from "@/components/BottomNavigation";
 import GlobalAudioPlayer from "@/components/GlobalAudioPlayer";
 
@@ -59,6 +60,7 @@ const SplashScreen = lazy(() => import("./pages/SplashScreen"));
 const ExplorePage = lazy(() => import("./pages/ExplorePage"));
 const CreatePostPage = lazy(() => import("./pages/CreatePostPage"));
 const AsmaUlHusnaPage = lazy(() => import("./pages/AsmaUlHusnaPage"));
+const ProPage = lazy(() => import("./pages/ProPage"));
 
 const queryClient = new QueryClient();
 
@@ -79,6 +81,7 @@ const App = () => (
   <HelmetProvider>
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
+        <ProProvider>
         <ThemeProvider>
           <ReadingSettingsProvider>
             <GlobalAudioProvider>
@@ -131,6 +134,7 @@ const App = () => (
                           <Route path="/explore" element={<ExplorePage />} />
                           <Route path="/create-post" element={<CreatePostPage />} />
                           <Route path="/asma-ul-husna" element={<AsmaUlHusnaPage />} />
+                          <Route path="/pro" element={<ProPage />} />
                           <Route path="*" element={<NotFound />} />
                         </Routes>
                       </Suspense>
@@ -144,6 +148,7 @@ const App = () => (
             </GlobalAudioProvider>
           </ReadingSettingsProvider>
         </ThemeProvider>
+        </ProProvider>
       </AuthProvider>
     </QueryClientProvider>
   </HelmetProvider>
