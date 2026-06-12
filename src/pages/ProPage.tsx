@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { PRO_FEATURES } from "@/data/proFeatures";
 import { toast } from "sonner";
 import ProBadge from "@/components/pro/ProBadge";
+import ProRedeemCard from "@/components/pro/ProRedeemCard";
 
 const PRO_COLOR = "#0074fc";
 
@@ -156,6 +157,7 @@ const ProPage = () => {
               <Gift className="w-4 h-4" style={{ color: PRO_COLOR }} />
               3 أيام تجربة مجانية للمستخدمين داخل الدول العربية — يمكن الإلغاء في أي وقت
             </div>
+            <ProRedeemCard />
           </div>
         )}
 
