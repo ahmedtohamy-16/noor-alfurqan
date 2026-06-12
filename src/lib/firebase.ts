@@ -164,6 +164,9 @@ export const signUp = async (
   username?: string,
   role: UserRole = "student"
 ) => {
+  // Defense-in-depth: never allow client to self-assign admin.
+  // Only "student" or "teacher" can be requested from the client.
+  const safeRole: UserRole = role === "teacher" ? "teacher" : "student";
   const userCredential = await createUserWithEmailAndPassword(auth, email, password);
   const user = userCredential.user;
   
@@ -176,7 +179,7 @@ export const signUp = async (
     email: user.email,
     displayName: displayName,
     photoURL: null,
-    role: role,
+    role: safeRole,
     device_type: deviceInfo,
     user_agent: typeof navigator !== "undefined" ? navigator.userAgent : null,
     createdAt: serverTimestamp(),
@@ -186,7 +189,7 @@ export const signUp = async (
   // Create user role entry (separate collection for security)
   await setDoc(doc(db, COLLECTIONS.USER_ROLES, user.uid), {
     uid: user.uid,
-    role: role,
+    role: safeRole,
     createdAt: serverTimestamp()
   });
 
