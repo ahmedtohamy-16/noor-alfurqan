@@ -1328,6 +1328,10 @@ export type Database = {
     Functions: {
       cleanup_expired_otps: { Args: never; Returns: undefined }
       generate_invite_code: { Args: never; Returns: string }
+      get_khatmah_invite_code: {
+        Args: { p_khatmah_id: string }
+        Returns: string
+      }
       get_usage_stats: { Args: never; Returns: Json }
       has_role: {
         Args: {

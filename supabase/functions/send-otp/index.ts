@@ -21,8 +21,19 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Require service-role bearer — only invoked by verify-otp internally
+  const authHeader = req.headers.get("Authorization") || "";
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+  if (!serviceKey || authHeader !== `Bearer ${serviceKey}`) {
+    return new Response(
+      JSON.stringify({ error: "Unauthorized" }),
+      { status: 401, headers: { "Content-Type": "application/json", ...corsHeaders } }
+    );
+  }
+
   try {
     const { email, otp, type }: OtpRequest = await req.json();
+
 
     if (!email || !otp) {
       return new Response(
@@ -135,17 +146,15 @@ const handler = async (req: Request): Promise<Response> => {
     if (!response.ok) {
       const errorText = await response.text();
       console.error("Testmail API error:", errorText);
-      
-      // Fallback: Log the OTP for testing purposes
-      console.log(`📧 OTP for ${email}: ${otp}`);
-      
+      const redacted = email.replace(/(.).+(@.+)/, "$1***$2");
+      console.warn(`📧 OTP delivery failed for ${redacted}`);
+
       return new Response(
-        JSON.stringify({ 
-          success: true, 
-          message: "تم إرسال رمز التحقق",
-          debug: true // Indicates fallback mode
+        JSON.stringify({
+          success: false,
+          error: "تعذّر إرسال رمز التحقق. حاول لاحقاً",
         }),
-        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        { status: 502, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
