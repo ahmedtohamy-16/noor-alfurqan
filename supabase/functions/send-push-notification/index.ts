@@ -204,10 +204,23 @@ serve(async (req) => {
   const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const serviceAccountJson = Deno.env.get("FIREBASE_SERVICE_ACCOUNT");
 
+  // Require service-role bearer or admin-only CRON token
+  const authHeader = req.headers.get("Authorization") || "";
+  const cronSecret = Deno.env.get("CRON_SECRET_TOKEN") || "";
+  const isService = supabaseServiceKey && authHeader === `Bearer ${supabaseServiceKey}`;
+  const isCron = cronSecret && authHeader === `Bearer ${cronSecret}`;
+  if (!isService && !isCron) {
+    return new Response(
+      JSON.stringify({ success: false, error: "Unauthorized" }),
+      { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
   try {
     const rawPayload = await req.json();
+    
     
     // Validate payload structure
     const validation = validatePayload(rawPayload);
