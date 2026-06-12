@@ -64,6 +64,7 @@ import {
 } from "@/services/lessonService";
 import { collection, getDocs } from "firebase/firestore";
 import ProAdminsManager from "@/components/pro/ProAdminsManager";
+import ProRedeemCodeManager from "@/components/pro/ProRedeemCodeManager";
 
 const AdminPage = () => {
   const navigate = useNavigate();
@@ -603,6 +604,7 @@ const AdminPage = () => {
 
           {isAdmin && (
             <TabsContent value="pro" className="space-y-4">
+              <ProRedeemCodeManager />
               <ProAdminsManager />
             </TabsContent>
           )}
