@@ -403,6 +403,14 @@ service cloud.firestore {
     // ============================================
     // DEFAULT DENY
     // ============================================
+    // Memorization progress — per-user subcollection
+    match /memorization/{userId}/ayahs/{ayahId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    // ============================================
+    // DEFAULT DENY
+    // ============================================
     match /{document=**} {
       allow read, write: if false;
     }

@@ -61,6 +61,7 @@ const ExplorePage = lazy(() => import("./pages/ExplorePage"));
 const CreatePostPage = lazy(() => import("./pages/CreatePostPage"));
 const AsmaUlHusnaPage = lazy(() => import("./pages/AsmaUlHusnaPage"));
 const ProPage = lazy(() => import("./pages/ProPage"));
+const MemorizationPage = lazy(() => import("./pages/MemorizationPage"));
 
 const queryClient = new QueryClient();
 
@@ -135,6 +136,7 @@ const App = () => (
                           <Route path="/create-post" element={<CreatePostPage />} />
                           <Route path="/asma-ul-husna" element={<AsmaUlHusnaPage />} />
                           <Route path="/pro" element={<ProPage />} />
+                          <Route path="/memorization" element={<MemorizationPage />} />
                           <Route path="*" element={<NotFound />} />
                         </Routes>
                       </Suspense>

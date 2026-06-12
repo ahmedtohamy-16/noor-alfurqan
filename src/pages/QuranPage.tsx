@@ -126,6 +126,24 @@ const QuranPage = () => {
           </Tabs>
         )}
 
+        {/* Hifz / Memorization entry (Pro) */}
+        <Link to="/memorization" className="block mb-4">
+          <div
+            className="rounded-xl p-4 flex items-center gap-3 text-white shadow-md hover:shadow-lg transition-shadow"
+            style={{ background: "linear-gradient(135deg, #0074fc 0%, #4ea3ff 100%)" }}
+          >
+            <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center text-xl">📖</div>
+            <div className="flex-1 text-right">
+              <div className="font-bold flex items-center gap-2 justify-end">
+                <span className="text-[10px] bg-white/25 px-2 py-0.5 rounded-full">PRO</span>
+                وضع الحافظ المتقدم
+              </div>
+              <div className="text-xs text-white/85">إخفاء كلمات، اختبار، ومراجعة ذكية</div>
+            </div>
+          </div>
+        </Link>
+
+
         {/* Direct Ayah Reference */}
         {ayahRef && (
           <div className="mb-4">
