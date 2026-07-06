@@ -1,9 +1,12 @@
 import React, { createContext, useContext, useState, useRef, useCallback, useEffect, ReactNode } from 'react';
 import { reciters, getVerifiedReciters, type Reciter } from '@/data/reciters';
 import { toast } from 'sonner';
+import { surahs } from '@/data/surahs';
+import { getAyahsBySurahAsync } from '@/data/quranAyats';
+import { getJuzOfAyah } from '@/data/juzData';
 
 type RepeatMode = 'none' | 'single' | 'range';
-type PlayMode = 'single' | 'surah';
+type PlayMode = 'single' | 'surah' | 'juz' | 'quran';
 
 interface AyahInfo {
   number: number;
@@ -214,11 +217,79 @@ export const GlobalAudioProvider: React.FC<GlobalAudioProviderProps> = ({ childr
     }
   }, [currentSurah, currentAyahIndex, preloadMultipleAyahs]);
 
+  // Load next surah and start playback from the beginning (used for juz/quran modes).
+  const loadNextSurahAndPlay = useCallback(async (nextSurahNumber: number) => {
+    if (nextSurahNumber < 1 || nextSurahNumber > 114) {
+      setIsPlaying(false);
+      return;
+    }
+    const meta = surahs.find((s) => s.number === nextSurahNumber);
+    if (!meta) { setIsPlaying(false); return; }
+    try {
+      setIsLoading(true);
+      const raw = await getAyahsBySurahAsync(nextSurahNumber);
+      const nextSurah = {
+        number: meta.number,
+        name: meta.name,
+        ayahs: raw.map((a) => ({
+          number: a.id,
+          numberInSurah: a.ayat_number_in_sura,
+          text: a.text_uthmani,
+        })),
+      };
+      setCurrentSurah(nextSurah);
+      setCurrentAyahIndex(0);
+      setCurrentRepeat(0);
+      const ayah = nextSurah.ayahs[0];
+      if (ayah && audioRef.current) {
+        audioRef.current.src = `${selectedReciter.server}/${ayah.number}.mp3`;
+        await audioRef.current.play();
+        setIsPlaying(true);
+      }
+    } catch (err) {
+      console.error('Failed to load next surah:', err);
+      setIsPlaying(false);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [selectedReciter]);
+
   const handleEnded = useCallback(() => {
     if (!currentSurah) return;
 
     const ayahs = currentSurah.ayahs;
-    
+    const advanceOrCross = () => {
+      const nextIndex = currentAyahIndex + 1;
+      if (nextIndex < ayahs.length) {
+        // juz mode: stop if crossing juz boundary within surah
+        if (playMode === 'juz') {
+          const currJuz = getJuzOfAyah(ayahs[currentAyahIndex].number);
+          const nextJuz = getJuzOfAyah(ayahs[nextIndex].number);
+          if (currJuz !== nextJuz) { setIsPlaying(false); return; }
+        }
+        setCurrentAyahIndex(nextIndex);
+        playAyahInternal(nextIndex);
+        return;
+      }
+      // End of surah reached
+      if (playMode === 'quran' && currentSurah.number < 114) {
+        loadNextSurahAndPlay(currentSurah.number + 1);
+        return;
+      }
+      if (playMode === 'juz' && currentSurah.number < 114) {
+        // continue into next surah only if same juz
+        const currJuz = getJuzOfAyah(ayahs[currentAyahIndex].number);
+        // Next surah's first ayah global number is currentSurah last + 1
+        const nextGlobal = ayahs[currentAyahIndex].number + 1;
+        if (getJuzOfAyah(nextGlobal) === currJuz) {
+          loadNextSurahAndPlay(currentSurah.number + 1);
+          return;
+        }
+      }
+      setIsPlaying(false);
+      setCurrentAyahIndex(0);
+    };
+
     // Handle repeat logic
     if (repeatMode === 'single') {
       if (currentRepeat < repeatCount - 1) {
@@ -227,18 +298,8 @@ export const GlobalAudioProvider: React.FC<GlobalAudioProviderProps> = ({ childr
         return;
       } else {
         setCurrentRepeat(0);
-        if (playMode === 'single') {
-          setIsPlaying(false);
-          return;
-        }
-        if (currentAyahIndex < ayahs.length - 1) {
-          const nextIndex = currentAyahIndex + 1;
-          setCurrentAyahIndex(nextIndex);
-          playAyahInternal(nextIndex);
-        } else {
-          setIsPlaying(false);
-          setCurrentAyahIndex(0);
-        }
+        if (playMode === 'single') { setIsPlaying(false); return; }
+        advanceOrCross();
       }
     } else if (repeatMode === 'range') {
       const rangeStartIndex = rangeStart - 1;
@@ -260,21 +321,10 @@ export const GlobalAudioProvider: React.FC<GlobalAudioProviderProps> = ({ childr
         }
       }
     } else {
-      if (playMode === 'single') {
-        setIsPlaying(false);
-        return;
-      }
-      
-      if (currentAyahIndex < ayahs.length - 1) {
-        const nextIndex = currentAyahIndex + 1;
-        setCurrentAyahIndex(nextIndex);
-        playAyahInternal(nextIndex);
-      } else {
-        setIsPlaying(false);
-        setCurrentAyahIndex(0);
-      }
+      if (playMode === 'single') { setIsPlaying(false); return; }
+      advanceOrCross();
     }
-  }, [currentSurah, currentAyahIndex, repeatMode, repeatCount, currentRepeat, playMode, rangeStart, rangeEnd]);
+  }, [currentSurah, currentAyahIndex, repeatMode, repeatCount, currentRepeat, playMode, rangeStart, rangeEnd, loadNextSurahAndPlay]);
 
   // Re-attach ended handler when dependencies change
   useEffect(() => {
