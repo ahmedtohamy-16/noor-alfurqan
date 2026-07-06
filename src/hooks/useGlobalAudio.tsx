@@ -1,9 +1,12 @@
 import React, { createContext, useContext, useState, useRef, useCallback, useEffect, ReactNode } from 'react';
 import { reciters, getVerifiedReciters, type Reciter } from '@/data/reciters';
 import { toast } from 'sonner';
+import { surahs } from '@/data/surahs';
+import { getAyahsBySurahAsync } from '@/data/quranAyats';
+import { getJuzOfAyah } from '@/data/juzData';
 
 type RepeatMode = 'none' | 'single' | 'range';
-type PlayMode = 'single' | 'surah';
+type PlayMode = 'single' | 'surah' | 'juz' | 'quran';
 
 interface AyahInfo {
   number: number;
