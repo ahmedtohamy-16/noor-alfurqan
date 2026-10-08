@@ -45,6 +45,8 @@ const LessonsPage = lazy(() => import("./pages/LessonsPage"));
 const TeacherDashboard = lazy(() => import("./pages/TeacherDashboard"));
 const MessagesPage = lazy(() => import("./pages/MessagesPage"));
 const UserManagementPage = lazy(() => import("./pages/UserManagementPage"));
+const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage"));
+import ProtectedRoute from "@/components/ProtectedRoute";
 const ForgotPasswordPage = lazy(() => import("./pages/ForgotPasswordPage"));
 const PrayerTimesPage = lazy(() => import("./pages/PrayerTimesPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
@@ -104,7 +106,7 @@ const App = () => (
                           <Route path="/khatmah" element={<KhatmahPage />} />
                           <Route path="/auth" element={<AuthPage />} />
                           {/* verify-otp route removed - using direct Firebase Auth */}
-                          <Route path="/profile" element={<ProfilePage />} />
+                          <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
                           <Route path="/settings" element={<SettingsPage />} />
                           <Route path="/reading-stats" element={<ReadingStatsPage />} />
                           <Route path="/daily-wird" element={<DailyWirdPage />} />
@@ -116,11 +118,12 @@ const App = () => (
                           <Route path="/notification-settings" element={<NotificationSettingsPage />} />
                           <Route path="/hadith" element={<HadithPage />} />
                           <Route path="/hadith/bookmarks" element={<HadithBookmarksPage />} />
-                          <Route path="/admin" element={<AdminPage />} />
+                          <Route path="/admin" element={<ProtectedRoute><AdminPage /></ProtectedRoute>} />
                           <Route path="/lessons" element={<LessonsPage />} />
-                          <Route path="/teacher" element={<TeacherDashboard />} />
-                          <Route path="/messages" element={<MessagesPage />} />
-                          <Route path="/user-management" element={<UserManagementPage />} />
+                          <Route path="/teacher" element={<ProtectedRoute><TeacherDashboard /></ProtectedRoute>} />
+                          <Route path="/messages" element={<ProtectedRoute><MessagesPage /></ProtectedRoute>} />
+                          <Route path="/user-management" element={<ProtectedRoute><UserManagementPage /></ProtectedRoute>} />
+                          <Route path="/reset-password" element={<ResetPasswordPage />} />
                           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                           <Route path="/prayer-times" element={<PrayerTimesPage />} />
                           {/* Social network */}
@@ -129,11 +132,11 @@ const App = () => (
                           <Route path="/post/:postId" element={<PostDetailsPage />} />
                           <Route path="/social-search" element={<SocialSearchPage />} />
                           <Route path="/support" element={<SupportPage />} />
-                          <Route path="/verification" element={<VerificationPage />} />
+                          <Route path="/verification" element={<ProtectedRoute><VerificationPage /></ProtectedRoute>} />
                           <Route path="/welcome" element={<WelcomePage />} />
                           <Route path="/splash" element={<SplashScreen />} />
                           <Route path="/explore" element={<ExplorePage />} />
-                          <Route path="/create-post" element={<CreatePostPage />} />
+                          <Route path="/create-post" element={<ProtectedRoute><CreatePostPage /></ProtectedRoute>} />
                           <Route path="/asma-ul-husna" element={<AsmaUlHusnaPage />} />
                           <Route path="/pro" element={<ProPage />} />
                           <Route path="/memorization" element={<MemorizationPage />} />
