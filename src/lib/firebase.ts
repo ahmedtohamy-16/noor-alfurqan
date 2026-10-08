@@ -14,7 +14,8 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
   signInWithRedirect,
-  getRedirectResult
+  getRedirectResult,
+  updateProfile
 } from "firebase/auth";
 import { 
   getFirestore, 
@@ -172,39 +173,48 @@ export const signUp = async (
   
   const displayName = username || email.split("@")[0];
   const deviceInfo = getDeviceInfo();
-  
-  // Create user profile in Firestore with device info
-  await setDoc(doc(db, COLLECTIONS.USERS, user.uid), {
-    uid: user.uid,
-    email: user.email,
-    displayName: displayName,
-    photoURL: null,
-    role: safeRole,
-    device_type: deviceInfo,
-    user_agent: typeof navigator !== "undefined" ? navigator.userAgent : null,
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp()
-  });
 
-  // Create user role entry (separate collection for security)
-  await setDoc(doc(db, COLLECTIONS.USER_ROLES, user.uid), {
-    uid: user.uid,
-    role: safeRole,
-    createdAt: serverTimestamp()
-  });
+  // Store the name on the auth account itself so greetings work even if
+  // profile storage is unreachable.
+  try { await updateProfile(user, { displayName }); } catch (e) { console.error("updateProfile failed", e); }
 
-  // Also create in profiles for backward compatibility
-  await setDoc(doc(db, COLLECTIONS.PROFILES, user.uid), {
-    id: user.uid,
-    username: displayName,
-    avatar_url: null,
-    created_at: Timestamp.now(),
-  });
-  
-  // Send email verification
-  await sendEmailVerification(user);
+  // Send verification email first — must not depend on profile writes.
+  try { await sendEmailVerification(user); } catch (e) { console.error("sendEmailVerification failed", e); }
+
+  // Profile writes run in the background with a timeout so signup never hangs.
+  const withTimeout = <T,>(p: Promise<T>, ms = 8000) =>
+    Promise.race([p, new Promise<never>((_, rej) => setTimeout(() => rej(new Error("timeout")), ms))]);
+  withTimeout(Promise.all([
+    setDoc(doc(db, COLLECTIONS.USERS, user.uid), {
+      uid: user.uid,
+      email: user.email,
+      displayName,
+      photoURL: null,
+      role: safeRole,
+      device_type: deviceInfo,
+      user_agent: typeof navigator !== "undefined" ? navigator.userAgent : null,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    }, { merge: true }),
+    setDoc(doc(db, COLLECTIONS.USER_ROLES, user.uid), {
+      uid: user.uid,
+      role: safeRole,
+      createdAt: serverTimestamp()
+    }, { merge: true }),
+    setDoc(doc(db, COLLECTIONS.PROFILES, user.uid), {
+      id: user.uid,
+      username: displayName,
+      avatar_url: null,
+      created_at: Timestamp.now(),
+    }, { merge: true }),
+  ])).catch((e) => console.error("Profile creation failed:", e));
   
   return user;
+};
+
+export const resendVerificationEmail = async () => {
+  if (!auth.currentUser) throw new Error("no-user");
+  await sendEmailVerification(auth.currentUser);
 };
 
 export const signIn = async (email: string, password: string) => {

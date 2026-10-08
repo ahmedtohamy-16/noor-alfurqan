@@ -86,16 +86,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }).catch(console.error);
 
     // Listen for auth state changes
-    const unsubscribe = onAuthChange(async (firebaseUser) => {
+    const unsubscribe = onAuthChange((firebaseUser) => {
       setUser(firebaseUser);
+      // Session is known now — never block the UI on profile loading.
+      setIsLoading(false);
       if (firebaseUser) {
-        await loadUserData(firebaseUser.uid);
+        loadUserData(firebaseUser.uid);
       } else {
         setRole(null);
         setUserProfile(null);
         setIsBanned(false);
       }
-      setIsLoading(false);
     });
 
     return () => unsubscribe();

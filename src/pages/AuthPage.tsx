@@ -102,7 +102,7 @@ const AuthPage = () => {
         navigate("/");
       } else {
         await signUp(email, password, username || email.split("@")[0], selectedRole);
-        toast.success("تم إنشاء حسابك! مرحباً بك في نور الفرقان");
+        toast.success("تم إنشاء حسابك! أرسلنا رابط تأكيد إلى بريدك الإلكتروني");
         navigate("/");
       }
     } catch (error: any) {
