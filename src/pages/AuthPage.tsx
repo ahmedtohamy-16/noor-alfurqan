@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth, authErrorMessage } from "@/hooks/useAuth";
 import { UserRole } from "@/lib/firebase";
 import { getGuestDataSummary } from "@/services/guestDataService";
 
@@ -49,7 +49,8 @@ const AuthPage = () => {
     summary: "",
   });
   const navigate = useNavigate();
-  const { user, signIn, signUp, signInWithGoogle, checkUserBanned } = useAuth();
+  const { user, signIn, signUp, signInWithGoogle, resendConfirmation } = useAuth();
+  const [pendingEmail, setPendingEmail] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) navigate("/");
@@ -90,43 +91,34 @@ const AuthPage = () => {
 
     try {
       if (isLogin) {
-        const banned = await checkUserBanned(email);
-        if (banned) {
-          setIsBanned(true);
-          toast.error("حسابك محظور");
-          setIsLoading(false);
-          return;
-        }
         await signIn(email, password);
         toast.success("تم تسجيل الدخول بنجاح");
-        navigate("/");
+        navigate(searchParams.get("next") || "/");
       } else {
-        await signUp(email, password, username || email.split("@")[0], selectedRole);
-        toast.success("تم إنشاء حسابك! أرسلنا رابط تأكيد إلى بريدك الإلكتروني");
-        navigate("/");
+        const { needsConfirmation } = await signUp(email, password, username || email.split("@")[0], selectedRole);
+        if (needsConfirmation) {
+          setPendingEmail(email);
+        } else {
+          toast.success("تم إنشاء حسابك! مرحباً بك في نور الفرقان");
+          navigate("/");
+        }
       }
     } catch (error: any) {
       console.error("Auth error:", error);
-      if (error.code === "auth/user-disabled") {
-        setIsBanned(true);
-        toast.error("حسابك محظور");
-      } else if (error.code === "auth/invalid-credential" || error.code === "auth/user-not-found") {
-        toast.error("البريد الإلكتروني أو كلمة المرور غير صحيحة");
-      } else if (error.code === "auth/email-already-in-use") {
-        toast.error("هذا البريد الإلكتروني مسجل مسبقاً");
-      } else if (error.code === "auth/weak-password") {
-        toast.error("كلمة المرور ضعيفة جداً");
-      } else if (error.code === "auth/invalid-email") {
-        toast.error("البريد الإلكتروني غير صالح");
-      } else if (error.code === "auth/too-many-requests") {
-        toast.error("محاولات كثيرة، حاول لاحقاً");
-      } else if (error.code === "auth/network-request-failed") {
-        toast.error("تحقق من اتصالك بالإنترنت");
-      } else {
-        toast.error(error.message || "حدث خطأ، حاول مرة أخرى");
-      }
+      if (error?.code === "email_not_confirmed") setPendingEmail(email);
+      toast.error(authErrorMessage(error));
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleResend = async () => {
+    if (!pendingEmail) return;
+    try {
+      await resendConfirmation(pendingEmail);
+      toast.success("تم إرسال رسالة التأكيد مرة أخرى");
+    } catch (e) {
+      toast.error(authErrorMessage(e));
     }
   };
 
@@ -218,6 +210,14 @@ const AuthPage = () => {
                 <p className="font-bold text-primary">لديك بيانات محفوظة</p>
                 <p className="text-muted-foreground">{guestDataInfo.summary}</p>
               </div>
+            </div>
+          )}
+
+          {pendingEmail && (
+            <div className="mb-4 p-4 bg-primary/10 border border-primary/30 rounded-xl text-right text-sm space-y-2">
+              <p className="font-bold text-primary">أكّد بريدك الإلكتروني</p>
+              <p className="text-muted-foreground text-xs">أرسلنا رابط تأكيد إلى {pendingEmail}. لن يُفعَّل الحساب قبل الضغط عليه.</p>
+              <Button type="button" size="sm" variant="outline" onClick={handleResend}>إعادة إرسال رسالة التأكيد</Button>
             </div>
           )}
 
