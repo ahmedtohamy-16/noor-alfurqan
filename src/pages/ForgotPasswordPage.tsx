@@ -1,171 +1,63 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Mail, ArrowRight, KeyRound, CheckCircle, BookOpen, AlertCircle } from "lucide-react";
+import { ArrowRight, Mail, MailCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { getAuth, sendPasswordResetEmail } from "firebase/auth";
-
-type Step = "email" | "success";
+import { useAuth, authErrorMessage } from "@/hooks/useAuth";
 
 const ForgotPasswordPage = () => {
   const navigate = useNavigate();
-  const [step, setStep] = useState<Step>("email");
+  const { resetPassword } = useAuth();
   const [email, setEmail] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [sent, setSent] = useState(false);
 
-  const handleSendResetEmail = async (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setErrorMessage("");
-
-    // Client-side email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!email) {
-      setErrorMessage("يرجى إدخال البريد الإلكتروني");
-      return;
-    }
-    if (!emailRegex.test(email)) {
-      setErrorMessage("البريد الإلكتروني غير صالح");
-      return;
-    }
-
-    setIsLoading(true);
-
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return toast.error("البريد الإلكتروني غير صالح");
+    setLoading(true);
     try {
-      const auth = getAuth();
-      await sendPasswordResetEmail(auth, email, {
-        url: `${window.location.origin}/auth`,
-        handleCodeInApp: false,
-      });
-      
-      toast.success("تم إرسال رابط إعادة تعيين كلمة المرور");
-      setStep("success");
-    } catch (error: any) {
-      console.error("Error sending reset email:", error);
-      
-      if (error.code === "auth/user-not-found") {
-        // Don't reveal if user exists for security
-        toast.success("إذا كان البريد مسجلاً، سيتم إرسال رابط الاستعادة");
-        setStep("success");
-      } else if (error.code === "auth/invalid-email") {
-        setErrorMessage("البريد الإلكتروني غير صالح");
-      } else if (error.code === "auth/too-many-requests") {
-        setErrorMessage("تم إجراء محاولات كثيرة. حاول لاحقاً");
-      } else {
-        setErrorMessage("حدث خطأ، حاول مرة أخرى");
-      }
+      await resetPassword(email);
+      setSent(true);
+    } catch (err) {
+      toast.error(authErrorMessage(err));
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      {/* Header */}
+    <div className="min-h-screen bg-background font-arabic flex flex-col" dir="rtl">
       <header className="p-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate("/auth")}>
+        <Button variant="ghost" size="icon" onClick={() => navigate("/auth?mode=login")} aria-label="رجوع">
           <ArrowRight className="w-5 h-5" />
         </Button>
       </header>
-
-      <main className="flex-1 flex items-center justify-center px-4 arabic-ui">
-        <div className="w-full max-w-md">
-          {/* Logo */}
-          <div className="text-center mb-8">
-            <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-              {step === "success" ? (
-                <CheckCircle className="w-8 h-8 text-primary-foreground" />
-              ) : (
-                <KeyRound className="w-8 h-8 text-primary-foreground" />
-              )}
+      <main className="flex-1 flex items-start justify-center px-4">
+        <div className="w-full max-w-md bg-card border border-border rounded-2xl p-6 shadow-lg">
+          {sent ? (
+            <div className="text-center space-y-3">
+              <MailCheck className="w-12 h-12 text-primary mx-auto" />
+              <h1 className="text-xl font-bold">تحقق من بريدك</h1>
+              <p className="text-sm text-muted-foreground">
+                إذا كان البريد <b>{email}</b> مسجلاً لدينا فستصلك رسالة تحتوي على رابط لتعيين كلمة مرور جديدة.
+              </p>
+              <Button variant="outline" className="w-full" onClick={() => navigate("/auth?mode=login")}>العودة لتسجيل الدخول</Button>
             </div>
-            <h1 className="text-2xl font-bold text-foreground mb-2">
-              {step === "success" ? "تم الإرسال بنجاح" : "نسيت كلمة المرور؟"}
-            </h1>
-            <p className="text-muted-foreground text-sm">
-              {step === "email" && "أدخل بريدك الإلكتروني لاستعادة كلمة المرور"}
-              {step === "success" && "تحقق من بريدك الإلكتروني"}
-            </p>
-          </div>
-
-          {/* Form Card */}
-          <Card className="border-border shadow-sm">
-            <CardContent className="pt-6">
-              {step === "email" && (
-                <form onSubmit={handleSendResetEmail} className="space-y-4">
-                  {errorMessage && (
-                    <div className="p-3 bg-destructive/10 border border-destructive/30 rounded-lg flex items-center gap-2 text-destructive text-sm">
-                      <AlertCircle className="w-4 h-4 flex-shrink-0" />
-                      <span>{errorMessage}</span>
-                    </div>
-                  )}
-                  
-                  <div className="relative">
-                    <Mail className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                    <Input
-                      type="email"
-                      placeholder="البريد الإلكتروني"
-                      value={email}
-                      onChange={(e) => {
-                        setEmail(e.target.value);
-                        setErrorMessage("");
-                      }}
-                      className="pr-10 text-right"
-                      required
-                    />
-                  </div>
-                  
-                  <Button type="submit" className="w-full" size="lg" disabled={isLoading}>
-                    {isLoading ? "جاري الإرسال..." : "إرسال رابط الاستعادة"}
-                  </Button>
-                </form>
-              )}
-
-              {step === "success" && (
-                <div className="text-center space-y-6">
-                  <div className="p-4 bg-primary/10 rounded-xl">
-                    <p className="text-muted-foreground mb-2">
-                      تم إرسال رابط إعادة تعيين كلمة المرور إلى:
-                    </p>
-                    <p className="font-medium text-primary break-all">{email}</p>
-                  </div>
-                  
-                  <div className="space-y-2 text-sm text-muted-foreground">
-                    <p>✓ افتح بريدك الإلكتروني</p>
-                    <p>✓ اضغط على الرابط الموجود في الرسالة</p>
-                    <p>✓ أنشئ كلمة مرور جديدة</p>
-                  </div>
-
-                  <div className="p-3 bg-muted/50 rounded-lg text-xs text-muted-foreground">
-                    💡 لم تجد الرسالة؟ تحقق من مجلد الرسائل غير المرغوب فيها (Spam)
-                  </div>
-                  
-                  <Button
-                    variant="outline"
-                    className="w-full"
-                    onClick={() => navigate("/auth")}
-                  >
-                    العودة لتسجيل الدخول
-                  </Button>
-                </div>
-              )}
-
-              {/* Back to login */}
-              {step !== "success" && (
-                <div className="text-center mt-6 pt-6 border-t border-border">
-                  <Button
-                    variant="link"
-                    onClick={() => navigate("/auth")}
-                    className="text-muted-foreground"
-                  >
-                    العودة لتسجيل الدخول
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          ) : (
+            <form onSubmit={submit} className="space-y-4">
+              <h1 className="text-xl font-bold text-center">نسيت كلمة المرور؟</h1>
+              <p className="text-sm text-muted-foreground text-center">أدخل بريدك وسنرسل لك رابط إعادة التعيين</p>
+              <div className="relative">
+                <Mail className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="البريد الإلكتروني" className="pr-10 h-12 text-right" required />
+              </div>
+              <Button type="submit" className="w-full h-12 font-bold" disabled={loading}>
+                {loading ? "جاري الإرسال..." : "إرسال رابط إعادة التعيين"}
+              </Button>
+            </form>
+          )}
         </div>
       </main>
     </div>
