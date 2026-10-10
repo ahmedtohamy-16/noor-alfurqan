@@ -1,73 +1,144 @@
-# Welcome to your Lovable project
+# Noor-Al-Furqan 
 
-## Project info
+اريد بناء تطبيق 
+سنقسم الخطة إلى 5 مراحل رئيسية:
+1.  **مرحلة التخطيط والتصميم (Foundation & Design):** وضع الأساس وتخيل الشكل النهائي.
+2.  **مرحلة إعداد البيئة الخلفية (Backend Setup - Supabase):** بناء الأساس التقني الذي سيحمل التطبيق.
+3.  **مرحلة بناء الواجهة الأمامية (Frontend Development - Lovable.dev):** تحويل التصميم إلى واقع ملموس.
+4.  **مرحلة ربط الواجهات (Connecting the Dots):** جعل التطبيق تفاعليًا وذكيًا.
+5.  **مرحلة الاختبار والنشر (Testing & Deployment):** التأكد من الجودة وإطلاق التطبيق للعالم.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+---
 
-## How can I edit this code?
+### **المرحلة الأولى: التخطيط والتصميم (Foundation & Design)**
 
-There are several ways of editing your application.
+هذه هي مرحلة العصف الذهني وتحديد هوية التطبيق.
 
-**Use Lovable**
+**1. تصميم واجهة المستخدم وتجربة المستخدم (UI/UX):**
+*   **لوحة الإلهام (Moodboard):** سنبحث عن تصميمات لتطبيقات قرآنية ومواقع إسلامية تتميز بالبساطة والجمال. سأبحث لك الآن عن بعض الأمثلة.
+*   **لوحة الألوان (Color Palette):**
+    *   **الوضع النهاري (Light Mode):** خلفية بيضاء مائلة للبيج (Off-white: `#F8F6F1`)، نص أساسي أسود داكن (`#1A1A1A`)، لون مميز (Accent) أخضر زيتوني (`#4A6C61`) أو ذهبي هادئ.
+    *   **الوضع الليلي (Dark Mode):** خلفية كحلية داكنة (Dark Navy: `#121E2C`)، نص أبيض فاتح (`#E0E0E0`)، لون مميز سماوي فاتح (`#6AC4F7`).
+*   **الخطوط (Typography):**
+    *   **خط القرآن:** **Uthmanic Hafs** (هذا هو الخط المستخدم في مصحف المدينة النبوية، ويمكن إيجاده في مستودعات GitHub).
+    *   **خط النصوص والعناوين:** **Tajawal** أو **Cairo** (خطوط عربية عصرية ومقروءة جيداً على الشاشات).
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+**2. البحث عن تصميمات ملهمة:**
+سأبحث الآن عن تصميمات لواجهات تطبيقات قرآنية على مواقع مثل Behance و Dribbble لتستلهم منها.
 
-Changes made via Lovable will be committed automatically to this repo.
+**نتائج البحث عن تصميمات ملهمة:**
+وجدت لك مجموعة رائعة من التصميمات على موقع Dribbble. تتميز هذه التصميمات بالآتي:
+*   **البساطة:** التركيز على المحتوى الأساسي (الآيات) بدون تشتيت.
+*   **استخدام الصور الطبيعية:** خلفيات هادئة ومريحة للعين.
+*   **الطباعة الواضحة:** خطوط عربية كبيرة وواضحة.
+*   **الأيقونات المعبرة:** استخدام أيقونات بسيطة للدلالة على الوظائف (تشغيل، مفضلة، مشاركة).
 
-**Use your preferred IDE**
+---
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### **المرحلة الثانية: إعداد البيئة الخلفية (Backend Setup - Supabase)**
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+هذه هي غرفة المحركات لتطبيقك. Supabase سيقوم بتخزين كل شيء بأمان.
 
-Follow these steps:
+**1. إنشاء مشروع Supabase:**
+*   اذهب إلى `supabase.com` وأنشئ حسابًا مجانيًا.
+*   أنشئ مشروعًا جديدًا (New Project) وأعطه اسمًا مثل "Noor-Al-Quran-Backend".
+*   احفظ جيدًا مفتاح الـ **API Key** والـ **URL** الخاص بمشروعك، ستحتاجهما لاحقًا لربط التطبيق.
+
+**2. تصميم جداول قاعدة البيانات (Database Schema):**
+هنا سنقوم بتصميم "الغرف" التي ستخزن بياناتك. في لوحة تحكم Supabase، اذهب إلى `Table Editor` وأنشئ الجداول التالية:
+
+*   **جدول المستخدمين (`profiles`):**
+    *   `id` (نوع `UUID`): يرتبط تلقائيًا بـ `id` المستخدم عند تسجيل الدخول. (Primary Key)
+    *   `username` (نوع `text`): اسم المستخدم.
+    *   `avatar_url` (نوع `text`): رابط صورته الشخصية.
+    *   `default_reciter_id` (نوع `int`): رقم القارئ المفضل للمستخدم.
+    *   `font_size` (نوع `text`): حجم الخط المفضل (مثال: "medium").
+
+*   **جدول الآيات المفضلة (`favorites`):**
+    *   `id` (نوع `bigint`): رقم تسلسلي تلقائي. (Primary Key)
+    *   `user_id` (نوع `UUID`): لربط المفضلة بصاحبها.
+    *   `surah_number` (نوع `int`): رقم السورة.
+    *   `ayah_number` (نوع `int`): رقم الآية.
+    *   `created_at` (نوع `timestamp`): تاريخ إضافة الآية للمفضلة.
+
+*   **جدول الختمات الجماعية (`khatmahs`):**
+    *   `id` (نوع `bigint`): رقم تسلسلي تلقائي. (Primary Key)
+    *   `name` (نوع `text`): اسم الختمة (مثال: "ختمة رمضان").
+    *   `created_by` (نوع `UUID`): المستخدم الذي أنشأ الختمة.
+    *   `invite_code` (نوع `text`): كود فريد للانضمام للختمة.
+    *   `is_completed` (نوع `boolean`): هل اكتملت الختمة أم لا.
+
+*   **جدول المشاركين في الختمة (`khatmah_participants`):**
+    *   `id` (نوع `bigint`): رقم تسلسلي تلقائي. (Primary Key)
+    *   `khatmah_id` (نوع `bigint`): لربط المشارك بالختمة.
+    *   `user_id` (نوع `UUID`): لربط المشارك بحسابه.
+    *   `assigned_juz` (نوع `int`): الجزء المخصص لهذا المشارك.
+    *   `is_completed` (نوع `boolean`): هل أتم قراءة الجزء المخصص له.
+
+---
+
+### **المرحلة الثالثة: بناء الواجهة الأمامية (Frontend - Lovable.dev)**
+
+هنا يبدأ السحر. ستستخدم الوصف الذي أعددناه سابقًا لبناء التطبيق.
+
+1.  **ابدأ مشروعًا جديدًا على `lovable.dev`**.
+2.  **الصق الوصف الشامل** الذي جهزناه في الأعلى في مربع الحوار.
+3.  **المراجعة والتعديل:** سيقوم الذكاء الاصطناعي بإنشاء نسخة أولية. الآن يأتي دورك في التعديل التفاعلي. استخدم عبارات مثل:
+    *   "غير لون الخلفية في الوضع الليلي إلى `#121E2C`."
+    *   "اجعل الخط في صفحة المصحف أكبر."
+    *   "أضف أيقونة 'مشاركة' بجانب أيقونة 'المفضلة' عند الضغط على الآية."
+    *   "صمم لي صفحة للملف الشخصي تحتوي على صورة المستخدم واسمه وقائمة بالآيات التي أضافها للمفضلة."
+
+---
+
+### **المرحلة الرابعة: ربط الواجهات (Connecting the Dots)**
+
+هذه هي المرحلة التي تجعل التطبيق "حيًا". ستحتاج إلى بعض المعرفة البسيطة بكيفية عمل `lovable.dev` مع Supabase.
+
+*   **إعداد الاتصال:** في إعدادات مشروعك على `lovable.dev`، ابحث عن مكان لإضافة متغيرات البيئة (Environment Variables). أضف مفتاح API والـ URL الخاص بـ Supabase التي حفظتها سابقًا.
+*   **المصادقة (Authentication):** اطلب من `lovable.dev`: "أنشئ لي صفحة تسجيل دخول باستخدام Supabase Auth. يجب أن تسمح للمستخدمين بالتسجيل باستخدام البريد الإلكتروني وكلمة المرور."
+*   **جلب البيانات:**
+    *   **لجلب السور:** "اربط صفحة الفهرس بواجهة `api.alquran.cloud/v1/surah` لعرض قائمة السور."
+    *   **لجلب الآيات:** "عندما يضغط المستخدم على سورة، اذهب إلى صفحة المصحف واعرض آيات هذه السورة باستخدام `api.alquran.cloud/v1/surah/{surah_number}`."
+*   **حفظ البيانات في Supabase:**
+    *   **لإضافة للمفضلة:** "عندما يضغط المستخدم على أيقونة القلب، قم بإضافة `user_id`, `surah_number`, `ayah_number` إلى جدول `favorites` في Supabase."
+    *   **لجلب المفضلة:** "في صفحة الملف الشخصي، اعرض الآيات من جدول `favorites` التي تطابق `user_id` للمستخدم الحالي."
+
+---
+
+### **المرحلة الخامسة: الاختبار والنشر (Testing & Deployment)**
+
+قبل إطلاق التطبيق، يجب التأكد من أن كل شيء يعمل كما هو متوقع.
+
+1.  **الاختبار الشامل:**
+    *   جرب تسجيل حساب جديد.
+    *   أضف آية للمفضلة وتأكد من ظهورها في ملفك الشخصي.
+    *   شغل تلاوة صوتية وتأكد من عمل المشغل الصوتي.
+    *   جرب البحث عن كلمة وتأكد من ظهور النتائج.
+    *   اختبر التطبيق على شاشة جوال وكمبيوتر للتأكد من أنه سريع الاستجابة.
+2.  **النشر (Deployment):**
+    *   توفر `lovable.dev` خيار النشر بضغطة زر. سيقومون باستضافة التطبيق لك.
+    *   **مزامنة مع GitHub (اختياري لكن موصى به):** قم بربط مشروعك بحسابك على GitHub. هذا يمنحك نسخة احتياطية من الكود المصدري ويتيح لك تعديله لاحقًا بشكل مستقل إذا أردت.
+
+This project was built with [Lovable](https://lovable.dev).
+
+**Live app**: https://noor-alfurqan.lovable.app
+
+## Build with Lovable
+
+Continue developing this project in the [Lovable editor](https://lovable.dev/projects/a627a8a5-f451-4c03-86fb-fc0ef654d906).
+
+- **Ship faster**: describe what you want to build and Lovable handles the code.
+- **Stay in sync**: every change made in Lovable is committed straight to this repository.
+- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
+
+## Development
+
+Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
+git clone <this-repository-url>
+cd <repository-name>
 npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
 npm run dev
 ```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
