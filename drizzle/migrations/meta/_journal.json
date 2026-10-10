@@ -1,0 +1,20 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1791642135235,
+      "tag": "0000_profiles_email_and_data_api_grants",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791642456714,
+      "tag": "0001_handle_new_user_unique_username_and_lookup",
+      "breakpoints": true
+    }
+  ]
+}
