@@ -22,7 +22,7 @@ import { useReadingSettings } from "@/hooks/useReadingSettings";
 import { useNotifications } from "@/hooks/useNotifications";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
-import { firestoreQuery, COLLECTIONS } from "@/lib/firebase";
+import { supabase } from "@/integrations/supabase/client";
 import { countryHasDST, isInDSTForCountry, getDSTStatusText } from "@/utils/dstUtils";
 
 const fontOptions = [
@@ -55,16 +55,17 @@ const SettingsPage = () => {
   const checkAdminStatus = async () => {
     if (!user) return;
     try {
-      const roles = await firestoreQuery<any>(
-        'user_roles',
-        [
-          { field: "user_id", op: "==", value: user.uid },
-          { field: "role", op: "==", value: "admin" }
-        ]
-      );
-      setIsAdmin(roles.length > 0);
+      const { data, error } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.uid)
+        .eq("role", "admin")
+        .maybeSingle();
+      if (error) throw error;
+      setIsAdmin(!!data);
     } catch (error) {
       console.error("Error checking admin status:", error);
+      setIsAdmin(false);
     }
   };
 

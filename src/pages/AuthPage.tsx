@@ -21,6 +21,7 @@ import { toast } from "sonner";
 import { useAuth, authErrorMessage } from "@/hooks/useAuth";
 import { UserRole } from "@/lib/firebase";
 import { getGuestDataSummary } from "@/services/guestDataService";
+import { supabase } from "@/integrations/supabase/client";
 
 const GoogleIcon = () => (
   <svg viewBox="0 0 24 24" className="w-5 h-5" aria-hidden="true">
@@ -84,6 +85,14 @@ const AuthPage = () => {
       const usernameRegex = /^[\u0600-\u06FFa-zA-Z0-9_\s]{3,50}$/;
       if (!usernameRegex.test(username)) {
         toast.error("اسم المستخدم يجب أن يكون 3-50 حرف");
+        setIsLoading(false);
+        return;
+      }
+      // Warn before submitting: a taken username used to fail with a raw
+      // database error instead of a readable message.
+      const { data: taken } = await supabase.rpc("is_username_taken", { p_username: username });
+      if (taken) {
+        toast.error("اسم المستخدم محجوز، اختر اسماً آخر");
         setIsLoading(false);
         return;
       }

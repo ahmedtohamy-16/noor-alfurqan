@@ -71,6 +71,8 @@ export const authErrorMessage = (err: any): string => {
   if (code === "same_password") return "كلمة المرور الجديدة يجب أن تختلف عن القديمة";
   if (msg.includes("failed to fetch") || msg.includes("network")) return "تحقق من اتصالك بالإنترنت";
   if (code === "signup_disabled") return "إنشاء الحسابات متوقف حالياً";
+  if (msg.includes("database error saving new user") || msg.includes("duplicate key") || code === "23505")
+    return "اسم المستخدم محجوز، اختر اسماً آخر";
   return "حدث خطأ، حاول مرة أخرى";
 };
 
