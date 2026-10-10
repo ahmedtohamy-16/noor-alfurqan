@@ -740,6 +740,7 @@ export type Database = {
           created_at: string | null
           display_name: string | null
           displayname_change_count: number | null
+          email: string | null
           id: string
           is_blocked: boolean | null
           last_displayname_change: string | null
@@ -755,6 +756,7 @@ export type Database = {
           created_at?: string | null
           display_name?: string | null
           displayname_change_count?: number | null
+          email?: string | null
           id: string
           is_blocked?: boolean | null
           last_displayname_change?: string | null
@@ -770,6 +772,7 @@ export type Database = {
           created_at?: string | null
           display_name?: string | null
           displayname_change_count?: number | null
+          email?: string | null
           id?: string
           is_blocked?: boolean | null
           last_displayname_change?: string | null
