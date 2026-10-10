@@ -1347,6 +1347,7 @@ export type Database = {
         Args: { p_book_id: string; p_hadith_number: number }
         Returns: number
       }
+      is_username_taken: { Args: { p_username: string }; Returns: boolean }
       join_khatmah_by_code: { Args: { p_invite_code: string }; Returns: Json }
     }
     Enums: {
