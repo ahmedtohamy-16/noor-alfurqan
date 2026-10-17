@@ -6,8 +6,6 @@ import {
   User,
   ArrowRight,
   BookOpen,
-  GraduationCap,
-  Users,
   Shield,
   Ban,
   CloudUpload,
@@ -19,7 +17,6 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { useAuth, authErrorMessage } from "@/hooks/useAuth";
-import { UserRole } from "@/lib/firebase";
 import { getGuestDataSummary } from "@/services/guestDataService";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -41,7 +38,6 @@ const AuthPage = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [username, setUsername] = useState("");
-  const [selectedRole, setSelectedRole] = useState<UserRole>("student");
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [isBanned, setIsBanned] = useState(false);
@@ -104,7 +100,7 @@ const AuthPage = () => {
         toast.success("تم تسجيل الدخول بنجاح");
         navigate(searchParams.get("next") || "/");
       } else {
-        const { needsConfirmation } = await signUp(email, password, username || email.split("@")[0], selectedRole);
+        const { needsConfirmation } = await signUp(email, password, username || email.split("@")[0]);
         if (needsConfirmation) {
           setPendingEmail(email);
         } else {
@@ -134,7 +130,7 @@ const AuthPage = () => {
   const handleGoogle = async () => {
     setIsGoogleLoading(true);
     try {
-      await signInWithGoogle(selectedRole);
+      await signInWithGoogle();
       toast.success("تم تسجيل الدخول عبر Google");
       navigate("/");
     } catch (error: any) {
@@ -150,10 +146,6 @@ const AuthPage = () => {
     }
   };
 
-  const roles: { value: UserRole; label: string; icon: React.ReactNode }[] = [
-    { value: "student", label: "طالب", icon: <GraduationCap className="w-4 h-4" /> },
-    { value: "teacher", label: "معلم", icon: <Users className="w-4 h-4" /> },
-  ];
 
   return (
     <div className="min-h-screen bg-background flex flex-col font-arabic relative overflow-hidden">
@@ -254,24 +246,6 @@ const AuthPage = () => {
                       onChange={(e) => setUsername(e.target.value)}
                       className="pr-10 text-right h-12"
                     />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2">
-                    {roles.map((role) => (
-                      <button
-                        key={role.value}
-                        type="button"
-                        onClick={() => setSelectedRole(role.value)}
-                        className={`py-3 rounded-xl border-2 text-sm font-bold transition-all flex items-center justify-center gap-2 ${
-                          selectedRole === role.value
-                            ? "border-primary bg-primary/10 text-primary"
-                            : "border-border text-muted-foreground hover:border-primary/40"
-                        }`}
-                      >
-                        {role.icon}
-                        {role.label}
-                      </button>
-                    ))}
                   </div>
                 </>
               )}
