@@ -19,6 +19,9 @@ import { toast } from "sonner";
 import { useAuth, authErrorMessage } from "@/hooks/useAuth";
 import { getGuestDataSummary } from "@/services/guestDataService";
 import { supabase } from "@/integrations/supabase/client";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+import { passwordRules, isPasswordValid } from "@/lib/passwordRules";
+import { Check } from "lucide-react";
 
 const GoogleIcon = () => (
   <svg viewBox="0 0 24 24" className="w-5 h-5" aria-hidden="true">
@@ -48,6 +51,8 @@ const AuthPage = () => {
   const navigate = useNavigate();
   const { user, signIn, signUp, signInWithGoogle, resendConfirmation } = useAuth();
   const [pendingEmail, setPendingEmail] = useState<string | null>(null);
+  const [otp, setOtp] = useState("");
+  const [isVerifying, setIsVerifying] = useState(false);
 
   useEffect(() => {
     if (user) navigate("/");
@@ -72,8 +77,13 @@ const AuthPage = () => {
       setIsLoading(false);
       return;
     }
-    if (password.length < 6) {
-      toast.error("كلمة المرور يجب أن تكون 6 أحرف على الأقل");
+    if (!isLogin && !isPasswordValid(password)) {
+      toast.error("كلمة المرور يجب أن تحتوي على 8 أحرف على الأقل بها حروف وأرقام ورموز");
+      setIsLoading(false);
+      return;
+    }
+    if (isLogin && password.length < 6) {
+      toast.error("كلمة المرور غير صحيحة");
       setIsLoading(false);
       return;
     }
@@ -115,6 +125,20 @@ const AuthPage = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleVerifyOtp = async () => {
+    if (!pendingEmail || otp.length < 6) return;
+    setIsVerifying(true);
+    const { error } = await supabase.auth.verifyOtp({ email: pendingEmail, token: otp, type: "signup" });
+    setIsVerifying(false);
+    if (error) {
+      toast.error("الرمز غير صحيح أو انتهت صلاحيته");
+      return;
+    }
+    toast.success("تم تأكيد بريدك! مرحباً بك في نور الفرقان");
+    setPendingEmail(null);
+    navigate(searchParams.get("next") || "/");
   };
 
   const handleResend = async () => {
@@ -215,10 +239,20 @@ const AuthPage = () => {
           )}
 
           {pendingEmail && (
-            <div className="mb-4 p-4 bg-primary/10 border border-primary/30 rounded-xl text-right text-sm space-y-2">
+            <div className="mb-4 p-4 bg-primary/10 border border-primary/30 rounded-xl text-right text-sm space-y-3">
               <p className="font-bold text-primary">أكّد بريدك الإلكتروني</p>
-              <p className="text-muted-foreground text-xs">أرسلنا رابط تأكيد إلى {pendingEmail}. لن يُفعَّل الحساب قبل الضغط عليه.</p>
-              <Button type="button" size="sm" variant="outline" onClick={handleResend}>إعادة إرسال رسالة التأكيد</Button>
+              <p className="text-muted-foreground text-xs">أرسلنا رمز تأكيد إلى {pendingEmail}. أدخله هنا لتفعيل حسابك.</p>
+              <div className="flex justify-center" dir="ltr">
+                <InputOTP maxLength={6} value={otp} onChange={setOtp}>
+                  <InputOTPGroup>
+                    {[0, 1, 2, 3, 4, 5].map((i) => <InputOTPSlot key={i} index={i} />)}
+                  </InputOTPGroup>
+                </InputOTP>
+              </div>
+              <Button type="button" className="w-full" disabled={otp.length < 6 || isVerifying} onClick={handleVerifyOtp}>
+                {isVerifying ? "جارٍ التحقق..." : "تأكيد الرمز"}
+              </Button>
+              <Button type="button" size="sm" variant="outline" className="w-full" onClick={handleResend}>إعادة إرسال الرمز</Button>
             </div>
           )}
 
@@ -282,6 +316,22 @@ const AuthPage = () => {
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
+
+              {!isLogin && (
+                <ul className="grid grid-cols-2 gap-1.5 text-xs text-right" aria-label="شروط كلمة المرور">
+                  {passwordRules.map((r) => {
+                    const ok = r.test(password);
+                    return (
+                      <li key={r.id} className={`flex items-center gap-1.5 ${ok ? "text-secondary" : "text-muted-foreground"}`}>
+                        <span className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 transition-colors ${ok ? "bg-secondary border-secondary text-secondary-foreground" : "border-muted-foreground/50"}`}>
+                          {ok && <Check className="w-3 h-3" />}
+                        </span>
+                        {r.label}
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
 
               {isLogin && (
                 <div className="text-left">
