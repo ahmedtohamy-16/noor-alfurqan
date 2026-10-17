@@ -41,6 +41,21 @@ const AuthPage = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [username, setUsername] = useState("");
+  const [usernameStatus, setUsernameStatus] = useState<"idle" | "checking" | "taken" | "available">("idle");
+
+  // Live availability check (debounced) against the backend.
+  useEffect(() => {
+    const name = username.trim();
+    if (name.length < 3) { setUsernameStatus("idle"); return; }
+    setUsernameStatus("checking");
+    let cancelled = false;
+    const t = setTimeout(async () => {
+      const { data, error } = await supabase.rpc("is_username_taken", { p_username: name });
+      if (cancelled) return;
+      setUsernameStatus(error ? "idle" : data ? "taken" : "available");
+    }, 400);
+    return () => { cancelled = true; clearTimeout(t); };
+  }, [username]);
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [isBanned, setIsBanned] = useState(false);
@@ -278,9 +293,15 @@ const AuthPage = () => {
                       placeholder="اسم المستخدم"
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
-                      className="pr-10 text-right h-12"
+                      className={`pr-10 text-right h-12 ${usernameStatus === "taken" ? "border-destructive focus-visible:ring-destructive" : usernameStatus === "available" ? "border-secondary focus-visible:ring-secondary" : ""}`}
+                      aria-invalid={usernameStatus === "taken"}
                     />
                   </div>
+                  {usernameStatus !== "idle" && (
+                    <p className={`text-[11px] px-1 text-right ${usernameStatus === "taken" ? "text-destructive" : usernameStatus === "available" ? "text-secondary" : "text-muted-foreground"}`}>
+                      {usernameStatus === "taken" ? "اسم المستخدم هذا مستخدم سابقاً" : usernameStatus === "available" ? "اسم المستخدم متاح" : "جارٍ التحقق..."}
+                    </p>
+                  )}
                 </>
               )}
 
@@ -318,13 +339,13 @@ const AuthPage = () => {
               </div>
 
               {!isLogin && (
-                <ul className="grid grid-cols-2 gap-1.5 text-xs text-right" aria-label="شروط كلمة المرور">
+                <ul className="flex flex-col gap-1 text-[11px] text-right px-1" aria-label="شروط كلمة المرور">
                   {passwordRules.map((r) => {
                     const ok = r.test(password);
                     return (
                       <li key={r.id} className={`flex items-center gap-1.5 ${ok ? "text-secondary" : "text-muted-foreground"}`}>
-                        <span className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 transition-colors ${ok ? "bg-secondary border-secondary text-secondary-foreground" : "border-muted-foreground/50"}`}>
-                          {ok && <Check className="w-3 h-3" />}
+                        <span className={`w-3 h-3 rounded-full border flex items-center justify-center shrink-0 transition-colors ${ok ? "bg-secondary border-secondary text-secondary-foreground" : "border-muted-foreground/50"}`}>
+                          {ok && <Check className="w-2 h-2" strokeWidth={4} />}
                         </span>
                         {r.label}
                       </li>
