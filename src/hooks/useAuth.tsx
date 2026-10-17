@@ -38,8 +38,8 @@ interface AuthContextType {
   isBanned: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   /** Returns true when the account needs email confirmation before sign-in. */
-  signUp: (email: string, password: string, username?: string, role?: UserRole) => Promise<{ needsConfirmation: boolean }>;
-  signInWithGoogle: (role?: UserRole) => Promise<void>;
+  signUp: (email: string, password: string, username?: string) => Promise<{ needsConfirmation: boolean }>;
+  signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
   checkUserBanned: (email: string) => Promise<boolean>;
