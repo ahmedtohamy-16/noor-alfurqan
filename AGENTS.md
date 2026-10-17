@@ -1,0 +1,13 @@
+# Noor Al-Furqan — Project Rules
+
+## Accounts and backend
+- Supabase Auth is the only account system; Firebase Auth is not used for users. Keep sign-up, sign-in, password reset and route protection on it so one identity owns every screen.
+- Firebase remains only for legacy Firestore data paths (settings, social, memorization, Pro, bookmarks) until they are migrated. Do not add new features that store user identity there.
+- Every table created in `public` must be followed in the same migration by explicit `GRANT`s to the roles its policies allow (`anon` only for public-read tables), because the Data API grants no default privileges on `public` — RLS alone leaves the app unable to read or write the table.
+- `public.profiles` stores `email`, `username` and `display_name`, written by the `handle_new_user()` signup trigger. Read profile fields from that table rather than auth metadata so admin screens and search work.
+- Usernames are unique at the database level (`profiles_username_unique`). The signup trigger must fall back to a derived unique username instead of raising, and the sign-up form must pre-check availability through the `is_username_taken` RPC — a unique-violation inside the trigger aborts account creation with an unreadable 500.
+- Roles live only in `public.user_roles` and are read through `has_role()`; never derive privileges from user-editable metadata.
+
+## Verification
+- Auth changes must be exercised in the running preview (sign-up, sign-in, refresh, sign-out, protected route, password reset), not only type-checked.
+- Database state is shared between the preview and the published app, so temporary auth settings must be reverted in the same turn they are changed.
