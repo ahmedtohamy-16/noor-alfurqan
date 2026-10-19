@@ -10,6 +10,7 @@ import SurahCard from "@/components/SurahCard";
 import { surahs } from "@/data/surahs";
 import { searchAyahsAsync } from "@/data/quranAyats";
 import { Skeleton } from "@/components/ui/skeleton";
+import QuranTopicSearch from "@/components/pro/QuranTopicSearch";
 
 interface AyahResult {
   number: number;
@@ -97,6 +98,8 @@ const QuranPage = () => {
             <p className="text-muted-foreground text-sm">١١٤ سورة</p>
           </div>
         </div>
+
+        <QuranTopicSearch />
 
         {/* Search Bar */}
         <div className="relative mb-4">
