@@ -697,6 +697,38 @@ export type Database = {
         }
         Relationships: []
       }
+      pro_entitlements: {
+        Row: {
+          expires_at: string | null
+          source: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          expires_at?: string | null
+          source?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          expires_at?: string | null
+          source?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pro_entitlements_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profile_changes_log: {
         Row: {
           change_type: string
@@ -938,6 +970,27 @@ export type Database = {
           time_limit?: number | null
           title?: string
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      quran_ai_service_state: {
+        Row: {
+          denied: boolean
+          id: string
+          message: string | null
+          updated_at: string
+        }
+        Insert: {
+          denied?: boolean
+          id: string
+          message?: string | null
+          updated_at?: string
+        }
+        Update: {
+          denied?: boolean
+          id?: string
+          message?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
