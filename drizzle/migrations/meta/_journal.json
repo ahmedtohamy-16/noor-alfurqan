@@ -15,6 +15,13 @@
       "when": 1791642456714,
       "tag": "0001_handle_new_user_unique_username_and_lookup",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792421548817,
+      "tag": "0002_pro_quran_ai_access",
+      "breakpoints": true
     }
   ]
 }

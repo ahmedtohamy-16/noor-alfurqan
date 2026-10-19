@@ -14,6 +14,7 @@ export interface ProFeature {
 }
 
 export const PRO_FEATURES: ProFeature[] = [
+  { id: "quran_ai", title: "البحث القرآني الذكي", description: "اقتراح آيات مرتبطة بسؤالك أو موضوعك مع مراجع السور والآيات.", icon: Sparkles },
   { id: "memorization", title: "وضع الحافظ المتقدم", description: "اختبارات مراجعة، إخفاء كلمات، ومتابعة السور التي تحتاج للمراجعة.", icon: BookOpenCheck },
   { id: "smart_plans", title: "خطط الحفظ والختمة الذكية", description: "خطة تلقائية حسب هدفك، وتعديل ذكي عند التأخر أو التقدم.", icon: Target },
   { id: "weak_points", title: "متابعة نقاط الضعف", description: "تحليل لسجل المراجعة وعرض أكثر المناطق التي تحتاج تركيزًا.", icon: Brain },
