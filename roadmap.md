@@ -10,4 +10,5 @@
 - Removed the student/teacher choice from the sign-up form; accounts are created without a role prompt and roles stay managed only in the database.
 
 ## Open
+- Add Pro-only Quran topic suggestions with server-side access checks, verified verse references, and live AI verification.
 - Real password sign-in has not been watched end to end: a new account must open a confirmation email first, and no readable mailbox is connected to this workspace. Blocked on: an inbox the agent can read, or the user opening one confirmation link.
