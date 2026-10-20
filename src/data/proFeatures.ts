@@ -3,7 +3,7 @@ import {
   CalendarClock, Mic, CloudUpload, RefreshCw, History, FileDown,
   Download, ListMusic, Repeat, Gauge, Moon, BarChart3, Trophy,
   Award, Users, HeartHandshake, Flag, Image as ImageIcon, MapPin,
-  StickyNote, Notebook, Compass
+  StickyNote, Notebook, Compass, Sparkles
 } from "lucide-react";
 
 export interface ProFeature {

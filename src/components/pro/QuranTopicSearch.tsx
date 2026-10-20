@@ -110,7 +110,7 @@ export default function QuranTopicSearch() {
         <form onSubmit={submit} className="space-y-3">
           <label htmlFor="quran-topic-question" className="text-sm">سؤالك أو موضوعك</label>
           <Textarea id="quran-topic-question" value={question} onChange={e => setQuestion(e.target.value)} placeholder="مثل: الصبر عند الشدائد" maxLength={1000} disabled={busy} className="min-h-24 resize-y" />
-          <div className="flex items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <p className="text-xs text-muted-foreground">اقتراحات بالذكاء الاصطناعي، وليست فتوى أو تفسيرًا معتمدًا.</p>
             {busy ? <Button type="button" variant="outline" onClick={() => abort.current?.abort()} className="shrink-0"><Square className="w-4 h-4 ml-2" />إيقاف</Button> : <Button type="submit" disabled={!question.trim()} className="shrink-0"><Search className="w-4 h-4 ml-2" />اقتراح آيات</Button>}
           </div>
