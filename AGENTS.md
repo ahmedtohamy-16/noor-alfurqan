@@ -7,6 +7,9 @@
 - `public.profiles` stores `email`, `username` and `display_name`, written by the `handle_new_user()` signup trigger. Read profile fields from that table rather than auth metadata so admin screens and search work.
 - Usernames are unique at the database level (`profiles_username_unique`). The signup trigger must fall back to a derived unique username instead of raising, and the sign-up form must pre-check availability through the `is_username_taken` RPC — a unique-violation inside the trigger aborts account creation with an unreadable 500.
 - Roles live only in `public.user_roles` and are read through `has_role()`; never derive privileges from user-editable metadata.
+- Paid Quran AI access is verified server-side against `public.pro_entitlements`; only trusted admin/payment paths write subscriptions, because legacy client Pro flags cannot authorize billed AI.
+- Quran AI generates references only; render verse text from the runtime Quran corpus and discard invalid references to avoid invented scripture.
+- Quran topic model calls stay in the authenticated Edge Function using request-local Responses SDK helpers; provider denials are persisted server-side to prevent repeated blocked calls.
 
 ## Verification
 - Auth changes must be exercised in the running preview (sign-up, sign-in, refresh, sign-out, protected route, password reset), not only type-checked.
