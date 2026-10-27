@@ -414,11 +414,18 @@ const AuthPage = () => {
                       placeholder="البريد الإلكتروني"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="pr-10 text-right h-12"
+                      className={`pr-10 text-right h-12 ${
+                        email && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim())
+                          ? "border-destructive focus-visible:ring-destructive"
+                          : ""
+                      }`}
                       autoComplete="email"
                       required
                     />
                   </div>
+                  {email && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim()) && (
+                    <p className="text-[11px] px-1 text-right text-destructive">أدخل بريدًا إلكترونيًا صحيحًا مثل name@example.com</p>
+                  )}
                 </>
               )}
 
