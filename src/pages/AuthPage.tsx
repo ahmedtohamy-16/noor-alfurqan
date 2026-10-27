@@ -4,6 +4,7 @@ import {
   Mail,
   Lock,
   User,
+  AtSign,
   ArrowRight,
   BookOpen,
   Shield,
@@ -11,6 +12,11 @@ import {
   CloudUpload,
   Eye,
   EyeOff,
+  Check,
+  CheckCircle2,
+  XCircle,
+  Circle,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,7 +27,7 @@ import { getGuestDataSummary } from "@/services/guestDataService";
 import { supabase } from "@/integrations/supabase/client";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { passwordRules, isPasswordValid } from "@/lib/passwordRules";
-import { Check } from "lucide-react";
+import { validateUsername } from "@/lib/usernameRules";
 
 const GoogleIcon = () => (
   <svg viewBox="0 0 24 24" className="w-5 h-5" aria-hidden="true">
@@ -32,30 +38,62 @@ const GoogleIcon = () => (
   </svg>
 );
 
+type UsernameStatus = "idle" | "checking" | "available" | "taken" | "invalid" | "error";
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 const AuthPage = () => {
   const [searchParams] = useSearchParams();
   const initialMode = searchParams.get("mode") === "signup" ? false : true;
 
   const [isLogin, setIsLogin] = useState(initialMode);
+  const [identifier, setIdentifier] = useState(""); // login: email or username
   const [email, setEmail] = useState("");
+  const [displayName, setDisplayName] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [username, setUsername] = useState("");
-  const [usernameStatus, setUsernameStatus] = useState<"idle" | "checking" | "taken" | "available">("idle");
+  const [usernameStatus, setUsernameStatus] = useState<UsernameStatus>("idle");
+  const [usernameMessage, setUsernameMessage] = useState("");
 
-  // Live availability check (debounced) against the backend.
+  // Live availability check (debounced). The name is only ever shown as
+  // available after a successful server check that returned "not taken" —
+  // validation failures, network errors and empty results never count.
   useEffect(() => {
     const name = username.trim();
-    if (name.length < 3) { setUsernameStatus("idle"); return; }
+    if (!name) {
+      setUsernameStatus("idle");
+      setUsernameMessage("");
+      return;
+    }
+    const validation = validateUsername(name);
+    if (!validation.valid) {
+      setUsernameStatus("invalid");
+      setUsernameMessage(validation.reason || "اسم المستخدم غير صالح");
+      return;
+    }
     setUsernameStatus("checking");
+    setUsernameMessage("");
     let cancelled = false;
     const t = setTimeout(async () => {
       const { data, error } = await supabase.rpc("is_username_taken", { p_username: name });
       if (cancelled) return;
-      setUsernameStatus(error ? "idle" : data ? "taken" : "available");
+      if (error) {
+        setUsernameStatus("error");
+        setUsernameMessage("تعذر التحقق من الاسم، تحقق من اتصالك وحاول مرة أخرى");
+      } else if (data) {
+        setUsernameStatus("taken");
+        setUsernameMessage("اسم المستخدم مستخدم بالفعل، اختر اسمًا آخر");
+      } else {
+        setUsernameStatus("available");
+        setUsernameMessage("اسم المستخدم متاح");
+      }
     }, 400);
     return () => { cancelled = true; clearTimeout(t); };
   }, [username]);
+
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [isBanned, setIsBanned] = useState(false);
@@ -64,7 +102,7 @@ const AuthPage = () => {
     summary: "",
   });
   const navigate = useNavigate();
-  const { user, signIn, signUp, signInWithGoogle, resendConfirmation } = useAuth();
+  const { user, signInWithIdentifier, signUp, signInWithGoogle, resendConfirmation } = useAuth();
   const [pendingEmail, setPendingEmail] = useState<string | null>(null);
   const [otp, setOtp] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
@@ -81,39 +119,67 @@ const AuthPage = () => {
     setIsLogin(searchParams.get("mode") === "signup" ? false : true);
   }, [searchParams]);
 
+  // Confirm-password state: empty stays neutral, match is success, mismatch is an error.
+  const confirmState: "idle" | "match" | "mismatch" =
+    confirmPassword.length === 0 ? "idle" : confirmPassword === password ? "match" : "mismatch";
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setIsBanned(false);
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      toast.error("البريد الإلكتروني غير صالح");
-      setIsLoading(false);
-      return;
-    }
-    if (!isLogin && !isPasswordValid(password)) {
-      toast.error("كلمة المرور يجب أن تحتوي على 8 أحرف على الأقل بها حروف وأرقام ورموز");
-      setIsLoading(false);
-      return;
-    }
-    if (isLogin && password.length < 6) {
-      toast.error("كلمة المرور غير صحيحة");
-      setIsLoading(false);
-      return;
-    }
-    if (!isLogin && username) {
-      const usernameRegex = /^[\u0600-\u06FFa-zA-Z0-9_\s]{3,50}$/;
-      if (!usernameRegex.test(username)) {
-        toast.error("اسم المستخدم يجب أن يكون 3-50 حرف");
+    if (isLogin) {
+      if (!identifier.trim()) {
+        toast.error("أدخل بريدك الإلكتروني أو اسم المستخدم");
         setIsLoading(false);
         return;
       }
-      // Warn before submitting: a taken username used to fail with a raw
-      // database error instead of a readable message.
-      const { data: taken } = await supabase.rpc("is_username_taken", { p_username: username });
+      if (password.length < 6) {
+        toast.error("بيانات الدخول غير صحيحة");
+        setIsLoading(false);
+        return;
+      }
+    } else {
+      if (!displayName.trim()) {
+        toast.error("أدخل اسمك الكامل");
+        setIsLoading(false);
+        return;
+      }
+      const validation = validateUsername(username);
+      if (!validation.valid) {
+        toast.error(validation.reason || "اسم المستخدم غير صالح");
+        setIsLoading(false);
+        return;
+      }
+      if (!EMAIL_REGEX.test(email)) {
+        toast.error("البريد الإلكتروني غير صالح");
+        setIsLoading(false);
+        return;
+      }
+      if (!isPasswordValid(password)) {
+        toast.error("كلمة المرور لا تستوفي الشروط المطلوبة");
+        setIsLoading(false);
+        return;
+      }
+      if (password !== confirmPassword) {
+        toast.error("كلمتا المرور غير متطابقتين");
+        setIsLoading(false);
+        return;
+      }
+      // Re-check availability at submit time: another user may have claimed
+      // the name since the live check ran.
+      const { data: taken, error: checkError } = await supabase.rpc("is_username_taken", {
+        p_username: username.trim(),
+      });
+      if (checkError) {
+        toast.error("تعذر التحقق من اسم المستخدم، حاول مرة أخرى");
+        setIsLoading(false);
+        return;
+      }
       if (taken) {
-        toast.error("اسم المستخدم محجوز، اختر اسماً آخر");
+        setUsernameStatus("taken");
+        setUsernameMessage("اسم المستخدم مستخدم بالفعل، اختر اسمًا آخر");
+        toast.error("اسم المستخدم مستخدم بالفعل، اختر اسمًا آخر");
         setIsLoading(false);
         return;
       }
@@ -121,11 +187,11 @@ const AuthPage = () => {
 
     try {
       if (isLogin) {
-        await signIn(email, password);
+        await signInWithIdentifier(identifier, password);
         toast.success("تم تسجيل الدخول بنجاح");
         navigate(searchParams.get("next") || "/");
       } else {
-        const { needsConfirmation } = await signUp(email, password, username || email.split("@")[0]);
+        const { needsConfirmation } = await signUp(email, password, username.trim(), displayName.trim());
         if (needsConfirmation) {
           setPendingEmail(email);
         } else {
@@ -135,7 +201,7 @@ const AuthPage = () => {
       }
     } catch (error: any) {
       console.error("Auth error:", error);
-      if (error?.code === "email_not_confirmed") setPendingEmail(email);
+      if (error?.code === "email_not_confirmed") setPendingEmail(identifier);
       toast.error(authErrorMessage(error));
     } finally {
       setIsLoading(false);
@@ -185,6 +251,12 @@ const AuthPage = () => {
     }
   };
 
+  const usernameBorder =
+    usernameStatus === "available"
+      ? "border-secondary focus-visible:ring-secondary"
+      : usernameStatus === "taken" || usernameStatus === "invalid"
+        ? "border-destructive focus-visible:ring-destructive"
+        : "";
 
   return (
     <div className="min-h-screen bg-background flex flex-col font-arabic relative overflow-hidden">
@@ -194,7 +266,7 @@ const AuthPage = () => {
 
       {/* Top bar */}
       <header className="relative z-10 p-4 flex items-center justify-between">
-        <Button variant="ghost" size="icon" onClick={() => navigate("/welcome")}>
+        <Button variant="ghost" size="icon" onClick={() => navigate("/welcome")} aria-label="رجوع">
           <ArrowRight className="w-5 h-5" />
         </Button>
         <Link to="/" className="text-sm text-muted-foreground hover:text-foreground">
@@ -286,37 +358,86 @@ const AuthPage = () => {
             <form onSubmit={handleSubmit} className="space-y-3">
               {!isLogin && (
                 <>
+                  {/* Full name */}
                   <div className="relative">
                     <User className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      type="text"
+                      placeholder="الاسم الكامل"
+                      value={displayName}
+                      onChange={(e) => setDisplayName(e.target.value)}
+                      className="pr-10 text-right h-12"
+                      autoComplete="name"
+                      required
+                    />
+                  </div>
+
+                  {/* Username with live availability */}
+                  <div className="relative">
+                    <AtSign className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
                       type="text"
                       placeholder="اسم المستخدم"
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
-                      className={`pr-10 text-right h-12 ${usernameStatus === "taken" ? "border-destructive focus-visible:ring-destructive" : usernameStatus === "available" ? "border-secondary focus-visible:ring-secondary" : ""}`}
-                      aria-invalid={usernameStatus === "taken"}
+                      className={`pr-10 pl-10 text-right h-12 ${usernameBorder}`}
+                      aria-invalid={usernameStatus === "taken" || usernameStatus === "invalid"}
+                      autoComplete="username"
+                      required
                     />
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2">
+                      {usernameStatus === "checking" && <Loader2 className="w-4 h-4 text-muted-foreground animate-spin" />}
+                      {usernameStatus === "available" && <CheckCircle2 className="w-4 h-4 text-secondary" />}
+                      {(usernameStatus === "taken" || usernameStatus === "invalid") && <XCircle className="w-4 h-4 text-destructive" />}
+                    </span>
                   </div>
-                  {usernameStatus !== "idle" && (
-                    <p className={`text-[11px] px-1 text-right ${usernameStatus === "taken" ? "text-destructive" : usernameStatus === "available" ? "text-secondary" : "text-muted-foreground"}`}>
-                      {usernameStatus === "taken" ? "اسم المستخدم هذا مستخدم سابقاً" : usernameStatus === "available" ? "اسم المستخدم متاح" : "جارٍ التحقق..."}
+                  {usernameStatus !== "idle" && usernameStatus !== "checking" && (
+                    <p
+                      className={`text-[11px] px-1 text-right flex items-center gap-1 ${
+                        usernameStatus === "available"
+                          ? "text-secondary"
+                          : usernameStatus === "error"
+                            ? "text-muted-foreground"
+                            : "text-destructive"
+                      }`}
+                    >
+                      {usernameStatus === "available" && <Check className="w-3 h-3" strokeWidth={3} />}
+                      {usernameMessage}
                     </p>
                   )}
+
+                  {/* Email */}
+                  <div className="relative">
+                    <Mail className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      type="email"
+                      placeholder="البريد الإلكتروني"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="pr-10 text-right h-12"
+                      autoComplete="email"
+                      required
+                    />
+                  </div>
                 </>
               )}
 
-              <div className="relative">
-                <Mail className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  type="email"
-                  placeholder="البريد الإلكتروني"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="pr-10 text-right h-12"
-                  required
-                />
-              </div>
+              {isLogin && (
+                <div className="relative">
+                  <User className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    type="text"
+                    placeholder="أدخل بريدك الإلكتروني أو اسم المستخدم"
+                    value={identifier}
+                    onChange={(e) => setIdentifier(e.target.value)}
+                    className="pr-10 text-right h-12"
+                    autoComplete="username"
+                    required
+                  />
+                </div>
+              )}
 
+              {/* Password */}
               <div className="relative">
                 <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
@@ -326,6 +447,7 @@ const AuthPage = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   className="pr-10 pl-10 text-right h-12"
                   minLength={6}
+                  autoComplete={isLogin ? "current-password" : "new-password"}
                   required
                 />
                 <button
@@ -333,25 +455,79 @@ const AuthPage = () => {
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                   tabIndex={-1}
+                  aria-label={showPassword ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
 
               {!isLogin && (
-                <ul className="flex flex-col gap-1 text-[11px] text-right px-1" aria-label="شروط كلمة المرور">
-                  {passwordRules.map((r) => {
-                    const ok = r.test(password);
-                    return (
-                      <li key={r.id} className={`flex items-center gap-1.5 ${ok ? "text-secondary" : "text-muted-foreground"}`}>
-                        <span className={`w-3 h-3 rounded-full border flex items-center justify-center shrink-0 transition-colors ${ok ? "bg-secondary border-secondary text-secondary-foreground" : "border-muted-foreground/50"}`}>
-                          {ok && <Check className="w-2 h-2" strokeWidth={4} />}
-                        </span>
-                        {r.label}
-                      </li>
-                    );
-                  })}
-                </ul>
+                <>
+                  {/* Password rules checklist */}
+                  <ul
+                    className="rounded-lg border border-border/60 bg-muted/30 px-3 py-2 flex flex-col gap-1.5"
+                    aria-label="شروط كلمة المرور"
+                  >
+                    {passwordRules.map((r) => {
+                      const ok = r.test(password);
+                      return (
+                        <li key={r.id} className="flex items-center gap-2 text-xs">
+                          {ok ? (
+                            <CheckCircle2 className="w-3.5 h-3.5 text-secondary shrink-0" />
+                          ) : (
+                            <Circle className="w-3.5 h-3.5 text-muted-foreground/50 shrink-0" />
+                          )}
+                          <span className={ok ? "text-secondary font-medium" : "text-muted-foreground"}>
+                            {r.label}
+                          </span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+
+                  {/* Confirm password */}
+                  <div className="relative">
+                    <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      type={showConfirmPassword ? "text" : "password"}
+                      placeholder="تأكيد كلمة المرور"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      className={`pr-10 pl-10 text-right h-12 ${
+                        confirmState === "match"
+                          ? "border-secondary focus-visible:ring-secondary"
+                          : confirmState === "mismatch"
+                            ? "border-destructive focus-visible:ring-destructive"
+                            : ""
+                      }`}
+                      aria-invalid={confirmState === "mismatch"}
+                      autoComplete="new-password"
+                      required
+                    />
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                      {confirmState === "match" && <CheckCircle2 className="w-4 h-4 text-secondary" />}
+                      {confirmState === "mismatch" && <XCircle className="w-4 h-4 text-destructive" />}
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        className="text-muted-foreground hover:text-foreground"
+                        tabIndex={-1}
+                        aria-label={showConfirmPassword ? "إخفاء تأكيد كلمة المرور" : "إظهار تأكيد كلمة المرور"}
+                      >
+                        {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </span>
+                  </div>
+                  {confirmState === "mismatch" && (
+                    <p className="text-[11px] px-1 text-right text-destructive">كلمتا المرور غير متطابقتين</p>
+                  )}
+                  {confirmState === "match" && (
+                    <p className="text-[11px] px-1 text-right text-secondary flex items-center gap-1">
+                      <Check className="w-3 h-3" strokeWidth={3} />
+                      كلمتا المرور متطابقتان
+                    </p>
+                  )}
+                </>
               )}
 
               {isLogin && (
@@ -370,7 +546,15 @@ const AuthPage = () => {
                 type="submit"
                 className="w-full h-12 font-bold shadow-md shadow-primary/20"
                 size="lg"
-                disabled={isLoading || isBanned || isGoogleLoading}
+                disabled={
+                  isLoading ||
+                  isBanned ||
+                  isGoogleLoading ||
+                  (!isLogin &&
+                    (usernameStatus !== "available" ||
+                      !isPasswordValid(password) ||
+                      confirmState !== "match"))
+                }
               >
                 {isLoading ? "جاري التحميل..." : isLogin ? "تسجيل الدخول" : "إنشاء الحساب"}
               </Button>
