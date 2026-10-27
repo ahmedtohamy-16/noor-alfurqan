@@ -559,6 +559,7 @@ const AuthPage = () => {
                   isGoogleLoading ||
                   (!isLogin &&
                     (usernameStatus !== "available" ||
+                      !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim()) ||
                       !isPasswordValid(password) ||
                       confirmState !== "match"))
                 }
