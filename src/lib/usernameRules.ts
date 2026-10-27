@@ -6,8 +6,9 @@
 export const USERNAME_MIN = 3;
 export const USERNAME_MAX = 30;
 
-// Arabic letters (0621-064A), Latin letters, digits, underscore and single spaces.
-const USERNAME_CHARS = /^[ء-يa-zA-Z0-9_ ]+$/;
+// Arabic letters (0621-064A), Latin letters, Latin and Arabic-Indic digits,
+// underscore and single spaces.
+const USERNAME_CHARS = /^[ء-يa-zA-Z0-9٠-٩_ ]+$/;
 
 export interface UsernameValidation {
   valid: boolean;
@@ -24,7 +25,7 @@ export const validateUsername = (raw: string): UsernameValidation => {
     return { valid: false, reason: "المسموح: حروف عربية أو إنجليزية وأرقام وشرطة سفلية (_) فقط" };
   if (/  /.test(name))
     return { valid: false, reason: "لا يمكن استخدام مسافتين متتاليتين" };
-  if (/^[0-9_]/.test(name))
+  if (/^[0-9٠-٩_]/.test(name))
     return { valid: false, reason: "اسم المستخدم يجب أن يبدأ بحرف" };
   return { valid: true };
 };

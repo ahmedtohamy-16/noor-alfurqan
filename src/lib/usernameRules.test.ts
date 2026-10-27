@@ -10,6 +10,10 @@ describe("validateUsername", () => {
     expect(validateUsername("ahmed_2026").valid).toBe(true);
   });
 
+  it("accepts Arabic-Indic digits inside the name", () => {
+    expect(validateUsername("زائر النور ٩٩").valid).toBe(true);
+  });
+
   it("rejects names shorter than 3 characters", () => {
     const r = validateUsername("ab");
     expect(r.valid).toBe(false);
