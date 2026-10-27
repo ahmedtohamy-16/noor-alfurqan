@@ -253,7 +253,7 @@ const AuthPage = () => {
 
   const usernameBorder =
     usernameStatus === "available"
-      ? "border-secondary focus-visible:ring-secondary"
+      ? "border-success focus-visible:ring-success"
       : usernameStatus === "taken" || usernameStatus === "invalid"
         ? "border-destructive focus-visible:ring-destructive"
         : "";
@@ -387,7 +387,7 @@ const AuthPage = () => {
                     />
                     <span className="absolute left-3 top-1/2 -translate-y-1/2">
                       {usernameStatus === "checking" && <Loader2 className="w-4 h-4 text-muted-foreground animate-spin" />}
-                      {usernameStatus === "available" && <CheckCircle2 className="w-4 h-4 text-secondary" />}
+                      {usernameStatus === "available" && <CheckCircle2 className="w-4 h-4 text-success" />}
                       {(usernameStatus === "taken" || usernameStatus === "invalid") && <XCircle className="w-4 h-4 text-destructive" />}
                     </span>
                   </div>
@@ -395,7 +395,7 @@ const AuthPage = () => {
                     <p
                       className={`text-[11px] px-1 text-right flex items-center gap-1 ${
                         usernameStatus === "available"
-                          ? "text-secondary"
+                          ? "text-success"
                           : usernameStatus === "error"
                             ? "text-muted-foreground"
                             : "text-destructive"
@@ -473,11 +473,11 @@ const AuthPage = () => {
                       return (
                         <li key={r.id} className="flex items-center gap-2 text-xs">
                           {ok ? (
-                            <CheckCircle2 className="w-3.5 h-3.5 text-secondary shrink-0" />
+                            <CheckCircle2 className="w-3.5 h-3.5 text-success shrink-0" />
                           ) : (
                             <Circle className="w-3.5 h-3.5 text-muted-foreground/50 shrink-0" />
                           )}
-                          <span className={ok ? "text-secondary font-medium" : "text-muted-foreground"}>
+                          <span className={ok ? "text-success font-medium" : "text-muted-foreground"}>
                             {r.label}
                           </span>
                         </li>
@@ -495,7 +495,7 @@ const AuthPage = () => {
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       className={`pr-10 pl-10 text-right h-12 ${
                         confirmState === "match"
-                          ? "border-secondary focus-visible:ring-secondary"
+                          ? "border-success focus-visible:ring-success"
                           : confirmState === "mismatch"
                             ? "border-destructive focus-visible:ring-destructive"
                             : ""
@@ -505,7 +505,7 @@ const AuthPage = () => {
                       required
                     />
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                      {confirmState === "match" && <CheckCircle2 className="w-4 h-4 text-secondary" />}
+                      {confirmState === "match" && <CheckCircle2 className="w-4 h-4 text-success" />}
                       {confirmState === "mismatch" && <XCircle className="w-4 h-4 text-destructive" />}
                       <button
                         type="button"
@@ -522,7 +522,7 @@ const AuthPage = () => {
                     <p className="text-[11px] px-1 text-right text-destructive">كلمتا المرور غير متطابقتين</p>
                   )}
                   {confirmState === "match" && (
-                    <p className="text-[11px] px-1 text-right text-secondary flex items-center gap-1">
+                    <p className="text-[11px] px-1 text-right text-success flex items-center gap-1">
                       <Check className="w-3 h-3" strokeWidth={3} />
                       كلمتا المرور متطابقتان
                     </p>
