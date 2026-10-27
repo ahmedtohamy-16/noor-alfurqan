@@ -460,6 +460,7 @@ const AzkarPage = () => {
               </div>
               <Link
                 to="/notification-settings"
+                aria-label="إعدادات التنبيهات"
                 className="w-10 h-10 rounded-full bg-white/15 backdrop-blur flex items-center justify-center text-white"
               >
                 <Settings className="w-5 h-5" />
@@ -647,7 +648,7 @@ const AzkarPage = () => {
 
       <main className="container mx-auto px-4 py-6 arabic-ui">
         <div className="flex items-center gap-4 mb-6">
-          <Button variant="ghost" size="icon" onClick={handleBack}>
+          <Button variant="ghost" size="icon" onClick={handleBack} aria-label="رجوع">
             <ArrowRight className="w-5 h-5" />
           </Button>
           <div className="flex-1">

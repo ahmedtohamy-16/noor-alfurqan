@@ -243,7 +243,7 @@ const ShareAyahWithThemes = ({
         {/* Preview */}
         <div className="relative">
           {previewUrl ? (
-            <img src={previewUrl} alt="Preview" className="w-full rounded-xl shadow-lg" />
+            <img src={previewUrl} alt="معاينة صورة مشاركة الآية" className="w-full rounded-xl shadow-lg" />
           ) : (
             <div className="aspect-square bg-muted rounded-xl animate-pulse" />
           )}

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import Header from "@/components/Header";
+import PageSeo from "@/components/PageSeo";
 import SurahCard from "@/components/SurahCard";
 import { surahs } from "@/data/surahs";
 import { searchAyahsAsync } from "@/data/quranAyats";
@@ -80,13 +81,18 @@ const QuranPage = () => {
 
   return (
     <div className="min-h-screen bg-background pb-20">
+      <PageSeo
+        title="القرآن الكريم — فهرس السور | نور الفرقان"
+        description="فهرس سور القرآن الكريم الـ114 مع البحث في الآيات بالكلمة أو برقم الآية، وقراءة واستماع لكل سورة."
+        path="/quran"
+      />
       <Header />
 
       <main className="container mx-auto px-4 py-6 arabic-ui">
         {/* Back Button & Title */}
         <div className="flex items-center gap-4 mb-6">
           <Link to="/">
-            <Button variant="ghost" size="icon">
+            <Button variant="ghost" size="icon" aria-label="العودة للرئيسية">
               <ArrowRight className="w-5 h-5" />
             </Button>
           </Link>

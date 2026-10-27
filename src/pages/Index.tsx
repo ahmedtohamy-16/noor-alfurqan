@@ -16,6 +16,7 @@ import {
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/Header";
+import PageSeo from "@/components/PageSeo";
 import NextPrayerHeroCard from "@/components/NextPrayerHeroCard";
 import VerseOfTheDayCard from "@/components/VerseOfTheDayCard";
 import PostCard from "@/components/social/PostCard";
@@ -47,9 +48,15 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <PageSeo
+        title="نور الفرقان — القرآن الكريم والأذكار ومواقيت الصلاة"
+        description="اقرأ القرآن الكريم واستمع إليه، وتابع الأحاديث والأذكار والسبحة ومواقيت الصلاة في تطبيق نور الفرقان بدون إعلانات."
+        path="/"
+      />
       <Header />
 
       <main className="container mx-auto px-4 py-4 arabic-ui max-w-3xl">
+        <h1 className="sr-only">نور الفرقان — القرآن الكريم، مواقيت الصلاة، والأذكار</h1>
         {/* Mode Toggle */}
         <ModeToggle mode={mode} setMode={setMode} />
 
