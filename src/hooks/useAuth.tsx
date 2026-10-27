@@ -219,6 +219,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         isTeacher: role === "teacher" || role === "admin",
         isBanned,
         signIn,
+        signInWithIdentifier,
         signUp,
         signInWithGoogle,
         signOut,
