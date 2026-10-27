@@ -37,8 +37,10 @@ interface AuthContextType {
   isTeacher: boolean;
   isBanned: boolean;
   signIn: (email: string, password: string) => Promise<void>;
+  /** Signs in with an email address or a username (resolved server-side). */
+  signInWithIdentifier: (identifier: string, password: string) => Promise<void>;
   /** Returns true when the account needs email confirmation before sign-in. */
-  signUp: (email: string, password: string, username?: string) => Promise<{ needsConfirmation: boolean }>;
+  signUp: (email: string, password: string, username?: string, displayName?: string) => Promise<{ needsConfirmation: boolean }>;
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
@@ -138,14 +140,28 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (error) throw error;
   };
 
-  const signUp = async (email: string, password: string, username?: string) => {
+  const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  const signInWithIdentifier = async (identifier: string, password: string) => {
+    const id = identifier.trim();
+    if (EMAIL_REGEX.test(id)) return signIn(id, password);
+    // Username login: resolve the account email server-side. A lookup failure
+    // or unknown username surfaces as a generic invalid-credentials error so
+    // the response never reveals whether a username exists.
+    const { data: resolvedEmail, error } = await supabase.rpc("get_email_by_username", { p_username: id });
+    if (error || !resolvedEmail) throw { code: "invalid_credentials", message: "Invalid login credentials" };
+    return signIn(resolvedEmail, password);
+  };
+
+  const signUp = async (email: string, password: string, username?: string, displayName?: string) => {
     const name = (username || email.split("@")[0]).trim();
+    const display = (displayName || name).trim();
     const { data, error } = await supabase.auth.signUp({
       email: email.trim(),
       password,
       options: {
         emailRedirectTo: window.location.origin,
-        data: { username: name, display_name: name },
+        data: { username: name, display_name: display },
       },
     });
     if (error) throw error;
