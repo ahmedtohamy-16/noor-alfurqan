@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { surahs } from "@/data/surahs";
 import { getAyahsBySurahAsync } from "@/data/quranAyats";
 import Header from "@/components/Header";
+import PageSeo from "@/components/PageSeo";
 import TafsirDialog from "@/components/TafsirDialog";
 import ShareAyahDialog from "@/components/ShareAyahDialog";
 import AyahOptionsMenu from "@/components/AyahOptionsMenu";
@@ -245,6 +246,14 @@ const SurahPage = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      {surahInfo && (
+        <PageSeo
+          title={`سورة ${surahInfo.name.replace(/^سُورَةُ\s*/, "")} — نور الفرقان`}
+          description={`اقرأ واستمع إلى سورة ${surahInfo.name.replace(/^سُورَةُ\s*/, "")} (${surahInfo.numberOfAyahs} آية، ${surahInfo.revelationType === "Meccan" ? "مكية" : "مدنية"}) مع التفسير والترجمة في نور الفرقان.`}
+          path={`/surah/${surahInfo.number}`}
+          jsonLd={{ "@context": "https://schema.org", "@type": "WebPage", name: `سورة ${surahInfo.name}`, inLanguage: "ar", url: `https://nooralfurqan.app/surah/${surahInfo.number}` }}
+        />
+      )}
       <Header />
       <main className="container mx-auto px-4 py-6 arabic-ui">
         <div className="flex items-center gap-4 mb-6">

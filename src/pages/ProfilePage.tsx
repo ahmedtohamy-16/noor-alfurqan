@@ -197,7 +197,7 @@ const ProfilePage = () => {
                     {profile?.avatar_url || userProfile?.photoURL ? (
                       <img 
                         src={profile?.avatar_url || userProfile?.photoURL || ""} 
-                        alt="Avatar" 
+                        alt="الصورة الشخصية للمستخدم" 
                         className="w-full h-full object-cover"
                       />
                     ) : (

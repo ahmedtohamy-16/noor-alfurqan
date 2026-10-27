@@ -247,7 +247,7 @@ const HadithShareDialog = ({
         {/* Preview */}
         <div className="relative">
           {previewUrl ? (
-            <img src={previewUrl} alt="Preview" className="w-full rounded-xl shadow-lg" />
+            <img src={previewUrl} alt="معاينة صورة مشاركة الحديث" className="w-full rounded-xl shadow-lg" />
           ) : (
             <div className="aspect-[4/5] bg-muted rounded-xl animate-pulse" />
           )}

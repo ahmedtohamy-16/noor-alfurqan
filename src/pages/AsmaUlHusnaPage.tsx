@@ -64,7 +64,7 @@ const AsmaUlHusnaPage = () => {
         {/* Top bar */}
         <div className="flex items-center gap-3 mb-6">
           <Link to="/">
-            <Button variant="ghost" size="icon">
+            <Button variant="ghost" size="icon" aria-label="العودة للرئيسية">
               <ArrowRight className="w-5 h-5" />
             </Button>
           </Link>
