@@ -9,6 +9,7 @@
 - Removed the throwaway test accounts created while testing.
 - Removed the student/teacher choice from the sign-up form; accounts are created without a role prompt and roles stay managed only in the database.
 - Added Quran topic/question suggestion UI, server-only AI SDK Responses integration, protected paid entitlement table, authentic-corpus verse resolution, and Pro feature listing. Nine targeted tests passed; guest gate and login navigation verified in browser; latest build OK.
+- Rebuilt the auth screens: signup fields ordered full name → username → email → password → confirm password, live username availability with normalized Arabic-aware matching (fixed the root cause where Arabic names falsely showed as available), redesigned password-rules checklist, confirm-password matching, and login by email or username via a server-side lookup that never reveals whether a name exists. 14 rule tests pass; all states verified in the preview.
 
 ## Open
 - Deploy and verify paid Quran AI end to end. Blocked: Lovable Cloud is paused, so deployment and account-session minting failed. Resume Cloud, then deploy quran-topic-suggestions and test a real paid account. Legacy Firestore Pro records are not authoritative paid entitlements and have not been reconciled into pro_entitlements; payment gateway remains unconfigured.
