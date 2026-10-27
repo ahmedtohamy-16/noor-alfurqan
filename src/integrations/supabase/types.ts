@@ -781,6 +781,7 @@ export type Database = {
           longitude: number | null
           username: string | null
           username_change_count: number | null
+          username_search: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -797,6 +798,7 @@ export type Database = {
           longitude?: number | null
           username?: string | null
           username_change_count?: number | null
+          username_search?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -813,6 +815,7 @@ export type Database = {
           longitude?: number | null
           username?: string | null
           username_change_count?: number | null
+          username_search?: string | null
         }
         Relationships: []
       }
@@ -1384,6 +1387,7 @@ export type Database = {
     Functions: {
       cleanup_expired_otps: { Args: never; Returns: undefined }
       generate_invite_code: { Args: never; Returns: string }
+      get_email_by_username: { Args: { p_username: string }; Returns: string }
       get_khatmah_invite_code: {
         Args: { p_khatmah_id: string }
         Returns: string
@@ -1402,6 +1406,7 @@ export type Database = {
       }
       is_username_taken: { Args: { p_username: string }; Returns: boolean }
       join_khatmah_by_code: { Args: { p_invite_code: string }; Returns: Json }
+      normalize_username: { Args: { p: string }; Returns: string }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
