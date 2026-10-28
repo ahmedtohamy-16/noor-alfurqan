@@ -1,41 +1,29 @@
 import { describe, it, expect } from "vitest";
-import { validateUsername } from "./usernameRules";
+import { validateUsername, usernameCandidates } from "./usernameRules";
 
 describe("validateUsername", () => {
-  it("accepts Arabic usernames", () => {
-    expect(validateUsername("أحمد محمد").valid).toBe(true);
-  });
-
-  it("accepts Latin usernames with digits and underscore", () => {
+  it("accepts English usernames with digits and underscore", () => {
     expect(validateUsername("ahmed_2026").valid).toBe(true);
   });
-
-  it("accepts Arabic-Indic digits inside the name", () => {
-    expect(validateUsername("زائر النور ٩٩").valid).toBe(true);
+  it("rejects Arabic usernames", () => {
+    expect(validateUsername("أحمد").valid).toBe(false);
+    expect(validateUsername("ahmed٩٩").valid).toBe(false);
   });
-
-  it("rejects names shorter than 3 characters", () => {
-    const r = validateUsername("ab");
-    expect(r.valid).toBe(false);
-    expect(r.reason).toContain("3");
+  it("rejects spaces and symbols", () => {
+    expect(validateUsername("ahmed ali").valid).toBe(false);
+    expect(validateUsername("ahmed@home").valid).toBe(false);
   });
-
-  it("rejects names longer than 30 characters", () => {
+  it("enforces length 3-30", () => {
+    expect(validateUsername("ab").valid).toBe(false);
     expect(validateUsername("a".repeat(31)).valid).toBe(false);
   });
-
-  it("rejects unsupported symbols", () => {
-    const r = validateUsername("ahmed@home");
-    expect(r.valid).toBe(false);
-    expect(r.reason).toContain("المسموح");
-  });
-
-  it("rejects double spaces", () => {
-    expect(validateUsername("ahmed  ali").valid).toBe(false);
-  });
-
-  it("rejects names starting with a digit or underscore", () => {
+  it("must start with a letter", () => {
     expect(validateUsername("1ahmed").valid).toBe(false);
     expect(validateUsername("_ahmed").valid).toBe(false);
+  });
+  it("suggests only valid alternatives", () => {
+    const c = usernameCandidates("ahmed");
+    expect(c.length).toBeGreaterThan(0);
+    c.forEach((n) => expect(validateUsername(n).valid).toBe(true));
   });
 });
