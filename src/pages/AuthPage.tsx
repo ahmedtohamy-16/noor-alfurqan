@@ -27,6 +27,7 @@ import { getGuestDataSummary } from "@/services/guestDataService";
 import { supabase } from "@/integrations/supabase/client";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { passwordRules, isPasswordValid, hasArabic } from "@/lib/passwordRules";
+import { validateEmail } from "@/lib/emailRules";
 import { validateUsername, usernameCandidates } from "@/lib/usernameRules";
 
 const GoogleIcon = () => (
@@ -170,8 +171,9 @@ const AuthPage = () => {
         setIsLoading(false);
         return;
       }
-      if (!EMAIL_REGEX.test(email)) {
-        toast.error("البريد الإلكتروني غير صالح");
+      const emailCheck = validateEmail(email);
+      if (!emailCheck.valid) {
+        toast.error(emailCheck.reason);
         setIsLoading(false);
         return;
       }
@@ -450,7 +452,7 @@ const AuthPage = () => {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       className={`pr-10 text-right h-12 ${
-                        email && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim())
+                        submitAttempted && !validateEmail(email).valid
                           ? "border-destructive focus-visible:ring-destructive"
                           : ""
                       }`}
@@ -458,9 +460,12 @@ const AuthPage = () => {
                       required
                     />
                   </div>
-                  {email && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim()) && (
-                    <p className="text-[11px] px-1 text-right text-destructive">أدخل بريدًا إلكترونيًا صحيحًا مثل name@example.com</p>
-                  )}
+                  {(() => {
+                    const c = validateEmail(email);
+                    return submitAttempted && !c.valid ? (
+                      <p className="text-[11px] px-1 text-right text-destructive">{c.reason}</p>
+                    ) : null;
+                  })()}
                 </>
               )}
 
@@ -519,29 +524,35 @@ const AuthPage = () => {
                       <XCircle className="w-3 h-3" /> كلمة المرور لا يمكن أن تحتوي على حروف عربية
                     </p>
                   )}
-                  <ul className="grid grid-cols-2 gap-1.5" aria-label="شروط كلمة المرور">
+                  {password && !hasArabic(password) && (() => {
+                    const passed = passwordRules.filter((r) => r.test(password)).length;
+                    const pct = (passed / passwordRules.length) * 100;
+                    const tone = passed === passwordRules.length ? "bg-success" : passed >= 2 ? "bg-primary" : "bg-destructive";
+                    return (
+                      <div className="h-1 w-full rounded-full bg-muted overflow-hidden" aria-hidden>
+                        <div className={`h-full ${tone} transition-all duration-300`} style={{ width: `${pct}%` }} />
+                      </div>
+                    );
+                  })()}
+                  <ul className="flex flex-wrap gap-x-4 gap-y-1 px-1" aria-label="شروط كلمة المرور">
                     {passwordRules.map((r) => {
                       const ok = r.test(password);
-                      const bad = !ok && (r.id === "noArabic" ? password.length > 0 : submitAttempted);
+                      const bad = !ok && submitAttempted;
                       return (
                         <li
                           key={r.id}
-                          className={`flex items-center gap-1.5 rounded-md border px-2 py-1.5 text-[11px] transition-colors ${
-                            ok
-                              ? "border-success/40 bg-success/10 text-success"
-                              : bad
-                                ? "border-destructive/40 bg-destructive/10 text-destructive"
-                                : "border-border/60 bg-muted/30 text-muted-foreground"
+                          className={`flex items-center gap-1 text-[11px] transition-colors ${
+                            ok ? "text-success" : bad ? "text-destructive" : "text-muted-foreground"
                           }`}
                         >
                           {ok ? (
-                            <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                            <CheckCircle2 className="w-3 h-3 shrink-0" />
                           ) : bad ? (
-                            <XCircle className="w-3.5 h-3.5 shrink-0" />
+                            <XCircle className="w-3 h-3 shrink-0" />
                           ) : (
-                            <Circle className="w-3.5 h-3.5 shrink-0 opacity-50" />
+                            <Circle className="w-3 h-3 shrink-0 opacity-50" />
                           )}
-                          <span className="leading-tight">{r.label}</span>
+                          <span>{r.label}</span>
                         </li>
                       );
                     })}

@@ -17,7 +17,6 @@ describe("passwordRules", () => {
     expect(rule("symbol").test("Abcdef12")).toBe(false);
   });
   it("rejects any Arabic character", () => {
-    expect(rule("noArabic").test("Noor@2026أ")).toBe(false);
     expect(isPasswordValid("Noor@2026أ")).toBe(false);
     expect(isPasswordValid("Noor@٢٠٢٦a")).toBe(false);
   });
