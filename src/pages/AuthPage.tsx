@@ -26,8 +26,8 @@ import { useAuth, authErrorMessage } from "@/hooks/useAuth";
 import { getGuestDataSummary } from "@/services/guestDataService";
 import { supabase } from "@/integrations/supabase/client";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
-import { passwordRules, isPasswordValid } from "@/lib/passwordRules";
-import { validateUsername } from "@/lib/usernameRules";
+import { passwordRules, isPasswordValid, hasArabic } from "@/lib/passwordRules";
+import { validateUsername, usernameCandidates } from "@/lib/usernameRules";
 
 const GoogleIcon = () => (
   <svg viewBox="0 0 24 24" className="w-5 h-5" aria-hidden="true">
@@ -57,6 +57,24 @@ const AuthPage = () => {
   const [username, setUsername] = useState("");
   const [usernameStatus, setUsernameStatus] = useState<UsernameStatus>("idle");
   const [usernameMessage, setUsernameMessage] = useState("");
+  const [submitAttempted, setSubmitAttempted] = useState(false);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+
+  // When the chosen name is taken, offer up to 3 verified-free alternatives.
+  useEffect(() => {
+    if (usernameStatus !== "taken") { setSuggestions([]); return; }
+    let cancelled = false;
+    (async () => {
+      const free: string[] = [];
+      for (const c of usernameCandidates(username)) {
+        if (free.length >= 3) break;
+        const { data, error } = await supabase.rpc("is_username_taken", { p_username: c });
+        if (!error && !data) free.push(c);
+      }
+      if (!cancelled) setSuggestions(free);
+    })();
+    return () => { cancelled = true; };
+  }, [usernameStatus, username]);
 
   // Live availability check (debounced). The name is only ever shown as
   // available after a successful server check that returned "not taken" —
@@ -140,6 +158,7 @@ const AuthPage = () => {
         return;
       }
     } else {
+      setSubmitAttempted(true);
       if (!displayName.trim()) {
         toast.error("أدخل اسمك الكامل");
         setIsLoading(false);
@@ -405,6 +424,22 @@ const AuthPage = () => {
                       {usernameMessage}
                     </p>
                   )}
+                  {suggestions.length > 0 && (
+                    <div className="flex flex-wrap items-center gap-1.5 px-1">
+                      <span className="text-[11px] text-muted-foreground">جرّب:</span>
+                      {suggestions.map((sug) => (
+                        <button
+                          key={sug}
+                          type="button"
+                          dir="ltr"
+                          onClick={() => setUsername(sug)}
+                          className="text-[11px] rounded-full border border-primary/40 bg-primary/10 px-2.5 py-0.5 text-primary hover:bg-primary/20 transition-colors"
+                        >
+                          {sug}
+                        </button>
+                      ))}
+                    </div>
+                  )}
 
                   {/* Email */}
                   <div className="relative">
@@ -452,7 +487,15 @@ const AuthPage = () => {
                   placeholder="كلمة المرور"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="pr-10 pl-10 text-right h-12"
+                  className={`pr-10 pl-10 text-right h-12 ${
+                    !isLogin && password
+                      ? hasArabic(password) || (submitAttempted && !isPasswordValid(password))
+                        ? "border-destructive focus-visible:ring-destructive"
+                        : isPasswordValid(password)
+                          ? "border-success focus-visible:ring-success"
+                          : ""
+                      : ""
+                  }`}
                   minLength={6}
                   autoComplete={isLogin ? "current-password" : "new-password"}
                   required
@@ -471,22 +514,34 @@ const AuthPage = () => {
               {!isLogin && (
                 <>
                   {/* Password rules checklist */}
-                  <ul
-                    className="rounded-lg border border-border/60 bg-muted/30 px-3 py-2 flex flex-col gap-1.5"
-                    aria-label="شروط كلمة المرور"
-                  >
+                  {hasArabic(password) && (
+                    <p className="text-[11px] px-1 text-right text-destructive flex items-center gap-1">
+                      <XCircle className="w-3 h-3" /> كلمة المرور لا يمكن أن تحتوي على حروف عربية
+                    </p>
+                  )}
+                  <ul className="grid grid-cols-2 gap-1.5" aria-label="شروط كلمة المرور">
                     {passwordRules.map((r) => {
                       const ok = r.test(password);
+                      const bad = !ok && (r.id === "noArabic" ? password.length > 0 : submitAttempted);
                       return (
-                        <li key={r.id} className="flex items-center gap-2 text-xs">
+                        <li
+                          key={r.id}
+                          className={`flex items-center gap-1.5 rounded-md border px-2 py-1.5 text-[11px] transition-colors ${
+                            ok
+                              ? "border-success/40 bg-success/10 text-success"
+                              : bad
+                                ? "border-destructive/40 bg-destructive/10 text-destructive"
+                                : "border-border/60 bg-muted/30 text-muted-foreground"
+                          }`}
+                        >
                           {ok ? (
-                            <CheckCircle2 className="w-3.5 h-3.5 text-success shrink-0" />
+                            <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                          ) : bad ? (
+                            <XCircle className="w-3.5 h-3.5 shrink-0" />
                           ) : (
-                            <Circle className="w-3.5 h-3.5 text-muted-foreground/50 shrink-0" />
+                            <Circle className="w-3.5 h-3.5 shrink-0 opacity-50" />
                           )}
-                          <span className={ok ? "text-success font-medium" : "text-muted-foreground"}>
-                            {r.label}
-                          </span>
+                          <span className="leading-tight">{r.label}</span>
                         </li>
                       );
                     })}
@@ -501,9 +556,9 @@ const AuthPage = () => {
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       className={`pr-10 pl-10 text-right h-12 ${
-                        confirmState === "match"
+                        confirmState === "match" && isPasswordValid(password)
                           ? "border-success focus-visible:ring-success"
-                          : confirmState === "mismatch"
+                          : confirmState === "mismatch" && submitAttempted
                             ? "border-destructive focus-visible:ring-destructive"
                             : ""
                       }`}
@@ -513,7 +568,7 @@ const AuthPage = () => {
                     />
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
                       {confirmState === "match" && <CheckCircle2 className="w-4 h-4 text-success" />}
-                      {confirmState === "mismatch" && <XCircle className="w-4 h-4 text-destructive" />}
+                      {confirmState === "mismatch" && submitAttempted && <XCircle className="w-4 h-4 text-destructive" />}
                       <button
                         type="button"
                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
@@ -525,7 +580,7 @@ const AuthPage = () => {
                       </button>
                     </span>
                   </div>
-                  {confirmState === "mismatch" && (
+                  {confirmState === "mismatch" && submitAttempted && (
                     <p className="text-[11px] px-1 text-right text-destructive">كلمتا المرور غير متطابقتين</p>
                   )}
                   {confirmState === "match" && (
@@ -556,12 +611,7 @@ const AuthPage = () => {
                 disabled={
                   isLoading ||
                   isBanned ||
-                  isGoogleLoading ||
-                  (!isLogin &&
-                    (usernameStatus !== "available" ||
-                      !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim()) ||
-                      !isPasswordValid(password) ||
-                      confirmState !== "match"))
+                  isGoogleLoading
                 }
               >
                 {isLoading ? "جاري التحميل..." : isLogin ? "تسجيل الدخول" : "إنشاء الحساب"}
