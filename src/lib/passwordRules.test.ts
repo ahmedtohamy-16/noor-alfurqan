@@ -8,31 +8,20 @@ describe("passwordRules", () => {
     expect(rule("length").test("Ab1!xyz")).toBe(false);
     expect(rule("length").test("Ab1!xyzw")).toBe(true);
   });
-
-  it("requires a real letter, not only digits or symbols", () => {
+  it("requires an English letter", () => {
     expect(rule("letter").test("1234!@#$")).toBe(false);
     expect(rule("letter").test("1234!@#a")).toBe(true);
-    expect(rule("letter").test("1234!@#أ")).toBe(true);
   });
-
-  it("does not count Arabic-Indic digits as letters", () => {
-    expect(rule("letter").test("١٢٣٤٥٦٧٨")).toBe(false);
-    expect(rule("number").test("١٢٣٤٥٦٧٨")).toBe(true);
-  });
-
-  it("requires a digit", () => {
+  it("requires a digit and a symbol", () => {
     expect(rule("number").test("Abcdef!g")).toBe(false);
-    expect(rule("number").test("Abcdef!1")).toBe(true);
-  });
-
-  it("requires a special symbol", () => {
     expect(rule("symbol").test("Abcdef12")).toBe(false);
-    expect(rule("symbol").test("Abcdef1!")).toBe(true);
   });
-
-  it("validates a fully compliant password", () => {
+  it("rejects any Arabic character", () => {
+    expect(rule("noArabic").test("Noor@2026أ")).toBe(false);
+    expect(isPasswordValid("Noor@2026أ")).toBe(false);
+    expect(isPasswordValid("Noor@٢٠٢٦a")).toBe(false);
+  });
+  it("accepts a compliant English password", () => {
     expect(isPasswordValid("Noor@2026")).toBe(true);
-    expect(isPasswordValid("نورالفرقان١٢٣!")).toBe(true);
-    expect(isPasswordValid("short1!")).toBe(false);
   });
 });

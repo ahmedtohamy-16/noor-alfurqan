@@ -1,11 +1,13 @@
-// "Letter" means an actual letter (Latin or Arabic), never a digit or symbol:
-// the Arabic Unicode block 0600-06FF also contains Arabic-Indic digits
-// (0660-0669), so the letter range is restricted to 0621-064A.
+// Password policy: English letters, digits and symbols only — Arabic characters
+// (including Arabic-Indic digits) are rejected outright.
+export const hasArabic = (p: string) => /[\u0600-\u06FF\u0750-\u077F\uFB50-\uFDFF\uFE70-\uFEFF]/.test(p);
+
 export const passwordRules = [
   { id: "length", label: "8 أحرف على الأقل", test: (p: string) => p.length >= 8 },
-  { id: "letter", label: "حرف واحد على الأقل", test: (p: string) => /[A-Za-zء-ي]/.test(p) },
-  { id: "number", label: "رقم واحد على الأقل", test: (p: string) => /[0-9٠-٩]/.test(p) },
-  { id: "symbol", label: "رمز خاص واحد على الأقل (!@#...)", test: (p: string) => /[^A-Za-z0-9ء-ي٠-٩\s]/.test(p) },
+  { id: "letter", label: "حرف إنجليزي واحد على الأقل", test: (p: string) => /[A-Za-z]/.test(p) },
+  { id: "number", label: "رقم واحد على الأقل (0-9)", test: (p: string) => /[0-9]/.test(p) },
+  { id: "symbol", label: "رمز خاص واحد على الأقل (!@#...)", test: (p: string) => /[^A-Za-z0-9\s\u0600-\u06FF]/.test(p) },
+  { id: "noArabic", label: "بدون حروف عربية", test: (p: string) => p.length > 0 && !hasArabic(p) },
 ];
 
 export const isPasswordValid = (p: string) => passwordRules.every((r) => r.test(p));
