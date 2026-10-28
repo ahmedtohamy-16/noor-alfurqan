@@ -8,7 +8,7 @@ export const ALLOWED_EMAIL_DOMAINS = [
 
 const FORMAT = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
-export type EmailCheck = { valid: true } | { valid: false; reason: string };
+export type EmailCheck = { valid: boolean; reason?: string };
 
 export function validateEmail(raw: string): EmailCheck {
   const email = raw.trim().toLowerCase();
