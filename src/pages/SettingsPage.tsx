@@ -22,7 +22,7 @@ import { useReadingSettings } from "@/hooks/useReadingSettings";
 import { useNotifications } from "@/hooks/useNotifications";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/untypedClient";
 import { countryHasDST, isInDSTForCountry, getDSTStatusText } from "@/utils/dstUtils";
 
 const fontOptions = [

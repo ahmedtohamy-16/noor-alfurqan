@@ -24,7 +24,7 @@ import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { useAuth, authErrorMessage } from "@/hooks/useAuth";
 import { getGuestDataSummary } from "@/services/guestDataService";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/untypedClient";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { passwordRules, isPasswordValid, hasArabic } from "@/lib/passwordRules";
 import { validateEmail } from "@/lib/emailRules";

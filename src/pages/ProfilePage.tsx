@@ -23,7 +23,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/untypedClient";
 import { validateUsername, sanitizeUsernameInput, friendlyUsernameError } from "@/lib/usernameRules";
 
 interface ProfileData {
