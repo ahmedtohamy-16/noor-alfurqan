@@ -50,8 +50,6 @@ const Header = () => {
 
   const navLinks = [
     { path: "/", label: "الرئيسية", icon: Book },
-    { path: "/feed", label: "المجتمع", icon: MessageSquare },
-    { path: "/explore", label: "استكشاف", icon: Search },
     { path: "/notifications", label: "الإشعارات", icon: Bell },
     { path: "/khatmah", label: "الختمة", icon: Users },
     { path: "/favorites", label: "المفضلة", icon: Heart },
