@@ -46,7 +46,10 @@ import {
   UserProfile, 
   UserRole, 
 } from "@/lib/firebase";
-import { updateUserRole } from "@/services/userService";
+
+/** Block/unblock and role changes stay off until the page is verified. */
+const ACTIONS_DISABLED = true;
+const ACTIONS_DISABLED_NOTE = "Blocking is temporarily disabled until the page is verified.";
 
 const UserManagementPage = () => {
   const navigate = useNavigate();
@@ -117,7 +120,9 @@ const UserManagementPage = () => {
 
   const handleRoleChange = async (userId: string, newRole: UserRole) => {
     try {
-      await updateUserRole(userId, newRole);
+      // Role changes are disabled until this page is verified against the cloud database.
+      void userId; void newRole;
+      throw new Error("disabled");
       toast.success("تم تحديث الصلاحية بنجاح");
       loadUsers();
     } catch (error) {
@@ -294,6 +299,11 @@ const UserManagementPage = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
+            {ACTIONS_DISABLED && (
+              <p role="note" className="mb-3 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
+                {ACTIONS_DISABLED_NOTE}
+              </p>
+            )}
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
@@ -319,7 +329,7 @@ const UserManagementPage = () => {
                                 size="sm"
                                 variant="outline"
                                 onClick={() => handleUnbanUser(u.uid)}
-                                disabled={isProcessing}
+                                disabled={ACTIONS_DISABLED || isProcessing}
                                 className="gap-1"
                               >
                                 <CheckCircle className="w-4 h-4" />
@@ -330,7 +340,7 @@ const UserManagementPage = () => {
                                 size="sm"
                                 variant="destructive"
                                 onClick={() => openBanDialog(u)}
-                                disabled={isCurrentUser || isProcessing}
+                                disabled={ACTIONS_DISABLED || isCurrentUser || isProcessing}
                                 className="gap-1"
                               >
                                 <Ban className="w-4 h-4" />
@@ -340,7 +350,7 @@ const UserManagementPage = () => {
                             <Select
                               value={u.role}
                               onValueChange={(v) => handleRoleChange(u.uid, v as UserRole)}
-                              disabled={isCurrentUser}
+                              disabled={ACTIONS_DISABLED || isCurrentUser}
                             >
                               <SelectTrigger className="w-24">
                                 <SelectValue />
