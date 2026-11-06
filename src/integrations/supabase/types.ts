@@ -727,13 +727,6 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "pro_entitlements_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: true
-            referencedRelation: "public_profiles"
-            referencedColumns: ["id"]
-          },
         ]
       }
       profile_changes_log: {
@@ -1395,16 +1388,6 @@ export type Database = {
           id: string | null
           username: string | null
         }
-        Insert: {
-          display_name?: string | null
-          id?: string | null
-          username?: string | null
-        }
-        Update: {
-          display_name?: string | null
-          id?: string | null
-          username?: string | null
-        }
         Relationships: []
       }
     }
@@ -1432,6 +1415,14 @@ export type Database = {
       is_reserved_username: { Args: { name: string }; Returns: boolean }
       is_username_taken: { Args: { p_username: string }; Returns: boolean }
       join_khatmah_by_code: { Args: { p_invite_code: string }; Returns: Json }
+      list_public_profiles: {
+        Args: never
+        Returns: {
+          display_name: string
+          id: string
+          username: string
+        }[]
+      }
       normalize_username: { Args: { p: string }; Returns: string }
     }
     Enums: {

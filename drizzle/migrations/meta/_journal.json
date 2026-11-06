@@ -43,6 +43,13 @@
       "when": 1793928051397,
       "tag": "0005_admin_blocking_and_profile_column_guards",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1793928431925,
+      "tag": "0006_public_profiles_via_definer_function",
+      "breakpoints": true
     }
   ]
 }
