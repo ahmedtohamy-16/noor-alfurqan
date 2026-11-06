@@ -727,6 +727,13 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "pro_entitlements_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       profile_changes_log: {
@@ -779,7 +786,7 @@ export type Database = {
           last_username_change: string | null
           latitude: number | null
           longitude: number | null
-          username: string | null
+          username: string
           username_change_count: number | null
           username_search: string | null
         }
@@ -796,7 +803,7 @@ export type Database = {
           last_username_change?: string | null
           latitude?: number | null
           longitude?: number | null
-          username?: string | null
+          username: string
           username_change_count?: number | null
           username_search?: string | null
         }
@@ -813,7 +820,7 @@ export type Database = {
           last_username_change?: string | null
           latitude?: number | null
           longitude?: number | null
-          username?: string | null
+          username?: string
           username_change_count?: number | null
           username_search?: string | null
         }
@@ -1382,9 +1389,27 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      public_profiles: {
+        Row: {
+          display_name: string | null
+          id: string | null
+          username: string | null
+        }
+        Insert: {
+          display_name?: string | null
+          id?: string | null
+          username?: string | null
+        }
+        Update: {
+          display_name?: string | null
+          id?: string | null
+          username?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      check_username_available: { Args: { name: string }; Returns: boolean }
       cleanup_expired_otps: { Args: never; Returns: undefined }
       generate_invite_code: { Args: never; Returns: string }
       get_email_by_username: { Args: { p_username: string }; Returns: string }
@@ -1404,6 +1429,7 @@ export type Database = {
         Args: { p_book_id: string; p_hadith_number: number }
         Returns: number
       }
+      is_reserved_username: { Args: { name: string }; Returns: boolean }
       is_username_taken: { Args: { p_username: string }; Returns: boolean }
       join_khatmah_by_code: { Args: { p_invite_code: string }; Returns: Json }
       normalize_username: { Args: { p: string }; Returns: string }
