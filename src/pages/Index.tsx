@@ -1,8 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import {
   Book,
-  Users,
   ChevronLeft,
   BookOpen,
   Library,
@@ -11,7 +10,6 @@ import {
   CircleDot,
   Sparkles,
   MoreHorizontal,
-  PenLine,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
