@@ -1,200 +1,117 @@
+# Plan: move everything to a Supabase project owned by tohamy.projects@gmail.com
 
-# إعادة بناء صفحة الأحاديث النبوية الشريفة
+Nothing is changed until you approve. Block, unblock and role controls stay disabled throughout (step 6).
 
-## نظرة عامة
+## 1. Current state (checked this turn, read-only)
 
-استبدال `src/pages/HadithPage.tsx` بالكامل بصفحة جديدة من الصفر بطابع راقٍ مستوحى من المصاحف الكلاسيكية، مع تدرجات ذهبية/زمردية، خط Amiri، ودعم كامل للوضع الليلي (نيلي داكن + لمسات ذهبية).
+- **Everything on the backend runs on Lovable Cloud today.** Sign-in, profiles, user_roles, favorites, pro_entitlements, the post-media bucket and the moderate-content function all live in the one Cloud project.
+- **No external Supabase project is connected.** Connectors linked to this project: Google Search Console only. Ahmed's LinkedIn exists in the workspace but isn't linked.
+- **Data size:** 10 sign-in accounts (not 8 or 9). All of them use email and password; none use Google. 5 favorites, 0 Pro entitlements, 0 files in post-media.
+- **Tables (41):** account_recovery_requests, admin_messages, admin_users, app_settings, asma_favorites, audio_generation_log, azkar, azkar_categories, blocked_users, cities, conversations, countries, course_enrollments, course_lessons, daily_wird, favorites, hadith_shares, khatmah_participants, khatmahs, messages, notification_history, notification_logs, otp_codes, pro_entitlements, profile_changes_log, profiles, push_subscriptions, quiz_attempts, quiz_questions, quizzes, quran_ai_service_state, reading_progress, reading_sessions, security_questions, tasbih_stats, teacher_files, user_azkar_progress, user_reading_settings, user_roles, user_settings, user_story_preferences. There is also the view public_profiles and the enum app_role.
+- **Access rules:** 104 in total. The migration copies them unchanged from the migration files in `drizzle/migrations` and `supabase/migrations`.
+- **Triggers:** on_auth_user_created (on the accounts table), plus profiles_guard_protected_columns, profiles_sync_username_search (insert and update), update_khatmahs_updated_at and update_user_story_preferences_updated_at.
+- **Functions (17):** check_username_available, cleanup_expired_otps, generate_invite_code, get_email_by_username, get_khatmah_invite_code, get_usage_stats, guard_profile_protected_columns, handle_new_user, has_role, increment_hadith_share, is_reserved_username, is_username_taken, join_khatmah_by_code, list_public_profiles, normalize_username, sync_username_search, update_updated_at_column.
+- **Storage buckets:** post-media (public, empty) and database_export_28_10_26 (private).
+- **Edge functions (10):** hadith-api, moderate-content, prophet-story-audio, quran-topic-suggestions, register-push-token, scheduled-notifications, send-otp, send-push-notification, test-notification, verify-otp.
+- **Secrets these functions use:** LOVABLE_API_KEY (AI features), FIREBASE_SERVICE_ACCOUNT, VITE_FIREBASE_VAPID_KEY (push), Api_key_testmail, Namespace, GOOGLE_SEARCH_CONSOLE_API_KEY.
 
-نُبقي طبقة البيانات الحالية (`useHadith` + IndexedDB + Edge Function) كما هي ونبني فوقها واجهة جديدة + مكوّنات جديدة + جدولًا واحدًا في الباك إند لتتبّع المشاركات.
+## 2. What you need to create or connect
 
-## الهيكل العام للصفحة (من فوق لتحت)
+- **A new Supabase project under tohamy.projects@gmail.com.** You create it yourself on supabase.com.
+  - Pick the region closest to your users, for example eu-central-1 (Frankfurt) for Egypt and the Gulf. Tell me which one you choose.
+  - Pick the Free or Pro plan. Pro gives daily backups and no pausing.
+- **Important limit:** Lovable Cloud can't be removed from this Lovable project, and it can't be switched to an external Supabase project. The supported route:
+  1. Remix this project into a new Lovable project, or export it through GitHub.
+  2. In the new copy, connect your Supabase project through Lovable's **Supabase integration** (Settings → Integrations → Supabase), signed in as tohamy.projects@gmail.com.
+  3. Point the custom domains (nooralfurqan.app) at the new project when you cut over.
+- **Secrets** go in only through the secure secrets form in the new project, never in chat. These are FIREBASE_SERVICE_ACCOUNT only if push stays on Firebase, and an email-provider key.
+- **AI features** (Quran AI, content moderation) depend on LOVABLE_API_KEY. In an external project that key may not be provided automatically. You may need an AI provider key (for example OpenAI), and the cost would then be billed to you.
 
-```
-┌─────────────────────────────────────────┐
-│ Hero Header                             │
-│  • أيقونة Bookmarks (يمين)              │
-│  • "الأحاديث النبوية الشريفة" (Amiri)   │
-│  • سطر المصادر: البخاري · مسلم · …      │
-├─────────────────────────────────────────┤
-│ كارت "حديث اليوم" (تدرّج ذهبي/زمردي)    │
-│  • نص الحديث وسط، الراوي تحت            │
-│  • زر "شارك حديث اليوم"                 │
-│  • يتغيّر يوميًا (seed = تاريخ اليوم)    │
-├─────────────────────────────────────────┤
-│ شريط البحث الذكي (debounce 300ms)       │
-│  • عدّاد النتائج + إبراز ذهبي للكلمة     │
-│  • Empty state لطيف لو مفيش نتائج        │
-├─────────────────────────────────────────┤
-│ تابات أفقية scrollable (الكتب)          │
-│  الكل · البخاري · مسلم · الترمذي …      │
-│  التاب النشط: خط ذهبي تحت + bold        │
-├─────────────────────────────────────────┤
-│ Chips الموضوعات (multi-select)          │
-│  الإيمان · الصلاة · الزكاة · …          │
-├─────────────────────────────────────────┤
-│ شريط أدوات: زر السورت (Dropdown)        │
-│  افتراضي · الأكثر مشاركة · عشوائي · راوي│
-├─────────────────────────────────────────┤
-│ قائمة كروت الأحاديث (Stagger animation) │
-│  • Skeleton أثناء التحميل                │
-│  • Infinite scroll                       │
-├─────────────────────────────────────────┤
-│ زر "العودة للأعلى" يظهر بعد scroll       │
-└─────────────────────────────────────────┘
-```
+## 3. Firebase usage and replacements
 
-## تصميم كارت الحديث
+`src/lib/firebase.ts` sets up Firebase sign-in, the Firestore database and push messaging. 33 files still import it or its helpers:
 
-```
-╭──────────────────────────────────────╮
-│ صحيح البخاري · كتاب الإيمان   #1  🔖 │
-│ ┌─[صحيح]  (Badge أخضر/أزرق/أحمر)     │
-├──────────────────────────────────────┤
-│ السند: حدثنا … عن … عن …  (رمادي صغير)│
-│ عن أبي هريرة رضي الله عنه (ذهبي)      │
-│                                       │
-│ «نص الحديث بخط Amiri كبير ومريح،     │
-│   مع إبراز كلمات البحث بلون ذهبي…»   │
-│                                       │
-│ [اقرأ المزيد] (لو > 4 سطور)           │
-├──────────────────────────────────────┤
-│  🔗 مشاركة   📋 نسخ   📖 شرح          │
-╰──────────────────────────────────────╯
-```
+| Area | Files | Reads or writes in Firebase | Supabase replacement |
+|---|---|---|---|
+| Old sign-in and role helpers | lib/firebase.ts, useAuth.tsx (leftovers), services/userService.ts, profileService.ts | users, user_roles, profiles documents | Delete: sign-in already uses Supabase |
+| Settings and theme | useUserSettings, useReadingSettings, useTheme, ReciterSelector, ReciterSettingsPanel, PrayerExportDialog | user settings documents | user_settings, user_reading_settings tables |
+| Worship stats | useTasbih, useDailyWird, useReadingProgress, useReadingStats, useAdvancedStats | tasbih, wird, progress | tasbih_stats, daily_wird, reading_progress, reading_sessions |
+| Favorites and bookmarks | useFavorites (Firebase fallback), useHadithBookmarks, usePinnedHadith | favorites, hadith bookmarks | favorites + new hadith_bookmarks table |
+| Memorization | useMemorization | memorization documents | new memorization table |
+| Pro | usePro, ProRedeemCard, ProRedeemCodeManager, ProAdminsManager | pro status, redeem codes, Pro admins | pro_entitlements + new redeem_codes table; admins via user_roles |
+| Khatmah, messages, teacher | KhatmahPage, MessagesPage, TeacherDashboard, services/lessonService | khatmah, chats, lessons | existing khatmahs, conversations, messages, course_* and teacher_files tables |
+| Admin | AdminPage, UserManagementPage | users list, stats | profiles, user_roles, get_usage_stats |
+| Notifications | NotificationsPage, useFCMNotifications, ProphetStoriesPage | notifications; push tokens | notification_history, push_subscriptions |
+| Guest data | services/guestDataService.ts | moves guest data into the account | the same tables above |
+| Support | services/supportService.ts | support_tickets | new support_tickets table |
 
-- نص الحديث: Amiri, 22px افتراضيًا
-- السند بخط أصغر (14px) ولون باهت
-- الراوي الرئيسي: لون `--gold` ذهبي بولد
-- Badge الصحة يظهر **فقط** عند توفّر `hadith.grade`
-- 4 أسطر افتراضية مع `line-clamp-4` + زر "اقرأ المزيد" يفتح البوتوم شيت
+- **Data to migrate from Firebase:** probably none. Firestore returned "Database '(default)' not found" earlier, so there seems to be no Firestore data at all. First step: confirm this read-only in the Firebase console (you do it, or I check it with your approval).
+- **Push notifications:** Supabase can't deliver push messages itself. Two options:
+  - (a) Keep Firebase Cloud Messaging for delivery only. No user data stays in Firebase.
+  - (b) Switch to standard Web Push with VAPID keys. Firebase is gone completely, but iOS and Android app wrappers need extra work.
 
-## البوتوم شيت (تفاصيل الحديث)
+## 4. Moving the accounts (user IDs and passwords kept)
 
-يُفتح من زر "شرح الحديث" أو "اقرأ المزيد":
+- Supabase stores passwords as standard bcrypt hashes. So `auth.users` and `auth.identities` rows can be copied row for row:
+  - The same IDs carry over.
+  - The same password hashes carry over, so users log in with their current password.
+  - The email-confirmed status carries over too.
+- **How:**
+  1. I export the 10 account rows with a read-only query.
+  2. The rows go into a private file. Password hashes are never shown in chat.
+  3. You run the insert script in the new project's SQL editor (needs the owner's dashboard), before the signup trigger is created.
+  4. Then the profiles, user_roles and all app tables are copied with the same IDs.
+- **What breaks:**
+  - Everyone is signed out once, because sessions don't transfer. They sign in again with the same password.
+  - Password-reset links and email codes sent before the switch stop working.
+- **If the copy fails:** fall back to resetting passwords. The IDs stay the same and each user gets a password-reset email.
 
-1. **الحديث كاملاً** (بخط أكبر)
-2. **شرح علمي** — من حقل `elaboration` (لو موجود) أو رسالة "جاري إعداد الشرح"
-3. **الفوائد المستخلصة** — نقاط Bullet (إن وُجدت ضمن `elaboration` نعرضها، وإلا نخفي القسم)
-4. **أحاديث مشابهة** — نتائج بحث سريع بأبرز كلمات الحديث (4–6 كلمات) في نفس الكتاب
+## 5. Risks, order, downtime, rollback
 
-## البحث الذكي
+**What could break, and how it's handled:**
+- **Login:** after the switch the app uses the new project's address and public key. Sign-in, refresh and sign-out are tested in the preview before the domain switch.
+- **Accounts trigger (on_auth_user_created):** created after the accounts are imported, so imported accounts don't get duplicate profiles. Then a new signup is tested.
+- **Username rules:** check rules, the unique index and the reserved list are recreated. Existing usernames are checked against them before import.
+- **Admin role:** user_roles rows are copied with the same IDs. Read access through has_role is tested with a regular account only, because you asked me not to sign in as admin.
+- **Confirmation emails:** the new project uses Supabase's default sender, which has low limits. The 6-digit code email still needs your own email domain or SMTP set up in the dashboard (you do this).
+- **Google sign-in:** not set up today (all accounts use email). It needs a Google OAuth client and the redirect address added in the dashboard (you do this).
+- **AI features:** need a model key (see section 2).
+- **Push notifications:** see section 3.
 
-- يستخدم `normalizeArabic` (موجود في المشروع):
-  - يشيل التشكيل `[\u064B-\u065F\u0670]`
-  - يوحّد الهمزات `[إأآا] → ا`
-  - يوحّد `ى → ي`، `ة → ه`
-- يبحث بشكل متوازي في: `text` + `narrator` + اسم الكتاب + الموضوع (كلمات مفتاحية)
-- Debounce 300ms (موجود في الصفحة الحالية)
-- يبرز الكلمة بـ `<mark>` بخلفية ذهبية شفافة
-- Empty state مع رسالة عربية لطيفة + اقتراح كلمات بديلة
+**Order:**
+1. You create the Supabase project and pick the region.
+2. You confirm Firestore is empty. You choose what replaces push and AI.
+3. Remix or export this project. Connect your Supabase project to the copy.
+4. Recreate the schema in the new database: types, tables, permissions, access rules, functions, the view, and the triggers except the accounts trigger.
+5. Import the accounts (you, in the SQL editor), then the app data with the same IDs. Then create the accounts trigger.
+6. Recreate the two storage buckets (no files to copy) and their access rules.
+7. Deploy the 10 edge functions and add the secrets through the secure form.
+8. Move each Firebase area in section 3 over to Supabase. Delete `src/lib/firebase.ts` and the firebase package.
+9. Test in the preview: sign-up, sign-in, refresh, sign-out, a protected page, password reset, username change, blocked screen, favorites, khatmah, support ticket.
+10. Publish the new project, move nooralfurqan.app to it, and freeze the old project.
 
-## فلتر الموضوعات
+**Downtime:** about 15–30 minutes, only during step 5 and the domain switch. Changes made in the old app after the export would be lost, so writes are frozen during the switch.
 
-نبني خريطة محلية من 12 موضوعًا → قائمة كلمات مفتاحية عربية لكل واحد:
+**Rollback:** the old project isn't touched, so point the domain back at it. Accounts that signed up on the new project after the switch would need copying back manually.
 
-```ts
-TOPIC_KEYWORDS = {
-  "الإيمان":  ["إيمان", "آمن", "يؤمن", "تصديق"],
-  "الصلاة":   ["صلاة", "صلى", "ركع", "سجد", "وضوء"],
-  "الزكاة":   ["زكاة", "صدقة", "أنفق"],
-  "الصيام":   ["صوم", "صام", "أفطر", "رمضان"],
-  "الحج":     ["حج", "عمرة", "طواف", "كعبة"],
-  "الأخلاق":  ["خلق", "صدق", "أمانة", "حياء"],
-  "الأذكار":  ["ذكر", "سبحان", "حمد", "لا إله"],
-  "الدعاء":   ["دعاء", "اللهم", "استغفر"],
-  // … إلخ
-}
-```
+**Steps you do yourself in the Supabase dashboard:**
+- Create the project.
+- Import the accounts.
+- Set up SMTP and the email domain.
+- Set up the Google OAuth client.
+- Set the auth redirect addresses and the Site URL.
+- Turn on backups.
 
-اختيار شريحة = تطبيق بحث داخلي بالكلمات المفتاحية. اختيار متعدد = OR بين الكلمات. لا حاجة لـ migration.
+## 6. Locked during the migration
 
-## المحفوظات (Hybrid)
+The user-management block, unblock and role controls stay disabled, with the current note, until you approve otherwise.
 
-- **للضيوف**: تخزين محلي في `localStorage` تحت مفتاح `hadith_bookmarks`
-- **للمسجّلين**: مزامنة لـ Firestore في كولكشن `hadith_bookmarks/{uid}/items/{hadithKey}`
-- عند تسجيل الدخول، نُدمج المحلي → Firestore (نفس نمط `useGuestMigration`)
-- صفحة منفصلة `/hadith/bookmarks` تعرض المحفوظات مجمّعة حسب الكتاب، مع Swipe-to-delete (نستخدم touch handlers بسيطة)
+## Open questions
 
-## ترتيب "الأكثر مشاركة" — يتطلب Migration
-
-جدول جديد `hadith_shares` لتتبّع المشاركات:
-
-```sql
-CREATE TABLE public.hadith_shares (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  book_id text NOT NULL,
-  hadith_number int NOT NULL,
-  share_count int NOT NULL DEFAULT 0,
-  updated_at timestamptz NOT NULL DEFAULT now(),
-  UNIQUE(book_id, hadith_number)
-);
-GRANT SELECT ON public.hadith_shares TO anon, authenticated;
-GRANT ALL    ON public.hadith_shares TO service_role;
-ALTER TABLE public.hadith_shares ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "public read" ON public.hadith_shares
-  FOR SELECT USING (true);
-```
-
-+ دالة `increment_hadith_share(book_id, hadith_number)` بصلاحية `SECURITY DEFINER` تُستدعى عند الضغط على "مشاركة".
-
-عند اختيار سورت "الأكثر مشاركة" نقرأ أعلى 50 (book_id, hadith_number) ثم نطابقها مع الأحاديث المحمّلة محليًا.
-
-## المكوّنات الجديدة
-
-```
-src/pages/HadithPage.tsx              ← إعادة كتابة كاملة
-src/pages/HadithBookmarksPage.tsx     ← جديد (route: /hadith/bookmarks)
-
-src/components/hadith/
-  HadithPageHeader.tsx           ← هيدر + Bookmark icon
-  HadithOfTheDayCard.tsx         ← كارت اليوم بتدرّج ذهبي
-  HadithSearchBar.tsx            ← بحث ذكي + counter
-  HadithBookTabs.tsx             ← تابات كتب أفقية
-  HadithTopicChips.tsx           ← شرائح موضوعات multi-select
-  HadithSortMenu.tsx             ← Dropdown السورت
-  HadithCardV2.tsx               ← كارت الحديث الجديد
-  HadithDetailsSheet.tsx         ← Bottom Sheet (Sheet من shadcn)
-  HadithBackToTop.tsx            ← زر العودة للأعلى
-  HadithSkeleton.tsx             ← Loading skeleton
-  HadithHighlightedText.tsx      ← إبراز كلمات البحث
-
-src/hooks/
-  useHadithBookmarks.tsx         ← Hybrid bookmarks (localStorage + Firestore)
-  useHadithOfTheDay.tsx          ← اختيار حديث اليوم
-  useHadithShareCount.tsx        ← قراءة/زيادة عدّاد المشاركة
-
-src/data/
-  hadithTopics.ts                ← خريطة الموضوعات → كلمات مفتاحية
-
-src/lib/
-  arabicNormalize.ts             ← (نستخدم الموجود) أو نعيد التصدير
-```
-
-نحتفظ بـ `useHadith.tsx` كما هو (طبقة البيانات / IndexedDB / Edge Function لم تتغير).
-
-## تفاصيل تقنية مهمة
-
-- **التايبوغرافي**: Amiri افتراضي، Scheherazade كخيار (موجود في `HadithFontControls`)
-- **الألوان (Design Tokens في `index.css`)**:
-  - `--hadith-gold: 38 70% 50%` (ذهبي للهايلايت والراوي)
-  - `--hadith-gold-soft: 38 70% 90%` (خلفية الهايلايت)
-  - Dark: خلفية `220 40% 8%` نيلي داكن، نصوص `40 30% 92%`
-- **Animations**: `animate-fade-in` للكروت بـ `style={{ animationDelay: \`${i * 50}ms\` }}`
-- **RTL**: `dir="rtl"` على الجذر، كل الـ flex/grid يحترم الاتجاه
-- **Routes**: نضيف `<Route path="/hadith/bookmarks" element={<HadithBookmarksPage />} />` في `App.tsx`
-
-## ترتيب التنفيذ
-
-1. **Migration**: إنشاء `hadith_shares` + دالة `increment_hadith_share`
-2. **Tokens + خط**: إضافة ألوان ذهبية في `index.css`، التأكد من تحميل Amiri
-3. **Data**: إنشاء `hadithTopics.ts`
-4. **Hooks**: `useHadithBookmarks`, `useHadithOfTheDay`, `useHadithShareCount`
-5. **Components**: بناء كل المكوّنات الفرعية بالترتيب من الأعلى للأسفل
-6. **Page**: تجميع `HadithPage.tsx` الجديدة
-7. **Bookmarks Page**: بناء صفحة المحفوظات + إضافة الـ route
-8. **تنظيف**: حذف المكوّنات القديمة غير المستخدمة (`HadithHeroSection`, `HadithFeaturedCard`, `HadithBookSelector`, `HadithItemCard`, `HadithInfiniteList`, `HadithLibraryCard`, `RandomHadithSection`, `HadithDetailsModal`)
-
-## ما هو خارج النطاق (لاحقًا)
-
-- المكتبة وإدارة التنزيلات (تُبقى متاحة عبر التاب الحالي أو نُخفيها مؤقتًا — سأنقلها لزر صغير في الهيدر يفتح Sheet للتنزيل)
-- "الفوائد المستخلصة" الذكية من AI — نعرضها فقط لو موجودة ضمن `elaboration` نصًا
+1. Is a new Lovable project (remix) connected to your Supabase project acceptable? The current project can't drop Lovable Cloud.
+2. Which region and plan?
+3. Push notifications: keep Firebase for delivery only, or move fully to Web Push?
+4. AI features: will you provide your own AI provider key, or should those features be turned off in the new project?
+5. Can you confirm in the Firebase console that Firestore has no data? Or do I check it read-only with your approval?
+6. Accounts: copy with password hashes (users keep their passwords), or ask everyone to reset their password?
+7. Copy the leftover tables for the education platform (courses, quizzes, teacher files) and messages too, or leave them out?
