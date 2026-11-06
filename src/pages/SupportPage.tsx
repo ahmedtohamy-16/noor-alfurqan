@@ -29,7 +29,7 @@ import {
   createSupportTicket,
   getMyTickets,
   TicketCategory,
-} from "@/services/socialService";
+} from "@/services/supportService";
 import { toast } from "sonner";
 
 const categoryLabels: Record<TicketCategory, { label: string; icon: any }> = {
