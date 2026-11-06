@@ -45,9 +45,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { 
   UserProfile, 
   UserRole, 
-  COLLECTIONS, 
-  firestoreUpdate,
-  firestoreQuery 
 } from "@/lib/firebase";
 import { updateUserRole } from "@/services/userService";
 
@@ -87,14 +84,29 @@ const UserManagementPage = () => {
     try {
       setIsLoading(true);
       
-      const allUsers = await firestoreQuery<UserProfile>(
-        COLLECTIONS.USERS,
-        [],
-        "createdAt",
-        "desc"
+      // Cloud profiles are the only source of users; admins can read every row.
+      const [{ data: profiles, error }, { data: roles }] = await Promise.all([
+        supabase
+          .from("profiles")
+          .select("id, username, display_name, email, is_blocked, created_at")
+          .order("created_at", { ascending: false }),
+        supabase.from("user_roles").select("user_id, role"),
+      ]);
+      if (error) throw error;
+      const roleOf = (id: string): UserRole => {
+        const r = (roles || []).filter((x) => x.user_id === id).map((x) => x.role);
+        return (r.includes("admin") ? "admin" : r.includes("moderator") ? "teacher" : "student") as UserRole;
+      };
+      setUsers(
+        (profiles || []).map((p) => ({
+          uid: p.id,
+          email: p.email ?? "",
+          displayName: p.display_name || p.username,
+          username: p.username,
+          role: roleOf(p.id),
+          isBanned: !!p.is_blocked,
+        })) as unknown as UserProfile[]
       );
-
-      setUsers(allUsers);
     } catch (error) {
       console.error("Error loading users:", error);
       toast.error("حدث خطأ في تحميل المستخدمين");
@@ -120,8 +132,10 @@ const UserManagementPage = () => {
     setIsProcessing(true);
 
     try {
-      const { error: banErr } = await supabase.from("profiles").update({ is_blocked: true }).eq("id", selectedUser.uid);
+      const { data: banned, error: banErr } = await supabase
+        .from("profiles").update({ is_blocked: true }).eq("id", selectedUser.uid).select("id");
       if (banErr) throw banErr;
+      if (!banned?.length) throw new Error("profile_not_found");
 
       toast.success("تم حظر المستخدم بنجاح");
       setBanDialogOpen(false);
@@ -140,8 +154,10 @@ const UserManagementPage = () => {
     setIsProcessing(true);
 
     try {
-      const { error: unbanErr } = await supabase.from("profiles").update({ is_blocked: false }).eq("id", userId);
+      const { data: unbanned, error: unbanErr } = await supabase
+        .from("profiles").update({ is_blocked: false }).eq("id", userId).select("id");
       if (unbanErr) throw unbanErr;
+      if (!unbanned?.length) throw new Error("profile_not_found");
 
       toast.success("تم إلغاء حظر المستخدم بنجاح");
       loadUsers();
