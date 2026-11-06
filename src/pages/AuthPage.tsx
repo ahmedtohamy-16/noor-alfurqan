@@ -428,6 +428,9 @@ const AuthPage = () => {
                       {usernameMessage}
                     </p>
                   )}
+                  {submitAttempted && !username.trim() && (
+                    <p className="text-[11px] px-1 text-right text-destructive">أدخل اسم مستخدم (3 أحرف على الأقل)</p>
+                  )}
                   {suggestions.length > 0 && (
                     <div className="flex flex-wrap items-center gap-1.5 px-1">
                       <span className="text-[11px] text-muted-foreground">جرّب:</span>
