@@ -14,3 +14,9 @@
 ## Open
 - Deploy and verify paid Quran AI end to end. Blocked: Lovable Cloud is paused, so deployment and account-session minting failed. Resume Cloud, then deploy quran-topic-suggestions and test a real paid account. Legacy Firestore Pro records are not authoritative paid entitlements and have not been reconciled into pro_entitlements; payment gateway remains unconfigured.
 - Real password sign-in has not been watched end to end: a new account must open a confirmation email first, and no readable mailbox is connected to this workspace. Blocked on: an inbox the agent can read, or the user opening one confirmation link.
+
+## Move to owner's Supabase project (approved plan, 2026-11-06)
+Decisions: run the move in a remixed copy; no accounts migrated (fresh start, owner creates own admin); Firebase kept only for push delivery; AI features turned off.
+- [ ] Owner: create Supabase project under tohamy.projects@gmail.com, remix this app, connect Supabase in the copy — blocked on owner
+- [ ] In the copy: recreate schema, buckets, functions; move Firebase data paths to Supabase; disable AI; test; switch domain
+- Block/unblock/role controls stay disabled
