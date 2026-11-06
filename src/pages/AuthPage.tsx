@@ -28,7 +28,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { passwordRules, isPasswordValid, hasArabic } from "@/lib/passwordRules";
 import { validateEmail } from "@/lib/emailRules";
-import { validateUsername, usernameCandidates } from "@/lib/usernameRules";
+import { validateUsername, usernameCandidates, sanitizeUsernameInput } from "@/lib/usernameRules";
 
 const GoogleIcon = () => (
   <svg viewBox="0 0 24 24" className="w-5 h-5" aria-hidden="true">
@@ -69,8 +69,8 @@ const AuthPage = () => {
       const free: string[] = [];
       for (const c of usernameCandidates(username)) {
         if (free.length >= 3) break;
-        const { data, error } = await supabase.rpc("is_username_taken", { p_username: c });
-        if (!error && !data) free.push(c);
+        const { data, error } = await supabase.rpc("check_username_available", { name: c });
+        if (!error && data === true) free.push(c);
       }
       if (!cancelled) setSuggestions(free);
     })();
@@ -97,7 +97,8 @@ const AuthPage = () => {
     setUsernameMessage("");
     let cancelled = false;
     const t = setTimeout(async () => {
-      const { data, error } = await supabase.rpc("is_username_taken", { p_username: name });
+      const { data: available, error } = await supabase.rpc("check_username_available", { name });
+      const data = !available;
       if (cancelled) return;
       if (error) {
         setUsernameStatus("error");
@@ -189,9 +190,10 @@ const AuthPage = () => {
       }
       // Re-check availability at submit time: another user may have claimed
       // the name since the live check ran.
-      const { data: taken, error: checkError } = await supabase.rpc("is_username_taken", {
-        p_username: username.trim(),
+      const { data: available, error: checkError } = await supabase.rpc("check_username_available", {
+        name: username.trim(),
       });
+      const taken = !available;
       if (checkError) {
         toast.error("تعذر التحقق من اسم المستخدم، حاول مرة أخرى");
         setIsLoading(false);
@@ -400,7 +402,7 @@ const AuthPage = () => {
                       type="text"
                       placeholder="اسم المستخدم"
                       value={username}
-                      onChange={(e) => setUsername(e.target.value)}
+                      onChange={(e) => setUsername(sanitizeUsernameInput(e.target.value))}
                       className={`pr-10 pl-10 text-right h-12 ${usernameBorder}`}
                       aria-invalid={usernameStatus === "taken" || usernameStatus === "invalid"}
                       autoComplete="username"

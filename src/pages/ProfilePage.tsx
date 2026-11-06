@@ -23,16 +23,30 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
-import { 
-  getProfile, 
-  updateUsername, 
-  updateDisplayName,
-  canChangeUsername,
-  canChangeDisplayName,
-  formatJoinDate,
-  ProfileData
-} from "@/services/profileService";
-import { Timestamp } from "@/lib/firebase";
+import { supabase } from "@/integrations/supabase/client";
+import { validateUsername, sanitizeUsernameInput, friendlyUsernameError } from "@/lib/usernameRules";
+
+interface ProfileData {
+  id: string;
+  username: string;
+  display_name: string | null;
+  avatar_url: string | null;
+  created_at: string | null;
+  username_change_count: number | null;
+  displayname_change_count: number | null;
+}
+
+const PROFILE_COLUMNS = "id, username, display_name, avatar_url, created_at, username_change_count, displayname_change_count";
+
+const getProfile = async (id: string): Promise<ProfileData | null> => {
+  const { data } = await supabase.from("profiles").select(PROFILE_COLUMNS).eq("id", id).maybeSingle();
+  return (data as ProfileData) ?? null;
+};
+
+const formatJoinDate = (iso: string | null | undefined) =>
+  iso ? new Date(iso).toLocaleDateString("ar-EG", { year: "numeric", month: "long", day: "numeric" }) : "غير معروف";
+
+type UsernameStatus = "idle" | "invalid" | "checking" | "available" | "taken" | "error";
 
 const ProfilePage = () => {
   const navigate = useNavigate();
@@ -66,8 +80,6 @@ const ProfilePage = () => {
         if (profileData) {
           setNewUsername(profileData.username || "");
           setNewDisplayName(profileData.display_name || userProfile?.displayName || "");
-          setUsernameRestriction(canChangeUsername(profileData));
-          setDisplayNameRestriction(canChangeDisplayName(profileData));
         }
       } catch (error) {
         console.error("Error loading profile:", error);
@@ -79,40 +91,66 @@ const ProfilePage = () => {
     loadProfile();
   }, [user, userProfile]);
 
+  // Live availability check for the username editor (debounced).
+  const [usernameStatus, setUsernameStatus] = useState<UsernameStatus>("idle");
+  const [usernameMessage, setUsernameMessage] = useState("");
+  useEffect(() => {
+    if (!isEditingUsername) return;
+    const name = newUsername.trim();
+    if (!name || name === profile?.username) { setUsernameStatus("idle"); setUsernameMessage(""); return; }
+    const v = validateUsername(name);
+    if (!v.valid) { setUsernameStatus("invalid"); setUsernameMessage(v.reason || "اسم المستخدم غير صالح"); return; }
+    setUsernameStatus("checking"); setUsernameMessage("");
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      const { data, error } = await supabase.rpc("check_username_available", { name });
+      if (cancelled) return;
+      if (error) { setUsernameStatus("error"); setUsernameMessage("تعذر التحقق من الاسم، حاول مرة أخرى"); }
+      else if (data) { setUsernameStatus("available"); setUsernameMessage("اسم المستخدم متاح"); }
+      else { setUsernameStatus("taken"); setUsernameMessage("اسم المستخدم هذا مستخدم سابقًا"); }
+    }, 400);
+    return () => { cancelled = true; clearTimeout(timer); };
+  }, [newUsername, isEditingUsername, profile?.username]);
+
   const handleSaveUsername = async () => {
-    if (!user || !newUsername.trim()) return;
-    
+    if (!user) return;
+    const name = newUsername.trim();
+    if (name === profile?.username) { setIsEditingUsername(false); return; }
+    const v = validateUsername(name);
+    if (!v.valid) { toast.error(v.reason || "اسم المستخدم غير صالح"); return; }
+
     setIsSaving(true);
-    const result = await updateUsername(user.uid, newUsername.trim());
-    
-    if (result.success) {
+    const { data: available, error: checkError } = await supabase.rpc("check_username_available", { name });
+    if (checkError || !available) {
+      toast.error(checkError ? "تعذر التحقق من الاسم، حاول مرة أخرى" : "اسم المستخدم هذا مستخدم سابقًا، اختر اسمًا آخر");
+      setIsSaving(false);
+      return;
+    }
+    const { error } = await supabase.from("profiles").update({ username: name }).eq("id", user.uid);
+    if (!error) {
       toast.success("تم تحديث اسم المستخدم بنجاح");
-      setProfile(prev => prev ? { ...prev, username: newUsername.trim() } : null);
       setIsEditingUsername(false);
-      // Refresh restrictions
       const updated = await getProfile(user.uid);
-      if (updated) setUsernameRestriction(canChangeUsername(updated));
+      if (updated) setProfile(updated);
     } else {
-      toast.error(result.error || "حدث خطأ");
+      toast.error(friendlyUsernameError(error));
     }
     setIsSaving(false);
   };
 
   const handleSaveDisplayName = async () => {
-    if (!user || !newDisplayName.trim()) return;
-    
+    const name = newDisplayName.trim();
+    if (!user || !name) return;
+
     setIsSaving(true);
-    const result = await updateDisplayName(user.uid, newDisplayName.trim());
-    
-    if (result.success) {
+    const { error } = await supabase.from("profiles").update({ display_name: name.slice(0, 100) }).eq("id", user.uid);
+    if (!error) {
       toast.success("تم تحديث الاسم بنجاح");
-      setProfile(prev => prev ? { ...prev, display_name: newDisplayName.trim() } : null);
       setIsEditingDisplayName(false);
-      // Refresh restrictions
       const updated = await getProfile(user.uid);
-      if (updated) setDisplayNameRestriction(canChangeDisplayName(updated));
+      if (updated) setProfile(updated);
     } else {
-      toast.error(result.error || "حدث خطأ");
+      toast.error("تعذر حفظ الاسم، حاول مرة أخرى");
     }
     setIsSaving(false);
   };
@@ -272,16 +310,26 @@ const ProfilePage = () => {
                     <div className="flex items-center gap-2">
                       <Input
                         value={newUsername}
-                        onChange={(e) => setNewUsername(e.target.value)}
-                        className="text-center text-sm"
-                        maxLength={50}
-                        placeholder="اسم المستخدم"
+                        onChange={(e) => setNewUsername(sanitizeUsernameInput(e.target.value))}
+                        className={`text-center text-sm ${
+                          usernameStatus === "available" ? "border-green-500 focus-visible:ring-green-500"
+                          : usernameStatus === "taken" || usernameStatus === "invalid" ? "border-destructive focus-visible:ring-destructive" : ""
+                        }`}
+                        maxLength={20}
+                        dir="ltr"
+                        autoCapitalize="none"
+                        autoCorrect="off"
+                        spellCheck={false}
+                        placeholder="username"
+                        aria-label="اسم المستخدم"
+                        aria-describedby="profile-username-status"
                       />
                       <Button 
                         size="icon" 
                         variant="ghost" 
                         onClick={handleSaveUsername}
-                        disabled={isSaving}
+                        disabled={isSaving || usernameStatus === "checking" || usernameStatus === "taken" || usernameStatus === "invalid"}
+                        aria-label="حفظ اسم المستخدم"
                       >
                         <Check className="w-4 h-4 text-green-500" />
                       </Button>
@@ -312,6 +360,19 @@ const ProfilePage = () => {
                     </div>
                   )}
                   
+                  {isEditingUsername && usernameMessage && (
+                    <p
+                      id="profile-username-status"
+                      role="status"
+                      className={`text-xs mt-1 ${usernameStatus === "available" ? "text-green-500" : usernameStatus === "checking" ? "text-muted-foreground" : "text-destructive"}`}
+                    >
+                      {usernameMessage}
+                    </p>
+                  )}
+                  {isEditingUsername && usernameStatus === "checking" && (
+                    <p className="text-xs mt-1 text-muted-foreground" role="status">جارٍ التحقق…</p>
+                  )}
+
                   {!usernameRestriction.allowed && (
                     <p className="text-xs text-amber-500 mt-1 flex items-center justify-center gap-1">
                       <AlertCircle className="w-3 h-3" />
