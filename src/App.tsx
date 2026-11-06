@@ -11,7 +11,6 @@ import { ReadingSettingsProvider } from "@/hooks/useReadingSettings";
 import { GlobalAudioProvider } from "@/hooks/useGlobalAudio";
 import { DownloadManagerProvider } from "@/components/DownloadManager";
 import { useGuestMigration } from "@/hooks/useGuestMigration";
-import { HomeModeProvider } from "@/hooks/useHomeMode";
 import { ProProvider } from "@/hooks/usePro";
 import BottomNavigation from "@/components/BottomNavigation";
 import GlobalAudioPlayer from "@/components/GlobalAudioPlayer";
@@ -51,16 +50,9 @@ const ForgotPasswordPage = lazy(() => import("./pages/ForgotPasswordPage"));
 const PrayerTimesPage = lazy(() => import("./pages/PrayerTimesPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 // Social network layer
-const FeedPage = lazy(() => import("./pages/FeedPage"));
-const SocialProfilePage = lazy(() => import("./pages/SocialProfilePage"));
-const PostDetailsPage = lazy(() => import("./pages/PostDetailsPage"));
-const SocialSearchPage = lazy(() => import("./pages/SocialSearchPage"));
 const SupportPage = lazy(() => import("./pages/SupportPage"));
-const VerificationPage = lazy(() => import("./pages/VerificationPage"));
 const WelcomePage = lazy(() => import("./pages/WelcomePage"));
 const SplashScreen = lazy(() => import("./pages/SplashScreen"));
-const ExplorePage = lazy(() => import("./pages/ExplorePage"));
-const CreatePostPage = lazy(() => import("./pages/CreatePostPage"));
 const AsmaUlHusnaPage = lazy(() => import("./pages/AsmaUlHusnaPage"));
 const ProPage = lazy(() => import("./pages/ProPage"));
 const MemorizationPage = lazy(() => import("./pages/MemorizationPage"));
@@ -90,7 +82,7 @@ const App = () => (
             <GlobalAudioProvider>
               <DownloadManagerProvider>
                 <TooltipProvider>
-                  <HomeModeProvider>
+                  <>
                   <GuestMigrationHandler>
                     <Toaster />
                     <Sonner />
@@ -127,16 +119,9 @@ const App = () => (
                           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                           <Route path="/prayer-times" element={<PrayerTimesPage />} />
                           {/* Social network */}
-                          <Route path="/feed" element={<FeedPage />} />
-                          <Route path="/u/:username" element={<SocialProfilePage />} />
-                          <Route path="/post/:postId" element={<PostDetailsPage />} />
-                          <Route path="/social-search" element={<SocialSearchPage />} />
                           <Route path="/support" element={<SupportPage />} />
-                          <Route path="/verification" element={<ProtectedRoute><VerificationPage /></ProtectedRoute>} />
                           <Route path="/welcome" element={<WelcomePage />} />
                           <Route path="/splash" element={<SplashScreen />} />
-                          <Route path="/explore" element={<ExplorePage />} />
-                          <Route path="/create-post" element={<ProtectedRoute><CreatePostPage /></ProtectedRoute>} />
                           <Route path="/asma-ul-husna" element={<AsmaUlHusnaPage />} />
                           <Route path="/pro" element={<ProPage />} />
                           <Route path="/memorization" element={<MemorizationPage />} />
@@ -147,7 +132,7 @@ const App = () => (
                       <BottomNavigation />
                     </BrowserRouter>
                   </GuestMigrationHandler>
-                  </HomeModeProvider>
+                  </>
                 </TooltipProvider>
               </DownloadManagerProvider>
             </GlobalAudioProvider>

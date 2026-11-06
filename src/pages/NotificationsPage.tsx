@@ -65,7 +65,7 @@ const formatDate = (dateString: string) => {
   });
 };
 
-type FilterTab = "all" | "social" | "islamic";
+type FilterTab = "all" | "islamic";
 
 const NotificationsPage = () => {
   const { user } = useAuth();
@@ -202,11 +202,10 @@ const NotificationsPage = () => {
           )}
         </div>
 
-        {/* Tabs (All / Social / Islamic) */}
+        {/* Tabs (All / Islamic) */}
         <div className="flex items-center gap-2 mb-5 overflow-x-auto scrollbar-none">
           {([
             { key: "all", label: "الكل" },
-            { key: "social", label: "اجتماعي" },
             { key: "islamic", label: "إسلامي" },
           ] as { key: FilterTab; label: string }[]).map((t) => (
             <button
