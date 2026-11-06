@@ -1,6 +1,6 @@
 import { useState, useEffect, createContext, useContext, ReactNode, useCallback } from "react";
 import type { Session, User } from "@supabase/supabase-js";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/untypedClient";
 import type { UserRole } from "@/lib/firebase";
 import { toast } from "sonner";
 
