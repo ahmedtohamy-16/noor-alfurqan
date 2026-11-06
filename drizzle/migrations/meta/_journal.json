@@ -57,6 +57,13 @@
       "when": 1793928775157,
       "tag": "0007_fix_guard_profile_condition",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1793928787528,
+      "tag": "0008_tighten_user_roles_grants",
+      "breakpoints": true
     }
   ]
 }
