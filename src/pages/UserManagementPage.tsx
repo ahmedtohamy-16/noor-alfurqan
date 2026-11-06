@@ -1,3 +1,4 @@
+import { supabase } from "@/integrations/supabase/client";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -119,11 +120,8 @@ const UserManagementPage = () => {
     setIsProcessing(true);
 
     try {
-      await firestoreUpdate(COLLECTIONS.USERS, selectedUser.uid, {
-        isBanned: true,
-        banReason: banReason || "مخالفة شروط الاستخدام",
-        bannedAt: new Date().toISOString(),
-      });
+      const { error: banErr } = await supabase.from("profiles").update({ is_blocked: true }).eq("id", selectedUser.uid);
+      if (banErr) throw banErr;
 
       toast.success("تم حظر المستخدم بنجاح");
       setBanDialogOpen(false);
@@ -142,11 +140,8 @@ const UserManagementPage = () => {
     setIsProcessing(true);
 
     try {
-      await firestoreUpdate(COLLECTIONS.USERS, userId, {
-        isBanned: false,
-        banReason: null,
-        bannedAt: null,
-      });
+      const { error: unbanErr } = await supabase.from("profiles").update({ is_blocked: false }).eq("id", userId);
+      if (unbanErr) throw unbanErr;
 
       toast.success("تم إلغاء حظر المستخدم بنجاح");
       loadUsers();

@@ -36,6 +36,13 @@
       "when": 1793927328321,
       "tag": "0004_unique_lowercase_usernames",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1793928051397,
+      "tag": "0005_admin_blocking_and_profile_column_guards",
+      "breakpoints": true
     }
   ]
 }

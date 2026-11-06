@@ -96,10 +96,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setRole(r);
     if (profile?.is_blocked) {
       setIsBanned(true);
-      await supabase.auth.signOut();
-      toast.error("حسابك محظور. تواصل مع الإدارة للمزيد من المعلومات");
       return;
     }
+    setIsBanned(false);
     setUserProfile({
       uid: u.id,
       email: profile?.email ?? u.email ?? null,
@@ -123,6 +122,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       } else {
         setRole(null);
         setUserProfile(null);
+        setIsBanned(false);
       }
     });
     supabase.auth.getSession().then(({ data }) => {
