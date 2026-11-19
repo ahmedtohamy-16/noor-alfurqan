@@ -12,5 +12,10 @@ Allow: /
 
 User-agent: *
 Allow: /
+Disallow: /admin
+Disallow: /user-management
+Disallow: /auth
+Disallow: /profile
+Disallow: /settings
 
 Sitemap: https://nooralfurqan.app/sitemap.xml
