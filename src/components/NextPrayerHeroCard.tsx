@@ -18,11 +18,11 @@ interface PrayerTimesData {
 }
 
 const prayers = [
-  { key: "Fajr", name: "الفجر", en: "Fajr" },
-  { key: "Dhuhr", name: "الظهر", en: "Dhuhr" },
-  { key: "Asr", name: "العصر", en: "Asr" },
-  { key: "Maghrib", name: "المغرب", en: "Maghrib" },
-  { key: "Isha", name: "العشاء", en: "Isha" },
+  { key: "Fajr", name: "الفجر" },
+  { key: "Dhuhr", name: "الظهر" },
+  { key: "Asr", name: "العصر" },
+  { key: "Maghrib", name: "المغرب" },
+  { key: "Isha", name: "العشاء" },
 ];
 
 const fetchPrayerTimes = async (lat: number, lng: number, method: number): Promise<PrayerTimesData> => {
@@ -37,7 +37,7 @@ const fetchPrayerTimes = async (lat: number, lng: number, method: number): Promi
 
 const formatTime12 = (t: string) => {
   const [h, m] = t.split(":").map(Number);
-  const period = h >= 12 ? "PM" : "AM";
+  const period = h >= 12 ? "م" : "ص";
   const hh = ((h + 11) % 12) + 1;
   return { time: `${hh.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`, period };
 };
@@ -45,7 +45,7 @@ const formatTime12 = (t: string) => {
 const NextPrayerHeroCard = () => {
   const { settings } = useUserSettings();
   const [countdown, setCountdown] = useState({ hours: 0, minutes: 0, seconds: 0 });
-  const [nextPrayer, setNextPrayer] = useState<{ name: string; en: string; time: string } | null>(null);
+  const [nextPrayer, setNextPrayer] = useState<{ name: string; time: string } | null>(null);
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
 
   const lat = settings.latitude;
@@ -70,12 +70,12 @@ const NextPrayerHeroCard = () => {
         const d = new Date();
         d.setHours(h, m, 0, 0);
         if (d > now) {
-          setNextPrayer({ name: p.name, en: p.en, time: prayerTimes[p.key as keyof PrayerTimesData] });
+          setNextPrayer({ name: p.name, time: prayerTimes[p.key as keyof PrayerTimesData] });
           found = true;
           break;
         }
       }
-      if (!found) setNextPrayer({ name: prayers[0].name, en: prayers[0].en, time: prayerTimes.Fajr });
+      if (!found) setNextPrayer({ name: prayers[0].name, time: prayerTimes.Fajr });
     };
     update();
     const i = setInterval(update, 60000);
@@ -154,8 +154,8 @@ const NextPrayerHeroCard = () => {
 
         <div className="relative p-5 text-white min-h-[170px]">
           <div className="text-right">
-            <p className="text-xs opacity-90 font-medium">Next Prayer</p>
-            <p className="text-lg font-bold">{nextPrayer.en} • {nextPrayer.name}</p>
+            <p className="text-xs opacity-90 font-medium">الصلاة القادمة</p>
+            <p className="text-lg font-bold">{nextPrayer.name}</p>
 
             <div className="flex items-baseline gap-2 mt-2" dir="ltr">
               <span className="text-4xl font-extrabold tracking-tight">{time}</span>
@@ -163,7 +163,7 @@ const NextPrayerHeroCard = () => {
             </div>
 
             <div className="mt-3">
-              <p className="text-[11px] opacity-80">Time left</p>
+              <p className="text-[11px] opacity-80">الوقت المتبقي</p>
               <div
                 className="inline-flex items-center gap-1 text-lg font-bold font-mono bg-white/15 backdrop-blur-sm px-3 py-1 rounded-lg mt-0.5"
                 dir="ltr"

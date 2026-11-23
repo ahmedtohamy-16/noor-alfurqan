@@ -195,13 +195,13 @@ export const countries: Country[] = [
   },
 ];
 
-// Prayer calculation methods
+// Prayer calculation methods — names must match the Aladhan method IDs they are saved with.
 export const prayerMethods = [
   { id: 1, name: 'جامعة العلوم الإسلامية - كراتشي' },
   { id: 2, name: 'الجمعية الإسلامية لأمريكا الشمالية (ISNA)' },
   { id: 3, name: 'رابطة العالم الإسلامي' },
   { id: 4, name: 'أم القرى - مكة المكرمة' },
-  { id: 5, name: 'الاتحاد الإسلامي - مصر' },
+  { id: 5, name: 'الهيئة المصرية العامة للمساحة' },
   { id: 7, name: 'معهد الجيوفيزياء - طهران' },
   { id: 8, name: 'منطقة الخليج' },
   { id: 9, name: 'الكويت' },
@@ -210,5 +210,13 @@ export const prayerMethods = [
   { id: 12, name: 'فرنسا (UOIF)' },
   { id: 13, name: 'تركيا (ديانت)' },
   { id: 14, name: 'الإدارة الدينية - روسيا' },
-  { id: 15, name: 'الشيعة - إثنا عشرية (جعفرية)' },
+  { id: 15, name: 'لجنة رؤية الهلال العالمية' },
+  { id: 16, name: 'دبي (الإمارات)' },
+  { id: 17, name: 'دائرة تطوير الإسلام - ماليزيا (JAKIM)' },
+  { id: 18, name: 'وزارة الشؤون الدينية - تونس' },
+  { id: 19, name: 'وزارة الشؤون الدينية - الجزائر' },
+  { id: 20, name: 'وزارة الشؤون الدينية - إندونيسيا' },
+  { id: 21, name: 'وزارة الأوقاف - المغرب' },
+  { id: 22, name: 'الجالية الإسلامية - لشبونة' },
+  { id: 23, name: 'وزارة الأوقاف - الأردن' },
 ];
