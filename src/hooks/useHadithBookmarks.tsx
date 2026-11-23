@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "./useAuth";
 import { firestoreGet, firestoreSet, COLLECTIONS } from "@/lib/firebase";
 import { toast } from "sonner";
+import { HADITH_CONTENT_VERSION, safeHadithSnapshot, refreshHadithSnapshots } from "@/lib/hadithContent";
 
 export interface HadithBookmark {
   bookId: string;
@@ -9,6 +10,7 @@ export interface HadithBookmark {
   text: string;
   narrator?: string;
   grade?: string;
+  contentVersion?: number;
   savedAt: string; // ISO
 }
 
@@ -22,7 +24,7 @@ const readLocal = (): HadithBookmark[] => {
     const raw = localStorage.getItem(LS_KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
+    return Array.isArray(parsed) ? parsed.map(safeHadithSnapshot) : [];
   } catch {
     return [];
   }
@@ -42,8 +44,9 @@ export const useHadithBookmarks = () => {
   // Sync from Firestore on login + merge with local
   useEffect(() => {
     if (!user) {
-      setBookmarks(readLocal());
-      return;
+      let cancelled = false;
+      refreshHadithSnapshots(readLocal()).then(items => { if (!cancelled) { setBookmarks(items); writeLocal(items); } });
+      return () => { cancelled = true; };
     }
     let cancelled = false;
     (async () => {
@@ -64,9 +67,9 @@ export const useHadithBookmarks = () => {
             map.set(k, b);
           }
         });
-        const merged = Array.from(map.values()).sort(
+        const merged = await refreshHadithSnapshots(Array.from(map.values()).sort(
           (a, b) => (a.savedAt < b.savedAt ? 1 : -1)
-        );
+        ));
         if (cancelled) return;
         setBookmarks(merged);
         writeLocal(merged);
@@ -119,7 +122,7 @@ export const useHadithBookmarks = () => {
         toast.success("تم إزالة الحديث من المحفوظات");
         return false;
       } else {
-        const next = [{ ...b, savedAt: new Date().toISOString() }, ...bookmarks];
+        const next = [{ ...b, contentVersion: HADITH_CONTENT_VERSION, savedAt: new Date().toISOString() }, ...bookmarks];
         await persist(next);
         toast.success("تم حفظ الحديث");
         return true;

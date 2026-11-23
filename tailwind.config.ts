@@ -72,7 +72,7 @@ export default {
         },
       },
       fontFamily: {
-        quran: ["Amiri", "serif"],
+        quran: ["Noor Amiri", "Amiri", "serif"],
         arabic: ["Cairo", "Tajawal", "sans-serif"],
         ui: ["Cairo", "Tajawal", "sans-serif"],
       },

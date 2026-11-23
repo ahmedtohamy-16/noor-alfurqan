@@ -5,6 +5,12 @@
 - [x] Arabic digits in prayer card/player, Arabic GPS city
 - [x] Tasbih custom dhikr, daily goal, stats saved in Supabase
 - [ ] Google sign-in — blocked: enable Google provider in Supabase dashboard
-- [ ] Heart (favorite) button in reader and mushaf
-- [ ] Installable app + offline support
-- [ ] Tasbih zero flash and dark header strip
+- [x] Heart (favorite) button in reader and mushaf
+- [x] Installable app + guarded offline support, Quran corpus and Arabic fonts cached
+- [ ] Published install/offline end-to-end check — blocked: new version must be published; preview intentionally refuses app-shell workers
+- [x] Tasbih zero flash and dark header strip: saved count restored and header checked in both themes
+- [x] Verify original hadith fields and separate matn/commentary/narrator
+- [x] Finish Arabic digits in dates, prayer countdown, volume, mushaf, hadith, favorites
+- [x] Fix Arabic GPS city in cached and newly detected locations
+- [x] Support direct /juz/:id links
+- [x] Check tasbih overflow across page states, 320–1280px, light/dark, long custom dhikr

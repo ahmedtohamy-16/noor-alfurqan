@@ -1,3 +1,4 @@
+import { arabicDigits } from "@/lib/displayFormat";
 import { useState, useRef, useEffect } from "react";
 import { Share2, Download, Copy, Check, ChevronLeft, ChevronRight, Image } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -121,7 +122,7 @@ const HadithShareDialog = ({
     // Hadith number
     ctx.fillStyle = `${selectedTheme.accentColor}b0`;
     ctx.font = "28px 'Amiri', serif";
-    ctx.fillText(`رقم الحديث: ${hadithNumber}`, width / 2, 190);
+    ctx.fillText(`رقم الحديث: ${arabicDigits(hadithNumber)}`, width / 2, 190);
 
     // Hadith text - word wrap with larger font
     ctx.fillStyle = selectedTheme.textColor;
@@ -203,7 +204,7 @@ const HadithShareDialog = ({
       try {
         await navigator.share({
           title: `حديث من ${bookName}`,
-          text: `${hadithText}\n\n${bookName} - رقم ${hadithNumber}\n\nنور الفرقان`,
+          text: `${hadithText}\n\n${bookName} - رقم ${arabicDigits(hadithNumber)}\n\nنور الفرقان`,
           files: [file],
         });
       } catch (error) {
@@ -215,7 +216,7 @@ const HadithShareDialog = ({
   };
 
   const handleCopyText = () => {
-    const text = `${hadithText}\n\n${narrator ? `الراوي: ${narrator}\n` : ''}${bookName} - رقم ${hadithNumber}\n\nنور الفرقان`;
+    const text = `${hadithText}\n\n${narrator ? `الراوي: ${narrator}\n` : ''}${bookName} - رقم ${arabicDigits(hadithNumber)}\n\nنور الفرقان`;
     navigator.clipboard.writeText(text);
     setCopied(true);
     toast.success("تم نسخ النص");

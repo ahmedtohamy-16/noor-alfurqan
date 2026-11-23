@@ -1,5 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { greetingForHour, greetingForTime } from "./displayFormat";
+import { arabicDigits, westernDigits, greetingForHour, greetingForTime } from "./displayFormat";
+
+describe("Arabic display with numeric navigation", () => {
+  it("formats all ten digits without changing time or timezone separators", () => {
+    expect(arabicDigits("0123456789 GMT+2 80% 04:42")).toBe("٠١٢٣٤٥٦٧٨٩ GMT+٢ ٨٠% ٠٤:٤٢");
+  });
+  it("accepts an Arabic mushaf page number for internal navigation", () => {
+    expect(Number(westernDigits("٦٠٤"))).toBe(604);
+  });
+});
 
 describe("time-aware greeting", () => {
   it("does not give a morning greeting at 2am", () => {

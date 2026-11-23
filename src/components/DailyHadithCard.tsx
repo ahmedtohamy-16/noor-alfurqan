@@ -1,3 +1,4 @@
+import { arabicDigits } from "@/lib/displayFormat";
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
@@ -271,7 +272,7 @@ const DailyHadithCard = () => {
           {/* Footer */}
           <div className="flex items-center justify-between mt-6 pt-4 border-t border-border/50">
             <p className="text-xs text-muted-foreground">
-              {currentHadith && `رقم الحديث: ${currentHadith.hadithNumber || currentHadith.id}`}
+              {currentHadith && `رقم الحديث: ${arabicDigits(currentHadith.hadithNumber || currentHadith.id)}`}
             </p>
             <Link to="/hadith">
               <Button variant="ghost" size="sm" className="gap-2 group-hover:bg-primary/10">

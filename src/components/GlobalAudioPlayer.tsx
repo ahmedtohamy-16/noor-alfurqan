@@ -78,7 +78,7 @@ const GlobalAudioPlayer = () => {
   const currentAyah = currentSurah.ayahs[currentAyahIndex];
 
   const formatTime = (time: number) => {
-    if (isNaN(time)) return '0:00';
+    if (isNaN(time)) return '٠:٠٠';
     const minutes = Math.floor(time / 60);
     const seconds = Math.floor(time % 60);
     return `${minutes}:${seconds.toString().padStart(2, '0')}`.replace(/\d/g, (d) => '٠١٢٣٤٥٦٧٨٩'[+d]);
@@ -453,8 +453,8 @@ const GlobalAudioPlayer = () => {
                   onValueChange={(value) => setVolume(value[0])}
                   className="flex-1"
                 />
-                <span className="text-xs text-muted-foreground w-10 tabular-nums text-left">
-                  {isMuted ? 0 : volume}%
+                <span dir="ltr" className="text-xs text-muted-foreground w-10 tabular-nums text-left arabic-digits">
+                  {toArabic(isMuted ? 0 : volume)}٪
                 </span>
               </div>
 

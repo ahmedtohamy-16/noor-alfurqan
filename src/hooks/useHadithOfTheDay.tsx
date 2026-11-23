@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useHadith } from "./useHadith";
 import { hadithBooks, type Hadith } from "@/data/hadithBooks";
 
-const STORAGE_KEY = "hadith_of_the_day_v1";
+const STORAGE_KEY = "hadith_of_the_day_v2";
 
 // Deterministic hadith of the day based on the calendar date (YYYY-MM-DD).
 export const useHadithOfTheDay = () => {

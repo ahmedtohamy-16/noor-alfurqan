@@ -31,6 +31,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { readingAyahIndex } from "@/lib/readingPositionRules";
+import FavoriteAyahButton from "@/components/FavoriteAyahButton";
 
 const PAGE_READ_DWELL_MS = 20_000;
 
@@ -532,6 +533,7 @@ const SurahPage = () => {
                     <span className="inline-flex items-center justify-center min-w-[40px] min-h-[40px] md:min-w-[32px] md:min-h-[32px] w-10 h-10 md:w-8 md:h-8 mx-1 text-sm bg-primary/10 text-primary rounded-full font-arabic align-middle cursor-pointer active:scale-95 transition-transform touch-manipulation">
                       {convertToArabicNumber(ayah.numberInSurah)}
                     </span>
+                    <FavoriteAyahButton active={isAyahFavorite} ayah={ayah.numberInSurah} onToggle={() => toggleFavorite(ayah, displayText)} />
                     {selectedTranslation && translatedText && (
                       <span dir="auto" className="block text-start font-sans text-base leading-relaxed text-muted-foreground mb-4 mt-2 ps-4 border-s-2 border-primary/30">
                         {translatedText}

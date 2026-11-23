@@ -150,7 +150,7 @@ const PrayerTimesPage = () => {
       .then((r) => r.json())
       .then((d) => {
         const h = d.data.hijri;
-        setHijriDate(`${h.weekday.ar}، ${h.day} ${h.month.ar} ${h.year}هـ`);
+        setHijriDate(arabicDigits(`${h.weekday.ar}، ${h.day} ${h.month.ar} ${h.year}هـ`));
       })
       .catch(() => {});
   }, []);
@@ -298,7 +298,7 @@ const PrayerTimesPage = () => {
   };
 
 
-  const fmt = (n: number) => n.toString().padStart(2, "0");
+  const fmt = (n: number) => arabicDigits(n.toString().padStart(2, "0"));
   const today = new Date();
   // 12-hour display with an Arabic period suffix (ص / م), never mixed with 24h.
   const formatTime = (t?: string) => {
@@ -309,7 +309,7 @@ const PrayerTimesPage = () => {
     return arabicDigits(`${h12}:${String(mm).padStart(2, "0")}`) + ` ${hh < 12 ? "ص" : "م"}`;
   };
   const tzOffset = -new Date().getTimezoneOffset() / 60;
-  const tzLabel = `GMT${tzOffset >= 0 ? "+" : ""}${tzOffset}`;
+  const tzLabel = arabicDigits(`GMT${tzOffset >= 0 ? "+" : ""}${tzOffset}`);
 
   // theme palette
   const palette = useMemo(() => isDark ? {
@@ -389,7 +389,7 @@ const PrayerTimesPage = () => {
           <div className="relative flex items-center text-white">
             <div className="w-1/2 border-l border-white/20 text-center">
               <p className="text-white/70 text-xs mb-1">الوقت المتبقي</p>
-              <div className="text-3xl font-bold tabular-nums tracking-wider" dir="ltr">
+              <div className="text-3xl font-bold tabular-nums arabic-digits" dir="ltr">
                 {fmt(countdown.hours)}:{fmt(countdown.minutes)}:{fmt(countdown.seconds)}
               </div>
               <div className="flex justify-center gap-4 mt-1 text-[10px] text-white/60" dir="ltr">
@@ -533,7 +533,7 @@ const PrayerTimesPage = () => {
               </div>
             </div>
             <span className={cn("text-[10px] tracking-wide", palette.subText)}>
-              {today.getDate()} {monthNames[today.getMonth()]} {today.getFullYear()}
+              {arabicDigits(`${today.getDate()} ${monthNames[today.getMonth()]} ${today.getFullYear()}`)}
             </span>
           </div>
 

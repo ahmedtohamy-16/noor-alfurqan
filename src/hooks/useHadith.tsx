@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { HADITH_CONTENT_VERSION } from '@/lib/hadithContent';
 import { Hadith, HadithBook, hadithBooks, getBookById } from '@/data/hadithBooks';
 
 const DB_NAME = 'hadith-offline-v2';
@@ -37,14 +38,16 @@ const saveHadithsToDb = async (bookId: string, hadiths: Hadith[], total: number)
     
     const data = {
       bookId,
+      contentVersion: HADITH_CONTENT_VERSION,
       hadiths,
       total,
       downloadedAt: new Date().toISOString()
     };
     
-    const request = store.put(data);
-    request.onerror = () => reject(request.error);
-    request.onsuccess = () => resolve();
+    store.put(data);
+    transaction.onerror = () => { db.close(); reject(transaction.error); };
+    transaction.onabort = () => { db.close(); reject(transaction.error); };
+    transaction.oncomplete = () => { db.close(); resolve(); };
   });
 };
 
@@ -60,7 +63,7 @@ const getHadithsFromDb = async (bookId: string): Promise<{ hadiths: Hadith[]; to
       request.onerror = () => reject(request.error);
       request.onsuccess = () => {
         const result = request.result;
-        resolve(result ? { hadiths: result.hadiths, total: result.total } : null);
+        resolve(result?.contentVersion === HADITH_CONTENT_VERSION ? { hadiths: result.hadiths, total: result.total } : null);
       };
     });
   } catch {
@@ -80,7 +83,7 @@ const getDownloadedBooks = async (): Promise<{ bookId: string; count: number; do
       request.onerror = () => reject(request.error);
       request.onsuccess = () => {
         const results = request.result || [];
-        resolve(results.map((r: any) => ({
+        resolve(results.filter((r: any) => r.contentVersion === HADITH_CONTENT_VERSION).map((r: any) => ({
           bookId: r.bookId,
           count: r.hadiths?.length || 0,
           downloadedAt: r.downloadedAt
@@ -134,7 +137,9 @@ const fetchFromApi = async (params: Record<string, string>): Promise<any> => {
     throw new Error(`HTTP ${response.status}: ${errorText}`);
   }
 
-  return await response.json();
+  const data = await response.json();
+  if (data.contentVersion !== HADITH_CONTENT_VERSION) throw new Error("Hadith source requires an update");
+  return data;
 };
 
 export interface UseHadithResult {

@@ -11,8 +11,11 @@ import { useReadingStats } from "@/hooks/useReadingStats";
 import { getAyahsByPageAsync } from "@/data/quranAyats";
 import { surahs } from "@/data/surahs";
 
-const TOTAL_PAGES = 604;
-const JUZ_START_PAGES = [1,22,42,62,82,102,121,142,162,182,201,222,242,262,282,302,322,342,362,382,402,422,442,462,482,502,522,542,562,582];
+import { arabicDigits, westernDigits } from "@/lib/displayFormat";
+import { TOTAL_MUSHAF_PAGES as TOTAL_PAGES, JUZ_START_PAGES } from "@/lib/mushafNavigation";
+import { useFavorites } from "@/hooks/useFavorites";
+import FavoriteAyahButton from "@/components/FavoriteAyahButton";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 const toAr = (n: number) => n.toLocaleString("ar-EG");
 
 const MushafPage = () => {
@@ -22,7 +25,8 @@ const MushafPage = () => {
   const invalidPage = !Number.isInteger(parsedPage) || parsedPage < 1 || parsedPage > TOTAL_PAGES;
   const initialPage = invalidPage ? 1 : parsedPage;
   const [currentPage, setCurrentPage] = useState(initialPage);
-  const [inputPage, setInputPage] = useState(initialPage.toString());
+  const [inputPage, setInputPage] = useState(arabicDigits(initialPage));
+  const { addFavorite, removeFavorite, isFavorite } = useFavorites();
   const { saveProgress } = useReadingProgress();
   const { incrementPage } = useReadingStats();
 
@@ -55,10 +59,14 @@ const MushafPage = () => {
   const currentJuz = JUZ_START_PAGES.filter((p) => p <= currentPage).length;
   const error = isError || pageAyahs.length === 0;
 
-  // Update URL and track reading
+  // Follow direct links and browser history without rewriting their page.
   useEffect(() => {
     if (invalidPage) return;
-    setSearchParams({ page: currentPage.toString() });
+    setCurrentPage(parsedPage);
+    setInputPage(arabicDigits(parsedPage));
+  }, [parsedPage, invalidPage]);
+  useEffect(() => {
+    if (invalidPage) return;
     incrementPage();
   }, [currentPage]);
 
@@ -78,13 +86,14 @@ const MushafPage = () => {
   const goToPage = (page: number) => {
     if (page >= 1 && page <= TOTAL_PAGES) {
       setCurrentPage(page);
-      setInputPage(page.toString());
+      setInputPage(arabicDigits(page));
+      setSearchParams({ page: page.toString() });
     }
   };
 
   const handlePageInput = (e: React.FormEvent) => {
     e.preventDefault();
-    const page = parseInt(inputPage);
+    const page = Number(westernDigits(inputPage));
     if (page >= 1 && page <= TOTAL_PAGES) {
       goToPage(page);
     }
@@ -117,7 +126,7 @@ const MushafPage = () => {
           <p className="text-6xl font-bold text-primary arabic-digits">٤٠٤</p>
           <h1 className="text-xl font-bold">هذه الصفحة غير موجودة في المصحف</h1>
           <p className="text-muted-foreground text-sm">صفحات المصحف من ١ إلى ٦٠٤.</p>
-          <Button onClick={() => { setSearchParams({ page: "1" }); setCurrentPage(1); setInputPage("1"); }}>الذهاب إلى الصفحة الأولى</Button>
+          <Button onClick={() => goToPage(1)}>الذهاب إلى الصفحة الأولى</Button>
         </main>
       </div>
     );
@@ -137,7 +146,7 @@ const MushafPage = () => {
             </Button>
           </Link>
 
-          <form onSubmit={handlePageInput} className="flex items-center gap-2">
+          <form onSubmit={handlePageInput} className="flex items-center gap-1 sm:gap-2">
             <Button
               type="button"
               variant="outline"
@@ -154,15 +163,15 @@ const MushafPage = () => {
                 صفحة
               </span>
               <Input
-                type="number"
+                type="text"
+                inputMode="numeric"
+                aria-label="رقم صفحة المصحف"
                 value={inputPage}
-                onChange={(e) => setInputPage(e.target.value)}
-                className="w-20 text-center"
-                min={1}
-                max={TOTAL_PAGES}
+                onChange={(e) => setInputPage(arabicDigits(e.target.value.replace(/[^0-9٠-٩]/g, "")))}
+                className="w-16 text-center arabic-digits"
               />
               <span className="text-sm text-muted-foreground whitespace-nowrap">
-                من {TOTAL_PAGES}
+                من <span className="arabic-digits">{arabicDigits(TOTAL_PAGES)}</span>
               </span>
             </div>
 
@@ -178,16 +187,12 @@ const MushafPage = () => {
             </Button>
           </form>
 
-          <select
-            aria-label="التصفح بالجزء"
-            value={currentJuz}
-            onChange={(e) => goToPage(JUZ_START_PAGES[Number(e.target.value) - 1])}
-            className="h-10 rounded-md border border-input bg-background px-3 text-sm"
-          >
-            {JUZ_START_PAGES.map((_, i) => (
-              <option key={i} value={i + 1}>الجزء {toAr(i + 1)}</option>
-            ))}
-          </select>
+          <Select value={String(currentJuz)} onValueChange={value => { const page = JUZ_START_PAGES[Number(value) - 1]; if (page) goToPage(page); }}>
+            <SelectTrigger aria-label="التصفح بالجزء" className="w-36"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {JUZ_START_PAGES.map((_, i) => <SelectItem key={i} value={String(i + 1)}>الجزء {toAr(i + 1)}</SelectItem>)}
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Mushaf Content */}
@@ -239,6 +244,10 @@ const MushafPage = () => {
                           <span className="inline-flex items-center justify-center w-8 h-8 mx-1 text-sm bg-primary/10 text-primary rounded-full font-arabic align-middle">
                             {convertToArabicNumber(ayah.numberInSurah)}
                           </span>
+                          <FavoriteAyahButton active={isFavorite(surah.number, ayah.numberInSurah)} ayah={ayah.numberInSurah}
+                            onToggle={() => isFavorite(surah.number, ayah.numberInSurah)
+                              ? removeFavorite(surah.number, ayah.numberInSurah)
+                              : addFavorite(surah.number, surah.name, ayah.numberInSurah, displayText)} />
                         </span>
                       );
                     })}
@@ -250,7 +259,7 @@ const MushafPage = () => {
         </div>
 
         {/* Bottom Navigation */}
-        <div className="flex items-center justify-between mt-6 gap-4">
+        <div className="flex flex-wrap items-center justify-between mt-6 gap-3 pb-24">
           <Button
             variant="outline"
             onClick={() => goToPage(currentPage - 1)}

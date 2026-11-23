@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useAuth } from "@/hooks/useAuth";
+import { arabicDigits } from "@/lib/displayFormat";
 
 const FavoritesPage = () => {
   const { user } = useAuth();
@@ -75,7 +76,7 @@ const FavoritesPage = () => {
                   >
                     <BookOpen className="w-4 h-4" />
                     <span className="text-sm font-medium">
-                      {fav.surah_name} - الآية {fav.ayah_number}
+                      {fav.surah_name} - الآية <span className="arabic-digits">{arabicDigits(fav.ayah_number)}</span>
                     </span>
                   </Link>
                   <Button

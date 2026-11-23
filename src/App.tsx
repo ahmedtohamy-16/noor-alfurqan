@@ -1,5 +1,6 @@
 import { Suspense, lazy, useEffect } from "react";
 import RouteSeo from "@/components/RouteSeo";
+import { pageForJuz } from "@/lib/mushafNavigation";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -16,6 +17,11 @@ const isValidSurahParam = (v?: string) => !!v && /^\d{1,3}$/.test(v) && Number(v
 const SurahRoute = () => {
   const { surahNumber } = useParams();
   return isValidSurahParam(surahNumber) ? <SurahPage /> : <NotFound />;
+};
+const JuzRoute = () => {
+  const { juzNumber } = useParams();
+  const page = pageForJuz(juzNumber);
+  return page === null ? <NotFound /> : <Navigate to={`/mushaf?page=${page}`} replace />;
 };
 import { HelmetProvider } from "react-helmet-async";
 import { ThemeProvider } from "@/hooks/useTheme";
@@ -112,6 +118,7 @@ const App = () => (
                           <Route path="/surah/:surahNumber" element={<SurahRoute />} />
                           <Route path="/quran/:surahNumber" element={<LegacySurahRedirect />} />
                           <Route path="/mushaf" element={<MushafPage />} />
+                          <Route path="/juz/:juzNumber" element={<JuzRoute />} />
                           <Route path="/favorites" element={<FavoritesPage />} />
                           <Route path="/downloads" element={<DownloadsPage />} />
                           <Route path="/search" element={<SearchPage />} />

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "./useAuth";
 import { firestoreGet, firestoreSet, firestoreDelete, COLLECTIONS } from "@/lib/firebase";
 import { Hadith } from "@/data/hadithBooks";
+import { HADITH_CONTENT_VERSION, refreshHadithSnapshots } from "@/lib/hadithContent";
 
 const PINNED_HADITH_KEY = "pinnedDailyHadith";
 const PINNED_HADITH_COLLECTION = "pinned_hadiths";
@@ -34,7 +35,8 @@ export const usePinnedHadith = () => {
         
         // Only use if pinned today
         if (data && data.pinnedDate === today) {
-          setPinnedHadith(data);
+          const [repaired] = await refreshHadithSnapshots([data]);
+          setPinnedHadith(repaired.text ? repaired : null);
         } else {
           setPinnedHadith(null);
         }
@@ -46,7 +48,8 @@ export const usePinnedHadith = () => {
           try {
             const data = JSON.parse(stored) as PinnedHadith;
             if (data.pinnedDate === today) {
-              setPinnedHadith(data);
+              const [repaired] = await refreshHadithSnapshots([data]);
+              setPinnedHadith(repaired.text ? repaired : null);
             } else {
               localStorage.removeItem(`${PINNED_HADITH_KEY}_${user.uid}`);
               setPinnedHadith(null);
@@ -65,7 +68,8 @@ export const usePinnedHadith = () => {
         try {
           const data = JSON.parse(stored) as PinnedHadith;
           if (data.pinnedDate === today) {
-            setPinnedHadith(data);
+            const [repaired] = await refreshHadithSnapshots([data]);
+            setPinnedHadith(repaired.text ? repaired : null);
           } else {
             localStorage.removeItem(PINNED_HADITH_KEY);
             setPinnedHadith(null);
@@ -88,6 +92,7 @@ export const usePinnedHadith = () => {
     const today = getTodayDate();
     const pinned: PinnedHadith = {
       ...hadith,
+      contentVersion: HADITH_CONTENT_VERSION,
       pinnedAt: new Date().toISOString(),
       pinnedDate: today,
     };

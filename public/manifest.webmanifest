@@ -1,0 +1,18 @@
+{
+  "id": "/",
+  "name": "نور الفرقان",
+  "short_name": "نور الفرقان",
+  "description": "القرآن الكريم والأذكار ومواقيت الصلاة",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "theme_color": "#0074CF",
+  "background_color": "#F8F6F1",
+  "icons": [
+    { "src": "/icons/app-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/app-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/app-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

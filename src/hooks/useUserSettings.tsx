@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "./useAuth";
 import { toast } from "sonner";
+import { arabicCityName, preferredCityName } from "@/lib/cityNames";
 import { 
   firestoreGet, 
   firestoreSet, 
@@ -79,24 +80,21 @@ const SETTINGS_STORAGE_KEY = "userSettings";
 
 // Helper to get city name from coordinates
 const reverseGeocode = async (lat: number, lng: number): Promise<string> => {
-  try {
-    const response = await fetch(
-      `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=ar`
-    );
-    const data = await response.json();
-    const name: string = data.city || data.locality || data.principalSubdivision || "";
-    if (/[\u0600-\u06FF]/.test(name)) return name;
+  let fallback: string | null = null;
+  const providers = [
+    { url: `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=ar`, names: (data: any) => [data.city, data.locality, data.principalSubdivision] },
+    { url: `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=10&accept-language=ar`, names: (data: any) => { const a = data.address || {}; return [a.city, a.town, a.village, a.county, a.state]; } },
+  ];
+  for (const provider of providers) {
     try {
-      const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=10&accept-language=ar`);
-      const j = await r.json();
-      const a = j.address || {};
-      const ar = a.city || a.town || a.village || a.county || a.state;
-      if (ar && /[\u0600-\u06FF]/.test(ar)) return ar;
-    } catch { /* keep fallback */ }
-    return name || "موقعك الحالي";
-  } catch {
-    return "موقعك الحالي";
+      const response = await fetch(provider.url, { signal: AbortSignal.timeout(5000) });
+      if (!response.ok) continue;
+      const name = preferredCityName(provider.names(await response.json()));
+      if (name && /[\u0621-\u064A]/.test(name)) return name;
+      fallback ??= name;
+    } catch { /* Each provider can fail independently. */ }
   }
+  return fallback || "موقعك الحالي";
 };
 
 // IP-based geolocation fallback
@@ -108,7 +106,7 @@ const getLocationByIP = async (): Promise<{ lat: number; lng: number; city: stri
       return {
         lat: data.latitude,
         lng: data.longitude,
-        city: data.city || "موقعك",
+        city: arabicCityName(data.city) || "موقعك",
       };
     }
   } catch (error) {
@@ -127,7 +125,10 @@ export const useUserSettings = () => {
       const saved = localStorage.getItem(SETTINGS_STORAGE_KEY);
       if (saved) {
         try {
-          return { ...defaultSettings, ...JSON.parse(saved) };
+          const data = JSON.parse(saved);
+          const repaired = { ...defaultSettings, ...data, city_name: arabicCityName(data.city_name) };
+          if (repaired.city_name !== data.city_name) localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(repaired));
+          return repaired;
         } catch {
           return defaultSettings;
         }
@@ -170,7 +171,7 @@ export const useUserSettings = () => {
         const loadedSettings: UserSettings = {
           latitude: data.latitude ?? null,
           longitude: data.longitude ?? null,
-          city_name: data.city_name ?? null,
+          city_name: arabicCityName(data.city_name),
           country_code: data.country_code ?? null,
           timezone: data.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
           notifications_enabled: data.notifications_enabled || false,
@@ -201,6 +202,7 @@ export const useUserSettings = () => {
         setSettings(loadedSettings);
         // Also save to localStorage for offline/guest access
         localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(loadedSettings));
+        window.dispatchEvent(new CustomEvent(SETTINGS_EVENT, { detail: loadedSettings }));
       }
     } catch (error) {
       console.error("Error fetching settings:", error);
@@ -211,6 +213,7 @@ export const useUserSettings = () => {
 
   const updateSettings = useCallback(async (newSettings: Partial<UserSettings>) => {
     const updated = { ...settingsRef.current, ...newSettings };
+    updated.city_name = arabicCityName(updated.city_name);
     settingsRef.current = updated;
     setSettings(updated);
     window.dispatchEvent(new CustomEvent(SETTINGS_EVENT, { detail: updated }));
@@ -249,7 +252,7 @@ export const useUserSettings = () => {
     await updateSettings({
       latitude: lat,
       longitude: lng,
-      city_name: cityName || null,
+      city_name: arabicCityName(cityName),
       timezone: detectedTimezone,
     });
 
@@ -260,7 +263,7 @@ export const useUserSettings = () => {
           last_location: {
             latitude: lat,
             longitude: lng,
-            city_name: cityName || null,
+            city_name: arabicCityName(cityName),
             updated_at: new Date().toISOString(),
           },
           device_type: getDeviceInfo(),

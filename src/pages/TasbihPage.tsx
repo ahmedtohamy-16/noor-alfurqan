@@ -65,22 +65,22 @@ const TasbihPage = () => {
             <Link to="/reading-stats" aria-label="إحصائيات التسبيح" className="w-11 h-11 rounded-full bg-primary-foreground/15 flex items-center justify-center text-primary-foreground">
               <BarChart3 className="w-5 h-5" />
             </Link>
-            <div className="text-center text-white">
+            <div className="text-center text-primary-foreground">
               <p className="text-sm opacity-90">{greeting}</p>
             </div>
             <MobileMenu className="bg-primary-foreground/15 text-primary-foreground hover:bg-primary-foreground/25" />
           </div>
 
-          <div className="text-center text-white">
+          <div className="text-center text-primary-foreground">
             <h1 className="text-3xl font-bold mb-1">التسبيح</h1>
-            <p className="opacity-90 text-sm">{currentDhikr}</p>
+            <p className="opacity-90 text-sm break-words">{currentDhikr}</p>
           </div>
         </div>
       </div>
 
       <main className="container mx-auto px-4 -mt-24 relative z-10 arabic-ui" dir="rtl">
         {/* Counter card */}
-        <Card className="bg-card rounded-3xl p-6 shadow-2xl border-0">
+        <Card className="bg-card rounded-3xl p-4 sm:p-6 shadow-2xl border-0 min-w-0">
           <TasbihCounter
             count={count}
             increment={increment}
@@ -109,8 +109,8 @@ const TasbihPage = () => {
             <div className="mt-4 space-y-5 animate-fade-in">
               <div>
                 <p className="text-sm text-muted-foreground mb-2">ذكر مخصص</p>
-                <form className="flex gap-2" onSubmit={(e) => { e.preventDefault(); const t = customDhikr.trim(); if (t) { changeDhikr(t.slice(0, 200)); setCustomDhikr(""); } }}>
-                  <Input value={customDhikr} onChange={(e) => setCustomDhikr(e.target.value)} placeholder="اكتب الذكر الذي تريده" maxLength={200} className="h-11" />
+                <form className="flex gap-2 min-w-0" onSubmit={(e) => { e.preventDefault(); const t = customDhikr.trim(); if (t) { changeDhikr(t.slice(0, 200)); setCustomDhikr(""); } }}>
+                  <Input value={customDhikr} onChange={(e) => setCustomDhikr(e.target.value)} placeholder="اكتب الذكر الذي تريده" maxLength={200} className="h-11 min-w-0" />
                   <Button type="submit" className="h-11 shrink-0" disabled={!customDhikr.trim()}>اعتماد</Button>
                 </form>
               </div>
@@ -121,8 +121,8 @@ const TasbihPage = () => {
                     <button key={g} type="button" onClick={() => saveGoal(g)} className={cn("min-h-10 px-3 rounded-full border text-sm arabic-digits", dailyGoal === g ? "bg-primary text-primary-foreground border-primary" : "bg-muted/40 border-transparent")}>{arabic(g)}</button>
                   ))}
                 </div>
-                <form className="flex gap-2" onSubmit={(e) => { e.preventDefault(); saveGoal(Number(goalInput)); }}>
-                  <Input type="number" inputMode="numeric" min={1} value={goalInput} onChange={(e) => setGoalInput(e.target.value)} placeholder="عدد مخصص" className="h-11" />
+                <form className="flex gap-2 min-w-0" onSubmit={(e) => { e.preventDefault(); saveGoal(Number(goalInput)); }}>
+                  <Input type="number" inputMode="numeric" min={1} value={goalInput} onChange={(e) => setGoalInput(e.target.value)} placeholder="عدد مخصص" className="h-11 min-w-0" />
                   <Button type="submit" variant="outline" className="h-11 shrink-0" disabled={!goalInput}>حفظ</Button>
                 </form>
               </div>
@@ -196,7 +196,7 @@ const TasbihPage = () => {
                       : "bg-muted/40 hover:bg-muted border-transparent text-foreground"
                   )}
                 >
-                  <p className="text-sm font-bold leading-tight">{d.text}</p>
+                  <p className="text-sm font-bold leading-tight break-words">{d.text}</p>
                   <p className={cn("text-[10px] mt-1 arabic-digits", active ? "opacity-90" : "text-muted-foreground")}>
                     {arabic(d.count)} مرة
                   </p>
@@ -229,7 +229,7 @@ const TasbihPage = () => {
                 <span dir="ltr" className="text-base font-bold text-primary arabic-digits">{arabic(goalProgress)}٪</span>
               </div>
             </div>
-            <div className="flex-1 text-center">
+            <div className="flex-1 min-w-0 text-center">
               <p className="text-2xl font-bold arabic-digits">
                 <span className="text-primary">{arabic(stats.todayCount)}</span>
                 <span className="text-muted-foreground"> / {arabic(dailyGoal)}</span>
@@ -262,7 +262,7 @@ const TasbihPage = () => {
             <div className="mt-4 space-y-2">
               {stats.dhikrTypes.slice(0, 4).map((d) => (
                 <div key={d.type} className="flex items-center justify-between text-sm">
-                  <span className="truncate">{d.type}</span>
+                  <span className="truncate min-w-0">{d.type}</span>
                   <span className="text-primary font-bold arabic-digits">{arabic(d.count)}</span>
                 </div>
               ))}

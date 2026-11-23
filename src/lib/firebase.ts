@@ -328,7 +328,9 @@ export const requestFCMToken = async (): Promise<string | null> => {
   if (!msg) return null;
   
   try {
-    const token = await getToken(msg, { vapidKey: VAPID_KEY });
+    const { registerMessagingWorker } = await import("./messagingWorker");
+    const serviceWorkerRegistration = await registerMessagingWorker();
+    const token = await getToken(msg, { vapidKey: VAPID_KEY, serviceWorkerRegistration });
     console.log("✅ FCM token obtained");
     return token;
   } catch (error) {

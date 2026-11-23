@@ -1,3 +1,4 @@
+import { arabicDigits } from "@/lib/displayFormat";
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { Helmet } from "react-helmet-async";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -194,7 +195,7 @@ const HadithPage = () => {
   // Actions
   const handleCopy = async (h: Hadith) => {
     const book = getBookById(h.bookId);
-    const text = `${h.text}\n\n— ${book?.nameAr || ""} (${h.hadithNumber})`;
+    const text = `${h.text}\n\n— ${book?.nameAr || ""} (${arabicDigits(h.hadithNumber)})`;
     try {
       await navigator.clipboard.writeText(text);
       setCopiedId(h.id);

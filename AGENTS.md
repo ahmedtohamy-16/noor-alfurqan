@@ -30,3 +30,6 @@
 - Dhikr reading renders Quran excerpts as separate blocks with global Quran font/size settings and a safe minimum line height so vowel marks cannot collide between lines.
 - The daily wird reminder is shown by `WirdReminderScheduler` (rules in `src/lib/wirdReminderRules.ts`) while the app is open; it fires once per day, so settings toggles always have a real effect without a server push job.
 - Reading stats count a mushaf page only after it stays visible for a dwell time in SurahPage, so opening a surah alone never records reading.
+- Hadith rows use quote-aware shared mapping and versioned snapshots to separate text/commentary.
+- PWA uses guarded generateSW; messaging has a separate scope to preserve both workers.
+- City names normalize centrally; shared verse hearts retain existing storage, and Arabic page input parses numerically.

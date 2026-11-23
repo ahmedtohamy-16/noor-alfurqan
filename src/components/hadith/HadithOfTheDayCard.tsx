@@ -1,3 +1,4 @@
+import { arabicDigits } from "@/lib/displayFormat";
 import { Share2, Sparkles, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Hadith } from "@/data/hadithBooks";
@@ -41,7 +42,7 @@ const HadithOfTheDayCard = ({ hadith, loading, onShare }: Props) => {
                 <p className="opacity-95 font-medium">— {hadith.narrator}</p>
               )}
               <p className="opacity-80 mt-1 text-xs">
-                {book?.nameAr} · رقم {hadith.hadithNumber}
+                {book?.nameAr} · رقم {arabicDigits(hadith.hadithNumber)}
               </p>
             </div>
 

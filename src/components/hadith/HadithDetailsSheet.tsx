@@ -1,3 +1,4 @@
+import { arabicDigits } from "@/lib/displayFormat";
 import { useEffect, useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
@@ -78,7 +79,7 @@ const HadithDetailsSheet = ({ open, onOpenChange, hadith }: Props) => {
               className="text-base"
               style={{ fontFamily: "'Amiri', 'Scheherazade New', serif" }}
             >
-              {book?.nameAr} — حديث رقم {hadith.hadithNumber}
+              {book?.nameAr} — حديث رقم {arabicDigits(hadith.hadithNumber)}
             </SheetTitle>
           </SheetHeader>
         </div>
@@ -137,7 +138,7 @@ const HadithDetailsSheet = ({ open, onOpenChange, hadith }: Props) => {
                     className="flex gap-3 text-sm leading-relaxed text-foreground/80"
                   >
                     <span className="w-6 h-6 rounded-full bg-gradient-to-br from-[hsl(var(--gold-gradient-start))] to-[hsl(var(--gold-gradient-end))] text-white text-[11px] font-bold flex items-center justify-center shrink-0">
-                      {i + 1}
+                      {arabicDigits(i + 1)}
                     </span>
                     <span>{b}</span>
                   </li>
@@ -162,7 +163,7 @@ const HadithDetailsSheet = ({ open, onOpenChange, hadith }: Props) => {
                     className="rounded-xl border border-border/40 bg-card/40 p-3"
                   >
                     <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-[11px] text-muted-foreground">#{h.hadithNumber}</span>
+                      <span className="text-[11px] text-muted-foreground">#{arabicDigits(h.hadithNumber)}</span>
                       {h.grade && (
                         <Badge variant="outline" className="text-[10px]">{h.grade}</Badge>
                       )}

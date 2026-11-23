@@ -1,3 +1,4 @@
+import { arabicDigits } from "@/lib/displayFormat";
 import { useMemo, useRef, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
@@ -54,7 +55,7 @@ const SwipeRow = ({
       >
         <div className="flex items-center justify-between mb-2 text-[11px] text-muted-foreground">
           <span className="font-semibold text-foreground/80">{book?.nameAr}</span>
-          <span>#{b.hadithNumber}</span>
+          <span>#{arabicDigits(b.hadithNumber)}</span>
         </div>
         {b.narrator && (
           <p className="text-xs font-bold text-[hsl(var(--gold-gradient-end))] mb-1.5">
@@ -65,7 +66,7 @@ const SwipeRow = ({
           className="text-[16px] leading-[2] line-clamp-3"
           style={{ fontFamily: "'Amiri', 'Scheherazade New', serif" }}
         >
-          {b.text}
+          {b.text || "اتصل بالإنترنت لتحديث نص الحديث المحفوظ"}
         </p>
         {b.grade && (
           <Badge variant="outline" className="mt-2 text-[10px]">{b.grade}</Badge>

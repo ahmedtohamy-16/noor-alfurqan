@@ -143,6 +143,7 @@ export const hadithBooks: HadithBook[] = [
 ];
 
 export interface Hadith {
+  contentVersion?: number;
   id: number;
   bookId: string;
   hadithNumber: number;

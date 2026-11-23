@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "./useAuth";
 import { useUserSettings } from "./useUserSettings";
 import { toast } from "sonner";
+import { registerMessagingWorker } from "@/lib/messagingWorker";
 import {
   isFirebaseConfigured,
   requestFCMToken,
@@ -57,7 +58,7 @@ export const useFCMNotifications = () => {
     const setupFCM = async () => {
       try {
         // Register service worker
-        await navigator.serviceWorker.register("/firebase-messaging-sw.js");
+        await registerMessagingWorker();
         console.log("✅ Service Worker registered");
 
         // Initialize Firebase messaging if configured

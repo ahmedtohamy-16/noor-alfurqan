@@ -1,4 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import Papa from "npm:papaparse@5.5.3";
+import { mapHadithRows, HADITH_CONTENT_VERSION } from "../_shared/hadithRows.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -56,153 +58,30 @@ const bookMappings: Record<string, { folder: string; fileWithDiacritics: string;
   }
 };
 
-// CSV parser that handles different separators
-function parseCSV(csvText: string): string[][] {
-  const lines = csvText.split('\n');
-  const result: string[][] = [];
-  
-  for (const line of lines) {
-    if (!line.trim()) continue;
-    
-    let fields: string[];
-    if (line.includes('\t')) {
-      fields = line.split('\t');
-    } else if (line.includes(';')) {
-      fields = line.split(';');
-    } else {
-      fields = line.split(',');
-    }
-    
-    result.push(fields.map(f => f.trim().replace(/^"|"$/g, '')));
-  }
-  
-  return result;
+// Standards-compliant parsing preserves quoted punctuation and embedded newlines.
+async function loadBook(bookId: string, withDiacritics = true) {
+  const mapping = bookMappings[bookId];
+  if (!mapping) throw new Error(`Unknown book: ${bookId}`);
+  const file = withDiacritics ? mapping.fileWithDiacritics : mapping.fileWithoutDiacritics;
+  const response = await fetch(`${GITHUB_RAW_BASE}/${mapping.folder}/${file}`, { headers: { Accept: "text/csv" } });
+  if (!response.ok) throw new Error(`Failed to fetch: ${response.status}`);
+  const parsed = Papa.parse<string[]>(await response.text(), { delimiter: ",", skipEmptyLines: true });
+  if (parsed.errors.some(error => error.type === "Quotes")) throw new Error("Malformed hadith source");
+  return mapHadithRows(parsed.data, bookId);
 }
 
-// Fetch hadiths from GitHub
-async function fetchHadiths(bookId: string, start: number, limit: number, withDiacritics: boolean = true) {
-  const mapping = bookMappings[bookId];
-  if (!mapping) {
-    throw new Error(`Unknown book: ${bookId}`);
-  }
-
-  const fileName = withDiacritics ? mapping.fileWithDiacritics : mapping.fileWithoutDiacritics;
-  const url = `${GITHUB_RAW_BASE}/${mapping.folder}/${fileName}`;
-  
-  console.log(`Fetching from: ${url}`);
-  
-  const response = await fetch(url, {
-    headers: {
-      'Accept': 'text/csv',
-      'User-Agent': 'NoorAlFurqan/1.0'
-    }
-  });
-
-  if (!response.ok) {
-    console.error(`Failed to fetch ${url}: ${response.status} ${response.statusText}`);
-    throw new Error(`Failed to fetch: ${response.status} ${response.statusText}`);
-  }
-
-  const csvText = await response.text();
-  const rows = parseCSV(csvText);
-  
-  // Skip header row if exists
-  const dataRows = rows.slice(1);
-  
-  // Paginate results
-  const end = Math.min(start + limit, dataRows.length);
-  const paginatedRows = dataRows.slice(start, end);
-  
-  // Parse hadiths
-  const hadiths = paginatedRows.map((row, index) => {
-    const hadithNumber = parseInt(row[0]) || (start + index + 1);
-    
-    if (row.length >= 4) {
-      return {
-        id: start + index + 1,
-        bookId,
-        hadithNumber,
-        narrator: row[1] || '',
-        text: row[2] || '',
-        elaboration: row[3] || ''
-      };
-    } else if (row.length >= 3) {
-      return {
-        id: start + index + 1,
-        bookId,
-        hadithNumber,
-        narrator: row[1] || '',
-        text: row[2] || ''
-      };
-    } else {
-      return {
-        id: start + index + 1,
-        bookId,
-        hadithNumber,
-        text: row[1] || row[0] || ''
-      };
-    }
-  });
-
-  return {
-    hadiths,
-    total: dataRows.length,
-    page: Math.floor(start / limit) + 1,
-    hasMore: end < dataRows.length
-  };
+async function fetchHadiths(bookId: string, start: number, limit: number) {
+  const all = await loadBook(bookId);
+  const end = Math.min(start + limit, all.length);
+  return { hadiths: all.slice(start, end), total: all.length, page: Math.floor(start / limit) + 1, hasMore: end < all.length, contentVersion: HADITH_CONTENT_VERSION };
 }
 
-// Search hadiths
-async function searchHadiths(bookId: string, query: string, limit: number = 50) {
-  const mapping = bookMappings[bookId];
-  if (!mapping) {
-    throw new Error(`Unknown book: ${bookId}`);
-  }
-
-  const url = `${GITHUB_RAW_BASE}/${mapping.folder}/${mapping.fileWithoutDiacritics}`;
-  
-  console.log(`Searching in: ${url}`);
-  
-  const response = await fetch(url, {
-    headers: {
-      'Accept': 'text/csv',
-      'User-Agent': 'NoorAlFurqan/1.0'
-    }
-  });
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch: ${response.status}`);
-  }
-
-  const csvText = await response.text();
-  const rows = parseCSV(csvText);
-  const dataRows = rows.slice(1);
-  
-  const normalizedQuery = query.toLowerCase();
-  const results: any[] = [];
-  
-  for (let i = 0; i < dataRows.length && results.length < limit; i++) {
-    const row = dataRows[i];
-    const text = row.join(' ').toLowerCase();
-    
-    if (text.includes(normalizedQuery)) {
-      const hadithNumber = parseInt(row[0]) || (i + 1);
-      
-      results.push({
-        id: i + 1,
-        bookId,
-        hadithNumber,
-        narrator: row.length >= 3 ? row[1] : '',
-        text: row.length >= 3 ? row[2] : (row[1] || row[0])
-      });
-    }
-  }
-
-  return {
-    results,
-    total: results.length,
-    query
-  };
+const normalizeSearch = (value: string) => value.replace(/[\u064B-\u065F\u0670\u200f]/g, "").replace(/[أإآٱ]/g, "ا").replace(/ى/g, "ي").replace(/ة/g, "ه").replace(/\s+/g, " ").trim().toLowerCase();
+async function searchHadiths(bookId: string, query: string, limit: number) {
+  const all = await loadBook(bookId);
+  const terms = normalizeSearch(query).split(" ").filter(Boolean);
+  const results = all.filter(hadith => terms.every(term => normalizeSearch(hadith.text).includes(term))).slice(0, limit);
+  return { results, total: results.length, query, contentVersion: HADITH_CONTENT_VERSION };
 }
 
 serve(async (req) => {
@@ -214,8 +93,8 @@ serve(async (req) => {
     const url = new URL(req.url);
     const action = url.searchParams.get('action') || 'list';
     const bookId = url.searchParams.get('book') || 'bukhari';
-    const start = parseInt(url.searchParams.get('start') || '0');
-    const limit = parseInt(url.searchParams.get('limit') || '50');
+    const start = Math.max(0, parseInt(url.searchParams.get('start') || '0') || 0);
+    const limit = Math.max(1, Math.min(500, parseInt(url.searchParams.get('limit') || '50') || 50));
     const query = url.searchParams.get('q') || '';
 
     console.log(`Action: ${action}, Book: ${bookId}, Start: ${start}, Limit: ${limit}`);
@@ -234,6 +113,13 @@ serve(async (req) => {
         data = await searchHadiths(bookId, query, limit);
         break;
       
+      case 'lookup': {
+        const numbers = new Set((url.searchParams.get('numbers') || '').split(',').map(Number));
+        const all = await loadBook(bookId);
+        data = { hadiths: all.filter(hadith => numbers.has(hadith.hadithNumber)), contentVersion: HADITH_CONTENT_VERSION };
+        break;
+      }
+
       case 'books':
         data = Object.keys(bookMappings).map(id => ({
           id,

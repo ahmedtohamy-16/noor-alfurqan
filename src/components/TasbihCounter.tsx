@@ -63,10 +63,10 @@ const TasbihCounter = ({ count, increment, reset, saveSession, appearance }: Tas
 
   return (
     <div className="relative arabic-ui flex flex-col items-center">
-      <button
+      <Button variant="ghost"
         onClick={handleClick}
         className={cn(
-          "relative w-[min(320px,100%)] aspect-square sm:w-[360px] flex items-center justify-center select-none transition-transform duration-150",
+          "relative w-full max-w-[360px] h-auto aspect-square p-0 hover:bg-transparent flex items-center justify-center select-none transition-transform duration-150",
           isPressed ? "scale-[0.97]" : "active:scale-[0.97]"
         )}
         aria-label="عدّاد التسبيح"
@@ -105,12 +105,16 @@ const TasbihCounter = ({ count, increment, reset, saveSession, appearance }: Tas
                   key={i}
                   className="absolute top-1/2 left-1/2"
                   style={{
-                    transform: `translate(-50%, -50%) translate(${x}px, ${y}px)`,
+                    left: `${50 + x / 320 * 100}%`,
+                    top: `${50 + y / 320 * 100}%`,
+                    width: `${(isMarker ? beadSize + 4 : beadSize) / 320 * 100}%`,
+                    aspectRatio: "1",
+                    transform: "translate(-50%, -50%)",
                   }}
                 >
                   <div
                     className={cn(
-                      "rounded-full transition-all ease-out shadow-md",
+                      "w-full h-full rounded-full transition-all ease-out shadow-md",
                       isMarker ? "ring-1 ring-primary/40" : "",
                       isActive
                         ? "bg-gradient-to-br from-primary to-primary/70 scale-150 shadow-primary/50"
@@ -119,8 +123,6 @@ const TasbihCounter = ({ count, increment, reset, saveSession, appearance }: Tas
                         : "bg-gradient-to-br from-muted-foreground/30 to-muted-foreground/10"
                     )}
                     style={{
-                      width: isMarker ? beadSize + 4 : beadSize,
-                      height: isMarker ? beadSize + 4 : beadSize,
                       transitionDuration: `${appearance.beadSpeed}ms`,
                     }}
                   />
@@ -131,8 +133,8 @@ const TasbihCounter = ({ count, increment, reset, saveSession, appearance }: Tas
         </div>
 
         {/* Center counter (does NOT rotate) */}
-        <div className="relative z-10 flex flex-col items-center justify-center w-40 h-40 rounded-full bg-gradient-to-br from-card to-muted/50 border border-primary/20 shadow-xl">
-          <span className="arabic-digits text-6xl font-bold text-foreground tabular-nums leading-none">
+        <div className="relative z-10 flex flex-col items-center justify-center w-1/2 aspect-square rounded-full bg-gradient-to-br from-card to-muted/50 border border-primary/20 shadow-xl">
+          <span className={cn("arabic-digits max-w-full font-bold text-foreground tabular-nums leading-none", String(count).length <= 3 ? "text-6xl" : String(count).length <= 4 ? "text-4xl" : String(count).length <= 6 ? "text-2xl" : "text-base")}>
             {arabic(count)}
           </span>
           <span className="text-xs text-muted-foreground mt-2">سبحة</span>
@@ -142,7 +144,7 @@ const TasbihCounter = ({ count, increment, reset, saveSession, appearance }: Tas
             </span>
           )}
         </div>
-      </button>
+      </Button>
 
       <div className="flex items-center justify-center mt-2">
         <Button

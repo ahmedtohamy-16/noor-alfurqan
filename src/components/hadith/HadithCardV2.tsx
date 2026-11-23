@@ -1,3 +1,4 @@
+import { arabicDigits } from "@/lib/displayFormat";
 import { useState } from "react";
 import { Bookmark, BookmarkCheck, Copy, Share2, BookOpenText, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -34,13 +35,6 @@ const gradeBadge = (grade?: string) => {
   return { label: grade, cls: "bg-muted text-muted-foreground border-border" };
 };
 
-// Split chain-of-narrators (سند) from matn when the text starts with "حدثنا/أخبرنا/سمعت"
-const splitSanad = (text: string): { sanad?: string; matn: string } => {
-  const m = text.match(/^((?:حدثنا|حدّثنا|أخبرنا|سمعت)[^:،.]*[:،.\-])\s*([\s\S]+)$/);
-  if (m) return { sanad: m[1], matn: m[2] };
-  return { matn: text };
-};
-
 const HadithCardV2 = ({
   hadith, index, searchQuery, isBookmarked, isCopied,
   onToggleBookmark, onCopy, onShare, onOpenDetails,
@@ -48,7 +42,7 @@ const HadithCardV2 = ({
   const [expanded, setExpanded] = useState(false);
   const book = getBookById(hadith.bookId);
   const badge = gradeBadge(hadith.grade);
-  const { sanad, matn } = splitSanad(hadith.text);
+  const matn = hadith.text;
 
   return (
     <article
@@ -67,7 +61,7 @@ const HadithCardV2 = ({
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-muted-foreground">
             <span className="font-semibold text-foreground/80">{book?.nameAr}</span>
             <span className="opacity-50">·</span>
-            <span>#{hadith.hadithNumber}</span>
+            <span>#{arabicDigits(hadith.hadithNumber)}</span>
           </div>
           {badge && (
             <Badge variant="outline" className={cn("mt-2 text-[10px] font-bold border", badge.cls)}>
@@ -87,13 +81,6 @@ const HadithCardV2 = ({
           )}
         </button>
       </div>
-
-      {/* sanad (if detected) */}
-      {sanad && (
-        <p className="text-[12px] text-muted-foreground mb-2 leading-relaxed opacity-80">
-          {sanad}
-        </p>
-      )}
 
       {/* narrator */}
       {hadith.narrator && (
