@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "./useAuth";
 import { toast } from "sonner";
 import { 
@@ -108,6 +108,8 @@ const getLocationByIP = async (): Promise<{ lat: number; lng: number; city: stri
   return null;
 };
 
+const SETTINGS_EVENT = "user-settings-changed";
+
 export const useUserSettings = () => {
   const { user } = useAuth();
   const [settings, setSettings] = useState<UserSettings>(() => {
@@ -125,6 +127,19 @@ export const useUserSettings = () => {
     return defaultSettings;
   });
   const [isLoading, setIsLoading] = useState(true);
+  // Latest settings, so consecutive updates never overwrite each other with stale values.
+  const settingsRef = useRef(settings);
+  settingsRef.current = settings;
+
+  // Every component calls this hook separately; keep all instances in sync.
+  useEffect(() => {
+    const onChange = (e: Event) => {
+      const next = (e as CustomEvent<UserSettings>).detail;
+      if (next) { settingsRef.current = next; setSettings(next); }
+    };
+    window.addEventListener(SETTINGS_EVENT, onChange);
+    return () => window.removeEventListener(SETTINGS_EVENT, onChange);
+  }, []);
 
   // Fetch settings on mount or user change
   useEffect(() => {
@@ -186,8 +201,10 @@ export const useUserSettings = () => {
   };
 
   const updateSettings = useCallback(async (newSettings: Partial<UserSettings>) => {
-    const updated = { ...settings, ...newSettings };
+    const updated = { ...settingsRef.current, ...newSettings };
+    settingsRef.current = updated;
     setSettings(updated);
+    window.dispatchEvent(new CustomEvent(SETTINGS_EVENT, { detail: updated }));
     
     // Always save to localStorage
     localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(updated));
@@ -203,7 +220,7 @@ export const useUserSettings = () => {
         toast.error("حدث خطأ في حفظ الإعدادات");
       }
     }
-  }, [settings, user]);
+  }, [user]);
 
   const updateLocation = useCallback(async (lat: number, lng: number, cityName?: string) => {
     const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";

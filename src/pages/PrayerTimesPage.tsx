@@ -1,3 +1,4 @@
+import { recommendedPrayerMethod } from "@/lib/prayerMethods";
 import { useState, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
@@ -284,7 +285,7 @@ const PrayerTimesPage = () => {
     setIsDetecting(true);
     try {
       await updateLocation(city.latitude, city.longitude, city.name_ar);
-      await updateSettings({ country_code: city.country_code });
+      await updateSettings({ country_code: city.country_code, prayer_method: recommendedPrayerMethod(city.country_code) });
     } catch {
       toast.error("تعذّر تحديث الموقع", {
         action: { label: "إعادة المحاولة", onClick: () => handleCityPick(city) },

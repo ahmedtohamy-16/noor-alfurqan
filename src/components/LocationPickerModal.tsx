@@ -1,3 +1,4 @@
+import { recommendedPrayerMethod } from "@/lib/prayerMethods";
 import { useState } from "react";
 import { MapPin, Navigation, Loader2, Check, AlertCircle } from "lucide-react";
 import {
@@ -50,6 +51,7 @@ const LocationPickerModal = ({ open, onOpenChange }: LocationPickerModalProps) =
 
   const handleCountryChange = (code: string) => {
     setSelectedCountry(code);
+    setSelectedMethod(recommendedPrayerMethod(code));
     setSelectedCity(null);
   };
 
