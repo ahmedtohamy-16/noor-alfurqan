@@ -1,3 +1,4 @@
+import { ayahCountLabel } from "@/lib/displayFormat";
 import { useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { Search, ArrowRight, BookOpen, Hash } from "lucide-react";
@@ -138,7 +139,7 @@ const SearchPage = () => {
                           <div className="flex items-center gap-4">
                             <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
                               <span className="text-primary font-bold">
-                                {surah.number}
+                                <span className="arabic-digits">{surah.number.toLocaleString("ar-EG")}</span>
                               </span>
                             </div>
                             <div className="flex-1 text-right">
@@ -146,7 +147,7 @@ const SearchPage = () => {
                                 {surah.name}
                               </h3>
                               <p className="text-sm text-muted-foreground">
-                                {surah.englishNameTranslation} • {surah.numberOfAyahs} آية
+                                {surah.revelationType === "Meccan" ? "مكية" : "مدنية"} • <span className="arabic-digits">{ayahCountLabel(surah.numberOfAyahs)}</span>
                               </p>
                             </div>
                             <ArrowRight className="w-5 h-5 text-muted-foreground rotate-180" />
