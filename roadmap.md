@@ -50,3 +50,21 @@ Decisions: run the move in a remixed copy; no accounts migrated (fresh start, ow
 - [x] استبدال الإيموجي بأيقونات SVG
 - [x] إعادة تصميم صفحة الأذكار
 - [x] التحية تبدأ "صباح الخير" من الفجر
+
+## Audit (19 items) — open
+- [ ] Tasbih count not persisted across refresh
+- [ ] Prayer city search: Egypt has only 5 cities (Zagazig/Mansoura/Tanta missing)
+- [ ] Prayer export dialog overflows on mobile
+- [ ] Daily wird reminder toggle does nothing
+- [ ] Translation choice not persisted
+- [ ] English translation rendered RTL
+- [ ] Playback speed control in player
+- [ ] Latin digits (prayer, prophets, stats, /pro, tafsir title); "آية" plural for 110 etc.
+- [ ] Reciters all show ~9.0 MB
+- [ ] /notification-settings near empty; toggle ignores denied permission
+- [ ] Trial code field visible on public pricing
+- [ ] Reading stats open without real reading
+- [ ] Visible line in blue gradient on dark tasbih
+- [ ] "الصفحة ٢٩٣" looks like a link but does nothing
+- [ ] /surah/0 shows error instead of 404
+- [ ] OTP email template: blocked on user connecting email domain
