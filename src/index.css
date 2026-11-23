@@ -146,9 +146,11 @@
     direction: rtl;
   }
 
-  /* Explicit numeral fallback: UI webfonts may omit Arabic-Indic glyphs. */
+  /* Explicit numeral fallback for Arabic-Indic digits (U+0660–0669).
+     Verified in-browser: Cairo's webfont subset renders ٠ as tofu, so it
+     must NOT appear here. Noto Naskh Arabic and Amiri render it correctly. */
   .arabic-digits {
-    font-family: Arial, Tahoma, sans-serif;
+    font-family: 'Noto Naskh Arabic', 'Amiri', Arial, Tahoma, sans-serif;
   }
 
   .loading-placeholder {

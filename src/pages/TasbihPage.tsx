@@ -126,7 +126,7 @@ const TasbihPage = () => {
                     <div className="w-4 h-4 rounded-full border-2 border-primary/40" />
                     <span>عدد العلامات</span>
                   </div>
-                  <span className="text-xs font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+                  <span className="text-xs font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full arabic-digits">
                     {arabic(appearance.markerCount)}
                   </span>
                 </div>
@@ -165,7 +165,7 @@ const TasbihPage = () => {
                   )}
                 >
                   <p className="text-sm font-bold leading-tight">{d.text}</p>
-                  <p className={cn("text-[10px] mt-1", active ? "opacity-90" : "text-muted-foreground")}>
+                  <p className={cn("text-[10px] mt-1 arabic-digits", active ? "opacity-90" : "text-muted-foreground")}>
                     {arabic(d.count)} مرة
                   </p>
                 </button>
@@ -194,11 +194,11 @@ const TasbihPage = () => {
                 />
               </svg>
               <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-base font-bold text-primary">{arabic(goalProgress)}%</span>
+                <span className="text-base font-bold text-primary arabic-digits">{arabic(goalProgress)}%</span>
               </div>
             </div>
             <div className="flex-1 text-center">
-              <p className="text-2xl font-bold">
+              <p className="text-2xl font-bold arabic-digits">
                 <span className="text-primary">{arabic(stats.todayCount)}</span>
                 <span className="text-muted-foreground"> / {arabic(dailyGoal)}</span>
               </p>
@@ -215,7 +215,7 @@ const TasbihPage = () => {
           </div>
           <div className="grid grid-cols-3 gap-3 text-center">
             <div>
-              <p className="text-2xl font-bold text-foreground">{arabic(stats.todayCount || 0)}</p>
+              <p className="text-2xl font-bold text-foreground arabic-digits">{arabic(stats.todayCount || 0)}</p>
               <p className="text-xs text-muted-foreground mt-1">سبحة</p>
             </div>
             <div>

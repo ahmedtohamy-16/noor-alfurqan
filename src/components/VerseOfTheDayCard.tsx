@@ -2,6 +2,7 @@ import { Card } from "@/components/ui/card";
 import { BookOpen, Share2, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { arabicDigits } from "@/lib/displayFormat";
 
 // Curated daily verses with surah/ayah refs for navigation
 const VERSES = [
@@ -99,7 +100,7 @@ const VerseOfTheDayCard = () => {
               <ChevronLeft className="w-3 h-3" />
             </span>
             <p className="text-[11px] text-muted-foreground/80">
-              {verse.surah} • الآية {verse.ayahNumber}
+              {verse.surah} • الآية <span className="arabic-digits">{arabicDigits(verse.ayahNumber)}</span>
             </p>
           </div>
         </div>
