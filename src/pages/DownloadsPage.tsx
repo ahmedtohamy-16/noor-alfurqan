@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { CheckCircle2, Download, Loader2, Pause, Play, RotateCcw, Save, Trash2, XCircle, Clock, HardDrive, ListChecks, X } from 'lucide-react';
 import Header from '@/components/Header';
+import QuranTextDownloads from '@/components/QuranTextDownloads';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -118,7 +119,7 @@ const DownloadsPage = () => {
       <Header />
       <main className="container max-w-3xl mx-auto px-4 py-6 pb-32">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
-          <h1 className="text-2xl font-bold text-foreground">التنزيلات الصوتية</h1>
+          <h1 className="text-2xl font-bold text-foreground">التنزيلات</h1>
           <Button className="gap-2 h-11" onClick={() => setRangeOpen(true)}><Download className="h-4 w-4" />تنزيل مقطع من سورة</Button>
         </div>
         <section aria-label="مساحة التخزين" className="border-y border-border py-4 mb-5 space-y-3">
@@ -138,6 +139,8 @@ const DownloadsPage = () => {
           {used >= limit && <p className="text-sm text-destructive">وصلت لحد المساحة؛ احذف بعض الملفات لإضافة تنزيلات جديدة.</p>}
         </section>
 
+        <QuranTextDownloads />
+        <h2 className="font-bold mb-3">التلاوات الصوتية</h2>
         <div className="flex gap-2 overflow-x-auto pb-2 mb-4">
           {filters.map((f) => (
             <Button key={f.id} size="sm" variant={filter === f.id ? 'default' : 'outline'}

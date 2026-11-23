@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
   User, 
@@ -26,6 +26,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/untypedClient";
 import { validateUsername, sanitizeUsernameInput, friendlyUsernameError } from "@/lib/usernameRules";
 import { arabicDigits } from "@/lib/displayFormat";
+import { resolveAvatar, AVATAR_BUCKET, avatarFileAllowed } from "@/lib/profileAvatar";
 
 interface ProfileData {
   id: string;
@@ -37,10 +38,11 @@ interface ProfileData {
   displayname_change_count: number | null;
 }
 
-const PROFILE_COLUMNS = "id, username, display_name, avatar_url, created_at, username_change_count, displayname_change_count";
+const PROFILE_COLUMNS = "id, username, display_name, avatar_url, created_at";
 
 const getProfile = async (id: string): Promise<ProfileData | null> => {
-  const { data } = await supabase.from("profiles").select(PROFILE_COLUMNS).eq("id", id).maybeSingle();
+  const { data, error } = await supabase.from("profiles").select(PROFILE_COLUMNS).eq("id", id).maybeSingle();
+  if (error) throw error;
   return (data as ProfileData) ?? null;
 };
 
@@ -51,7 +53,30 @@ type UsernameStatus = "idle" | "invalid" | "checking" | "available" | "taken" | 
 
 const ProfilePage = () => {
   const navigate = useNavigate();
-  const { user, userProfile, role, signOut, isLoading: authLoading } = useAuth();
+  const { user, userProfile, role, signOut, refreshProfile, resetPassword, isLoading: authLoading } = useAuth();
+  const photoInput = useRef<HTMLInputElement>(null);
+  const [avatar, setAvatar] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [loadError, setLoadError] = useState(false);
+  const uploadAvatar = async (file?: File) => {
+    if (!user || !file) return;
+    if (!avatarFileAllowed(file)) { toast.error("اختر صورة JPG أو PNG أو WebP لا تزيد عن ٢ ميجابايت"); return; }
+    setUploading(true);
+    const oldPath = profile?.avatar_url;
+    const path = `${user.uid}/${crypto.randomUUID()}.${file.type.split('/')[1]}`;
+    try {
+      const { error } = await supabase.storage.from(AVATAR_BUCKET).upload(path, file, { contentType: file.type });
+      if (error) throw error;
+      const { error: profileError } = await supabase.from('profiles').update({ avatar_url: path }).eq('id', user.uid);
+      if (profileError) { await supabase.storage.from(AVATAR_BUCKET).remove([path]); throw profileError; }
+      setAvatar(await resolveAvatar(path));
+      setProfile(previous => previous ? { ...previous, avatar_url: path } : previous);
+      await refreshProfile();
+      if (oldPath?.startsWith(`${user.uid}/`)) await supabase.storage.from(AVATAR_BUCKET).remove([oldPath]);
+      toast.success("تم حفظ الصورة الشخصية");
+    } catch { toast.error("تعذّر حفظ الصورة؛ حاول مرة أخرى"); }
+    finally { setUploading(false); if (photoInput.current) photoInput.current.value = ''; }
+  };
   
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -77,6 +102,8 @@ const ProfilePage = () => {
       try {
         const profileData = await getProfile(user.uid);
         setProfile(profileData);
+        setAvatar(await resolveAvatar(profileData?.avatar_url));
+        setLoadError(false);
         
         if (profileData) {
           setNewUsername(profileData.username || "");
@@ -84,6 +111,7 @@ const ProfilePage = () => {
         }
       } catch (error) {
         console.error("Error loading profile:", error);
+        setLoadError(true);
       } finally {
         setIsLoading(false);
       }
@@ -133,6 +161,7 @@ const ProfilePage = () => {
       setIsEditingUsername(false);
       const updated = await getProfile(user.uid);
       if (updated) setProfile(updated);
+      await refreshProfile();
     } else {
       toast.error(friendlyUsernameError(error));
     }
@@ -150,6 +179,7 @@ const ProfilePage = () => {
       setIsEditingDisplayName(false);
       const updated = await getProfile(user.uid);
       if (updated) setProfile(updated);
+      await refreshProfile();
     } else {
       toast.error("تعذر حفظ الاسم، حاول مرة أخرى");
     }
@@ -169,11 +199,11 @@ const ProfilePage = () => {
   const getRoleBadge = (role: string | null) => {
     switch (role) {
       case "admin":
-        return <Badge className="bg-red-500/10 text-red-500 border-red-500/20">مسؤول</Badge>;
+        return <Badge variant="outline" className="text-primary border-primary/20">مسؤول</Badge>;
       case "teacher":
-        return <Badge className="bg-blue-500/10 text-blue-500 border-blue-500/20">معلم</Badge>;
+        return <Badge variant="outline">معلم</Badge>;
       default:
-        return <Badge className="bg-green-500/10 text-green-500 border-green-500/20">طالب</Badge>;
+        return <Badge variant="outline">عضو</Badge>;
     }
   };
 
@@ -223,7 +253,9 @@ const ProfilePage = () => {
       <Header />
 
       <main className="container mx-auto px-4 py-8 arabic-ui">
-        <div className="max-w-2xl mx-auto space-y-6">
+        <div className="max-w-2xl mx-auto space-y-6 pb-28">
+          <h1 className="text-2xl font-bold">الملف الشخصي</h1>
+          {loadError && <p role="alert" className="text-destructive">تعذّر تحميل بيانات حسابك؛ أعد فتح الصفحة عند الاتصال.</p>}
           
           {/* Profile Header Card */}
           <Card className="overflow-hidden">
@@ -233,9 +265,9 @@ const ProfilePage = () => {
                 {/* Avatar */}
                 <div className="relative">
                   <div className="w-24 h-24 rounded-full bg-primary/10 border-4 border-background flex items-center justify-center overflow-hidden">
-                    {profile?.avatar_url || userProfile?.photoURL ? (
+                    {avatar || userProfile?.photoURL ? (
                       <img 
-                        src={profile?.avatar_url || userProfile?.photoURL || ""} 
+                        src={avatar || userProfile?.photoURL || ""}
                         alt="الصورة الشخصية للمستخدم" 
                         className="w-full h-full object-cover"
                       />
@@ -243,12 +275,13 @@ const ProfilePage = () => {
                       <User className="w-10 h-10 text-primary" />
                     )}
                   </div>
-                  <button 
-                    className="absolute bottom-0 right-0 p-2 bg-primary text-primary-foreground rounded-full shadow-lg hover:bg-primary/90 transition-colors"
-                    onClick={() => toast.info("ميزة رفع الصور قيد التطوير")}
+                  <input ref={photoInput} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={e => void uploadAvatar(e.target.files?.[0])} />
+                  <Button size="icon" aria-label="تغيير الصورة الشخصية" disabled={uploading}
+                    className="absolute bottom-0 right-0 w-11 h-11 rounded-full shadow-lg"
+                    onClick={() => photoInput.current?.click()}
                   >
                     <Camera className="w-4 h-4" />
-                  </button>
+                  </Button>
                 </div>
                 
                 {/* Display Name */}

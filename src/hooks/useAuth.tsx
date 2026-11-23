@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/untypedClient";
 import type { UserRole } from "@/lib/firebase";
 import { toast } from "sonner";
 import { activateUserState } from "@/lib/userStateStore";
+import { resolveAvatar } from "@/lib/profileAvatar";
 
 /**
  * Supabase Auth is the only account system.
@@ -105,7 +106,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       email: profile?.email ?? u.email ?? null,
       username: profile?.username ?? null,
       displayName: profile?.display_name ?? toAppUser(u).displayName,
-      photoURL: profile?.avatar_url ?? null,
+      photoURL: await resolveAvatar(profile?.avatar_url),
       isBanned: false,
       role: r,
     });

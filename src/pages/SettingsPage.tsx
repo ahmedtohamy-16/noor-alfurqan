@@ -28,6 +28,9 @@ import { arabicDigits } from "@/lib/displayFormat";
 import { useGlobalAudio } from "@/hooks/useGlobalAudio";
 import { getReciterById } from "@/data/reciters";
 import { flushUserState } from "@/lib/userStateStore";
+import tzLookup from "tz-lookup";
+import { prayerMethods } from "@/data/locationData";
+import { recommendedPrayerMethod } from "@/lib/prayerMethods";
 
 const fontOptions = [
   { id: "Amiri", name: "خط Amiri", arabicName: "أميري", preview: "font-amiri" },
@@ -314,59 +317,17 @@ const SettingsPage = () => {
               <h2 className="text-lg font-bold text-foreground">التوقيت</h2>
             </div>
             
-            <Card className="p-5 hover:shadow-md transition-shadow">
-              <div className="flex items-center gap-3 mb-4">
-                <Sunrise className="w-5 h-5 text-primary" />
-                <div>
-                  <p className="font-medium text-foreground">التوقيت الصيفي (DST)</p>
-                  <p className="text-sm text-muted-foreground">
-                    {settings.country_code 
-                      ? getDSTStatusText(settings.country_code)
-                      : "حدد موقعك أولاً لضبط التوقيت"}
-                  </p>
-                </div>
+            <div className="border-y border-border py-5 space-y-5">
+              <div className="space-y-2"><label className="text-sm font-medium">طريقة الحساب</label>
+                <Select value={String(settings.prayer_method || 0)} onValueChange={v => updateSettings({ prayer_method: Number(v) })}>
+                  <SelectTrigger className="h-11"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="0">تلقائي حسب الدولة</SelectItem>{prayerMethods.filter(p => p.id !== 0).map(p => <SelectItem key={p.id} value={String(p.id)}>{p.name}</SelectItem>)}</SelectContent>
+                </Select>
               </div>
-
-              <div className="space-y-4 pt-4 border-t border-border">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-foreground">وضع التوقيت الصيفي</label>
-                  <Select
-                    value={settings.dst_mode}
-                    onValueChange={(val: 'auto' | 'manual') => {
-                      updateSettings({ dst_mode: val });
-                    }}
-                  >
-                    <SelectTrigger className="h-11">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-popover z-50">
-                      <SelectItem value="auto">تلقائي (حسب الدولة)</SelectItem>
-                      <SelectItem value="manual">يدوي</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {settings.dst_mode === 'manual' && (
-                  <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
-                    <span className="text-sm text-foreground">تفعيل التوقيت الصيفي (+١ ساعة)</span>
-                    <Switch
-                      checked={settings.dst_enabled}
-                      onCheckedChange={(checked) => {
-                        updateSettings({ dst_enabled: checked });
-                      }}
-                    />
-                  </div>
-                )}
-
-                {settings.dst_mode === 'auto' && settings.country_code && (
-                  <p className="text-xs text-muted-foreground bg-muted/50 p-3 rounded-lg">
-                    {countryHasDST(settings.country_code) 
-                      ? `دولتك (${settings.country_code}) تطبق التوقيت الصيفي. ${isInDSTForCountry(settings.country_code) ? "حالياً: مُفعّل" : "حالياً: غير مُفعّل"}`
-                      : `دولتك (${settings.country_code}) لا تطبق التوقيت الصيفي.`}
-                  </p>
-                )}
+              <div className="space-y-2"><label className="text-sm font-medium">حساب وقت العصر</label>
+                <Select value={String(settings.prayer_madhab)} onValueChange={v => updateSettings({ prayer_madhab: Number(v) })}><SelectTrigger className="h-11"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="0">شافعي / مالكي / حنبلي</SelectItem><SelectItem value="1">حنفي</SelectItem></SelectContent></Select>
               </div>
-            </Card>
+              <div className="flex flex-wrap justify-between gap-2 text-sm"><span className="text-muted-foreground">المنطقة الزمنية</span><span dir="ltr">{settings.latitude !== null && settings.longitude !== null ? tzLookup(settings.latitude, settings.longitude) : settings.timezone}</span></div>
+            </div>
           </section>
 
           <Separator />

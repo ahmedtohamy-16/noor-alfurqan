@@ -1,5 +1,6 @@
 // Quran Ayats Data - Offline Static Data
 // Total: 6236 ayahs across 114 surahs
+import { readOfflineQuran } from '@/lib/offlineQuran';
 
 export interface QuranAyah {
   id: number;
@@ -29,6 +30,11 @@ export const loadQuranAyats = async (): Promise<QuranAyah[]> => {
     .then((data) => {
       ayatsCache = data;
       return data;
+    })
+    .catch(async error => {
+      const saved = await readOfflineQuran();
+      if (saved.length) return saved;
+      throw error;
     })
     .finally(() => {
       ayatsPromise = null;

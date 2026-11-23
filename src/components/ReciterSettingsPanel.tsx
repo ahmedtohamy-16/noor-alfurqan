@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Headphones, Download, Check, Loader2 } from 'lucide-react';
+import { Headphones, Download, Check, Loader2, Save } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { reciters, type Reciter } from '@/data/reciters';
+import { getVerifiedReciters, type Reciter } from '@/data/reciters';
 import { cn } from '@/lib/utils';
 import { surahs } from '@/data/surahs';
 import { estimateSurahMB, formatSizeMB } from '@/lib/reciterSizeEstimate';
@@ -12,6 +12,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { firestoreGet, firestoreSet, COLLECTIONS } from '@/lib/firebase';
 import { toast } from 'sonner';
 import { arabicDigits } from '@/lib/displayFormat';
+import { flushUserState } from '@/lib/userStateStore';
+import { DownloadAudioDialog } from './DownloadAudioDialog';
 
 interface ReciterSettingsPanelProps {
   surahNumber?: number;
@@ -21,120 +23,18 @@ interface ReciterSettingsPanelProps {
 const ReciterSettingsPanel = ({ surahNumber, surahName }: ReciterSettingsPanelProps) => {
   const { selectedReciter, setReciter, isPlaying } = useGlobalAudio();
   const { user } = useAuth();
-  const [downloadingReciter, setDownloadingReciter] = useState<string | null>(null);
-  const [downloadProgress, setDownloadProgress] = useState(0);
-  const [offlineReciters, setOfflineReciters] = useState<Set<string>>(new Set());
-
-  // Load offline reciters from localStorage
-  useEffect(() => {
-    const stored = localStorage.getItem('offlineReciters');
-    if (stored) {
-      try {
-        setOfflineReciters(new Set(JSON.parse(stored)));
-      } catch (e) {
-        console.error('Error loading offline reciters:', e);
-      }
-    }
-  }, []);
-
-
-  const handleReciterSelect = async (reciter: Reciter) => {
-    if (isPlaying) {
-      toast.info('سيتم تغيير القارئ');
-    }
-    
-    setReciter(reciter);
-    
-    // Save to database
-    if (user) {
-      await firestoreSet(COLLECTIONS.USER_READING_SETTINGS, user.uid, {
-        user_id: user.uid,
-        selected_reciter: reciter.id,
-      });
-    }
-    
-    // Save to localStorage
-    localStorage.setItem('selectedReciter', reciter.id);
+  const [draftId, setDraftId] = useState(selectedReciter.id);
+  const [saving, setSaving] = useState(false);
+  const [downloadOpen, setDownloadOpen] = useState(false);
+  useEffect(() => { setDraftId(selectedReciter.id); }, [selectedReciter.id]);
+  const handleConfirm = async () => {
+    const reciter = getVerifiedReciters().find(r => r.id === draftId);
+    if (!reciter) return;
+    setSaving(true);
+    try { setReciter(reciter); if (user) await flushUserState(user.uid); toast.success('تم حفظ القارئ'); }
+    catch { toast.error('تعذّر حفظ القارئ؛ أعد المحاولة'); }
+    finally { setSaving(false); }
   };
-
-  const getReciterPath = (reciterId: string): string => {
-    // Mapping for quranicaudio.com download paths
-    const paths: Record<string, string> = {
-      'ar.alafasy': 'mishary_rashid_alafasy',
-      'ar.husary': 'mahmood_khaleel_al-husaree',
-      'ar.minshawi': 'muhammad_siddeeq_al-minshaawee',
-      'ar.abdulsamad': 'abdul_basit_murattal',
-      'ar.sudais': 'abdurrahmaan_as-sudays',
-      'ar.shaatree': 'abu_bakr_ash-shaatree',
-      'ar.mahermuaiqly': 'maher_al_mueaqly',
-      'ar.hanirifai': 'hani_ar-rifai',
-      'ar.shuraym': 'sa3ood_ash-shuraym',
-      'ar.ahmedajamy': 'ahmed_ibn_ali_al-ajamy',
-    };
-    return paths[reciterId] || 'mishary_rashid_alafasy';
-  };
-
-  const handleDownloadReciter = async (reciter: Reciter, e: React.MouseEvent) => {
-    e.stopPropagation();
-    
-    if (!surahNumber || !surahName) {
-      toast.error('لا يمكن تحديد السورة');
-      return;
-    }
-
-    setDownloadingReciter(reciter.id);
-    setDownloadProgress(0);
-
-    try {
-      const surahFormatted = surahNumber.toString().padStart(3, '0');
-      const url = `https://download.quranicaudio.com/quran/${getReciterPath(reciter.id)}/${surahFormatted}.mp3`;
-      
-      const response = await fetch(url);
-      if (!response.ok) throw new Error('السورة غير متوفرة');
-      
-      const contentLength = response.headers.get('content-length');
-      const total = contentLength ? parseInt(contentLength, 10) : 0;
-      
-      const reader = response.body?.getReader();
-      if (!reader) throw new Error('No reader');
-      
-      const chunks: ArrayBuffer[] = [];
-      let receivedLength = 0;
-      
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        
-        chunks.push(value.buffer as ArrayBuffer);
-        receivedLength += value.length;
-        
-        if (total > 0) {
-          setDownloadProgress((receivedLength / total) * 100);
-        }
-      }
-      
-      const blob = new Blob(chunks, { type: 'audio/mpeg' });
-      const cacheKey = `quran-audio-${reciter.id}-${surahNumber}`;
-      
-      const cache = await caches.open('quran-audio');
-      const cacheResponse = new Response(blob);
-      await cache.put(cacheKey, cacheResponse);
-      
-      const newOffline = new Set(offlineReciters);
-      newOffline.add(`${reciter.id}-${surahNumber}`);
-      setOfflineReciters(newOffline);
-      localStorage.setItem('offlineReciters', JSON.stringify([...newOffline]));
-      
-      toast.success(`تم حفظ ${surahName} بصوت ${reciter.nameArabic} للاستخدام بدون نت`);
-    } catch (error) {
-      console.error('Download error:', error);
-      toast.error('فشل في تحميل الصوت');
-    } finally {
-      setDownloadingReciter(null);
-      setDownloadProgress(0);
-    }
-  };
-
   return (
     <Card className="p-4 space-y-3 arabic-ui">
       <div className="flex items-center gap-2 mb-2">
@@ -143,16 +43,14 @@ const ReciterSettingsPanel = ({ surahNumber, surahName }: ReciterSettingsPanelPr
       </div>
 
       <div className="space-y-2 max-h-[300px] overflow-y-auto">
-        {reciters.map((reciter) => {
-          const isSelected = selectedReciter.id === reciter.id;
-          const isDownloading = downloadingReciter === reciter.id;
-          const isOffline = surahNumber && offlineReciters.has(`${reciter.id}-${surahNumber}`);
-          const isDisabled = isPlaying && !isSelected;
+        {getVerifiedReciters().map((reciter) => {
+          const isSelected = draftId === reciter.id;
+          const isDisabled = saving;
 
           return (
             <div
               key={reciter.id}
-              onClick={() => !isDisabled && handleReciterSelect(reciter)}
+              onClick={() => !isDisabled && setDraftId(reciter.id)}
               className={cn(
                 'flex items-center justify-between p-3 rounded-lg border transition-all',
                 isSelected
@@ -171,48 +69,17 @@ const ReciterSettingsPanel = ({ surahNumber, surahName }: ReciterSettingsPanelPr
                   )}>
                     {reciter.nameArabic}
                   </p>
-                  <p className="text-xs text-muted-foreground">{reciter.name}</p>
                 </div>
               </div>
 
-              {surahNumber && (
-                <div className="flex items-center gap-2">
-                  {isOffline && (
-                    <span className="text-xs text-green-500 bg-green-500/10 px-2 py-0.5 rounded">
-                      محفوظ
-                    </span>
-                  )}
-                  
-                  {isDownloading ? (
-                    <div className="flex items-center gap-2 min-w-[100px]">
-                      <Progress value={downloadProgress} className="h-1.5 w-16" />
-                      <span className="text-xs text-muted-foreground">
-                        <span dir="ltr">{arabicDigits(Math.round(downloadProgress))}٪</span>
-                      </span>
-                    </div>
-                  ) : (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 px-2 gap-1"
-                      onClick={(e) => handleDownloadReciter(reciter, e)}
-                    >
-                      <Download className="w-3 h-3" />
-                      <span className="text-xs">{formatSizeMB(estimateSurahMB(reciter.id, reciter.server, surahs.find((x) => x.number === surahNumber)?.numberOfAyahs ?? 7))}</span>
-                    </Button>
-                  )}
-                </div>
-              )}
             </div>
           );
         })}
       </div>
 
-      {isPlaying && (
-        <p className="text-xs text-muted-foreground text-center">
-          أوقف التشغيل لتغيير القارئ
-        </p>
-      )}
+      <Button className="w-full h-11 gap-2" disabled={saving || draftId === selectedReciter.id} onClick={handleConfirm}>{saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}حفظ القارئ</Button>
+      {surahNumber && <Button variant="outline" className="w-full h-11 gap-2" onClick={() => setDownloadOpen(true)}><Download className="w-4 h-4" />تنزيل التلاوة</Button>}
+      <DownloadAudioDialog open={downloadOpen} onOpenChange={setDownloadOpen} surahNumber={surahNumber || 1} surahName={surahName || "الفاتحة"} ayahNumber={null} downloadType="range" totalAyahs={surahs.find(s => s.number === surahNumber)?.numberOfAyahs || 7} />
     </Card>
   );
 };

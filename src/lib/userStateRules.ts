@@ -11,6 +11,14 @@ export function mergeState(base: StatePayload, patch: StatePayload): StatePayloa
   return result;
 }
 export const sameState = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
-export const changedFields = (before: StatePayload, after: StatePayload): StatePayload =>
-  Object.fromEntries(Object.entries(after).filter(([key, value]) => !sameState(before[key], value)));
+export const changedFields = (before: StatePayload, after: StatePayload): StatePayload => {
+  const changes: StatePayload = {};
+  for (const [key, value] of Object.entries(after)) {
+    if (sameState(before[key], value)) continue;
+    const previous = before[key];
+    changes[key] = previous && value && typeof previous === 'object' && typeof value === 'object' && !Array.isArray(previous) && !Array.isArray(value)
+      ? changedFields(previous as StatePayload, value as StatePayload) : value;
+  }
+  return changes;
+};
 export const userCacheKey = (uid: string) => `noor:user-state:v1:${uid}`;
