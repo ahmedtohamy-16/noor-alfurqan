@@ -1,3 +1,4 @@
+import { recommendedPrayerMethod } from "@/lib/prayerMethods";
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Clock, MapPin, ChevronLeft } from "lucide-react";
@@ -41,7 +42,7 @@ const NextPrayerWidget = () => {
 
   const lat = settings.latitude;
   const lng = settings.longitude;
-  const method = settings.prayer_method || 4;
+  const method = settings.prayer_method || recommendedPrayerMethod(settings.country_code);
   const hasLocation = lat && lng;
 
   const { data: prayerTimes } = useQuery({

@@ -51,7 +51,7 @@ const VerseOfTheDayCard = () => {
 
   const handleShare = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    const text = `${verse.arabic}\n\n${verse.translation}\n— ${verse.surah} (${verse.ayahNumber})`;
+    const text = `${verse.arabic}\n— ${verse.surah} (${verse.ayahNumber})`;
     try {
       if (navigator.share) {
         await navigator.share({ title: "آية اليوم", text });
@@ -93,7 +93,6 @@ const VerseOfTheDayCard = () => {
           <p className="font-quran text-xl leading-loose text-right text-foreground mb-2">
             {verse.arabic}
           </p>
-          <p className="text-xs text-muted-foreground mb-2">{verse.translation}</p>
           <div className="flex items-center justify-between">
             <span className="inline-flex items-center gap-1 text-[11px] text-primary font-semibold">
               اذهب للآية

@@ -52,7 +52,7 @@ const defaultSettings: UserSettings = {
   notifications_enabled: false,
   daily_wird_enabled: false,
   daily_wird_time: "06:00:00",
-  prayer_method: 4, // Default: Umm Al-Qura
+  prayer_method: 0, // 0 = not chosen yet; the recommended method for the country is used
   prayer_madhab: 0, // Default: Shafi'i (Standard)
   prayer_reminder_minutes: 15,
   dst_mode: 'auto',
@@ -167,7 +167,7 @@ export const useUserSettings = () => {
           notifications_enabled: data.notifications_enabled || false,
           daily_wird_enabled: data.daily_wird_enabled || false,
           daily_wird_time: data.daily_wird_time || "06:00:00",
-          prayer_method: data.prayer_method || 4,
+          prayer_method: data.prayer_method || 0,
           prayer_madhab: data.prayer_madhab ?? 0,
           prayer_reminder_minutes: data.prayer_reminder_minutes || 15,
           dst_mode: data.dst_mode || 'auto',

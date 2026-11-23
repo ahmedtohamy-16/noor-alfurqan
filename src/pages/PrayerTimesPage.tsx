@@ -114,7 +114,7 @@ const PrayerTimesPage = () => {
 
   const lat = settings.latitude || 21.4225;
   const lng = settings.longitude || 39.8262;
-  const method = settings.prayer_method || 4;
+  const method = settings.prayer_method || recommendedPrayerMethod(settings.country_code);
   const madhab = settings.prayer_madhab || 0;
   const hasLocation = settings.latitude && settings.longitude;
 

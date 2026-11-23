@@ -35,7 +35,7 @@ const LocationPickerModal = ({ open, onOpenChange }: LocationPickerModalProps) =
   const [selectedCountry, setSelectedCountry] = useState<string>("");
   const [selectedCity, setSelectedCity] = useState<City | null>(null);
   const [isDetecting, setIsDetecting] = useState(false);
-  const [selectedMethod, setSelectedMethod] = useState<number>(settings.prayer_method || 4);
+  const [selectedMethod, setSelectedMethod] = useState<number>(settings.prayer_method || recommendedPrayerMethod(settings.country_code));
   const [selectedMadhab, setSelectedMadhab] = useState<number>(settings.prayer_madhab || 0);
 
   const hasCurrentLocation = settings.city_name && settings.latitude && settings.longitude;

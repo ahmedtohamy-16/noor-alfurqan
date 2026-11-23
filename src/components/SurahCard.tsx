@@ -59,10 +59,6 @@ const SurahCard = ({ surah, index }: SurahCardProps) => {
           </div>
         </div>
 
-        {/* Decorative chevron */}
-        <div className="shrink-0 text-muted-foreground/40 group-hover:text-primary/60 transition-colors font-arabic text-lg">
-          ﴿
-        </div>
       </div>
     </Link>
   );
