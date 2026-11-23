@@ -111,7 +111,7 @@ const ReadingStatsPage = () => {
             {dailyProgress >= 100 && (
               <div className="flex items-center gap-2 mt-2 text-green-600 text-sm">
                 <Award className="w-4 h-4" />
-                <span className="font-medium">أحسنت! لقد حققت هدفك اليومي 🎉</span>
+                <span className="font-medium">أحسنت! لقد حققت هدفك اليومي</span>
               </div>
             )}
           </div>
@@ -189,7 +189,7 @@ const ReadingStatsPage = () => {
                 <p className="text-3xl font-bold text-foreground">
                   {convertToArabicNumber(stats.streakDays)}
                 </p>
-                <p className="text-sm text-muted-foreground">يوم 🔥</p>
+                <p className="text-sm text-muted-foreground">يوم متتالي</p>
               </div>
               {stats.streakDays >= 7 && (
                 <div className="bg-orange-500/20 px-2 py-1 rounded-full">

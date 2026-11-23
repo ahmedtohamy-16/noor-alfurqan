@@ -31,7 +31,7 @@ const TasbihCounter = ({ count, increment, reset, saveSession, appearance }: Tas
     setIsPressed(true);
     setTimeout(() => setIsPressed(false), 120);
     if (count > 0 && (count + 1) % 33 === 0) {
-      toast.success(`✨ ${arabic((count + 1) / 33)} × ٣٣`);
+      toast.success(`${arabic((count + 1) / 33)} × ٣٣`);
     }
   };
 

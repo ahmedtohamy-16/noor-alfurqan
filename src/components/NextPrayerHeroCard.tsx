@@ -1,3 +1,4 @@
+import { rememberFajrTime } from "@/lib/displayFormat";
 import { recommendedPrayerMethod } from "@/lib/prayerMethods";
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -32,6 +33,7 @@ const fetchPrayerTimes = async (lat: number, lng: number, method: number): Promi
     `https://api.aladhan.com/v1/timings/${dateStr}?latitude=${lat}&longitude=${lng}&method=${method}`
   );
   const data = await response.json();
+  rememberFajrTime(data.data.timings?.Fajr);
   return data.data.timings;
 };
 

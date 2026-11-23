@@ -106,7 +106,7 @@ export const useDailyWird = () => {
         });
 
         if (isCompleted) {
-          toast.success("🎉 مبارك! أتممت وردك اليومي");
+          toast.success("مبارك! أتممت وردك اليومي");
         }
       } catch (error) {
         console.error("Error updating wird:", error);

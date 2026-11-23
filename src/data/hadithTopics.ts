@@ -8,39 +8,38 @@ export interface HadithTopic {
   id: string;
   label: string;
   keywords: string[]; // normalized
-  emoji?: string;
 }
 
 const T = (raw: string[]): string[] => raw.map(normalizeArabic);
 
 export const HADITH_TOPICS: HadithTopic[] = [
-  { id: "iman",     label: "الإيمان", emoji: "☪️",
+  { id: "iman",     label: "الإيمان",
     keywords: T(["إيمان", "آمن", "يؤمن", "تصديق", "الإسلام", "اسلام"]) },
-  { id: "salah",    label: "الصلاة", emoji: "🕌",
+  { id: "salah",    label: "الصلاة",
     keywords: T(["صلاة", "صلى", "ركع", "سجد", "وضوء", "أذان", "جماعة"]) },
-  { id: "zakat",    label: "الزكاة", emoji: "💰",
+  { id: "zakat",    label: "الزكاة",
     keywords: T(["زكاة", "صدقة", "أنفق", "إنفاق", "تصدق"]) },
-  { id: "siyam",    label: "الصيام", emoji: "🌙",
+  { id: "siyam",    label: "الصيام",
     keywords: T(["صوم", "صام", "أفطر", "رمضان", "صائم"]) },
-  { id: "hajj",     label: "الحج", emoji: "🕋",
+  { id: "hajj",     label: "الحج",
     keywords: T(["حج", "عمرة", "طواف", "كعبة", "إحرام", "عرفة"]) },
-  { id: "akhlaq",   label: "الأخلاق", emoji: "🤝",
+  { id: "akhlaq",   label: "الأخلاق",
     keywords: T(["خلق", "صدق", "أمانة", "حياء", "تواضع", "حلم", "صبر"]) },
-  { id: "athkar",   label: "الأذكار", emoji: "📿",
+  { id: "athkar",   label: "الأذكار",
     keywords: T(["ذكر", "سبحان", "حمد", "لا إله إلا الله", "تسبيح", "استغفار"]) },
-  { id: "dua",      label: "الدعاء", emoji: "🤲",
+  { id: "dua",      label: "الدعاء",
     keywords: T(["دعاء", "اللهم", "ادع", "يدعو"]) },
-  { id: "quran",    label: "القرآن", emoji: "📖",
+  { id: "quran",    label: "القرآن",
     keywords: T(["قرآن", "تلاوة", "آية", "سورة", "حفظ"]) },
-  { id: "family",   label: "الأسرة", emoji: "👨‍👩‍👧",
+  { id: "family",   label: "الأسرة",
     keywords: T(["والد", "أم", "أب", "ابن", "أهل", "زوج", "زوجة", "رحم"]) },
-  { id: "jihad",    label: "الجهاد", emoji: "🛡️",
+  { id: "jihad",    label: "الجهاد",
     keywords: T(["جهاد", "شهيد", "غزوة", "سبيل الله"]) },
-  { id: "ilm",      label: "العلم", emoji: "📚",
+  { id: "ilm",      label: "العلم",
     keywords: T(["علم", "تعلم", "عالم", "فقه", "تفقه"]) },
-  { id: "muamala",  label: "المعاملات", emoji: "🤲",
+  { id: "muamala",  label: "المعاملات",
     keywords: T(["بيع", "شراء", "ربا", "تجارة", "كسب", "مال"]) },
-  { id: "manners",  label: "الآداب", emoji: "✨",
+  { id: "manners",  label: "الآداب",
     keywords: T(["آداب", "سلام", "ضيف", "طعام", "شراب", "نوم"]) },
 ];
 

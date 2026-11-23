@@ -159,7 +159,7 @@ export const useFCMNotifications = () => {
       await updateSettings({ notifications_enabled: true });
       setState((prev) => ({ ...prev, isEnabled: true }));
 
-      toast.success("تم تفعيل الإشعارات ✅");
+      toast.success("تم تفعيل الإشعارات");
       return true;
     } catch (error) {
       console.error("❌ Enable notifications error:", error);
@@ -217,7 +217,7 @@ export const useFCMNotifications = () => {
 
     try {
       // Send local notification for testing
-      sendLocalNotification("🧪 اختبار الإشعارات", "الإشعارات تعمل بنجاح!");
+      sendLocalNotification("اختبار الإشعارات", "الإشعارات تعمل بنجاح!");
       toast.success("تم إرسال إشعار الاختبار!");
       return true;
     } catch (error) {

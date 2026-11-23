@@ -32,3 +32,7 @@ Decisions: run the move in a remixed copy; no accounts migrated (fresh start, ow
 - [ ] Owner: create Supabase project under tohamy.projects@gmail.com, remix this app, connect Supabase in the copy — blocked on owner
 - [ ] In the copy: recreate schema, buckets, functions; move Firebase data paths to Supabase; disable AI; test; switch domain
 - Block/unblock/role controls stay disabled
+
+- [x] استبدال الإيموجي بأيقونات SVG
+- [x] إعادة تصميم صفحة الأذكار
+- [x] التحية تبدأ "صباح الخير" من الفجر

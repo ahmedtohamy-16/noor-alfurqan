@@ -206,7 +206,7 @@ const HadithCard = ({
             onClick={() => setIsExpanded(!isExpanded)}
             className="mt-4 text-sm text-primary hover:text-primary/80 font-medium flex items-center gap-1.5 transition-colors"
           >
-            {isExpanded ? 'عرض أقل ↑' : 'قراءة المزيد ↓'}
+            {isExpanded ? 'عرض أقل' : 'قراءة المزيد'}
           </button>
         )}
       </div>

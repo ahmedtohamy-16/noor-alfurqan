@@ -339,7 +339,7 @@ const RuqyahPage = () => {
               {currentItem.repeatCount && currentItem.repeatCount > 1 && (
                 <p className="text-primary text-sm mt-4">
                   {(repeatCount[currentItem.id] || 0) >= currentItem.repeatCount 
-                    ? "✓ تم الإكمال" 
+                    ? "تم الإكمال" 
                     : `اضغط للتكرار • ${currentItem.repeatCount - (repeatCount[currentItem.id] || 0)} متبقي`}
                 </p>
               )}

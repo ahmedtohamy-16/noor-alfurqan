@@ -1,3 +1,4 @@
+import { rememberFajrTime } from "@/lib/displayFormat";
 import { recommendedPrayerMethod } from "@/lib/prayerMethods";
 import { useState, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -88,13 +89,14 @@ const fetchPrayerTimes = async (lat: number, lng: number, method: number, madhab
   const dateStr = `${today.getDate()}-${today.getMonth() + 1}-${today.getFullYear()}`;
   const key = cacheKey(lat, lng, method, madhab, dateStr);
   const cached = readCache(key);
-  if (cached) return cached;
+  if (cached) { rememberFajrTime(cached.Fajr); return cached; }
   const r = await fetch(`https://api.aladhan.com/v1/timings/${dateStr}?latitude=${lat}&longitude=${lng}&method=${method}&school=${madhab}`);
   if (!r.ok) throw new Error(`Prayer API error: ${r.status}`);
   const d = await r.json();
   const timings = d?.data?.timings;
   if (!timings) throw new Error("بيانات المواقيت غير متاحة");
   writeCache(key, timings);
+  rememberFajrTime(timings.Fajr);
   return timings;
 };
 
@@ -228,7 +230,7 @@ const PrayerTimesPage = () => {
       }
       if (t.getTime() > now) {
         timers.push(window.setTimeout(() => {
-          toast.success(`🕌 حان الآن وقت صلاة ${p.name}`, { duration: 10000 });
+          toast.success(`حان الآن وقت صلاة ${p.name}`, { duration: 10000 });
           if (settings.notifications_enabled) {
             playAdhan(getAdhanUrl(settings.adhan_sound as AdhanSoundId, p.key === "Fajr"), p.name);
           }

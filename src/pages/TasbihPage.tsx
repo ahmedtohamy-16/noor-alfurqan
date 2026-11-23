@@ -9,7 +9,7 @@ import { useTasbih } from "@/hooks/useTasbih";
 import mosqueBg from "@/assets/mosque-night-hero.jpg";
 import { cn } from "@/lib/utils";
 import MobileMenu from "@/components/MobileMenu";
-import { greetingForHour } from "@/lib/displayFormat";
+import { greetingForTime } from "@/lib/displayFormat";
 
 const quickDhikrs = [
   { text: "سبحان الله", count: 33 },
@@ -23,7 +23,7 @@ const quickDhikrs = [
 const TasbihPage = () => {
   const { stats, currentDhikr, changeDhikr, count, increment, reset, saveSession, appearance, updateAppearance } = useTasbih();
   const [dailyGoal, setDailyGoal] = useState(1000);
-  const greeting = greetingForHour(new Date().getHours());
+  const greeting = greetingForTime();
   const [showSettings, setShowSettings] = useState(false);
 
   useEffect(() => {
@@ -55,7 +55,7 @@ const TasbihPage = () => {
               <BarChart3 className="w-5 h-5" />
             </Link>
             <div className="text-center text-white">
-              <p className="text-sm opacity-90">{greeting} <span>👋</span></p>
+              <p className="text-sm opacity-90">{greeting}</p>
             </div>
             <MobileMenu className="bg-primary-foreground/15 text-primary-foreground hover:bg-primary-foreground/25" />
           </div>

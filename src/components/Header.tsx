@@ -6,7 +6,7 @@ import ThemeToggle from "./ThemeToggle";
 import { useAuth } from "@/hooks/useAuth";
 import HeaderLocationButton from "./HeaderLocationButton";
 import MobileMenu from "./MobileMenu";
-import { greetingForHour } from "@/lib/displayFormat";
+import { greetingForTime } from "@/lib/displayFormat";
 
 const GREETING_KEY = "noor:appStartTs";
 const GREETING_DURATION_MS = 3 * 60 * 1000; // 3 minutes
@@ -34,7 +34,7 @@ const Header = () => {
   }, []);
 
   const isHome = location.pathname === "/";
-  const greeting = greetingForHour(new Date().getHours());
+  const greeting = greetingForTime();
   // Use full registered display name (no split). Guests get no salam at all.
   const displayName =
     (userProfile as any)?.display_name ||

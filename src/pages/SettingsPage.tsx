@@ -375,7 +375,7 @@ const SettingsPage = () => {
                 {settings.dst_mode === 'auto' && settings.country_code && (
                   <p className="text-xs text-muted-foreground bg-muted/50 p-3 rounded-lg">
                     {countryHasDST(settings.country_code) 
-                      ? `دولتك (${settings.country_code}) تطبق التوقيت الصيفي. ${isInDSTForCountry(settings.country_code) ? "حالياً: مُفعّل ✓" : "حالياً: غير مُفعّل"}`
+                      ? `دولتك (${settings.country_code}) تطبق التوقيت الصيفي. ${isInDSTForCountry(settings.country_code) ? "حالياً: مُفعّل" : "حالياً: غير مُفعّل"}`
                       : `دولتك (${settings.country_code}) لا تطبق التوقيت الصيفي.`}
                   </p>
                 )}

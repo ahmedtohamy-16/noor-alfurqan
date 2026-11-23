@@ -240,7 +240,7 @@ const MemorizationPage = () => {
           {mode === "due" ? (
             dueAyahs.length === 0 ? (
               <Card className="p-8 text-center text-muted-foreground">
-                لا توجد آيات تحتاج مراجعة الآن — أحسنت! 🌿
+                لا توجد آيات تحتاج مراجعة الآن — أحسنت!
               </Card>
             ) : (
               dueAyahs.map((r) => {

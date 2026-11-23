@@ -522,7 +522,7 @@ const KhatmahCard = ({
               myParticipation.is_completed ? "text-primary" : "text-muted-foreground"
             }`}
           >
-            {myParticipation.is_completed ? "مكتمل ✓" : "اضغط عند الإتمام"}
+            {myParticipation.is_completed ? "مكتمل" : "اضغط عند الإتمام"}
           </span>
         </div>
       )}
@@ -545,7 +545,7 @@ const KhatmahCard = ({
                   }`}
                 >
                   ج{convertToArabicNumber(p.assigned_juz)}
-                  {p.is_completed && " ✓"}
+                  {p.is_completed && " (مكتمل)"}
                 </span>
               ))}
             {participants.length > 6 && (

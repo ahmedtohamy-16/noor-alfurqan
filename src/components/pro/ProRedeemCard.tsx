@@ -55,7 +55,7 @@ const ProRedeemCard = () => {
         },
         { merge: true }
       );
-      toast.success("تم تفعيل Pro — استمتع بالمزايا 🎉");
+      toast.success("تم تفعيل Pro — استمتع بالمزايا");
       setCode("");
     } catch (e: any) {
       console.error(e);

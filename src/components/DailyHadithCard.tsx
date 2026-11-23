@@ -19,7 +19,8 @@ import {
   Pin,
   PinOff,
   Heart,
-  Image
+  Image,
+  Quote,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -226,18 +227,14 @@ const DailyHadithCard = () => {
           {currentHadith && (
             <div className="space-y-4">
               <div className="relative">
-                <div className="absolute -right-2 top-0 text-6xl text-primary/10 font-serif leading-none">
-                  ❝
-                </div>
+                <Quote aria-hidden="true" className="absolute -right-2 top-0 w-10 h-10 text-primary/10" />
                 <p className={cn(
                   "quran-text text-lg md:text-xl leading-loose pr-6 text-foreground transition-all duration-300",
                   !isExpanded && isLongText && "line-clamp-4"
                 )}>
                   {displayText}
                 </p>
-                <div className="absolute -left-2 bottom-0 text-6xl text-primary/10 font-serif leading-none rotate-180">
-                  ❝
-                </div>
+                <Quote aria-hidden="true" className="absolute -left-2 bottom-0 w-10 h-10 text-primary/10 rotate-180" />
               </div>
 
               {/* Read More Button */}

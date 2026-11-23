@@ -49,7 +49,7 @@ export const useAdhanAudio = () => {
       
       if (event.data?.type === "ADHAN_PLAYING") {
         console.log("🔊 Adhan is playing:", event.data.prayerName);
-        toast.info(`🕌 أذان صلاة ${event.data.prayerName}`, {
+        toast.info(`أذان صلاة ${event.data.prayerName}`, {
           action: {
             label: "إيقاف",
             onClick: () => stopAdhan(),
@@ -80,7 +80,7 @@ export const useAdhanAudio = () => {
 
       await audioRef.current.play();
       
-      toast.info(`🕌 أذان صلاة ${prayerName || "الصلاة"}`, {
+      toast.info(`أذان صلاة ${prayerName || "الصلاة"}`, {
         action: {
           label: "إيقاف",
           onClick: () => stopAdhan(),
