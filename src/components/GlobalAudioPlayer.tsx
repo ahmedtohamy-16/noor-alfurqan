@@ -104,9 +104,10 @@ const GlobalAudioPlayer = () => {
           <button
             onClick={() => setExpanded(true)}
             aria-label="فتح المشغل"
-            className="pointer-events-auto absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground rounded-full w-8 h-8 shadow-lg flex items-center justify-center hover:bg-primary/90 transition-all hover:scale-105"
+            className="pointer-events-auto absolute -top-11 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground rounded-full h-10 min-w-[44px] px-4 gap-1.5 text-sm font-semibold shadow-lg border-2 border-background flex items-center justify-center hover:bg-primary/90 transition-all"
           >
             <ChevronUp className="w-4 h-4" />
+            <span>فتح المشغل</span>
           </button>
 
           <div className="pointer-events-auto mx-auto max-w-2xl bg-card/90 backdrop-blur-xl border-t border-border/60 shadow-lg">

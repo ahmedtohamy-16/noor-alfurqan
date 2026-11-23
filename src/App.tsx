@@ -4,7 +4,14 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useParams, useLocation } from "react-router-dom";
+
+// Old links used /quran/:n; keep them working by redirecting to /surah/:n.
+const LegacySurahRedirect = () => {
+  const { surahNumber } = useParams();
+  const { search, hash } = useLocation();
+  return <Navigate to={`/surah/${surahNumber}${search}${hash}`} replace />;
+};
 import { HelmetProvider } from "react-helmet-async";
 import { ThemeProvider } from "@/hooks/useTheme";
 import { AuthProvider } from "@/hooks/useAuth";
@@ -95,6 +102,7 @@ const App = () => (
                           <Route path="/" element={<Index />} />
                           <Route path="/quran" element={<QuranPage />} />
                           <Route path="/surah/:surahNumber" element={<SurahPage />} />
+                          <Route path="/quran/:surahNumber" element={<LegacySurahRedirect />} />
                           <Route path="/mushaf" element={<MushafPage />} />
                           <Route path="/favorites" element={<FavoritesPage />} />
                           <Route path="/search" element={<SearchPage />} />

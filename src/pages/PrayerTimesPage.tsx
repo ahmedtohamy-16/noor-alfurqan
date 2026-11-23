@@ -650,7 +650,7 @@ const PrayerTimesPage = () => {
             <div className="flex-1">
               <h3 className="font-bold text-lg">تنزيل جدول المواقيت</h3>
               <p className={cn("text-xs mt-1 leading-relaxed", palette.subText)}>
-                تصدير شهر هجري أو ميلادي كامل أو أسبوع واحد بصيغة PDF أو صورة لمدينة {settings.city_name || "—"}
+                تصدير شهر هجري أو ميلادي كامل أو أسبوع واحد بصيغة PDF أو صورة{settings.city_name ? ` لمدينة ${settings.city_name}` : " بعد تحديد موقعك"}
               </p>
             </div>
           </div>
