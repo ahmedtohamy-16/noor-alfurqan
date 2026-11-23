@@ -15,14 +15,15 @@ import {
   Smile, BadgeInfo, MessagesSquare, MessageCircleReply, Egg, Dog, MessageSquareHeart, Award,
   Badge, CircleDot, SquareDashed, Mountain, MountainSnow, Landmark, CircleDashed, PartyPopper,
   ThumbsUp, Cross, ScanEye, Siren, Beef, ShieldX, RefreshCw, Gem,
-  CircleGauge, BookHeart,
+  CircleGauge, BookHeart, Sunset,
   type LucideIcon,
 } from "lucide-react";
 import { KaabaIcon, MosqueIcon } from "@/components/icons/IslamicIcons";
 
 // Explicit subject-based mapping: similar sections never share the same glyph.
 const SECTION_ICONS: Record<string, LucideIcon> = {
-  "أذكار الصباح والمساء": Sun,
+  "أذكار الصباح": Sun,
+  "أذكار المساء": Sunset,
   "أذكار النوم": Bed,
   "أذكار الاستيقاظ من النوم": Sunrise,
   "دعاء دخول الخلاء": DoorClosed,

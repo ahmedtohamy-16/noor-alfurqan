@@ -2,11 +2,12 @@ import { normalizeArabic } from "@/lib/arabicNormalize";
 
 export interface AzkarDhikr { id: number; text: string; count: number; audio: string; filename: string }
 export interface AzkarSection { id: number; category: string; audio: string; filename: string; array: AzkarDhikr[] }
-export type AzkarFilter = "all" | "morning" | "sleep" | "prayer" | "fav";
+export type AzkarFilter = "all" | "morning" | "evening" | "sleep" | "prayer" | "fav";
 
 export const AZKAR_FILTERS: { id: AzkarFilter; label: string }[] = [
   { id: "all", label: "الكل" },
-  { id: "morning", label: "الصباح والمساء" },
+  { id: "morning", label: "الصباح" },
+  { id: "evening", label: "المساء" },
   { id: "sleep", label: "النوم" },
   { id: "prayer", label: "بعد الصلاة والمسجد" },
   { id: "fav", label: "المفضلة" },
@@ -21,7 +22,8 @@ export function sectionInFilter(s: AzkarSection, f: AzkarFilter, favs: number[])
   switch (f) {
     case "all": return true;
     case "fav": return favs.includes(s.id);
-    case "morning": return has(s.category, ["الصباح", "المساء"]);
+    case "morning": return has(s.category, ["الصباح"]);
+    case "evening": return has(s.category, ["المساء"]);
     case "sleep": return has(s.category, ["النوم", "تقلب ليلا", "الرؤيا"]);
     case "prayer": return has(s.category, ["الصلاة", "المسجد", "السلام من", "الوتر", "التشهد", "الركوع", "السجود", "السجدتين", "الاستفتاح", "الآذان", "الوضوء", "الاستخارة"]);
   }

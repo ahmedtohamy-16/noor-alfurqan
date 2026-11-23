@@ -1,5 +1,9 @@
 # Roadmap
 
+## Separate daily azkar and Quran clarity
+- [x] Separate morning/evening sections with source-documented variants, independent progress and no mismatched audio; four rule tests passed.
+- [x] Render Quran passages as separate readable blocks using the Quran's selected font and size; verified mobile/desktop, day/night, daily filters, evening variants and independent counting without runtime errors.
+
 ## Touch menus and remaining worship details
 - [x] Sweep Mushaf, Quran/search results, favorites, daily verse and ruqyah: no alternate pointer-down ayah menu; fix reversed completion percentages in dhikr reader, last reading, khatmah and reading stats without changing records or settings.
 - [x] Open ayah menus only after a stationary tap; verified real touch swipes do not open menus and scrolling dismisses an open menu.

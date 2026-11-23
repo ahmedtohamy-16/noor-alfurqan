@@ -26,3 +26,5 @@
 - Surah reading position uses the first ayah crossing the line beneath the sticky reading bar and runtime corpus page/juz metadata, so its page indicator follows scrolling rather than the surah's starting page.
 - Ayah menus open on a completed stationary pointer gesture, not pointer-down, and dismiss on scroll/touchmove/wheel so scrolling never opens or carries a verse menu.
 - Dhikr catalogue icons use an explicit subject-based mapping per section, avoiding shared keyword matches that give related sections identical glyphs.
+- Daily azkar are derived from the bundled source with stable morning/existing IDs and a separate evening ID; only documented evening variants are applied and mismatched recordings are omitted to preserve text/audio accuracy and existing progress.
+- Dhikr reading renders Quran excerpts as separate blocks with global Quran font/size settings and a safe minimum line height so vowel marks cannot collide between lines.

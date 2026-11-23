@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { arabicDigits as ar } from "@/lib/displayFormat";
 import { AZKAR_FILTERS, searchAzkar, sectionInFilter, sectionProgress, type AzkarFilter, type AzkarSection, type AzkarDhikr } from "@/lib/azkarRules";
 import { sectionIcon } from "./sectionIcons";
+import DhikrText from "./DhikrText";
 import { toast } from "sonner";
 
 const FAV_KEY = "azkar_favorite_sections";
@@ -302,7 +303,7 @@ export function AzkarReader({ section, index, progress, isPlaying, onBack, onInd
         <Card role="button" tabIndex={0} onClick={tap} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); tap(); } }}
           aria-label="اضغط على البطاقة للعد"
           className={cn("p-6 rounded-3xl cursor-pointer select-none active:scale-[0.99] transition-transform", remaining === 0 && "ring-2 ring-primary")}>
-          <p className="font-quran text-xl sm:text-2xl leading-[2.3] text-foreground text-center whitespace-pre-line">{dhikr.text}</p>
+          <DhikrText text={dhikr.text} />
         </Card>
 
         <div className="grid grid-cols-[minmax(0,1fr)_112px_minmax(0,1fr)] items-center gap-2 sm:gap-5 mx-1 sm:mx-4">
@@ -315,9 +316,9 @@ export function AzkarReader({ section, index, progress, isPlaying, onBack, onInd
               </span>
             </Ring>
           </button>
-          <Button variant="outline" onClick={() => onToggleAudio(dhikr)} className="h-12 w-full min-w-0 rounded-full gap-1.5 px-2 sm:px-4">
+          {dhikr.audio ? <Button variant="outline" onClick={() => onToggleAudio(dhikr)} className="h-12 w-full min-w-0 rounded-full gap-1.5 px-2 sm:px-4">
             {isPlaying ? <Pause className="w-4 h-4 shrink-0" /> : <Play className="w-4 h-4 shrink-0" />} {isPlaying ? "إيقاف" : "استماع"}
-          </Button>
+          </Button> : <span aria-hidden="true" />}
         </div>
         <p className="text-center text-xs text-muted-foreground arabic-digits">التكرار {ar(count)} من {ar(dhikr.count)} · اضغط البطاقة أو الدائرة للعد</p>
       </main>

@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import Header from "@/components/Header";
 import adhkarData from "@/data/adhkar.json";
+import { separateDailyAzkar } from "@/lib/dailyAzkar";
 import { toast } from "sonner";
 import { useDownloadManager } from "@/components/DownloadManager";
 import { useNotifications } from "@/hooks/useNotifications";
@@ -37,12 +38,8 @@ interface UserProgress {
   [key: string]: number;
 }
 
-// Morning and Evening category IDs
-const MORNING_CATEGORY_ID = 1; // أذكار الصباح
-const EVENING_CATEGORY_ID = 2; // أذكار المساء
-
 const AzkarPage = () => {
-  const [categories] = useState<AzkarCategory[]>(adhkarData as AzkarCategory[]);
+  const [categories] = useState<AzkarCategory[]>(() => separateDailyAzkar(adhkarData));
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<AzkarCategory | null>(null);
   const [progress, setProgress] = useState<UserProgress>({});
@@ -199,9 +196,10 @@ const AzkarPage = () => {
       updateTask(taskId, { status: "downloading", progress: 0 });
       
       let completed = 0;
-      const total = categories.length;
+      const downloadable = categories.filter(category => category.audio);
+      const total = downloadable.length;
 
-      for (const category of categories) {
+      for (const category of downloadable) {
         try {
           const audioUrl = `${AUDIO_BASE_URL}${category.audio}`;
           const response = await fetch(audioUrl);
@@ -227,7 +225,7 @@ const AzkarPage = () => {
       }
 
       updateTask(taskId, { status: "completed", progress: 100 });
-      toast.success("تم تحميل جميع الأذكار للاستخدام بدون إنترنت");
+      toast.success("تم تحميل تسجيلات الأذكار المتاحة للاستخدام بدون إنترنت");
     } catch (error) {
       updateTask(taskId, { status: "error", error: "فشل التحميل" });
       toast.error("حدث خطأ في التحميل");
