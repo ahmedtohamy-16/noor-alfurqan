@@ -23,6 +23,7 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Hadith, getBookById } from '@/data/hadithBooks';
 import { cn } from '@/lib/utils';
+import { arabicDigits } from '@/lib/displayFormat';
 
 interface HadithCardProps {
   hadith: Hadith;
@@ -106,7 +107,7 @@ const HadithCard = ({
           
           <div className="flex items-center gap-1.5 text-muted-foreground">
             <span className="text-xs opacity-60">الحديث</span>
-            <span className="font-semibold text-sm text-foreground/80">#{hadith.hadithNumber}</span>
+            <span className="font-semibold text-sm text-foreground/80">#{arabicDigits(hadith.hadithNumber)}</span>
           </div>
         </div>
         

@@ -12,6 +12,7 @@ import { useUserSettings } from "@/hooks/useUserSettings";
 import { useFCMNotifications } from "@/hooks/useFCMNotifications";
 import { useAdhanAudio, adhanSounds, AdhanSoundId } from "@/hooks/useAdhanAudio";
 import { toast } from "sonner";
+import { arabicDigits } from "@/lib/displayFormat";
 
 interface AzkarSettings {
   morning: { enabled: boolean; time: string };
@@ -364,7 +365,7 @@ const NotificationSettingsPage = () => {
                                 <SelectContent>
                                   {item.times.map((time) => (
                                     <SelectItem key={time} value={time}>
-                                      {time}
+                                      {arabicDigits(time)}
                                     </SelectItem>
                                   ))}
                                 </SelectContent>

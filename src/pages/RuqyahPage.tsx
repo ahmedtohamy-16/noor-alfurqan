@@ -9,6 +9,9 @@ import Header from "@/components/Header";
 import { ruqyahCategories, ruqyahAudioLinks, RuqyahCategory, RuqyahItem, getAyahAudioUrl } from "@/data/ruqyahData";
 import { toast } from "sonner";
 import { useDownloadManager } from "@/components/DownloadManager";
+import { arabicDigits } from "@/lib/displayFormat";
+import { useFavorites } from "@/hooks/useFavorites";
+import FavoriteAyahButton from "@/components/FavoriteAyahButton";
 
 const RuqyahPage = () => {
   const [selectedCategory, setSelectedCategory] = useState<RuqyahCategory | null>(null);
@@ -20,6 +23,7 @@ const RuqyahPage = () => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const fullAudioRef = useRef<HTMLAudioElement | null>(null);
   const { addTask, updateTask } = useDownloadManager();
+  const { isFavorite, toggleFavorite } = useFavorites();
 
   useEffect(() => {
     return () => {
@@ -258,7 +262,7 @@ const RuqyahPage = () => {
                     <h3 className="font-bold text-foreground text-sm">{category.name}</h3>
                     <p className="text-xs text-muted-foreground mt-1">{category.description}</p>
                     <Badge variant="secondary" className="mt-2 text-xs">
-                      {category.items.length} {category.items.length === 1 ? "عنصر" : "عناصر"}
+                      {arabicDigits(category.items.length)} {category.items.length === 1 ? "عنصر" : "عناصر"}
                     </Badge>
                   </div>
                   <ChevronLeft className="w-5 h-5 text-muted-foreground shrink-0" />
@@ -292,7 +296,7 @@ const RuqyahPage = () => {
           <div className="flex-1">
             <h1 className="text-xl font-bold text-foreground truncate">{selectedCategory.name}</h1>
             <p className="text-muted-foreground text-sm">
-              {currentIndex + 1} من {selectedCategory.items.length}
+              {arabicDigits(currentIndex + 1)} من {arabicDigits(selectedCategory.items.length)}
             </p>
           </div>
         </div>
@@ -305,7 +309,7 @@ const RuqyahPage = () => {
                 <div className="flex justify-between text-sm mb-2">
                   <span className="text-muted-foreground">عدد التكرار</span>
                   <span className="font-medium text-primary">
-                    {repeatCount[currentItem.id] || 0}/{currentItem.repeatCount}
+                    {arabicDigits(repeatCount[currentItem.id] || 0)}/{arabicDigits(currentItem.repeatCount)}
                   </span>
                 </div>
                 <Progress 
@@ -332,7 +336,7 @@ const RuqyahPage = () => {
 
               {currentItem.source && (
                 <p className="text-sm text-muted-foreground mt-2">
-                  المصدر: {currentItem.source}
+                  المصدر: {arabicDigits(currentItem.source)}
                 </p>
               )}
 
@@ -340,13 +344,15 @@ const RuqyahPage = () => {
                 <p className="text-primary text-sm mt-4">
                   {(repeatCount[currentItem.id] || 0) >= currentItem.repeatCount 
                     ? "تم الإكمال" 
-                    : `اضغط للتكرار • ${currentItem.repeatCount - (repeatCount[currentItem.id] || 0)} متبقي`}
+                    : `اضغط للتكرار • ${arabicDigits(currentItem.repeatCount - (repeatCount[currentItem.id] || 0))} متبقي`}
                 </p>
               )}
             </Card>
 
             {/* Actions */}
             <div className="flex flex-wrap justify-center gap-2 mt-4">
+              {currentItem.surahNumber && currentItem.ayahNumber && <FavoriteAyahButton ayah={currentItem.ayahNumber} active={isFavorite(currentItem.surahNumber, currentItem.ayahNumber)} onToggle={() => toggleFavorite(currentItem.surahNumber || 0, currentItem.ayahNumber || 0)} />}
+              {currentItem.surahNumber && !currentItem.ayahNumber && <Button asChild variant="outline"><Link to={`/surah/${currentItem.surahNumber}?ayah=${currentItem.ayahStart || 1}`}>قراءة الآيات</Link></Button>}
               <Button
                 variant="outline"
                 className="gap-2"

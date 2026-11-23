@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useHadith } from "./useHadith";
 import { hadithBooks, type Hadith } from "@/data/hadithBooks";
+import { hasVerifiedHadithContent } from "@/lib/hadithContent";
 
 const STORAGE_KEY = "hadith_of_the_day_v2";
 
@@ -19,7 +20,7 @@ export const useHadithOfTheDay = () => {
       const cached = localStorage.getItem(STORAGE_KEY);
       if (cached) {
         const parsed = JSON.parse(cached);
-        if (parsed?.date === todayKey && parsed?.hadith) {
+        if (parsed?.date === todayKey && hasVerifiedHadithContent(parsed?.hadith)) {
           setHadith(parsed.hadith);
           setLoading(false);
           return;

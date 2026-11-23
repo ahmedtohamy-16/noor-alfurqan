@@ -30,6 +30,7 @@ import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp
 import { passwordRules, isPasswordValid, hasArabic } from "@/lib/passwordRules";
 import { validateEmail } from "@/lib/emailRules";
 import { validateUsername, usernameCandidates, sanitizeUsernameInput } from "@/lib/usernameRules";
+import { arabicDigits } from "@/lib/displayFormat";
 
 const GoogleIcon = () => (
   <svg viewBox="0 0 24 24" className="w-5 h-5" aria-hidden="true">
@@ -359,7 +360,7 @@ const AuthPage = () => {
               <CloudUpload className="w-5 h-5 text-primary flex-shrink-0" />
               <div className="text-right text-xs">
                 <p className="font-bold text-primary">لديك بيانات محفوظة</p>
-                <p className="text-muted-foreground">{guestDataInfo.summary}</p>
+                <p className="text-muted-foreground">{arabicDigits(guestDataInfo.summary)}</p>
               </div>
             </div>
           )}

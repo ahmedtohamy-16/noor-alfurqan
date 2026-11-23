@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { arabicDigits } from "@/lib/displayFormat";
 import { useNavigate } from "react-router-dom";
 import { 
   Users, 
@@ -315,7 +316,7 @@ const AdminPage = () => {
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between">
                   <div className="text-right">
-                    <p className="text-2xl font-bold">{stats.student}</p>
+                    <p className="text-2xl font-bold">{arabicDigits(stats.student)}</p>
                     <p className="text-sm text-muted-foreground">طالب</p>
                   </div>
                   <GraduationCap className="w-10 h-10 text-primary opacity-80" />
@@ -326,7 +327,7 @@ const AdminPage = () => {
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between">
                   <div className="text-right">
-                    <p className="text-2xl font-bold">{stats.teacher}</p>
+                    <p className="text-2xl font-bold">{arabicDigits(stats.teacher)}</p>
                     <p className="text-sm text-muted-foreground">معلم</p>
                   </div>
                   <Users className="w-10 h-10 text-green-500 opacity-80" />
@@ -337,7 +338,7 @@ const AdminPage = () => {
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between">
                   <div className="text-right">
-                    <p className="text-2xl font-bold">{totalStats.lessons}</p>
+                    <p className="text-2xl font-bold">{arabicDigits(totalStats.lessons)}</p>
                     <p className="text-sm text-muted-foreground">درس</p>
                   </div>
                   <BookOpen className="w-10 h-10 text-blue-500 opacity-80" />
@@ -348,7 +349,7 @@ const AdminPage = () => {
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between">
                   <div className="text-right">
-                    <p className="text-2xl font-bold">{totalStats.favorites}</p>
+                    <p className="text-2xl font-bold">{arabicDigits(totalStats.favorites)}</p>
                     <p className="text-sm text-muted-foreground">مفضلة</p>
                   </div>
                   <BarChart3 className="w-10 h-10 text-amber-500 opacity-80" />
@@ -469,7 +470,7 @@ const AdminPage = () => {
                   </div>
                 </DialogContent>
               </Dialog>
-              <h3 className="text-lg font-semibold">الدروس ({lessons.length})</h3>
+              <h3 className="text-lg font-semibold">الدروس ({arabicDigits(lessons.length)})</h3>
             </div>
 
             {lessons.length === 0 ? (
@@ -542,7 +543,7 @@ const AdminPage = () => {
               <Card>
                 <CardHeader>
                   <CardTitle className="text-right flex items-center justify-end gap-2">
-                    <span>إدارة المستخدمين ({filteredUsers.length})</span>
+                    <span>إدارة المستخدمين ({arabicDigits(filteredUsers.length)})</span>
                     <UserCog className="w-5 h-5" />
                   </CardTitle>
                 </CardHeader>

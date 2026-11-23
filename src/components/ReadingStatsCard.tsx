@@ -1,6 +1,7 @@
 import { BookOpen, Clock, TrendingUp, Calendar } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { useReadingStats } from "@/hooks/useReadingStats";
+import { arabicDigits } from "@/lib/displayFormat";
 
 const ReadingStatsCard = () => {
   const { stats, isLoading } = useReadingStats();
@@ -48,7 +49,7 @@ const ReadingStatsCard = () => {
         <div className="bg-background/60 rounded-lg p-3 text-center">
           <Clock className="w-5 h-5 text-accent mx-auto mb-1" />
           <p className="text-lg font-bold text-foreground">
-            {stats.totalReadingTime > 0 ? formatTime(stats.totalReadingTime) : "٠"}
+            {stats.totalReadingTime > 0 ? arabicDigits(formatTime(stats.totalReadingTime)) : "٠"}
           </p>
           <p className="text-xs text-muted-foreground">وقت القراءة</p>
         </div>

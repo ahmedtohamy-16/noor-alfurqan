@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { arabicDigits } from "@/lib/displayFormat";
 import ExportThemeSelector, { exportThemes, type ExportTheme } from "./ExportThemeSelector";
 
 interface ShareAyahWithThemesProps {
@@ -125,7 +126,7 @@ const ShareAyahWithThemes = ({
     // Ayah number
     ctx.fillStyle = `${selectedTheme.accentColor}b0`;
     ctx.font = `32px ${selectedFont.family}`;
-    ctx.fillText(`الآية ${ayahNumber}`, width / 2, 195);
+    ctx.fillText(`الآية ${arabicDigits(ayahNumber)}`, width / 2, 195);
 
     // Ayah text - word wrap with LARGE CLEAR font
     ctx.fillStyle = selectedTheme.textColor;
@@ -186,7 +187,7 @@ const ShareAyahWithThemes = ({
     a.download = `ayah-${surahName}-${ayahNumber}-4K.png`;
     a.click();
     URL.revokeObjectURL(url);
-    toast.success("تم تحميل الصورة بجودة 4K");
+    toast.success("تم تحميل الصورة بجودة ٤K");
   };
 
   const handleShare = async () => {
@@ -198,8 +199,8 @@ const ShareAyahWithThemes = ({
 
       try {
         await navigator.share({
-          title: `${surahName} - الآية ${ayahNumber}`,
-          text: `${ayahText}\n\n${surahName} - الآية ${ayahNumber}\n\nنور الفرقان`,
+          title: `${surahName} - الآية ${arabicDigits(ayahNumber)}`,
+          text: `${ayahText}\n\n${surahName} - الآية ${arabicDigits(ayahNumber)}\n\nنور الفرقان`,
           files: [file],
         });
       } catch (error) {
@@ -211,7 +212,7 @@ const ShareAyahWithThemes = ({
   };
 
   const handleCopyText = () => {
-    const text = `${ayahText}\n\n${surahName} - الآية ${ayahNumber}\n\nنور الفرقان`;
+    const text = `${ayahText}\n\n${surahName} - الآية ${arabicDigits(ayahNumber)}\n\nنور الفرقان`;
     navigator.clipboard.writeText(text);
     setCopied(true);
     toast.success("تم نسخ النص");
@@ -297,7 +298,7 @@ const ShareAyahWithThemes = ({
           </Button>
           <Button onClick={handleDownload} variant="outline" className="flex-col h-auto py-3 gap-1">
             <Download className="w-5 h-5" />
-            <span className="text-xs">تحميل 4K</span>
+            <span className="text-xs">تحميل ٤K</span>
           </Button>
           <Button onClick={handleCopyText} variant="outline" className="flex-col h-auto py-3 gap-1">
             {copied ? <Check className="w-5 h-5 text-green-500" /> : <Copy className="w-5 h-5" />}

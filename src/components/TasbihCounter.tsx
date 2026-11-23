@@ -139,7 +139,7 @@ const TasbihCounter = ({ count, increment, reset, saveSession, appearance }: Tas
           </span>
           <span className="text-xs text-muted-foreground mt-2">سبحة</span>
           {cycles > 0 && (
-            <span className="mt-1 text-[11px] text-primary font-semibold">
+            <span className="mt-1 max-w-full break-all whitespace-normal text-[11px] text-primary font-semibold">
               {arabic(cycles)} × ٣٣
             </span>
           )}

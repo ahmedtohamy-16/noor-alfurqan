@@ -1,5 +1,6 @@
 import { rememberFajrTime, arabicDigits } from "@/lib/displayFormat";
 import { recommendedPrayerMethod } from "@/lib/prayerMethods";
+import { arabicCityLabel, hasLocationCoordinates } from "@/lib/cityNames";
 import { useState, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
@@ -114,18 +115,18 @@ const PrayerTimesPage = () => {
   const [nextPrayer, setNextPrayer] = useState<{ name: string; time: string; key: string } | null>(null);
   const [hijriDate, setHijriDate] = useState<string>("");
 
-  const lat = settings.latitude || 21.4225;
-  const lng = settings.longitude || 39.8262;
+  const lat = settings.latitude ?? 21.4225;
+  const lng = settings.longitude ?? 39.8262;
   const method = settings.prayer_method || recommendedPrayerMethod(settings.country_code);
   const madhab = settings.prayer_madhab || 0;
-  const hasLocation = settings.latitude && settings.longitude;
+  const hasLocation = hasLocationCoordinates(settings.latitude, settings.longitude);
 
   const [isSavingSettings, setIsSavingSettings] = useState(false);
 
   const { data: prayerTimes, isLoading: isLoadingTimes, isFetching: isFetchingTimes, error: prayerError, refetch: refetchPrayer } = useQuery({
     queryKey: ["prayerTimes", lat, lng, method, madhab],
     queryFn: () => fetchPrayerTimes(lat, lng, method, madhab),
-    enabled: !!lat && !!lng,
+    enabled: hasLocation,
     staleTime: 1000 * 60 * 60,
     gcTime: 1000 * 60 * 60 * 6,
     retry: 1,
@@ -361,7 +362,7 @@ const PrayerTimesPage = () => {
               <MapPin className="w-3.5 h-3.5" />
             </span>
             <span className="text-xs font-bold truncate">
-              {hasLocation ? settings.city_name : "حدد موقعك"}
+              {hasLocation ? arabicCityLabel(settings.city_name) : "حدد موقعك"}
             </span>
           </button>
           <h1 className="text-base font-bold tracking-tight">مواقيت الصلاة</h1>
@@ -427,7 +428,7 @@ const PrayerTimesPage = () => {
                   <p className={cn("text-[10px] mb-0.5", palette.subText)}>
                     {locationBusy ? "جاري التحديث..." : "موقعك الحالي"}
                   </p>
-                  <h2 className="font-bold text-base truncate">{settings.city_name}</h2>
+                  <h2 className="font-bold text-base truncate">{arabicCityLabel(settings.city_name)}</h2>
                   <p className={cn("text-[10px]", palette.subText)} dir="ltr">{tzLabel}</p>
                 </div>
               </div>
@@ -652,7 +653,7 @@ const PrayerTimesPage = () => {
             <div className="flex-1">
               <h3 className="font-bold text-lg">تنزيل جدول المواقيت</h3>
               <p className={cn("text-xs mt-1 leading-relaxed", palette.subText)}>
-                تصدير شهر هجري أو ميلادي كامل أو أسبوع واحد بصيغة PDF أو صورة{settings.city_name ? ` لمدينة ${settings.city_name}` : " بعد تحديد موقعك"}
+                تصدير شهر هجري أو ميلادي كامل أو أسبوع واحد بصيغة PDF أو صورة{settings.city_name ? ` — ${arabicCityLabel(settings.city_name)}` : " بعد تحديد موقعك"}
               </p>
             </div>
           </div>

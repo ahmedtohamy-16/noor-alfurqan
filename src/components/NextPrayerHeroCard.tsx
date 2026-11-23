@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import { useUserSettings } from "@/hooks/useUserSettings";
 import { Link } from "react-router-dom";
 import LocationPickerModal from "./LocationPickerModal";
+import { arabicCityLabel, hasLocationCoordinates } from "@/lib/cityNames";
 import mosqueHero from "@/assets/mosque-hero.jpg";
 
 interface PrayerTimesData {
@@ -53,12 +54,15 @@ const NextPrayerHeroCard = () => {
   const lat = settings.latitude;
   const lng = settings.longitude;
   const method = settings.prayer_method || recommendedPrayerMethod(settings.country_code);
-  const hasLocation = lat && lng;
+  const hasLocation = hasLocationCoordinates(lat, lng);
 
   const { data: prayerTimes } = useQuery({
     queryKey: ["prayerTimesHero", lat, lng, method],
-    queryFn: () => fetchPrayerTimes(lat!, lng!, method),
-    enabled: !!lat && !!lng,
+    queryFn: () => {
+      if (lat === null || lng === null) throw new Error("لم يُحدد الموقع");
+      return fetchPrayerTimes(lat, lng, method);
+    },
+    enabled: hasLocation,
     staleTime: 1000 * 60 * 60,
   });
 
@@ -181,7 +185,7 @@ const NextPrayerHeroCard = () => {
             {settings.city_name && (
               <div className="flex items-center gap-1 mt-3 text-xs opacity-90">
                 <MapPin className="w-3 h-3" />
-                <span>{settings.city_name}</span>
+                <span>{arabicCityLabel(settings.city_name)}</span>
               </div>
             )}
           </div>

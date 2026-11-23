@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { firestoreQuery, firestoreSet, firestoreDelete, COLLECTIONS } from "@/lib/firebase";
 import { toast } from "sonner";
 import Header from "@/components/Header";
+import { arabicDigits } from "@/lib/displayFormat";
 
 interface NotificationItem {
   id: string;
@@ -181,7 +182,7 @@ const NotificationsPage = () => {
             <h1 className="text-2xl font-bold text-foreground">الإشعارات</h1>
             {unreadCount > 0 && (
               <Badge variant="destructive" className="rounded-full">
-                {unreadCount}
+                {arabicDigits(unreadCount)}
               </Badge>
             )}
           </div>
@@ -264,12 +265,12 @@ const NotificationsPage = () => {
                               <span className="w-2 h-2 rounded-full bg-primary" />
                             )}
                           </div>
-                          <h3 className="font-bold text-foreground">{notification.title}</h3>
+                          <h3 className="font-bold text-foreground">{arabicDigits(notification.title)}</h3>
                           {notification.body && (
-                            <p className="text-sm text-muted-foreground mt-1">{notification.body}</p>
+                            <p className="text-sm text-muted-foreground mt-1">{arabicDigits(notification.body)}</p>
                           )}
                           <p className="text-xs text-muted-foreground mt-2">
-                            {formatDate(notification.created_at)}
+                            {arabicDigits(formatDate(notification.created_at))}
                           </p>
                         </div>
                         

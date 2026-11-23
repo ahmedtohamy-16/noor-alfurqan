@@ -3,12 +3,13 @@ import { MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useUserSettings } from "@/hooks/useUserSettings";
 import LocationPickerModal from "./LocationPickerModal";
+import { arabicCityLabel, hasLocationCoordinates } from "@/lib/cityNames";
 
 const HeaderLocationButton = () => {
   const { settings } = useUserSettings();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const hasLocation = settings.city_name && settings.latitude && settings.longitude;
+  const hasLocation = hasLocationCoordinates(settings.latitude, settings.longitude);
 
   return (
     <>
@@ -20,10 +21,10 @@ const HeaderLocationButton = () => {
       >
         <MapPin className="w-4 h-4 text-primary" />
         <span className="hidden sm:inline max-w-[120px] truncate">
-          {hasLocation ? settings.city_name : "لم يتم التحديد"}
+          {hasLocation ? arabicCityLabel(settings.city_name) : "لم يتم التحديد"}
         </span>
         <span className="sm:hidden text-xs">
-          {hasLocation ? settings.city_name : "الموقع"}
+          {hasLocation ? arabicCityLabel(settings.city_name) : "الموقع"}
         </span>
       </Button>
 

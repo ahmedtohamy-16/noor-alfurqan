@@ -6,6 +6,8 @@ import { Card } from "@/components/ui/card";
 import { useUserSettings } from "@/hooks/useUserSettings";
 import { Link } from "react-router-dom";
 import LocationPickerModal from "./LocationPickerModal";
+import { arabicDigits } from "@/lib/displayFormat";
+import { arabicCityLabel, hasLocationCoordinates } from "@/lib/cityNames";
 
 interface PrayerTimesData {
   Fajr: string;
@@ -43,12 +45,15 @@ const NextPrayerWidget = () => {
   const lat = settings.latitude;
   const lng = settings.longitude;
   const method = settings.prayer_method || recommendedPrayerMethod(settings.country_code);
-  const hasLocation = lat && lng;
+  const hasLocation = hasLocationCoordinates(lat, lng);
 
   const { data: prayerTimes } = useQuery({
     queryKey: ["prayerTimesWidget", lat, lng, method],
-    queryFn: () => fetchPrayerTimes(lat!, lng!, method),
-    enabled: !!lat && !!lng,
+    queryFn: () => {
+      if (lat === null || lng === null) throw new Error("لم يُحدد الموقع");
+      return fetchPrayerTimes(lat, lng, method);
+    },
+    enabled: hasLocation,
     staleTime: 1000 * 60 * 60,
   });
 
@@ -107,7 +112,7 @@ const NextPrayerWidget = () => {
     return () => clearInterval(interval);
   }, [prayerTimes, nextPrayer]);
 
-  const formatNumber = (num: number) => num.toString().padStart(2, "0");
+  const formatNumber = (num: number) => arabicDigits(num.toString().padStart(2, "0"));
 
   // Show location prompt if no location
   if (!hasLocation) {
@@ -148,13 +153,13 @@ const NextPrayerWidget = () => {
             <div>
               <p className="text-sm text-muted-foreground">الصلاة القادمة</p>
               <p className="text-xl font-bold text-foreground">{nextPrayer.name}</p>
-              <p className="text-sm text-primary font-medium">{nextPrayer.time}</p>
+              <p className="text-sm text-primary font-medium arabic-digits" dir="ltr">{arabicDigits(nextPrayer.time)}</p>
             </div>
           </div>
 
           <div className="text-center">
             <p className="text-xs text-muted-foreground mb-1">متبقي</p>
-            <div className="flex items-center gap-1 text-xl font-bold text-primary font-mono" dir="ltr">
+            <div className="flex items-center gap-1 text-xl font-bold text-primary arabic-digits" dir="ltr">
               <span>{formatNumber(countdown.hours)}</span>
               <span className="animate-pulse">:</span>
               <span>{formatNumber(countdown.minutes)}</span>
@@ -167,7 +172,7 @@ const NextPrayerWidget = () => {
         {settings.city_name && (
           <div className="flex items-center gap-1 mt-2 text-xs text-muted-foreground">
             <MapPin className="w-3 h-3" />
-            <span>{settings.city_name}</span>
+            <span>{arabicCityLabel(settings.city_name)}</span>
           </div>
         )}
       </Card>

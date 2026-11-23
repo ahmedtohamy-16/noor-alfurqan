@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/popover';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
+import { arabicDigits } from '@/lib/displayFormat';
 
 interface HadithFontControlsProps {
   fontSize: number;
@@ -75,7 +76,7 @@ const HadithFontControls = ({
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <Label className="text-sm font-medium text-foreground">حجم الخط</Label>
-              <span className="text-sm text-muted-foreground">{fontSize}px</span>
+              <span className="text-sm text-muted-foreground">{arabicDigits(fontSize)}px</span>
             </div>
             <div className="flex items-center gap-3">
               <Button

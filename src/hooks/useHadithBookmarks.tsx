@@ -1,8 +1,8 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "./useAuth";
 import { firestoreGet, firestoreSet, COLLECTIONS } from "@/lib/firebase";
 import { toast } from "sonner";
-import { HADITH_CONTENT_VERSION, safeHadithSnapshot, refreshHadithSnapshots } from "@/lib/hadithContent";
+import { safeHadithSnapshot, refreshHadithSnapshots, preserveSavedHadiths } from "@/lib/hadithContent";
 
 export interface HadithBookmark {
   bookId: string;
@@ -24,7 +24,7 @@ const readLocal = (): HadithBookmark[] => {
     const raw = localStorage.getItem(LS_KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed.map(safeHadithSnapshot) : [];
+    return Array.isArray(parsed) ? parsed : [];
   } catch {
     return [];
   }
@@ -38,14 +38,17 @@ const writeLocal = (items: HadithBookmark[]) => {
 
 export const useHadithBookmarks = () => {
   const { user } = useAuth();
-  const [bookmarks, setBookmarks] = useState<HadithBookmark[]>(() => readLocal());
+  const storedRecords = useRef<HadithBookmark[]>(readLocal());
+  const [bookmarks, setBookmarks] = useState<HadithBookmark[]>(() => readLocal().map(safeHadithSnapshot));
   const [loading, setLoading] = useState(false);
 
   // Sync from Firestore on login + merge with local
   useEffect(() => {
     if (!user) {
       let cancelled = false;
-      refreshHadithSnapshots(readLocal()).then(items => { if (!cancelled) { setBookmarks(items); writeLocal(items); } });
+      const records = readLocal();
+      storedRecords.current = records;
+      refreshHadithSnapshots(records).then(items => { if (!cancelled) setBookmarks(items); });
       return () => { cancelled = true; };
     }
     let cancelled = false;
@@ -67,15 +70,17 @@ export const useHadithBookmarks = () => {
             map.set(k, b);
           }
         });
-        const merged = await refreshHadithSnapshots(Array.from(map.values()).sort(
+        const records = Array.from(map.values()).sort(
           (a, b) => (a.savedAt < b.savedAt ? 1 : -1)
-        ));
+        );
+        const merged = await refreshHadithSnapshots(records);
         if (cancelled) return;
         setBookmarks(merged);
-        writeLocal(merged);
+        storedRecords.current = records;
+        writeLocal(records);
         // Push merged back if local had extras
         if (local.length > remoteItems.length) {
-          await firestoreSet(COLLECTIONS.HADITH_BOOKMARKS, user.uid, { items: merged });
+          await firestoreSet(COLLECTIONS.HADITH_BOOKMARKS, user.uid, { items: records });
         }
       } catch (e) {
         console.error("Bookmark sync failed", e);
@@ -91,10 +96,12 @@ export const useHadithBookmarks = () => {
   const persist = useCallback(
     async (next: HadithBookmark[]) => {
       setBookmarks(next);
-      writeLocal(next);
+      const records = preserveSavedHadiths(next, storedRecords.current);
+      storedRecords.current = records;
+      writeLocal(records);
       if (user) {
         try {
-          await firestoreSet(COLLECTIONS.HADITH_BOOKMARKS, user.uid, { items: next });
+          await firestoreSet(COLLECTIONS.HADITH_BOOKMARKS, user.uid, { items: records });
         } catch (e) {
           console.error("Bookmark save failed", e);
         }
@@ -122,7 +129,9 @@ export const useHadithBookmarks = () => {
         toast.success("تم إزالة الحديث من المحفوظات");
         return false;
       } else {
-        const next = [{ ...b, contentVersion: HADITH_CONTENT_VERSION, savedAt: new Date().toISOString() }, ...bookmarks];
+        const [verified] = await refreshHadithSnapshots([b]);
+        if (!verified?.text) { toast.error("تعذر التحقق من نص الحديث، حاول مرة أخرى عند الاتصال"); return false; }
+        const next = [{ ...verified, savedAt: new Date().toISOString() }, ...bookmarks];
         await persist(next);
         toast.success("تم حفظ الحديث");
         return true;

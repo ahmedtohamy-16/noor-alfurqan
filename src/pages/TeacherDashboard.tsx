@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { arabicDigits } from "@/lib/displayFormat";
 import { useNavigate } from "react-router-dom";
 import {
   BookOpen,
@@ -228,7 +229,7 @@ const TeacherDashboard = () => {
 
     // Check file size (max 50MB)
     if (file.size > 50 * 1024 * 1024) {
-      toast.error("حجم الملف كبير جداً. الحد الأقصى 50 ميجابايت");
+      toast.error("حجم الملف كبير جداً. الحد الأقصى ٥٠ ميجابايت");
       return;
     }
 
@@ -353,21 +354,21 @@ const TeacherDashboard = () => {
           <Card>
             <CardContent className="pt-6 text-center">
               <BookOpen className="w-8 h-8 mx-auto text-primary mb-2" />
-              <p className="text-2xl font-bold">{courses.length}</p>
+              <p className="text-2xl font-bold">{arabicDigits(courses.length)}</p>
               <p className="text-sm text-muted-foreground">كورس</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="pt-6 text-center">
               <ClipboardList className="w-8 h-8 mx-auto text-amber-500 mb-2" />
-              <p className="text-2xl font-bold">{quizzes.length}</p>
+              <p className="text-2xl font-bold">{arabicDigits(quizzes.length)}</p>
               <p className="text-sm text-muted-foreground">اختبار</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="pt-6 text-center">
               <File className="w-8 h-8 mx-auto text-blue-500 mb-2" />
-              <p className="text-2xl font-bold">{files.length}</p>
+              <p className="text-2xl font-bold">{arabicDigits(files.length)}</p>
               <p className="text-sm text-muted-foreground">ملف</p>
             </CardContent>
           </Card>
@@ -452,7 +453,7 @@ const TeacherDashboard = () => {
                   </div>
                 </DialogContent>
               </Dialog>
-              <h3 className="text-lg font-semibold">الكورسات ({courses.length})</h3>
+              <h3 className="text-lg font-semibold">الكورسات ({arabicDigits(courses.length)})</h3>
             </div>
 
             {courses.length === 0 ? (
@@ -554,7 +555,7 @@ const TeacherDashboard = () => {
                   </div>
                 </DialogContent>
               </Dialog>
-              <h3 className="text-lg font-semibold">الاختبارات ({quizzes.length})</h3>
+              <h3 className="text-lg font-semibold">الاختبارات ({arabicDigits(quizzes.length)})</h3>
             </div>
 
             {quizzes.length === 0 ? (
@@ -625,7 +626,7 @@ const TeacherDashboard = () => {
                   </Button>
                 </label>
               </div>
-              <h3 className="text-lg font-semibold">الملفات ({files.length})</h3>
+              <h3 className="text-lg font-semibold">الملفات ({arabicDigits(files.length)})</h3>
             </div>
 
             {files.length === 0 ? (
@@ -651,7 +652,7 @@ const TeacherDashboard = () => {
                         <div className="text-right">
                           <p className="font-medium">{file.file_name}</p>
                           <p className="text-sm text-muted-foreground">
-                            {formatFileSize(file.file_size)}
+                            {arabicDigits(formatFileSize(file.file_size))}
                           </p>
                         </div>
                         {getFileIcon(file.file_type)}

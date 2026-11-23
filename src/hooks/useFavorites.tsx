@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "./useAuth";
 import { toast } from "sonner";
+import { getAyahAsync } from "@/data/quranAyats";
+import { surahs } from "@/data/surahs";
 import { 
   firestoreQuery, 
   firestoreSet, 
@@ -25,6 +27,8 @@ interface Favorite {
   created_at: string;
 }
 
+const FAVORITES_EVENT = "quran-favorites-changed";
+
 export const useFavorites = () => {
   const { user } = useAuth();
   const [favorites, setFavorites] = useState<Favorite[]>([]);
@@ -35,6 +39,7 @@ export const useFavorites = () => {
       // Load guest favorites from localStorage
       const guestData = getGuestData();
       setFavorites(guestData.favorites);
+      window.dispatchEvent(new CustomEvent(FAVORITES_EVENT, { detail: { userId: null, favorites: guestData.favorites } }));
       setIsLoading(false);
       return;
     }
@@ -47,6 +52,7 @@ export const useFavorites = () => {
         "desc"
       );
       setFavorites(data || []);
+      window.dispatchEvent(new CustomEvent(FAVORITES_EVENT, { detail: { userId: user.uid, favorites: data || [] } }));
     } catch (error) {
       console.error("Error fetching favorites:", error);
     } finally {
@@ -56,6 +62,12 @@ export const useFavorites = () => {
 
   useEffect(() => {
     fetchFavorites();
+    const synchronize = (event: Event) => {
+      const detail = (event as CustomEvent<{ userId: string | null; favorites: Favorite[] }>).detail;
+      if (detail?.userId === (user?.uid ?? null)) setFavorites(detail.favorites);
+    };
+    window.addEventListener(FAVORITES_EVENT, synchronize);
+    return () => window.removeEventListener(FAVORITES_EVENT, synchronize);
   }, [user?.uid]);
 
   const addFavorite = async (
@@ -150,12 +162,21 @@ export const useFavorites = () => {
     );
   };
 
+  const toggleFavorite = async (surahNumber: number, ayahNumber: number) => {
+    if (isFavorite(surahNumber, ayahNumber)) return removeFavorite(surahNumber, ayahNumber);
+    const ayah = await getAyahAsync(surahNumber, ayahNumber);
+    const surah = surahs.find(value => value.number === surahNumber);
+    if (!ayah || !surah) { toast.error("تعذر تحميل الآية، حاول مرة أخرى عند الاتصال"); return false; }
+    return addFavorite(surahNumber, surah.name, ayahNumber, ayah.text_uthmani);
+  };
+
   return {
     favorites,
     isLoading,
     addFavorite,
     removeFavorite,
     isFavorite,
+    toggleFavorite,
     refetch: fetchFavorites,
   };
 };

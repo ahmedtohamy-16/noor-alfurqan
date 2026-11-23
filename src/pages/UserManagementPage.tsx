@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/untypedClient";
 import { useState, useEffect } from "react";
+import { arabicDigits } from "@/lib/displayFormat";
 import { useNavigate } from "react-router-dom";
 import {
   Users,
@@ -247,21 +248,21 @@ const UserManagementPage = () => {
           <Card>
             <CardContent className="pt-6 text-center">
               <Users className="w-8 h-8 mx-auto text-primary mb-2" />
-              <p className="text-2xl font-bold">{stats.total}</p>
+              <p className="text-2xl font-bold">{arabicDigits(stats.total)}</p>
               <p className="text-sm text-muted-foreground">إجمالي</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="pt-6 text-center">
               <CheckCircle className="w-8 h-8 mx-auto text-green-500 mb-2" />
-              <p className="text-2xl font-bold">{stats.active}</p>
+              <p className="text-2xl font-bold">{arabicDigits(stats.active)}</p>
               <p className="text-sm text-muted-foreground">نشط</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="pt-6 text-center">
               <Ban className="w-8 h-8 mx-auto text-destructive mb-2" />
-              <p className="text-2xl font-bold">{stats.banned}</p>
+              <p className="text-2xl font-bold">{arabicDigits(stats.banned)}</p>
               <p className="text-sm text-muted-foreground">محظور</p>
             </CardContent>
           </Card>
@@ -295,7 +296,7 @@ const UserManagementPage = () => {
         <Card>
           <CardHeader>
             <CardTitle className="text-right">
-              المستخدمون ({filteredUsers.length})
+              المستخدمون ({arabicDigits(filteredUsers.length)})
             </CardTitle>
           </CardHeader>
           <CardContent>

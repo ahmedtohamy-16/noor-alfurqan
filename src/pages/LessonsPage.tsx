@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getPublishedLessons, getLessonsByCategory, incrementViewCount, Lesson } from "@/services/lessonService";
 import { useAuth } from "@/hooks/useAuth";
+import { arabicDigits } from "@/lib/displayFormat";
 
 const LessonsPage = () => {
   const navigate = useNavigate();
@@ -156,7 +157,7 @@ const LessonsPage = () => {
                         {lesson.teacherName}
                       </span>
                       <span className="flex items-center gap-1">
-                        {lesson.viewCount} مشاهدة
+                        {arabicDigits(lesson.viewCount)} مشاهدة
                       </span>
                     </div>
                   </div>

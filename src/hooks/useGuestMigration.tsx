@@ -10,6 +10,7 @@ import {
   getGuestDataSummary 
 } from "@/services/guestDataService";
 import { toast } from "sonner";
+import { arabicDigits } from "@/lib/displayFormat";
 
 export const useGuestMigration = () => {
   const { user } = useAuth();
@@ -43,7 +44,7 @@ export const useGuestMigration = () => {
         
         if (result.success && result.migratedItems.length > 0) {
           toast.success(
-            `تم نقل بياناتك: ${result.migratedItems.join("، ")}`,
+            `تم نقل بياناتك: ${arabicDigits(result.migratedItems.join("، "))}`,
             {
               duration: 5000,
               description: "جميع بياناتك السابقة محفوظة في حسابك الآن",

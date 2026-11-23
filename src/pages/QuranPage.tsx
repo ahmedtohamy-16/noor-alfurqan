@@ -1,4 +1,8 @@
-import { arabicDigits, ayahCountLabel } from "@/lib/displayFormat";
+import { arabicDigits, westernDigits, ayahCountLabel } from "@/lib/displayFormat";
+import { parseQuranReference, validQuranReference } from "@/lib/quranReferenceRules";
+import { normalizeArabic } from "@/lib/arabicNormalize";
+import { useFavorites } from "@/hooks/useFavorites";
+import FavoriteAyahButton from "@/components/FavoriteAyahButton";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowRight, Book, Search, Hash, BookOpen } from "lucide-react";
@@ -27,6 +31,7 @@ interface AyahResult {
 
 const QuranPage = () => {
   const navigate = useNavigate();
+  const { isFavorite, toggleFavorite } = useFavorites();
   const [filter, setFilter] = useState<"all" | "meccan" | "medinan">("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [searchType, setSearchType] = useState<"surah" | "ayah">("surah");
@@ -39,10 +44,10 @@ const QuranPage = () => {
     if (!searchQuery.trim()) return matchesFilter;
     
     const matchesSearch = 
-      surah.name.includes(searchQuery) ||
+      normalizeArabic(surah.name).includes(normalizeArabic(searchQuery)) ||
       surah.englishName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       surah.englishNameTranslation.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      surah.number.toString() === searchQuery;
+      surah.number.toString() === westernDigits(searchQuery.trim());
     
     return matchesFilter && matchesSearch;
   });
@@ -70,17 +75,9 @@ const QuranPage = () => {
   });
 
   // Check if query is a valid ayah reference (e.g., "2:255" for Ayat Al-Kursi)
-  const parseAyahReference = (q: string) => {
-    const match = q.match(/^(\d+):(\d+)$/);
-    if (match) {
-      return { surah: parseInt(match[1]), ayah: parseInt(match[2]) };
-    }
-    return null;
-  };
-
-  const rawRef = parseAyahReference(searchQuery.trim());
+  const rawRef = parseQuranReference(searchQuery);
   const refSurah = rawRef ? surahs.find((s) => s.number === rawRef.surah) : undefined;
-  const ayahRef = rawRef && refSurah && rawRef.ayah >= 1 && rawRef.ayah <= refSurah.numberOfAyahs ? rawRef : null;
+  const ayahRef = validQuranReference(rawRef) ? rawRef : null;
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -115,7 +112,7 @@ const QuranPage = () => {
           <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
           <Input
             type="text"
-            placeholder="ابحث عن سورة، كلمة، أو رقم آية (مثال: 2:255)..."
+            placeholder="ابحث عن سورة، كلمة، أو رقم آية (مثال: ٢:٢٥٥)..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pr-12 h-12 text-base rounded-xl border-2 focus:border-primary text-right"
@@ -176,13 +173,13 @@ const QuranPage = () => {
                 </p>
                 <div className="space-y-4">
                   {ayahResults.slice(0, 50).map((ayah) => (
+                    <div key={ayah.number} className="relative">
                     <Link
-                      key={ayah.number}
                       to={`/surah/${ayah.surah.number}?ayah=${ayah.numberInSurah}`}
                       className="block"
                     >
                       <div className="bg-card hover:bg-accent/10 border border-border rounded-xl p-4 transition-all hover:shadow-md">
-                        <div className="flex items-center gap-2 mb-2">
+                        <div className="flex flex-wrap items-center gap-2 mb-2 pl-12">
                           <span className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-medium">
                             {ayah.surah.name}
                           </span>
@@ -195,6 +192,8 @@ const QuranPage = () => {
                         </p>
                       </div>
                     </Link>
+                    <div className="absolute left-1 top-1"><FavoriteAyahButton ayah={ayah.numberInSurah} active={isFavorite(ayah.surah.number, ayah.numberInSurah)} onToggle={() => toggleFavorite(ayah.surah.number, ayah.numberInSurah)} /></div>
+                    </div>
                   ))}
                 </div>
               </div>
@@ -222,7 +221,7 @@ const QuranPage = () => {
             {searchQuery.trim() && !rawRef && (
               <p className="text-muted-foreground mb-4">
                 {filteredSurahs.length > 0
-                  ? `تم العثور على ${filteredSurahs.length} سورة`
+                  ? `تم العثور على ${arabicDigits(filteredSurahs.length)} سورة`
                   : "لم يتم العثور على نتائج"}
               </p>
             )}

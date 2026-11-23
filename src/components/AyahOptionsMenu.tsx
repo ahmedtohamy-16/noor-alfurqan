@@ -8,6 +8,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
+import { arabicDigits } from "@/lib/displayFormat";
 
 interface AyahOptionsMenuProps {
   ayahNumber: number;
@@ -56,7 +57,7 @@ const AyahOptionsMenu = ({
 
   const handleCopyAyah = async () => {
     try {
-      const textToCopy = `${ayahText}\n\n— سورة ${surahName}، الآية ${ayahNumber}`;
+      const textToCopy = `${ayahText}\n\n— سورة ${surahName}، الآية ${arabicDigits(ayahNumber)}`;
       await navigator.clipboard.writeText(textToCopy);
       toast.success("تم نسخ الآية");
     } catch (error) {

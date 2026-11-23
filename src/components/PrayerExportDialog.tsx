@@ -1,4 +1,5 @@
 import { arabicDigits } from "@/lib/displayFormat";
+import { arabicCityName, arabicCityLabel, hasLocationCoordinates } from "@/lib/cityNames";
 import { useState, useEffect, useRef } from "react";
 import { Download, Image as ImageIcon, MapPin, Loader2, FileJson, FileText } from "lucide-react";
 import {
@@ -90,7 +91,7 @@ const PrayerExportDialog = ({
 
   const finalLat = useCustomLocation && selectedCity ? selectedCity.latitude : defaultLat;
   const finalLng = useCustomLocation && selectedCity ? selectedCity.longitude : defaultLng;
-  const finalCityName = useCustomLocation && selectedCity ? selectedCity.name_ar : defaultCityName;
+  const finalCityName = arabicCityName(useCustomLocation && selectedCity ? selectedCity.name_ar : defaultCityName);
 
   // Detect current Hijri month/year on open
   useEffect(() => {
@@ -141,7 +142,7 @@ const PrayerExportDialog = ({
 
   // Fetch days according to selected period
   const fetchDays = async (): Promise<{ days: PrayerDay[]; titleSubtitle: string }> => {
-    if (!finalLat || !finalLng) throw new Error("Location not set");
+    if (!hasLocationCoordinates(finalLat, finalLng)) throw new Error("Location not set");
 
     if (period === "gregorian") {
       const r = await fetch(`https://api.aladhan.com/v1/calendar/${currentYear}/${currentMonth}?latitude=${finalLat}&longitude=${finalLng}&method=${method}&school=${madhab}`);
@@ -179,7 +180,8 @@ const PrayerExportDialog = ({
   // Render canvas (used by image + pdf)
   const renderCanvas = (days: PrayerDay[], titleSubtitle: string): HTMLCanvasElement => {
     const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d")!;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) throw new Error("تعذر تجهيز الصورة");
     const scale = period === "week" ? 3 : 3;
     const width = 1200;
     const rowHeight = period === "week" ? 60 : 42;
@@ -219,9 +221,9 @@ const PrayerExportDialog = ({
     ctx.fillStyle = isLight ? "#ffffff" : selectedTheme.textColor;
     ctx.textAlign = "center";
     ctx.font = "bold 38px 'Segoe UI', Arial, sans-serif";
-    ctx.fillText(`مواقيت الصلاة لمدينة ${finalCityName || ""}`, width / 2, 55);
+    ctx.fillText(`مواقيت الصلاة — ${arabicCityLabel(finalCityName)}`, width / 2, 55);
     ctx.font = "24px 'Segoe UI', Arial, sans-serif";
-    ctx.fillText(titleSubtitle, width / 2, 95);
+    ctx.fillText(arabicDigits(titleSubtitle), width / 2, 95);
 
     // Columns
     const columns = [
@@ -283,10 +285,10 @@ const PrayerExportDialog = ({
           ctx.font = "bold 14px 'Segoe UI', Arial, sans-serif";
           ctx.fillStyle = selectedTheme.textColor;
         } else {
-          ctx.font = "16px 'Courier New', monospace";
+          ctx.font = "16px 'Noor Amiri', 'Amiri', serif";
           ctx.fillStyle = selectedTheme.accentColor;
         }
-        ctx.fillText(text, xPos + columns[idx].width / 2, rowY + rowHeight / 2 + 6);
+        ctx.fillText(arabicDigits(text), xPos + columns[idx].width / 2, rowY + rowHeight / 2 + 6);
         xPos += columns[idx].width;
       });
     });
@@ -487,7 +489,7 @@ const PrayerExportDialog = ({
                 <MapPin className="w-4 h-4 text-primary" />
                 <p className="text-sm text-muted-foreground">الموقع المحدد:</p>
               </div>
-              <p className="font-bold text-lg text-foreground">{defaultCityName}</p>
+              <p className="font-bold text-lg text-foreground">{arabicCityLabel(defaultCityName)}</p>
             </div>
           )}
 

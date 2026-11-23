@@ -237,7 +237,7 @@ export const DownloadAudioDialog = ({
           <div className="space-y-2">
             <Progress value={downloadProgress} className="h-2" />
             <p className="text-sm text-center text-muted-foreground">
-              {Math.round(downloadProgress)}%
+              <span dir="ltr" className="arabic-digits">{arabicDigits(Math.round(downloadProgress))}٪</span>
             </p>
           </div>
         )}

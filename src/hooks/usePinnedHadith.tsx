@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "./useAuth";
 import { firestoreGet, firestoreSet, firestoreDelete, COLLECTIONS } from "@/lib/firebase";
 import { Hadith } from "@/data/hadithBooks";
-import { HADITH_CONTENT_VERSION, refreshHadithSnapshots } from "@/lib/hadithContent";
+import { refreshHadithSnapshots } from "@/lib/hadithContent";
 
 const PINNED_HADITH_KEY = "pinnedDailyHadith";
 const PINNED_HADITH_COLLECTION = "pinned_hadiths";
@@ -89,10 +89,11 @@ export const usePinnedHadith = () => {
   }, [loadPinnedHadith]);
 
   const pinHadith = async (hadith: Hadith): Promise<boolean> => {
+    const [verified] = await refreshHadithSnapshots([hadith]);
+    if (!verified?.text) return false;
     const today = getTodayDate();
     const pinned: PinnedHadith = {
-      ...hadith,
-      contentVersion: HADITH_CONTENT_VERSION,
+      ...verified,
       pinnedAt: new Date().toISOString(),
       pinnedDate: today,
     };

@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Hadith, getBookById } from '@/data/hadithBooks';
 import { cn } from '@/lib/utils';
+import { arabicDigits } from '@/lib/displayFormat';
 
 interface HadithDetailsModalProps {
   hadith: Hadith | null;
@@ -70,7 +71,7 @@ const HadithDetailsModal = ({
               </Button>
             </div>
             <DialogTitle className="text-xl font-bold text-right text-white">
-              الحديث رقم {hadith.hadithNumber}
+              الحديث رقم {arabicDigits(hadith.hadithNumber)}
             </DialogTitle>
           </DialogHeader>
         </div>

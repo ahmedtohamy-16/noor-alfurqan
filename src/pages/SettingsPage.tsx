@@ -24,6 +24,7 @@ import { toast } from "sonner";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/untypedClient";
 import { countryHasDST, isInDSTForCountry, getDSTStatusText } from "@/utils/dstUtils";
+import { arabicDigits } from "@/lib/displayFormat";
 
 const fontOptions = [
   { id: "Amiri", name: "خط Amiri", arabicName: "أميري", preview: "font-amiri" },
@@ -208,7 +209,7 @@ const SettingsPage = () => {
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <label className="text-sm font-medium text-foreground">حجم الخط</label>
-                      <span className="text-sm font-bold text-primary bg-primary/10 px-2 py-0.5 rounded">{readingSettings.fontSize}px</span>
+                      <span className="text-sm font-bold text-primary bg-primary/10 px-2 py-0.5 rounded">{arabicDigits(readingSettings.fontSize)}px</span>
                     </div>
                     <Slider
                       value={[readingSettings.fontSize]}
@@ -228,7 +229,7 @@ const SettingsPage = () => {
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <label className="text-sm font-medium text-foreground">ارتفاع السطر</label>
-                      <span className="text-sm font-bold text-primary bg-primary/10 px-2 py-0.5 rounded">{readingSettings.lineHeight.toFixed(1)}</span>
+                      <span className="text-sm font-bold text-primary bg-primary/10 px-2 py-0.5 rounded">{arabicDigits(readingSettings.lineHeight.toFixed(1))}</span>
                     </div>
                     <Slider
                       value={[readingSettings.lineHeight]}
@@ -361,7 +362,7 @@ const SettingsPage = () => {
 
                 {settings.dst_mode === 'manual' && (
                   <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
-                    <span className="text-sm text-foreground">تفعيل التوقيت الصيفي (+1 ساعة)</span>
+                    <span className="text-sm text-foreground">تفعيل التوقيت الصيفي (+١ ساعة)</span>
                     <Switch
                       checked={settings.dst_enabled}
                       onCheckedChange={(checked) => {

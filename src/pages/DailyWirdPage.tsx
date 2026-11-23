@@ -7,6 +7,7 @@ import { useDailyWird } from "@/hooks/useDailyWird";
 import { useAuth } from "@/hooks/useAuth";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
+import { arabicDigits } from "@/lib/displayFormat";
 
 const DailyWirdPage = () => {
   const { user } = useAuth();
@@ -105,10 +106,10 @@ const DailyWirdPage = () => {
                   ) : (
                     <>
                       <span className="text-4xl font-bold text-foreground">
-                        {wird?.completed_pages || 0}
+                        {arabicDigits(wird?.completed_pages || 0)}
                       </span>
                       <span className="text-muted-foreground">
-                        من {wird?.target_pages || 2}
+                        من {arabicDigits(wird?.target_pages || 2)}
                       </span>
                     </>
                   )}
@@ -129,7 +130,7 @@ const DailyWirdPage = () => {
             ) : (
               <div className="text-center mb-6">
                 <h2 className="text-xl font-bold text-foreground mb-2">
-                  متبقي {(wird?.target_pages || 2) - (wird?.completed_pages || 0)} صفحة
+                  متبقي {arabicDigits((wird?.target_pages || 2) - (wird?.completed_pages || 0))} صفحة
                 </h2>
                 <p className="text-muted-foreground">
                   لإكمال وردك اليومي
@@ -151,7 +152,7 @@ const DailyWirdPage = () => {
               
               <div className="text-center px-6">
                 <p className="text-3xl font-bold text-foreground">
-                  {wird?.completed_pages || 0}
+                  {arabicDigits(wird?.completed_pages || 0)}
                 </p>
                 <p className="text-sm text-muted-foreground">صفحة مكتملة</p>
               </div>
@@ -179,7 +180,7 @@ const DailyWirdPage = () => {
             <div>
               <p className="font-medium text-foreground">عدد الصفحات اليومية</p>
               <p className="text-sm text-muted-foreground">
-                ستكمل القرآن في {daysToComplete} يوم تقريباً
+                ستكمل القرآن في {arabicDigits(daysToComplete)} يوم تقريباً
               </p>
             </div>
             
@@ -194,7 +195,7 @@ const DailyWirdPage = () => {
               </Button>
               
               <span className="text-2xl font-bold text-foreground w-12 text-center">
-                {wird?.target_pages || 2}
+                {arabicDigits(wird?.target_pages || 2)}
               </span>
               
               <Button
@@ -216,7 +217,7 @@ const DailyWirdPage = () => {
             {[
               { pages: 1, desc: "ختمة في سنتين" },
               { pages: 2, desc: "ختمة في سنة" },
-              { pages: 4, desc: "ختمة في 5 أشهر" },
+              { pages: 4, desc: "ختمة في ٥ أشهر" },
               { pages: 20, desc: "ختمة في شهر" },
             ].map((option) => (
               <button
@@ -228,7 +229,7 @@ const DailyWirdPage = () => {
                     : "border-border hover:border-primary/50"
                 }`}
               >
-                <p className="text-2xl font-bold text-foreground">{option.pages}</p>
+                <p className="text-2xl font-bold text-foreground">{arabicDigits(option.pages)}</p>
                 <p className="text-sm text-muted-foreground">{option.desc}</p>
               </button>
             ))}

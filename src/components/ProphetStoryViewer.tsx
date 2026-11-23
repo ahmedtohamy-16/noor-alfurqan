@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import type { ProphetStory, ExtendedStory } from "@/data/prophetStories";
 import { prophetLocationsData } from "@/data/prophetLocations";
 import ProphetStoryMap from "./ProphetStoryMap";
+import { arabicDigits } from "@/lib/displayFormat";
 
 // Import prophet images
 import adamImg from "@/assets/prophets/adam.jpg";
@@ -130,7 +131,7 @@ const ProphetStoryViewer = ({ prophet, story, language, isRTL, onBack }: Prophet
                     <div key={index} className="bg-background/50 rounded-lg p-4 border border-emerald-500/10">
                       <p className="text-lg font-arabic leading-loose text-foreground mb-2" dir="rtl">{verse.arabic}</p>
                       {verse.translation && !isRTL && <p className="text-muted-foreground text-sm italic">{verse.translation}</p>}
-                      <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-2">{verse.reference}</p>
+                      <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-2">{isRTL ? arabicDigits(verse.reference) : verse.reference}</p>
                     </div>
                   ))}
                 </div>
@@ -150,7 +151,7 @@ const ProphetStoryViewer = ({ prophet, story, language, isRTL, onBack }: Prophet
                   {story.hadiths.map((hadith, index) => (
                     <div key={index} className="bg-background/50 rounded-lg p-4 border border-amber-500/10">
                       <p className="text-foreground leading-relaxed mb-2" dir={isRTL ? 'rtl' : 'ltr'}>"{hadith.text}"</p>
-                      <p className="text-xs text-amber-600 dark:text-amber-400">{hadith.source}</p>
+                      <p className="text-xs text-amber-600 dark:text-amber-400">{isRTL ? arabicDigits(hadith.source) : hadith.source}</p>
                     </div>
                   ))}
                 </div>
@@ -168,7 +169,7 @@ const ProphetStoryViewer = ({ prophet, story, language, isRTL, onBack }: Prophet
               <ul className="space-y-3">
                 {story.lessons.map((lesson, index) => (
                   <li key={index} className="flex items-start gap-3">
-                    <span className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 text-sm font-bold text-primary">{index + 1}</span>
+                    <span className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 text-sm font-bold text-primary">{isRTL ? arabicDigits(index + 1) : index + 1}</span>
                     <span className="text-foreground/80">{lesson}</span>
                   </li>
                 ))}

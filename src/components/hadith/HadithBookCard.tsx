@@ -5,6 +5,7 @@ import { Progress } from '@/components/ui/progress';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { HadithBook } from '@/data/hadithBooks';
 import { cn } from '@/lib/utils';
+import { arabicDigits } from '@/lib/displayFormat';
 
 interface HadithBookCardProps {
   book: HadithBook;
@@ -84,7 +85,7 @@ const HadithBookCard = ({
         <div className="space-y-2">
           <div className="flex items-center gap-2 text-xs text-primary font-medium">
             <Loader2 className="w-4 h-4 animate-spin" />
-            <span>جاري التنزيل {downloadProgress}%</span>
+            <span>جاري التنزيل {arabicDigits(downloadProgress)}٪</span>
           </div>
           <Progress value={downloadProgress} className="h-1.5" />
         </div>
@@ -117,7 +118,7 @@ const HadithBookCard = ({
             </Button>
           </TooltipTrigger>
           <TooltipContent>
-            تنزيل الكتاب (~{Math.round((book.totalHadiths * 500) / 1024)} KB)
+            تنزيل الكتاب (~{arabicDigits(Math.round((book.totalHadiths * 500) / 1024))} KB)
           </TooltipContent>
         </Tooltip>
       )}

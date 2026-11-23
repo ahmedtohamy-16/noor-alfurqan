@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import type { ProphetLocationData, ProphetLocation } from '@/data/prophetLocations';
+import { arabicDigits } from '@/lib/displayFormat';
 
 interface ProphetStoryMapProps {
   locationData: ProphetLocationData;
@@ -131,7 +132,7 @@ const ProphetStoryMap = ({ locationData, isRTL }: ProphetStoryMapProps) => {
                   {isRTL ? selectedLocation.description.ar : selectedLocation.description.en}
                 </p>
                 <p className="text-xs text-muted-foreground/70 mt-1">
-                  {selectedLocation.coordinates.lat.toFixed(4)}°, {selectedLocation.coordinates.lng.toFixed(4)}°
+                  {isRTL ? arabicDigits(selectedLocation.coordinates.lat.toFixed(4)) : selectedLocation.coordinates.lat.toFixed(4)}°, {isRTL ? arabicDigits(selectedLocation.coordinates.lng.toFixed(4)) : selectedLocation.coordinates.lng.toFixed(4)}°
                 </p>
               </div>
               <Button

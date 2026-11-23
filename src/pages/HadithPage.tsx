@@ -67,6 +67,8 @@ const HadithPage = () => {
   const isSearchMode = debouncedQuery.trim().length > 0;
   const [searchResults, setSearchResults] = useState<Hadith[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [searchError, setSearchError] = useState(false);
+  const [searchAttempt, setSearchAttempt] = useState(0);
 
   const [copiedId, setCopiedId] = useState<number | null>(null);
 
@@ -113,6 +115,9 @@ const HadithPage = () => {
       setHadiths((prev) => [...prev, ...data.hadiths]);
       setCurrentPage((p) => p + 1);
       setHasMore(data.hasMore);
+    } catch {
+      setListError(true);
+      setHasMore(false);
     } finally {
       setLoadingMore(false);
     }
@@ -126,12 +131,15 @@ const HadithPage = () => {
     }
     let cancelled = false;
     setIsSearching(true);
+    setSearchError(false);
     (async () => {
       try {
         const bookId =
           selectedBook === "all" ? hadithBooks[0].id : selectedBook;
         const res = await searchHadiths(bookId, debouncedQuery);
         if (!cancelled) setSearchResults(res.results || []);
+      } catch {
+        if (!cancelled) { setSearchResults([]); setSearchError(true); }
       } finally {
         if (!cancelled) setIsSearching(false);
       }
@@ -139,7 +147,7 @@ const HadithPage = () => {
     return () => {
       cancelled = true;
     };
-  }, [debouncedQuery, isSearchMode, selectedBook, searchHadiths]);
+  }, [debouncedQuery, isSearchMode, selectedBook, searchHadiths, searchAttempt]);
 
   // Topic filtering (client-side on currently loaded items)
   const filteredByTopic = useMemo(() => {
@@ -224,6 +232,7 @@ const HadithPage = () => {
       text: h.text,
       narrator: h.narrator,
       grade: h.grade,
+      contentVersion: h.contentVersion,
     });
   };
 
@@ -305,6 +314,11 @@ const HadithPage = () => {
           {/* List */}
           {loadingList || (isSearchMode && isSearching) ? (
             <HadithSkeleton />
+          ) : searchError && isSearchMode ? (
+            <div role="alert" className="px-6 py-16 text-center">
+              <p className="text-base font-bold mb-4">تعذّر الاتصال للبحث في الأحاديث</p>
+              <Button size="sm" variant="outline" onClick={() => setSearchAttempt(value => value + 1)}>إعادة المحاولة</Button>
+            </div>
           ) : listError && !isSearchMode ? (
             <div className="px-6 py-16 text-center">
               <p className="text-base font-bold mb-2">تعذّر تحميل الأحاديث</p>

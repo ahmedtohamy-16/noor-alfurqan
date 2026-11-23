@@ -3,6 +3,7 @@ import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { arabicDigits } from "@/lib/displayFormat";
 
 export interface DisplaySettings {
   fontSize: number;
@@ -50,7 +51,7 @@ const DisplaySettingsPanel = ({ settings, onChange }: DisplaySettingsProps) => {
             <Type className="w-4 h-4" />
             حجم الخط
           </Label>
-          <span className="text-sm text-muted-foreground">{settings.fontSize}px</span>
+          <span className="text-sm text-muted-foreground">{arabicDigits(settings.fontSize)}px</span>
         </div>
         <Slider
           value={[settings.fontSize]}
@@ -65,7 +66,7 @@ const DisplaySettingsPanel = ({ settings, onChange }: DisplaySettingsProps) => {
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <Label>المسافة بين الأسطر</Label>
-          <span className="text-sm text-muted-foreground">{settings.lineHeight.toFixed(1)}</span>
+          <span className="text-sm text-muted-foreground">{arabicDigits(settings.lineHeight.toFixed(1))}</span>
         </div>
         <Slider
           value={[settings.lineHeight]}

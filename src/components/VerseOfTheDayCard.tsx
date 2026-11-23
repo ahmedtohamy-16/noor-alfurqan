@@ -3,6 +3,8 @@ import { BookOpen, Share2, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { arabicDigits } from "@/lib/displayFormat";
+import { useFavorites } from "@/hooks/useFavorites";
+import FavoriteAyahButton from "./FavoriteAyahButton";
 
 // Curated daily verses with surah/ayah refs for navigation
 const VERSES = [
@@ -45,6 +47,7 @@ const VERSES = [
 
 const VerseOfTheDayCard = () => {
   const navigate = useNavigate();
+  const { isFavorite, toggleFavorite } = useFavorites();
   const dayIndex = Math.floor(
     (Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86_400_000
   );
@@ -52,7 +55,7 @@ const VerseOfTheDayCard = () => {
 
   const handleShare = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    const text = `${verse.arabic}\n— ${verse.surah} (${verse.ayahNumber})`;
+    const text = `${verse.arabic}\n— ${verse.surah} (${arabicDigits(verse.ayahNumber)})`;
     try {
       if (navigator.share) {
         await navigator.share({ title: "آية اليوم", text });
@@ -72,7 +75,7 @@ const VerseOfTheDayCard = () => {
       className="p-4 bg-gradient-to-br from-primary/5 via-background to-secondary/5 border-primary/20 cursor-pointer hover:shadow-md transition-all arabic-ui"
       role="button"
       tabIndex={0}
-      onKeyDown={(e) => { if (e.key === "Enter") goToAyah(); }}
+      onKeyDown={(e) => { if (e.key === "Enter" && e.target === e.currentTarget) goToAyah(); }}
     >
       <div className="flex items-start gap-3">
         <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
@@ -80,6 +83,7 @@ const VerseOfTheDayCard = () => {
         </div>
         <div className="flex-1 min-w-0 text-right">
           <div className="flex items-center justify-between mb-2">
+            <FavoriteAyahButton ayah={verse.ayahNumber} active={isFavorite(verse.surahNumber, verse.ayahNumber)} onToggle={() => toggleFavorite(verse.surahNumber, verse.ayahNumber)} />
             <Button
               variant="ghost"
               size="icon"

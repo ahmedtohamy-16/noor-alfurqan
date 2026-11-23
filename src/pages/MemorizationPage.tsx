@@ -15,6 +15,9 @@ import { getAyahsBySurahAsync, type QuranAyah } from "@/data/quranAyats";
 import { useMemorization, type MemoStatus } from "@/hooks/useMemorization";
 import { usePro } from "@/hooks/usePro";
 import { toast } from "sonner";
+import { arabicDigits } from "@/lib/displayFormat";
+import { useFavorites } from "@/hooks/useFavorites";
+import FavoriteAyahButton from "@/components/FavoriteAyahButton";
 
 const PRO_COLOR = "#0074fc";
 
@@ -40,6 +43,7 @@ const hideWords = (text: string, n: number) => {
 
 const MemorizationPage = () => {
   const navigate = useNavigate();
+  const { isFavorite, toggleFavorite } = useFavorites();
   const { isPro, isLoading: proLoading } = usePro();
   const { records, grade, reset, dueToday, memorizedCount, getStatus } = useMemorization();
 
@@ -97,7 +101,8 @@ const MemorizationPage = () => {
         <div className="flex items-center justify-between">
           <Badge className={statusColor[status]}>{statusLabel[status]}</Badge>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <span>آية {a.ayat_number_in_sura}</span>
+            <span>آية {arabicDigits(a.ayat_number_in_sura)}</span>
+            <FavoriteAyahButton ayah={a.ayat_number_in_sura} active={isFavorite(a.sura_id, a.ayat_number_in_sura)} onToggle={() => toggleFavorite(a.sura_id, a.ayat_number_in_sura)} />
           </div>
         </div>
 
@@ -166,16 +171,16 @@ const MemorizationPage = () => {
         <div className="grid grid-cols-3 gap-2">
           <Card className="p-3 text-center">
             <div className="text-xs text-muted-foreground">محفوظة</div>
-            <div className="text-2xl font-bold" style={{ color: PRO_COLOR }}>{memorizedCount}</div>
+            <div className="text-2xl font-bold" style={{ color: PRO_COLOR }}>{arabicDigits(memorizedCount)}</div>
           </Card>
           <Card className="p-3 text-center">
             <div className="text-xs text-muted-foreground">مستحقة اليوم</div>
-            <div className="text-2xl font-bold">{dueToday.length}</div>
+            <div className="text-2xl font-bold">{arabicDigits(dueToday.length)}</div>
           </Card>
           <Card className="p-3 text-center">
             <div className="text-xs text-muted-foreground">قيد الحفظ</div>
             <div className="text-2xl font-bold">
-              {Object.values(records).filter((r) => r.status === "learning").length}
+              {arabicDigits(Object.values(records).filter((r) => r.status === "learning").length)}
             </div>
           </Card>
         </div>
@@ -184,7 +189,7 @@ const MemorizationPage = () => {
           <TabsList className="w-full grid grid-cols-3">
             <TabsTrigger value="study">دراسة</TabsTrigger>
             <TabsTrigger value="test">اختبار</TabsTrigger>
-            <TabsTrigger value="due">المراجعة ({dueToday.length})</TabsTrigger>
+            <TabsTrigger value="due">المراجعة ({arabicDigits(dueToday.length)})</TabsTrigger>
           </TabsList>
 
           {(mode === "study" || mode === "test") && (
@@ -197,7 +202,7 @@ const MemorizationPage = () => {
                   <SelectContent className="max-h-72">
                     {surahs.map((s) => (
                       <SelectItem key={s.number} value={String(s.number)}>
-                        {s.number}. {s.name}
+                        {arabicDigits(s.number)}. {s.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -216,7 +221,7 @@ const MemorizationPage = () => {
                 <div className="space-y-1">
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">إخفاء آخر كلمات</span>
-                    <span className="font-bold">{hideCount}</span>
+                    <span className="font-bold">{arabicDigits(hideCount)}</span>
                   </div>
                   <Slider
                     value={[hideCount]}
@@ -229,7 +234,7 @@ const MemorizationPage = () => {
               )}
 
               <div className="text-xs text-muted-foreground text-center">
-                {surahMeta?.name} — {ayahs.length} آية
+                {surahMeta?.name} — {arabicDigits(ayahs.length)} آية
               </div>
             </Card>
           )}
@@ -249,7 +254,7 @@ const MemorizationPage = () => {
                 );
                 if (!a) return (
                   <Card key={r.id} className="p-4 flex items-center justify-between">
-                    <span className="text-sm">سورة {r.surah} - آية {r.ayah}</span>
+                    <span className="text-sm">سورة {arabicDigits(r.surah)} - آية {arabicDigits(r.ayah)}</span>
                     <Button size="sm" variant="outline" onClick={() => { setSurahNum(r.surah); setMode("study"); }}>
                       افتح
                     </Button>

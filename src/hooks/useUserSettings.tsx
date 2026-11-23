@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "./useAuth";
 import { toast } from "sonner";
-import { arabicCityName, preferredCityName } from "@/lib/cityNames";
+import { arabicCityName, preferredCityName, hasLocationCoordinates } from "@/lib/cityNames";
 import { 
   firestoreGet, 
   firestoreSet, 
@@ -102,7 +102,7 @@ const getLocationByIP = async (): Promise<{ lat: number; lng: number; city: stri
   try {
     const response = await fetch("https://ipapi.co/json/");
     const data = await response.json();
-    if (data.latitude && data.longitude) {
+    if (hasLocationCoordinates(data.latitude, data.longitude)) {
       return {
         lat: data.latitude,
         lng: data.longitude,

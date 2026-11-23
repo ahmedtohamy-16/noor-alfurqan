@@ -230,7 +230,7 @@ const TasbihPage = () => {
               </div>
             </div>
             <div className="flex-1 min-w-0 text-center">
-              <p className="text-2xl font-bold arabic-digits">
+              <p className={cn("font-bold arabic-digits break-all", String(stats.todayCount).length <= 5 ? "text-2xl" : "text-base")}>
                 <span className="text-primary">{arabic(stats.todayCount)}</span>
                 <span className="text-muted-foreground"> / {arabic(dailyGoal)}</span>
               </p>
@@ -252,8 +252,8 @@ const TasbihPage = () => {
               { v: stats.totalCount, l: "الإجمالي" },
               { v: stats.streakDays, l: "أيام متتالية" },
             ].map((x) => (
-              <div key={x.l} className="rounded-2xl bg-muted/40 py-3">
-                <p className="text-2xl font-bold text-primary arabic-digits">{arabic(x.v || 0)}</p>
+              <div key={x.l} className="rounded-2xl bg-muted/40 py-3 px-2 min-w-0">
+                <p className={cn("font-bold text-primary arabic-digits break-all", String(x.v || 0).length <= 6 ? "text-2xl" : "text-base")}>{arabic(x.v || 0)}</p>
                 <p className="text-xs text-muted-foreground mt-1">{x.l}</p>
               </div>
             ))}
@@ -263,14 +263,14 @@ const TasbihPage = () => {
               {stats.dhikrTypes.slice(0, 4).map((d) => (
                 <div key={d.type} className="flex items-center justify-between text-sm">
                   <span className="truncate min-w-0">{d.type}</span>
-                  <span className="text-primary font-bold arabic-digits">{arabic(d.count)}</span>
+                  <span className="text-primary font-bold arabic-digits shrink-0 break-all max-w-[50%]">{arabic(d.count)}</span>
                 </div>
               ))}
             </div>
           )}
           {stats.lastSession && (
-            <p className="mt-4 text-xs text-muted-foreground flex items-center gap-1">
-              <Clock className="w-3.5 h-3.5" /> آخر جلسة: {arabic(stats.lastSession.count)} — {stats.lastSession.dhikr}
+            <p className="mt-4 text-xs text-muted-foreground flex items-start gap-1 min-w-0">
+              <Clock className="w-3.5 h-3.5 shrink-0" /><span className="min-w-0 break-words [overflow-wrap:anywhere]">آخر جلسة: {arabic(stats.lastSession.count)} — {stats.lastSession.dhikr}</span>
             </p>
           )}
         </Card>

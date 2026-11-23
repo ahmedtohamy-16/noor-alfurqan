@@ -1,5 +1,7 @@
 import { ayahCountLabel } from "@/lib/displayFormat";
-import { useParams, Link, useSearchParams } from "react-router-dom";
+import { useParams, Link, useSearchParams, useLocation } from "react-router-dom";
+import { parseQuranReference, validQuranReference } from "@/lib/quranReferenceRules";
+import NotFound from "./NotFound";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, BookOpen, Headphones, Settings2, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -62,7 +64,10 @@ const fetchTranslation = async (surahNumber: string, edition: string): Promise<A
 const SurahPage = () => {
   const { surahNumber } = useParams<{ surahNumber: string }>();
   const [searchParams] = useSearchParams();
-  const highlightAyah = searchParams.get("ayah");
+  const location = useLocation();
+  const highlightAyah = searchParams.get("ayah") ?? location.hash.match(/^#ayah-(.+)$/)?.[1] ?? null;
+  const requestedReference = highlightAyah === null ? null : parseQuranReference(`${surahNumber}:${highlightAyah}`);
+  const invalidRequestedAyah = highlightAyah !== null && !validQuranReference(requestedReference);
   const { addFavorite, removeFavorite, isFavorite } = useFavorites();
   const { saveProgress } = useReadingProgress();
   const { incrementPage } = useReadingStats();
@@ -229,16 +234,17 @@ const SurahPage = () => {
 
   // Scroll to highlighted ayah from favorites/verse-of-the-day
   useEffect(() => {
-    if (highlightAyah && surah) {
-      const ayahNum = parseInt(highlightAyah);
-      setTimeout(() => {
+    if (requestedReference && !invalidRequestedAyah && surah) {
+      const ayahNum = requestedReference.ayah;
+      const timer = setTimeout(() => {
         const element = ayahRefs.current[ayahNum];
         if (element) {
           element.scrollIntoView({ behavior: "smooth", block: "center" });
         }
       }, 500);
+      return () => clearTimeout(timer);
     }
-  }, [highlightAyah, surah]);
+  }, [highlightAyah, invalidRequestedAyah, surah]);
 
   // Scroll to current playing ayah
   useEffect(() => {
@@ -298,6 +304,8 @@ const SurahPage = () => {
     ];
     return colors[index % colors.length];
   };
+
+  if (invalidRequestedAyah) return <NotFound />;
 
   if (error) {
     return (

@@ -14,3 +14,13 @@ export const preferredCityName = (candidates: unknown[]): string | null => {
   const names = candidates.filter((value): value is string => typeof value === "string" && !!value.trim()).map(value => arabicCityName(value));
   return names.find(value => value && /[\u0621-\u064A]/.test(value)) ?? names[0] ?? null;
 };
+
+/** Unknown names stay in saved data; the Arabic interface never guesses their translation. */
+export const arabicCityLabel = (name: string | null | undefined): string => {
+  const normalized = arabicCityName(name);
+  return normalized && /[\u0621-\u064A]/.test(normalized) ? normalized : "موقعك الحالي";
+};
+
+export const hasLocationCoordinates = (lat: number | null | undefined, lng: number | null | undefined): boolean =>
+  typeof lat === "number" && Number.isFinite(lat) && Math.abs(lat) <= 90 &&
+  typeof lng === "number" && Number.isFinite(lng) && Math.abs(lng) <= 180;

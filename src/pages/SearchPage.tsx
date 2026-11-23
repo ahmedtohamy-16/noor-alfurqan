@@ -1,4 +1,9 @@
-import { ayahCountLabel } from "@/lib/displayFormat";
+import { arabicDigits, westernDigits, ayahCountLabel } from "@/lib/displayFormat";
+import { parseQuranReference, validQuranReference } from "@/lib/quranReferenceRules";
+import { normalizeArabic } from "@/lib/arabicNormalize";
+import { searchAyahsAsync } from "@/data/quranAyats";
+import { useFavorites } from "@/hooks/useFavorites";
+import FavoriteAyahButton from "@/components/FavoriteAyahButton";
 import { useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { Search, ArrowRight, BookOpen, Hash } from "lucide-react";
@@ -24,19 +29,17 @@ interface AyahResult {
 const fetchAyahSearch = async (query: string): Promise<AyahResult[]> => {
   if (!query.trim()) return [];
   
-  try {
-    const response = await fetch(
-      `https://api.alquran.cloud/v1/search/${encodeURIComponent(query)}/all/ar.alafasy`
-    );
-    const data = await response.json();
-    return data.data?.matches || [];
-  } catch {
-    return [];
-  }
+  const results = await searchAyahsAsync(query);
+  return results.slice(0, 100).map(ayah => {
+    const surah = surahs.find(value => value.number === ayah.sura_id);
+    return { number: ayah.id, text: ayah.text_uthmani, numberInSurah: ayah.ayat_number_in_sura,
+      surah: { number: ayah.sura_id, name: surah?.name || "", englishName: surah?.englishName || "" } };
+  });
 };
 
 const SearchPage = () => {
   const [searchParams] = useSearchParams();
+  const { isFavorite, toggleFavorite } = useFavorites();
   const initialQuery = searchParams.get("q") || "";
   const [query, setQuery] = useState(initialQuery);
   const [searchType, setSearchType] = useState<"surah" | "ayah">("surah");
@@ -45,10 +48,10 @@ const SearchPage = () => {
   const filteredSurahs = surahs.filter((surah) => {
     if (!query.trim()) return false;
     return (
-      surah.name.includes(query) ||
+      normalizeArabic(surah.name).includes(normalizeArabic(query)) ||
       surah.englishName.toLowerCase().includes(query.toLowerCase()) ||
       surah.englishNameTranslation.toLowerCase().includes(query.toLowerCase()) ||
-      surah.number.toString() === query
+      surah.number.toString() === westernDigits(query.trim())
     );
   });
 
@@ -61,15 +64,8 @@ const SearchPage = () => {
   });
 
   // Check if query is a valid ayah reference (e.g., "2:255" for Ayat Al-Kursi)
-  const parseAyahReference = (q: string) => {
-    const match = q.match(/^(\d+):(\d+)$/);
-    if (match) {
-      return { surah: parseInt(match[1]), ayah: parseInt(match[2]) };
-    }
-    return null;
-  };
-
-  const ayahRef = parseAyahReference(query);
+  const rawRef = parseQuranReference(query);
+  const ayahRef = validQuranReference(rawRef) ? rawRef : null;
 
   return (
     <div className="min-h-screen bg-background">
@@ -86,7 +82,7 @@ const SearchPage = () => {
             <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
             <Input
               type="text"
-              placeholder="ابحث عن سورة، كلمة، أو رقم آية (مثال: 2:255)..."
+              placeholder="ابحث عن سورة، كلمة، أو رقم آية (مثال: ٢:٢٥٥)..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               className="pr-12 h-14 text-lg rounded-xl border-2 focus:border-primary text-right"
@@ -109,22 +105,24 @@ const SearchPage = () => {
               {/* Direct Ayah Reference */}
               {ayahRef && (
                 <div className="mb-6">
-                  <Link to={`/surah/${ayahRef.surah}#ayah-${ayahRef.ayah}`}>
+                  <Link to={`/surah/${ayahRef.surah}?ayah=${ayahRef.ayah}`}>
                     <div className="bg-primary/10 border border-primary/20 rounded-xl p-4 hover:bg-primary/20 transition-colors">
                       <p className="text-sm text-primary mb-1">الذهاب مباشرة إلى:</p>
                       <p className="font-bold text-foreground">
-                        سورة {surahs.find(s => s.number === ayahRef.surah)?.name || ayahRef.surah} - الآية {ayahRef.ayah}
+                        سورة {surahs.find(s => s.number === ayahRef.surah)?.name || arabicDigits(ayahRef.surah)} - الآية {arabicDigits(ayahRef.ayah)}
                       </p>
                     </div>
                   </Link>
                 </div>
               )}
 
+              {rawRef && !ayahRef && <p role="alert" className="mb-4 text-center text-muted-foreground">رقم السورة أو الآية غير صحيح</p>}
+
               {query.trim() && (
                 <div>
                   <p className="text-muted-foreground mb-4">
                     {filteredSurahs.length > 0
-                      ? `تم العثور على ${filteredSurahs.length} نتيجة`
+                      ? `تم العثور على ${arabicDigits(filteredSurahs.length)} نتيجة`
                       : "لم يتم العثور على نتائج"}
                   </p>
 
@@ -174,22 +172,22 @@ const SearchPage = () => {
               ) : ayahResults && ayahResults.length > 0 ? (
                 <div>
                   <p className="text-muted-foreground mb-4">
-                    تم العثور على {ayahResults.length} آية
+                    تم العثور على {ayahCountLabel(ayahResults.length)}
                   </p>
                   <div className="space-y-4">
                     {ayahResults.slice(0, 50).map((ayah) => (
+                      <div key={ayah.number} className="relative">
                       <Link
-                        key={ayah.number}
-                        to={`/surah/${ayah.surah.number}#ayah-${ayah.numberInSurah}`}
+                        to={`/surah/${ayah.surah.number}?ayah=${ayah.numberInSurah}`}
                         className="block"
                       >
                         <div className="bg-card hover:bg-surah-card-hover border border-border rounded-xl p-4 transition-all hover:shadow-md">
-                          <div className="flex items-center gap-2 mb-2">
+                          <div className="flex flex-wrap items-center gap-2 mb-2 pl-12">
                             <span className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-medium">
                               {ayah.surah.name}
                             </span>
                             <span className="text-sm text-muted-foreground">
-                              الآية {ayah.numberInSurah}
+                              الآية {arabicDigits(ayah.numberInSurah)}
                             </span>
                           </div>
                           <p className="text-foreground font-quran text-lg leading-loose line-clamp-3">
@@ -197,6 +195,8 @@ const SearchPage = () => {
                           </p>
                         </div>
                       </Link>
+                      <div className="absolute left-1 top-1"><FavoriteAyahButton ayah={ayah.numberInSurah} active={isFavorite(ayah.surah.number, ayah.numberInSurah)} onToggle={() => toggleFavorite(ayah.surah.number, ayah.numberInSurah)} /></div>
+                      </div>
                     ))}
                   </div>
                 </div>
@@ -219,7 +219,7 @@ const SearchPage = () => {
               ابدأ بكتابة اسم السورة أو كلمة للبحث
             </p>
             <p className="text-sm text-muted-foreground">
-              يمكنك أيضاً البحث برقم الآية مثل: 2:255 (آية الكرسي)
+              يمكنك أيضاً البحث برقم الآية مثل: ٢:٢٥٥ (آية الكرسي)
             </p>
           </div>
         )}

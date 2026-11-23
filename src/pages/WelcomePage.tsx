@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { BookOpen, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { arabicDigits } from "@/lib/displayFormat";
 
 const WelcomePage = () => {
   const navigate = useNavigate();
@@ -62,7 +63,7 @@ const WelcomePage = () => {
 
         {/* Footer */}
         <p className="absolute bottom-6 text-xs text-muted-foreground/60">
-          © {new Date().getFullYear()} نور الفرقان
+          © {arabicDigits(new Date().getFullYear())} نور الفرقان
         </p>
       </main>
     </div>

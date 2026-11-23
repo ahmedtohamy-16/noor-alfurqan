@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.89.0";
+import { arabicDigits } from "../_shared/displayNumbers.ts";
 
 const allowedOrigins = [
   "https://noor-alfurqan.lovable.app",
@@ -10,7 +11,7 @@ const allowedOrigins = [
 ];
 
 const getCorsHeaders = (origin: string | null): Record<string, string> => {
-  const allowedOrigin = allowedOrigins.includes(origin || "") ? origin! : allowedOrigins[0];
+  const allowedOrigin = origin && allowedOrigins.includes(origin) ? origin : allowedOrigins[0];
   return {
     "Access-Control-Allow-Origin": allowedOrigin,
     "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -220,7 +221,7 @@ serve(async (req) => {
       }
 
       // === Prayer Time Reminders with Adhan ===
-      if (user.latitude && user.longitude && user.prayer_reminder_minutes > 0) {
+      if (user.latitude !== null && user.longitude !== null && user.prayer_reminder_minutes > 0) {
         const prayerTimes = await getPrayerTimes(
           user.latitude,
           user.longitude,
@@ -262,7 +263,7 @@ serve(async (req) => {
               notifications.push({
                 user_id: user.user_id,
                 title: `🕌 صلاة ${info.ar}`,
-                body: `باقي ${user.prayer_reminder_minutes} دقيقة على صلاة ${info.ar}`,
+                body: `باقي ${arabicDigits(user.prayer_reminder_minutes)} دقيقة على صلاة ${info.ar}`,
                 tag: `prayer-${info.key}`,
                 notification_type: "prayer",
                 data: {
@@ -337,7 +338,7 @@ serve(async (req) => {
       }
 
       // === After Prayer Azkar ===
-      if (user.azkar_prayer_enabled && user.latitude && user.longitude) {
+      if (user.azkar_prayer_enabled && user.latitude !== null && user.longitude !== null) {
         const prayerTimes = await getPrayerTimes(
           user.latitude,
           user.longitude,

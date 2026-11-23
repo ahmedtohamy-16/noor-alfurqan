@@ -1,8 +1,5 @@
-export const arabicDigits = (value: number | string) =>
-  String(value).replace(/\d/g, (digit) => "٠١٢٣٤٥٦٧٨٩"[Number(digit)]);
-
-export const westernDigits = (value: string) =>
-  value.replace(/[٠-٩]/g, digit => String("٠١٢٣٤٥٦٧٨٩".indexOf(digit)));
+import { arabicDigits } from "../../supabase/functions/_shared/displayNumbers";
+export { arabicDigits, westernDigits } from "../../supabase/functions/_shared/displayNumbers";
 
 export const ayahCountLabel = (count: number) =>
   `${arabicDigits(count)} ${count >= 3 && count <= 10 ? "آيات" : "آية"}`;

@@ -1,6 +1,7 @@
 import { BookMarked, ChevronRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { arabicDigits } from "@/lib/displayFormat";
 
 const SOURCES = "البخاري · مسلم · الترمذي · أبو داود · النسائي · ابن ماجه · مالك · أحمد · الدارمي";
 
@@ -32,7 +33,7 @@ const HadithPageHeader = ({ bookmarkCount = 0 }: { bookmarkCount?: number }) => 
           <BookMarked className="w-5 h-5 text-[hsl(var(--gold-gradient-end))]" />
           {bookmarkCount > 0 && (
             <span className="absolute -top-1 -left-1 min-w-[18px] h-[18px] px-1 rounded-full bg-[hsl(var(--gold-gradient-end))] text-[10px] font-bold text-white flex items-center justify-center">
-              {bookmarkCount > 99 ? "99+" : bookmarkCount}
+              {arabicDigits(bookmarkCount > 99 ? "99+" : bookmarkCount)}
             </span>
           )}
         </Button>

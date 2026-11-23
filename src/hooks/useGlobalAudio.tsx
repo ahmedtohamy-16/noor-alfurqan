@@ -5,6 +5,7 @@ import { surahs } from '@/data/surahs';
 import { getAyahsBySurahAsync } from '@/data/quranAyats';
 import { startAyahDownload } from '@/lib/ayahDownloads';
 import { decideAfterAyah, type PlayMode, type RepeatMode } from '@/lib/playbackRules';
+import { arabicDigits } from '@/lib/displayFormat';
 
 export type { PlayMode, RepeatMode };
 
@@ -387,7 +388,7 @@ export const GlobalAudioProvider: React.FC<{ children: ReactNode }> = ({ childre
     const ayah = currentSurah.ayahs[currentAyahIndex];
     try {
       navigator.mediaSession.metadata = new MediaMetadata({
-        title: `سورة ${currentSurah.name} · آية ${ayah?.numberInSurah ?? ''}`,
+        title: `سورة ${currentSurah.name} · آية ${arabicDigits(ayah?.numberInSurah ?? '')}`,
         artist: selectedReciter.nameArabic,
         album: 'نور الفرقان',
         artwork: [{ src: '/favicon.ico', sizes: '64x64' }],

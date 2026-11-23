@@ -8,6 +8,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { arabicDigits } from "@/lib/displayFormat";
 
 interface ShareAyahDialogProps {
   isOpen: boolean;
@@ -67,7 +68,7 @@ const ShareAyahDialog = ({
     // Ayah number
     ctx.fillStyle = "rgba(201, 169, 97, 0.7)";
     ctx.font = "28px 'Amiri', serif";
-    ctx.fillText(`الآية ${ayahNumber}`, canvas.width / 2, 170);
+    ctx.fillText(`الآية ${arabicDigits(ayahNumber)}`, canvas.width / 2, 170);
 
     // Ayah text - word wrap
     ctx.fillStyle = "#ffffff";
@@ -134,8 +135,8 @@ const ShareAyahDialog = ({
 
       try {
         await navigator.share({
-          title: `${surahName} - الآية ${ayahNumber}`,
-          text: `${ayahText}\n\n${surahName} - الآية ${ayahNumber}\n\nنور الفرقان`,
+          title: `${surahName} - الآية ${arabicDigits(ayahNumber)}`,
+          text: `${ayahText}\n\n${surahName} - الآية ${arabicDigits(ayahNumber)}\n\nنور الفرقان`,
           files: [file],
         });
       } catch (error) {
@@ -148,7 +149,7 @@ const ShareAyahDialog = ({
   };
 
   const handleCopyText = () => {
-    const text = `${ayahText}\n\n${surahName} - الآية ${ayahNumber}\n\nنور الفرقان`;
+    const text = `${ayahText}\n\n${surahName} - الآية ${arabicDigits(ayahNumber)}\n\nنور الفرقان`;
     navigator.clipboard.writeText(text);
     setCopied(true);
     toast.success("تم نسخ النص");
@@ -167,7 +168,7 @@ const ShareAyahDialog = ({
 
         {/* Preview */}
         <div className="bg-gradient-to-br from-[#1a2f1a] to-[#0d1f0d] rounded-xl p-6 text-center">
-          <p className="text-accent text-sm mb-2">{surahName} - الآية {ayahNumber}</p>
+          <p className="text-accent text-sm mb-2">{surahName} - الآية {arabicDigits(ayahNumber)}</p>
           <p className="font-quran text-white text-lg leading-relaxed mb-4">
             {ayahText.length > 100 ? ayahText.slice(0, 100) + "..." : ayahText}
           </p>

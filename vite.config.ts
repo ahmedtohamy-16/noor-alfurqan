@@ -49,7 +49,7 @@ export default defineConfig(({ mode }) => ({
           options: { cacheName: "noor-hashed-assets", expiration: { maxEntries: 100, maxAgeSeconds: 86400 * 30 } },
         },
         {
-          urlPattern: ({ url }) => url.hostname === "api.aladhan.com" && /^\/v1\/(timings|gToH)/.test(url.pathname),
+          urlPattern: ({ url }) => url.hostname === "api.aladhan.com" && /^\/v1\/(timings|gToH|calendar|hijriCalendar)/.test(url.pathname),
           handler: "NetworkFirst",
           options: { cacheName: "noor-prayer-data", networkTimeoutSeconds: 5, cacheableResponse: { statuses: [200] }, expiration: { maxEntries: 60, maxAgeSeconds: 86400 * 7 } },
         },

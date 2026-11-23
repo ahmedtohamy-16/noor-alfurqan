@@ -25,6 +25,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/untypedClient";
 import { validateUsername, sanitizeUsernameInput, friendlyUsernameError } from "@/lib/usernameRules";
+import { arabicDigits } from "@/lib/displayFormat";
 
 interface ProfileData {
   id: string;
@@ -299,7 +300,7 @@ const ProfilePage = () => {
                   {!displayNameRestriction.allowed && (
                     <p className="text-xs text-muted-foreground mt-1 flex items-center justify-center gap-1">
                       <Clock className="w-3 h-3" />
-                      يمكنك التغيير بعد {displayNameRestriction.daysRemaining} يوم
+                      يمكنك التغيير بعد {arabicDigits(displayNameRestriction.daysRemaining)} يوم
                     </p>
                   )}
                 </div>
@@ -376,7 +377,7 @@ const ProfilePage = () => {
                   {!usernameRestriction.allowed && (
                     <p className="text-xs text-amber-500 mt-1 flex items-center justify-center gap-1">
                       <AlertCircle className="w-3 h-3" />
-                      يمكنك تغيير اليوزر نيم بعد {usernameRestriction.daysRemaining} يوم
+                      يمكنك تغيير اليوزر نيم بعد {arabicDigits(usernameRestriction.daysRemaining)} يوم
                     </p>
                   )}
                 </div>
@@ -473,8 +474,8 @@ const ProfilePage = () => {
                 <div>
                   <h4 className="font-medium text-amber-600 dark:text-amber-400 mb-1">قيود التغيير</h4>
                   <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
-                    <li>يمكن تغيير اسم المستخدم (Username) مرة كل 30 يوماً</li>
-                    <li>يمكن تغيير الاسم (Display Name) مرة كل 7 أيام (بحد أقصى 3 مرات أسبوعياً)</li>
+                    <li>يمكن تغيير اسم المستخدم (Username) مرة كل ٣٠ يوماً</li>
+                    <li>يمكن تغيير الاسم (Display Name) مرة كل ٧ أيام (بحد أقصى ٣ مرات أسبوعياً)</li>
                     <li>جميع التغييرات يتم تسجيلها للأمان</li>
                   </ul>
                 </div>

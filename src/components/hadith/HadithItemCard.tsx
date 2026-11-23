@@ -13,6 +13,7 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Hadith, getBookById } from '@/data/hadithBooks';
 import { cn } from '@/lib/utils';
+import { arabicDigits } from '@/lib/displayFormat';
 
 interface HadithItemCardProps {
   hadith: Hadith;
@@ -77,7 +78,7 @@ const HadithItemCard = ({
             {book?.nameAr}
           </Badge>
           <span className="text-sm font-medium text-muted-foreground">
-            رقم {hadith.hadithNumber}
+            رقم {arabicDigits(hadith.hadithNumber)}
           </span>
         </div>
         

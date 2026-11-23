@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import { useAudioDownloadQuota } from '@/hooks/useAudioDownloadQuota';
+import { arabicDigits } from '@/lib/displayFormat';
 
 interface DownloadTask {
   id: string;
@@ -99,7 +100,7 @@ const DownloadManagerUI = () => {
         <div className="flex items-center gap-2">
           <Download className="w-4 h-4 text-primary" />
           <span className="font-medium text-sm">
-            التحميلات ({activeTasks.length} نشط)
+            التحميلات ({arabicDigits(activeTasks.length)} نشط)
           </span>
         </div>
         <div className="flex items-center gap-1">
@@ -162,8 +163,8 @@ const DownloadManagerUI = () => {
                 <div className="space-y-1">
                   <Progress value={task.progress} className="h-2" />
                   <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <span>{task.totalSize || ''}</span>
-                    <span>{Math.round(task.progress)}%</span>
+                    <span>{arabicDigits(task.totalSize || '')}</span>
+                    <span dir="ltr" className="arabic-digits">{arabicDigits(Math.round(task.progress))}٪</span>
                   </div>
                 </div>
               )}

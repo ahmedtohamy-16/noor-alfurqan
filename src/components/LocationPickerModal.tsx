@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/select";
 import { countries, prayerMethods, type City } from "@/data/locationData";
 import { useUserSettings } from "@/hooks/useUserSettings";
+import { arabicCityLabel, hasLocationCoordinates } from "@/lib/cityNames";
 
 // Madhab options
 const madhabs = [
@@ -38,7 +39,7 @@ const LocationPickerModal = ({ open, onOpenChange }: LocationPickerModalProps) =
   const [selectedMethod, setSelectedMethod] = useState<number>(settings.prayer_method || recommendedPrayerMethod(settings.country_code));
   const [selectedMadhab, setSelectedMadhab] = useState<number>(settings.prayer_madhab || 0);
 
-  const hasCurrentLocation = settings.city_name && settings.latitude && settings.longitude;
+  const hasCurrentLocation = hasLocationCoordinates(settings.latitude, settings.longitude);
 
   const handleAutoDetect = async () => {
     setIsDetecting(true);
@@ -100,7 +101,7 @@ const LocationPickerModal = ({ open, onOpenChange }: LocationPickerModalProps) =
                 <MapPin className="w-4 h-4 text-primary" />
                 <p className="text-sm text-muted-foreground">موقعك الحالي:</p>
               </div>
-              <p className="font-bold text-lg text-foreground">{settings.city_name}</p>
+              <p className="font-bold text-lg text-foreground">{arabicCityLabel(settings.city_name)}</p>
             </div>
           )}
 

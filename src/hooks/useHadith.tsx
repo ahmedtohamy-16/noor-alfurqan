@@ -255,7 +255,7 @@ export const useHadith = (): UseHadithResult => {
       };
     } catch (error) {
       console.error('Error searching hadiths:', error);
-      return { results: [], total: 0 };
+      throw error;
     } finally {
       setLoading(false);
     }
