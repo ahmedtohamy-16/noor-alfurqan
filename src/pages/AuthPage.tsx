@@ -25,6 +25,7 @@ import { toast } from "sonner";
 import { useAuth, authErrorMessage } from "@/hooks/useAuth";
 import { getGuestDataSummary } from "@/services/guestDataService";
 import { supabase } from "@/integrations/supabase/untypedClient";
+import { getResendState, loadAttempts, recordAttempt } from "@/lib/otpResendRules";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { passwordRules, isPasswordValid, hasArabic } from "@/lib/passwordRules";
 import { validateEmail } from "@/lib/emailRules";
@@ -216,6 +217,8 @@ const AuthPage = () => {
       } else {
         const { needsConfirmation } = await signUp(email, password, username.trim(), displayName.trim());
         if (needsConfirmation) {
+          setAttempts(recordAttempt());
+          setNow(Date.now());
           setPendingEmail(email);
         } else {
           toast.success("تم إنشاء حسابك! مرحباً بك في نور الفرقان");
@@ -245,13 +248,28 @@ const AuthPage = () => {
     navigate(searchParams.get("next") || "/");
   };
 
-  const handleResend = async () => {
+  const [now, setNow] = useState(Date.now());
+  const [attempts, setAttempts] = useState<number[]>(() => loadAttempts());
+  const [isResending, setIsResending] = useState(false);
+  useEffect(() => {
     if (!pendingEmail) return;
+    const t = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(t);
+  }, [pendingEmail]);
+  const resendState = getResendState(attempts, now);
+
+  const handleResend = async () => {
+    if (!pendingEmail || !resendState.canResend || isResending) return;
+    setIsResending(true);
+    setAttempts(recordAttempt());
+    setNow(Date.now());
     try {
       await resendConfirmation(pendingEmail);
       toast.success("تم إرسال رسالة التأكيد مرة أخرى");
     } catch (e) {
       toast.error(authErrorMessage(e));
+    } finally {
+      setIsResending(false);
     }
   };
 
@@ -312,6 +330,7 @@ const AuthPage = () => {
             </p>
           </div>
 
+          {!pendingEmail && (<>
           {/* Tabs */}
           <div className="grid grid-cols-2 bg-muted/50 rounded-xl p-1 mb-5">
             <button
@@ -345,24 +364,53 @@ const AuthPage = () => {
             </div>
           )}
 
+          </>)}
+
           {pendingEmail && (
-            <div className="mb-4 p-4 bg-primary/10 border border-primary/30 rounded-xl text-right text-sm space-y-3">
-              <p className="font-bold text-primary">أكّد بريدك الإلكتروني</p>
-              <p className="text-muted-foreground text-xs">أرسلنا رمز تأكيد إلى {pendingEmail}. أدخله هنا لتفعيل حسابك.</p>
+            <div className="bg-card border border-border rounded-3xl p-6 shadow-lg shadow-primary/10 text-center space-y-5 animate-fade-in">
+              <div className="mx-auto w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center">
+                <Shield className="w-7 h-7 text-primary" />
+              </div>
+              <div className="space-y-1">
+                <h2 className="text-lg font-extrabold text-foreground">أدخل رمز التأكيد</h2>
+                <p className="text-xs text-muted-foreground leading-relaxed">أرسلنا رمزًا من ٦ أرقام إلى<br /><span className="font-bold text-foreground break-all" dir="ltr">{pendingEmail}</span></p>
+              </div>
               <div className="flex justify-center" dir="ltr">
-                <InputOTP maxLength={6} value={otp} onChange={setOtp}>
-                  <InputOTPGroup>
-                    {[0, 1, 2, 3, 4, 5].map((i) => <InputOTPSlot key={i} index={i} />)}
+                <InputOTP maxLength={6} value={otp} onChange={setOtp} autoFocus inputMode="numeric">
+                  <InputOTPGroup className="gap-2">
+                    {[0, 1, 2, 3, 4, 5].map((i) => (
+                      <InputOTPSlot key={i} index={i} className="h-12 w-11 rounded-xl border text-xl font-bold first:rounded-xl last:rounded-xl" />
+                    ))}
                   </InputOTPGroup>
                 </InputOTP>
               </div>
-              <Button type="button" className="w-full" disabled={otp.length < 6 || isVerifying} onClick={handleVerifyOtp}>
+              <Button type="button" className="w-full h-12 font-bold" disabled={otp.length < 6 || isVerifying} onClick={handleVerifyOtp}>
                 {isVerifying ? "جارٍ التحقق..." : "تأكيد الرمز"}
               </Button>
-              <Button type="button" size="sm" variant="outline" className="w-full" onClick={handleResend}>إعادة إرسال الرمز</Button>
+              <div className="space-y-2">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="w-full h-11 disabled:opacity-100 disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed"
+                  disabled={!resendState.canResend || isResending}
+                  onClick={handleResend}
+                >
+                  {resendState.locked
+                    ? "يرجى إعادة المحاولة لاحقًا"
+                    : isResending
+                      ? "جارٍ الإرسال..."
+                      : resendState.cooldownSeconds > 0
+                        ? `إعادة الإرسال بعد ${resendState.cooldownSeconds.toLocaleString("ar-EG")} ثانية`
+                        : "إرسال الرمز مرة أخرى"}
+                </Button>
+                <button type="button" onClick={() => { setPendingEmail(null); setOtp(""); }} className="text-xs text-muted-foreground hover:text-foreground min-h-11">
+                  تغيير البريد الإلكتروني
+                </button>
+              </div>
             </div>
           )}
 
+          {!pendingEmail && (<>
           {isBanned && (
             <div className="mb-4 p-3 bg-destructive/10 border border-destructive/30 rounded-xl flex items-center gap-3">
               <Ban className="w-6 h-6 text-destructive" />
@@ -656,6 +704,7 @@ const AuthPage = () => {
               <span>المتابعة عبر Google</span>
             </Button>
           </div>
+          </>)}
 
           <div className="mt-4 flex items-center justify-center gap-4 text-xs">
             <a href="mailto:support@nooralfurqan.app?subject=%D8%B7%D9%84%D8%A8%20%D8%AF%D8%B9%D9%85" className="text-primary hover:underline min-h-11 inline-flex items-center">

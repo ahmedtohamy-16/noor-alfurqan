@@ -18,7 +18,7 @@ interface Props {
 const HadithTopicChips = ({ selected, onToggle }: Props) => {
   return (
     <div
-      className="overflow-x-auto scrollbar-none px-4 -mx-1"
+      className="overflow-x-auto scrollbar-none px-4"
       style={{ scrollbarWidth: "none" }}
     >
       <div className="flex items-center gap-2 min-w-max py-1" dir="rtl">

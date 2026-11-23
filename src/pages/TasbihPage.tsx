@@ -4,6 +4,7 @@ import { ChevronLeft, BarChart3, Edit, Plus, Clock, Settings2, Rabbit, Turtle, G
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
+import { Input } from "@/components/ui/input";
 import TasbihCounter from "@/components/TasbihCounter";
 import { useTasbih } from "@/hooks/useTasbih";
 import mosqueBg from "@/assets/mosque-night-hero.jpg";
@@ -25,6 +26,15 @@ const TasbihPage = () => {
   const [dailyGoal, setDailyGoal] = useState(1000);
   const greeting = greetingForTime();
   const [showSettings, setShowSettings] = useState(false);
+  const [customDhikr, setCustomDhikr] = useState("");
+  const [goalInput, setGoalInput] = useState("");
+  const saveGoal = (n: number) => {
+    if (!Number.isFinite(n) || n < 1) return;
+    const v = Math.min(100000, Math.floor(n));
+    setDailyGoal(v);
+    localStorage.setItem("tasbih_daily_goal", String(v));
+    setGoalInput("");
+  };
 
   useEffect(() => {
     const stored = localStorage.getItem("tasbih_daily_goal");
@@ -83,8 +93,10 @@ const TasbihPage = () => {
         {/* Appearance Settings */}
         <Card className="mt-4 p-5">
           <button
+            type="button"
             onClick={() => setShowSettings((s) => !s)}
-            className="flex items-center justify-between w-full"
+            aria-expanded={showSettings}
+            className="relative z-10 flex items-center justify-between w-full min-h-11"
           >
             <div className="flex items-center gap-2">
               <Settings2 className="w-4 h-4 text-primary" />
@@ -95,6 +107,25 @@ const TasbihPage = () => {
 
           {showSettings && (
             <div className="mt-4 space-y-5 animate-fade-in">
+              <div>
+                <p className="text-sm text-muted-foreground mb-2">ذكر مخصص</p>
+                <form className="flex gap-2" onSubmit={(e) => { e.preventDefault(); const t = customDhikr.trim(); if (t) { changeDhikr(t.slice(0, 200)); setCustomDhikr(""); } }}>
+                  <Input value={customDhikr} onChange={(e) => setCustomDhikr(e.target.value)} placeholder="اكتب الذكر الذي تريده" maxLength={200} className="h-11" />
+                  <Button type="submit" className="h-11 shrink-0" disabled={!customDhikr.trim()}>اعتماد</Button>
+                </form>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground mb-2">الهدف اليومي</p>
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {[100, 300, 500, 1000].map((g) => (
+                    <button key={g} type="button" onClick={() => saveGoal(g)} className={cn("min-h-10 px-3 rounded-full border text-sm arabic-digits", dailyGoal === g ? "bg-primary text-primary-foreground border-primary" : "bg-muted/40 border-transparent")}>{arabic(g)}</button>
+                  ))}
+                </div>
+                <form className="flex gap-2" onSubmit={(e) => { e.preventDefault(); saveGoal(Number(goalInput)); }}>
+                  <Input type="number" inputMode="numeric" min={1} value={goalInput} onChange={(e) => setGoalInput(e.target.value)} placeholder="عدد مخصص" className="h-11" />
+                  <Button type="submit" variant="outline" className="h-11 shrink-0" disabled={!goalInput}>حفظ</Button>
+                </form>
+              </div>
               {/* Speed */}
               <div>
                 <div className="flex items-center justify-between mb-2">
@@ -179,7 +210,7 @@ const TasbihPage = () => {
         <Card className="mt-4 p-5">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-bold text-foreground">هدفك اليومي</h3>
-            <Edit className="w-4 h-4 text-primary" />
+            <button type="button" aria-label="تعديل الهدف" onClick={() => setShowSettings(true)} className="w-11 h-11 -m-3 flex items-center justify-center"><Edit className="w-4 h-4 text-primary" /></button>
           </div>
           <div className="flex items-center gap-4">
             <div className="relative w-20 h-20 shrink-0">
@@ -208,31 +239,45 @@ const TasbihPage = () => {
           </div>
         </Card>
 
-        {/* Last session */}
+        {/* Stats */}
         <Card className="mt-4 p-5">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-bold text-foreground">آخر جلسة</h3>
-            <Clock className="w-4 h-4 text-primary" />
+            <h3 className="font-bold text-foreground">إحصائياتك</h3>
+            <BarChart3 className="w-4 h-4 text-primary" />
           </div>
-          <div className="grid grid-cols-3 gap-3 text-center">
-            <div>
-              <p className="text-2xl font-bold text-foreground arabic-digits">{arabic(stats.todayCount || 0)}</p>
-              <p className="text-xs text-muted-foreground mt-1">سبحة</p>
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-foreground">--</p>
-              <p className="text-xs text-muted-foreground mt-1">دقيقة</p>
-            </div>
-            <div>
-              <p className="text-base font-bold text-foreground">اليوم</p>
-              <p className="text-xs text-muted-foreground mt-1">--:--</p>
-            </div>
+          <div className="grid grid-cols-2 gap-3 text-center">
+            {[
+              { v: stats.todayCount, l: "اليوم" },
+              { v: stats.weekCount, l: "آخر ٧ أيام" },
+              { v: stats.totalCount, l: "الإجمالي" },
+              { v: stats.streakDays, l: "أيام متتالية" },
+            ].map((x) => (
+              <div key={x.l} className="rounded-2xl bg-muted/40 py-3">
+                <p className="text-2xl font-bold text-primary arabic-digits">{arabic(x.v || 0)}</p>
+                <p className="text-xs text-muted-foreground mt-1">{x.l}</p>
+              </div>
+            ))}
           </div>
+          {stats.dhikrTypes.length > 0 && (
+            <div className="mt-4 space-y-2">
+              {stats.dhikrTypes.slice(0, 4).map((d) => (
+                <div key={d.type} className="flex items-center justify-between text-sm">
+                  <span className="truncate">{d.type}</span>
+                  <span className="text-primary font-bold arabic-digits">{arabic(d.count)}</span>
+                </div>
+              ))}
+            </div>
+          )}
+          {stats.lastSession && (
+            <p className="mt-4 text-xs text-muted-foreground flex items-center gap-1">
+              <Clock className="w-3.5 h-3.5" /> آخر جلسة: {arabic(stats.lastSession.count)} — {stats.lastSession.dhikr}
+            </p>
+          )}
         </Card>
 
-        <Button className="w-full mt-5 h-14 text-base rounded-2xl gap-2 shadow-lg shadow-primary/30">
+        <Button onClick={() => saveSession()} disabled={count === 0} className="w-full mt-5 h-14 text-base rounded-2xl gap-2 shadow-lg shadow-primary/30">
           <Plus className="w-5 h-5" />
-          جلسة جديدة
+          حفظ الجلسة وبدء جلسة جديدة
         </Button>
       </main>
     </div>

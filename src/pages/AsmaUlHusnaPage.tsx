@@ -166,7 +166,7 @@ const AsmaUlHusnaPage = () => {
 
         {/* Details Dialog */}
         <Dialog open={!!selected} onOpenChange={(o) => !o && setSelected(null)}>
-          <DialogContent className="arabic-ui max-w-md">
+          <DialogContent className="arabic-ui w-[calc(100%-2rem)] max-w-md rounded-3xl sm:rounded-3xl">
             {selected && (
               <>
                 <DialogHeader>

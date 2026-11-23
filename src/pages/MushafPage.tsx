@@ -12,10 +12,15 @@ import { getAyahsByPageAsync } from "@/data/quranAyats";
 import { surahs } from "@/data/surahs";
 
 const TOTAL_PAGES = 604;
+const JUZ_START_PAGES = [1,22,42,62,82,102,121,142,162,182,201,222,242,262,282,302,322,342,362,382,402,422,442,462,482,502,522,542,562,582];
+const toAr = (n: number) => n.toLocaleString("ar-EG");
 
 const MushafPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const initialPage = parseInt(searchParams.get("page") || "1");
+  const rawPage = searchParams.get("page") || "1";
+  const parsedPage = Number(rawPage);
+  const invalidPage = !Number.isInteger(parsedPage) || parsedPage < 1 || parsedPage > TOTAL_PAGES;
+  const initialPage = invalidPage ? 1 : parsedPage;
   const [currentPage, setCurrentPage] = useState(initialPage);
   const [inputPage, setInputPage] = useState(initialPage.toString());
   const { saveProgress } = useReadingProgress();
@@ -47,10 +52,12 @@ const MushafPage = () => {
     staleTime: 1000 * 60 * 60,
   });
 
+  const currentJuz = JUZ_START_PAGES.filter((p) => p <= currentPage).length;
   const error = isError || pageAyahs.length === 0;
 
   // Update URL and track reading
   useEffect(() => {
+    if (invalidPage) return;
     setSearchParams({ page: currentPage.toString() });
     incrementPage();
   }, [currentPage]);
@@ -102,6 +109,20 @@ const MushafPage = () => {
     return acc;
   }, {} as Record<number, { name: string; number: number; ayahs: typeof pageAyahs }>);
 
+  if (invalidPage) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="container mx-auto px-4 py-20 text-center arabic-ui space-y-4">
+          <p className="text-6xl font-bold text-primary arabic-digits">٤٠٤</p>
+          <h1 className="text-xl font-bold">هذه الصفحة غير موجودة في المصحف</h1>
+          <p className="text-muted-foreground text-sm">صفحات المصحف من ١ إلى ٦٠٤.</p>
+          <Button onClick={() => { setSearchParams({ page: "1" }); setCurrentPage(1); setInputPage("1"); }}>الذهاب إلى الصفحة الأولى</Button>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -121,8 +142,9 @@ const MushafPage = () => {
               type="button"
               variant="outline"
               size="icon"
-              onClick={() => goToPage(currentPage + 1)}
-              disabled={currentPage >= TOTAL_PAGES}
+              onClick={() => goToPage(currentPage - 1)}
+              disabled={currentPage <= 1}
+              aria-label="الصفحة السابقة"
             >
               <ChevronRight className="w-4 h-4" />
             </Button>
@@ -148,12 +170,24 @@ const MushafPage = () => {
               type="button"
               variant="outline"
               size="icon"
-              onClick={() => goToPage(currentPage - 1)}
-              disabled={currentPage <= 1}
+              onClick={() => goToPage(currentPage + 1)}
+              disabled={currentPage >= TOTAL_PAGES}
+              aria-label="الصفحة التالية"
             >
               <ChevronLeft className="w-4 h-4" />
             </Button>
           </form>
+
+          <select
+            aria-label="التصفح بالجزء"
+            value={currentJuz}
+            onChange={(e) => goToPage(JUZ_START_PAGES[Number(e.target.value) - 1])}
+            className="h-10 rounded-md border border-input bg-background px-3 text-sm"
+          >
+            {JUZ_START_PAGES.map((_, i) => (
+              <option key={i} value={i + 1}>الجزء {toAr(i + 1)}</option>
+            ))}
+          </select>
         </div>
 
         {/* Mushaf Content */}
@@ -219,8 +253,8 @@ const MushafPage = () => {
         <div className="flex items-center justify-between mt-6 gap-4">
           <Button
             variant="outline"
-            onClick={() => goToPage(currentPage + 1)}
-            disabled={currentPage >= TOTAL_PAGES}
+            onClick={() => goToPage(currentPage - 1)}
+            disabled={currentPage <= 1}
             className="gap-2"
           >
             <ChevronRight className="w-4 h-4" />
@@ -233,8 +267,8 @@ const MushafPage = () => {
 
           <Button
             variant="outline"
-            onClick={() => goToPage(currentPage - 1)}
-            disabled={currentPage <= 1}
+            onClick={() => goToPage(currentPage + 1)}
+            disabled={currentPage >= TOTAL_PAGES}
             className="gap-2"
           >
             الصفحة التالية

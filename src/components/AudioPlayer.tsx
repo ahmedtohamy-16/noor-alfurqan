@@ -269,7 +269,7 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, AudioPlayerProps>(
       if (isNaN(time)) return "0:00";
       const minutes = Math.floor(time / 60);
       const seconds = Math.floor(time % 60);
-      return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+      return `${minutes}:${seconds.toString().padStart(2, "0")}`.replace(/\d/g, (d) => "٠١٢٣٤٥٦٧٨٩"[+d]);
     };
 
     const handleReciterChange = (reciterId: string) => {

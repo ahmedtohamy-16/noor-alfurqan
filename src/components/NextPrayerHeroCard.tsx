@@ -41,7 +41,7 @@ const formatTime12 = (t: string) => {
   const [h, m] = t.split(":").map(Number);
   const period = h >= 12 ? "م" : "ص";
   const hh = ((h + 11) % 12) + 1;
-  return { time: `${hh.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`, period };
+  return { time: `${hh.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`.replace(/\d/g, (d) => "٠١٢٣٤٥٦٧٨٩"[+d]), period };
 };
 
 const NextPrayerHeroCard = () => {
@@ -104,7 +104,7 @@ const NextPrayerHeroCard = () => {
     return () => clearInterval(i);
   }, [nextPrayer]);
 
-  const f = (n: number) => n.toString().padStart(2, "0");
+  const f = (n: number) => n.toString().padStart(2, "0").replace(/\d/g, (d) => "٠١٢٣٤٥٦٧٨٩"[+d]);
 
   if (!hasLocation) {
     return (

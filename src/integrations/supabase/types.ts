@@ -71,6 +71,33 @@ export type Database = {
         }
         Relationships: []
       }
+      tasbih_sessions: {
+        Row: {
+          count: number
+          created_at: string
+          dhikr: string
+          id: string
+          session_date: string
+          user_id: string
+        }
+        Insert: {
+          count: number
+          created_at?: string
+          dhikr: string
+          id?: string
+          session_date?: string
+          user_id: string
+        }
+        Update: {
+          count?: number
+          created_at?: string
+          dhikr?: string
+          id?: string
+          session_date?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string

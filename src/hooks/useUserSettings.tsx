@@ -84,7 +84,16 @@ const reverseGeocode = async (lat: number, lng: number): Promise<string> => {
       `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=ar`
     );
     const data = await response.json();
-    return data.city || data.locality || data.principalSubdivision || "موقعك الحالي";
+    const name: string = data.city || data.locality || data.principalSubdivision || "";
+    if (/[\u0600-\u06FF]/.test(name)) return name;
+    try {
+      const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=10&accept-language=ar`);
+      const j = await r.json();
+      const a = j.address || {};
+      const ar = a.city || a.town || a.village || a.county || a.state;
+      if (ar && /[\u0600-\u06FF]/.test(ar)) return ar;
+    } catch { /* keep fallback */ }
+    return name || "موقعك الحالي";
   } catch {
     return "موقعك الحالي";
   }
