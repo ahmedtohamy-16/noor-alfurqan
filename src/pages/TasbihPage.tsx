@@ -194,7 +194,7 @@ const TasbihPage = () => {
                 />
               </svg>
               <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-base font-bold text-primary arabic-digits">{arabic(goalProgress)}%</span>
+                <span dir="ltr" className="text-base font-bold text-primary arabic-digits">{arabic(goalProgress)}٪</span>
               </div>
             </div>
             <div className="flex-1 text-center">

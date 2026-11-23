@@ -147,7 +147,7 @@ export function AzkarHome({ sections, progress, searchQuery, onSearch, onOpen, m
           <>
             <Card className="p-4 rounded-2xl shadow-lg flex items-center gap-4">
               <Ring pct={lastPct} size={72}>
-                <span className="text-sm font-bold text-primary arabic-digits">{ar(lastPct)}٪</span>
+                <span dir="ltr" className="text-sm font-bold text-primary arabic-digits">{ar(lastPct)}٪</span>
                 <span className="text-[10px] text-muted-foreground">اليوم</span>
               </Ring>
               <div className="flex-1 min-w-0">
@@ -305,8 +305,8 @@ export function AzkarReader({ section, index, progress, isPlaying, onBack, onInd
           <p className="font-quran text-xl sm:text-2xl leading-[2.3] text-foreground text-center whitespace-pre-line">{dhikr.text}</p>
         </Card>
 
-        <div className="flex items-center justify-center gap-6">
-          <Button variant="outline" onClick={share} className="h-12 rounded-full gap-2 px-5"><Share2 className="w-5 h-5" /> مشاركة</Button>
+        <div className="grid grid-cols-[minmax(0,1fr)_112px_minmax(0,1fr)] items-center gap-2 sm:gap-5 mx-1 sm:mx-4">
+          <Button variant="outline" onClick={share} className="h-12 w-full min-w-0 rounded-full gap-1.5 px-2 sm:px-4"><Share2 className="w-4 h-4 shrink-0" /> مشاركة</Button>
           <button onClick={tap} aria-label={remaining ? `عدّ، المتبقي ${remaining}` : "تم"} className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
             <Ring pct={(count / dhikr.count) * 100} size={112} stroke={8}>
               <span className={cn("w-[88px] h-[88px] rounded-full flex flex-col items-center justify-center", remaining ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary")}>
@@ -315,8 +315,8 @@ export function AzkarReader({ section, index, progress, isPlaying, onBack, onInd
               </span>
             </Ring>
           </button>
-          <Button variant="outline" onClick={() => onToggleAudio(dhikr)} className="h-12 rounded-full gap-2 px-5">
-            {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />} {isPlaying ? "إيقاف" : "استماع"}
+          <Button variant="outline" onClick={() => onToggleAudio(dhikr)} className="h-12 w-full min-w-0 rounded-full gap-1.5 px-2 sm:px-4">
+            {isPlaying ? <Pause className="w-4 h-4 shrink-0" /> : <Play className="w-4 h-4 shrink-0" />} {isPlaying ? "إيقاف" : "استماع"}
           </Button>
         </div>
         <p className="text-center text-xs text-muted-foreground arabic-digits">التكرار {ar(count)} من {ar(dhikr.count)} · اضغط البطاقة أو الدائرة للعد</p>

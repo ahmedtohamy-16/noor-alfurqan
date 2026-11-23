@@ -24,3 +24,5 @@
 - Same-surah range downloads decode one verse at a time and encode one continuous MP3 in a worker; enforce device storage limits across concurrent queue jobs and await IndexedDB transaction completion before marking files saved.
 - Audio storage quotas are synchronized globally from the signed-in user's Supabase pro_entitlements, never legacy Firebase flags or persisted client overrides; subscription expiry/sign-out lowers the limit without deleting existing files.
 - Surah reading position uses the first ayah crossing the line beneath the sticky reading bar and runtime corpus page/juz metadata, so its page indicator follows scrolling rather than the surah's starting page.
+- Ayah menus open on a completed stationary pointer gesture, not pointer-down, and dismiss on scroll/touchmove/wheel so scrolling never opens or carries a verse menu.
+- Dhikr catalogue icons use an explicit subject-based mapping per section, avoiding shared keyword matches that give related sections identical glyphs.

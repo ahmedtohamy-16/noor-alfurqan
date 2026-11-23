@@ -1,5 +1,6 @@
 import { Heart, Share2, BookOpen, Play, Copy, Download } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useEffect, useRef, useState } from "react";
+import { isStationaryTap } from "@/lib/tapGesture";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -36,6 +37,23 @@ const AyahOptionsMenu = ({
   onDownloadAyah,
   children,
 }: AyahOptionsMenuProps) => {
+  const [open, setOpen] = useState(false);
+  const gesture = useRef<{ x: number; y: number; moved: boolean } | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const close = () => setOpen(false);
+    // Capture catches window scrolling and any scrollable ancestor of the verse.
+    document.addEventListener("scroll", close, true);
+    document.addEventListener("touchmove", close, { passive: true });
+    document.addEventListener("wheel", close, { passive: true });
+    return () => {
+      document.removeEventListener("scroll", close, true);
+      document.removeEventListener("touchmove", close);
+      document.removeEventListener("wheel", close);
+    };
+  }, [open]);
+
   const handleCopyAyah = async () => {
     try {
       const textToCopy = `${ayahText}\n\n— سورة ${surahName}، الآية ${ayahNumber}`;
@@ -47,8 +65,28 @@ const AyahOptionsMenu = ({
   };
 
   return (
-    <DropdownMenu modal={false}>
-      <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+    <DropdownMenu modal={false} open={open} onOpenChange={setOpen}>
+      <DropdownMenuTrigger asChild
+        onPointerDown={(e) => {
+          // Radix normally opens on pointer-down, before it can distinguish scrolling.
+          e.preventDefault();
+          if (e.button !== 0) return;
+          gesture.current = { x: e.clientX, y: e.clientY, moved: false };
+        }}
+        onPointerMove={(e) => {
+          if (gesture.current && !isStationaryTap(gesture.current, { x: e.clientX, y: e.clientY })) {
+            gesture.current.moved = true;
+          }
+        }}
+        onPointerCancel={() => { gesture.current = null; }}
+        onPointerUp={(e) => {
+          const start = gesture.current;
+          gesture.current = null;
+          if (start && !start.moved && isStationaryTap(start, { x: e.clientX, y: e.clientY })) {
+            setOpen(previous => !previous);
+          }
+        }}
+        onClick={(e) => e.stopPropagation()}>
         {children}
       </DropdownMenuTrigger>
       <DropdownMenuContent 

@@ -1,5 +1,10 @@
 # Roadmap
 
+## Touch menus and remaining worship details
+- [x] Open ayah menus only after a stationary tap; verified real touch swipes do not open menus and scrolling dismisses an open menu.
+- [x] Give all 132 dhikr sections distinct icons, inset reader actions, and correct goal percentage direction.
+- [x] Exercise dhikr card/circle counting (3→2→1) and tasbih counting (0→1→2) in the mobile preview; 12 focused tests passed.
+
 ## Surah header and reading position
 - [x] Refine the compact surah title and separate fixed surah details from reading position.
 - [x] Verify the sticky Mushaf page/juz indicator follows visible ayahs forward and backward on mobile and desktop; five rule tests passed and both surahs opened without runtime errors.
