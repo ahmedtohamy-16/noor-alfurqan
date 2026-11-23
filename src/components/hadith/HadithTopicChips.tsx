@@ -1,3 +1,5 @@
+import { Heart } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { HADITH_TOPICS } from "@/data/hadithTopics";
 
@@ -16,19 +18,19 @@ const HadithTopicChips = ({ selected, onToggle }: Props) => {
         {HADITH_TOPICS.map((t) => {
           const active = selected.includes(t.id);
           return (
-            <button
+            <Button variant="ghost"
               key={t.id}
               onClick={() => onToggle(t.id)}
               className={cn(
-                "h-9 px-3.5 rounded-full text-xs font-medium border transition-all whitespace-nowrap",
+                "h-11 px-3.5 rounded-full text-xs font-medium border transition-all whitespace-nowrap",
                 active
-                  ? "bg-gradient-to-r from-[hsl(var(--gold-gradient-start))] to-[hsl(var(--gold-gradient-end))] text-white border-transparent shadow-sm"
-                  : "bg-card/60 border-border/60 text-muted-foreground hover:text-foreground hover:border-[hsl(var(--gold-gradient-end)/0.4)]"
+                  ? "bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground border-transparent shadow-sm"
+                  : "bg-card/60 border-border/60 text-muted-foreground hover:text-foreground hover:border-primary/40"
               )}
             >
-              <span className="mr-1">{t.emoji}</span>
+              {t.id === "iman" ? <Heart aria-hidden="true" className="h-4 w-4" /> : <span aria-hidden="true" className="mr-1">{t.emoji}</span>}
               {t.label}
-            </button>
+            </Button>
           );
         })}
       </div>

@@ -1,3 +1,4 @@
+import { arabicDigits } from "@/lib/displayFormat";
 import { BookOpen, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
@@ -25,12 +26,12 @@ const LastReadCard = ({ surahName, surahNumber, ayahNumber, progress }: LastRead
             <span className="text-sm opacity-90">آخر قراءة</span>
           </div>
           <span className="text-xs bg-white/20 px-3 py-1 rounded-full">
-            {Math.round(progress)}% مكتمل
+            {arabicDigits(Math.round(progress))}٪ مكتمل
           </span>
         </div>
 
         <h3 className="text-2xl font-bold mb-1 font-quran">{surahName}</h3>
-        <p className="text-sm opacity-80 mb-4">الآية {ayahNumber}</p>
+        <p className="text-sm opacity-80 mb-4">الآية {arabicDigits(ayahNumber)}</p>
 
         {/* Progress Bar */}
         <div className="w-full h-2 bg-white/20 rounded-full mb-4">

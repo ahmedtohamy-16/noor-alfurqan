@@ -66,7 +66,7 @@ const TasbihCounter = ({ count, increment, reset, saveSession, appearance }: Tas
       <button
         onClick={handleClick}
         className={cn(
-          "relative w-[320px] h-[320px] sm:w-[360px] sm:h-[360px] flex items-center justify-center select-none transition-transform duration-150",
+          "relative w-[min(320px,100%)] aspect-square sm:w-[360px] flex items-center justify-center select-none transition-transform duration-150",
           isPressed ? "scale-[0.97]" : "active:scale-[0.97]"
         )}
         aria-label="عدّاد التسبيح"
@@ -132,7 +132,7 @@ const TasbihCounter = ({ count, increment, reset, saveSession, appearance }: Tas
 
         {/* Center counter (does NOT rotate) */}
         <div className="relative z-10 flex flex-col items-center justify-center w-40 h-40 rounded-full bg-gradient-to-br from-card to-muted/50 border border-primary/20 shadow-xl">
-          <span className="text-6xl font-bold text-foreground tabular-nums leading-none">
+          <span className="arabic-digits text-6xl font-bold text-foreground tabular-nums leading-none">
             {arabic(count)}
           </span>
           <span className="text-xs text-muted-foreground mt-2">سبحة</span>

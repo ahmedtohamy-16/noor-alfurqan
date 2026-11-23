@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { ChevronLeft, BarChart3, Menu, Edit, Plus, Clock, Settings2, Rabbit, Turtle, Gauge } from "lucide-react";
+import { ChevronLeft, BarChart3, Edit, Plus, Clock, Settings2, Rabbit, Turtle, Gauge } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
@@ -8,6 +8,8 @@ import TasbihCounter from "@/components/TasbihCounter";
 import { useTasbih } from "@/hooks/useTasbih";
 import mosqueBg from "@/assets/mosque-night-hero.jpg";
 import { cn } from "@/lib/utils";
+import MobileMenu from "@/components/MobileMenu";
+import { greetingForHour } from "@/lib/displayFormat";
 
 const quickDhikrs = [
   { text: "سبحان الله", count: 33 },
@@ -21,16 +23,12 @@ const quickDhikrs = [
 const TasbihPage = () => {
   const { stats, currentDhikr, changeDhikr, count, increment, reset, saveSession, appearance, updateAppearance } = useTasbih();
   const [dailyGoal, setDailyGoal] = useState(1000);
-  const [greeting, setGreeting] = useState("مساء الخير");
+  const greeting = greetingForHour(new Date().getHours());
   const [showSettings, setShowSettings] = useState(false);
 
   useEffect(() => {
     const stored = localStorage.getItem("tasbih_daily_goal");
     if (stored) setDailyGoal(parseInt(stored));
-    const h = new Date().getHours();
-    if (h < 12) setGreeting("صباح الخير");
-    else if (h < 18) setGreeting("ظهرك سعيد");
-    else setGreeting("مساء الخير");
   }, []);
 
   const arabic = (n: number) => {
@@ -53,18 +51,13 @@ const TasbihPage = () => {
         <div className="absolute inset-0 bg-gradient-to-b from-primary/90 via-primary/80 to-primary" />
         <div className="relative px-4 pt-6 pb-32 arabic-ui" dir="rtl">
           <div className="flex items-center justify-between mb-6">
-            <button className="w-10 h-10 rounded-full bg-white/15 backdrop-blur flex items-center justify-center text-white">
-              <Menu className="w-5 h-5" />
-            </button>
+            <Link to="/reading-stats" aria-label="إحصائيات التسبيح" className="w-11 h-11 rounded-full bg-primary-foreground/15 flex items-center justify-center text-primary-foreground">
+              <BarChart3 className="w-5 h-5" />
+            </Link>
             <div className="text-center text-white">
               <p className="text-sm opacity-90">{greeting} <span>👋</span></p>
             </div>
-            <Link
-              to="/reading-stats"
-              className="w-10 h-10 rounded-full bg-white/15 backdrop-blur flex items-center justify-center text-white"
-            >
-              <BarChart3 className="w-5 h-5" />
-            </Link>
+            <MobileMenu className="bg-primary-foreground/15 text-primary-foreground hover:bg-primary-foreground/25" />
           </div>
 
           <div className="text-center text-white">

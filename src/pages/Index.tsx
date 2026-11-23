@@ -1,3 +1,4 @@
+import { arabicDigits } from "@/lib/displayFormat";
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import {
@@ -89,7 +90,7 @@ const IslamicHome = ({ lastRead }: { lastRead: any }) => {
               </div>
               <div className="text-right">
                 <p className="text-[11px] text-muted-foreground">آخر قراءة</p>
-                <p className="font-bold text-foreground text-sm">{lastRead.surah_name} • الآية {lastRead.ayah_number}</p>
+                <p className="font-bold text-foreground text-sm">{lastRead.surah_name} • الآية {arabicDigits(lastRead.ayah_number)}</p>
               </div>
             </div>
             <Link to={`/surah/${lastRead.surah_number}`}>

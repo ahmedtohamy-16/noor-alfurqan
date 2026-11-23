@@ -1,5 +1,10 @@
 # Roadmap
 
+## Current design review
+- [x] Repair mobile menu and tasbih numeral rendering; verify light/dark mobile.
+- [x] Isolate mixed-language surah labels and widen desktop prayer layout.
+- [x] Correct greeting, hadith topic icon, Arabic counts, loading styles, daily hadith contrast, Pro contrast, welcome copy, and close targets.
+
 ## Done
 - Hosted backend confirmed enabled and healthy; applied the missing data-access permissions to every table, which is what stopped the app from saving or loading anything.
 - Added and backfilled the account email on the profile record; the signup trigger now stores email and display name.

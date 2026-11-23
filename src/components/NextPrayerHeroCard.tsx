@@ -131,7 +131,7 @@ const NextPrayerHeroCard = () => {
 
   if (!nextPrayer) {
     return (
-      <Card className="h-44 bg-primary/20 animate-pulse rounded-2xl" />
+      <Card className="h-44 loading-placeholder animate-pulse motion-reduce:animate-none rounded-2xl" />
     );
   }
 

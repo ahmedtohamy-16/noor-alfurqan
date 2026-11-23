@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { Surah } from "@/data/surahs";
+import { ayahCountLabel } from "@/lib/displayFormat";
 
 interface SurahCardProps {
   surah: Surah;
@@ -54,7 +55,7 @@ const SurahCard = ({ surah, index }: SurahCardProps) => {
             </span>
             <span className="w-1 h-1 rounded-full bg-border" />
             <span className="tabular-nums">
-              {toArabicDigits(surah.numberOfAyahs)} آية
+              {ayahCountLabel(surah.numberOfAyahs)}
             </span>
           </div>
         </div>

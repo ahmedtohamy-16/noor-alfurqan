@@ -15,5 +15,7 @@
 - Quran topic model calls stay in the authenticated Edge Function using request-local Responses SDK helpers; provider denials are persisted server-side to prevent repeated blocked calls.
 
 ## Verification
+- Mobile navigation uses the shared portalled MobileMenu sheet, outside sticky/backdrop-filter ancestors, to avoid clipped overlays and keep controls consistent.
+- Use displayFormat for time-based greetings and Arabic count labels; numeral-only displays use the arabic-digits fallback font to avoid missing glyphs.
 - Auth changes must be exercised in the running preview (sign-up, sign-in, refresh, sign-out, protected route, password reset), not only type-checked.
 - Database state is shared between the preview and the published app, so temporary auth settings must be reverted in the same turn they are changed.

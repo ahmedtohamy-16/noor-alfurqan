@@ -340,9 +340,9 @@ const PrayerTimesPage = () => {
       dir="rtl"
       style={{ fontFamily: "'Tajawal','Cairo',sans-serif" }}
     >
-      <div className="mx-auto w-full max-w-[420px] px-4 pt-5 flex flex-col gap-5">
+      <div className="mx-auto w-full max-w-6xl px-4 pt-5 grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
         {/* Header */}
-        <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center justify-between gap-2 lg:col-span-2">
           <button
             onClick={() => setIsLocationModalOpen(true)}
             className={cn(
@@ -466,9 +466,9 @@ const PrayerTimesPage = () => {
           )}>
             <div className="absolute -top-8 -left-8 w-32 h-32 bg-amber-400/20 rounded-full blur-2xl pointer-events-none" />
             <div className="relative flex flex-col items-center text-center gap-3">
-              <div className="w-16 h-16 rounded-2xl bg-amber-500/20 flex items-center justify-center animate-pulse">
+              <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center">
                 {locationBusy ? (
-                  <Loader2 className="w-8 h-8 text-amber-500 animate-spin" />
+                  <Loader2 className="w-8 h-8 text-muted-foreground animate-spin" />
                 ) : (
                   <MapPin className="w-8 h-8 text-amber-500" />
                 )}
@@ -541,8 +541,7 @@ const PrayerTimesPage = () => {
                 <div
                   key={p.key}
                   className={cn(
-                    "rounded-2xl p-3 h-[92px] animate-pulse",
-                    palette.inactivePrayer
+                    "rounded-2xl p-3 h-[92px] animate-pulse motion-reduce:animate-none loading-placeholder"
                   )}
                 />
               ))}
@@ -665,7 +664,7 @@ const PrayerTimesPage = () => {
           </Button>
         </div>
 
-        <p className={cn("text-center text-[10px] px-2", palette.subText)}>
+        <p className={cn("text-center text-[10px] px-2 lg:col-span-2", palette.subText)}>
           آخر تحديث: {new Date().toLocaleTimeString("ar", { hour: "2-digit", minute: "2-digit" })}
         </p>
       </div>

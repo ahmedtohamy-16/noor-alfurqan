@@ -128,17 +128,16 @@ const SettingsPage = () => {
           {/* ====== Pro CTA ====== */}
           <Link to="/pro" className="block group">
             <Card
-              className="p-5 text-white relative overflow-hidden border-0 group-hover:scale-[1.01] transition-transform"
-              style={{ background: "linear-gradient(135deg, #0074fc 0%, #4ea3ff 60%, #0a4ea8 100%)" }}
+              className="p-5 bg-card text-card-foreground relative overflow-hidden border-primary/30 group-hover:border-primary transition-colors"
             >
               <div className="flex items-center justify-between gap-3">
                 <div className="text-right">
                   <p className="font-bold text-lg flex items-center gap-2 justify-end">
                     نور الفرقان Pro
                   </p>
-                  <p className="text-sm text-white/85">افتح المزايا المتقدمة وادعم استمرار المشروع</p>
+                  <p className="text-sm text-muted-foreground">افتح المزايا المتقدمة وادعم استمرار المشروع</p>
                 </div>
-                <div className="px-4 py-2 rounded-full bg-white/20 backdrop-blur text-sm font-bold whitespace-nowrap">
+                <div className="min-h-11 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-bold whitespace-nowrap">
                   ابدأ الآن
                 </div>
               </div>

@@ -29,9 +29,6 @@ const WelcomePage = () => {
           <p className="text-base text-muted-foreground mb-2">
             اقرأ القرآن واستمع إليه، مع الأذكار والحديث ومواقيت الصلاة — مجانًا وبدون إعلانات
           </p>
-          <p className="text-xs text-muted-foreground/70 tracking-wide">
-            Welcome to Noor Alfurqan
-          </p>
         </div>
 
         {/* CTA buttons */}

@@ -1,3 +1,4 @@
+import { ayahCountLabel } from "@/lib/displayFormat";
 import { useParams, Link, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, BookOpen, Headphones, Settings2, Download } from "lucide-react";
@@ -260,7 +261,7 @@ const SurahPage = () => {
           <Link to="/quran"><Button variant="ghost" size="icon"><ArrowRight className="w-5 h-5" /></Button></Link>
           <div className="flex-1">
             <h1 className="text-2xl md:text-3xl font-bold text-foreground font-quran">{surahInfo?.name}</h1>
-            <p className="text-muted-foreground text-sm">{surahInfo?.englishNameTranslation} • {surahInfo?.numberOfAyahs} آية</p>
+            <p className="text-muted-foreground text-sm flex flex-wrap items-center gap-2" dir="rtl"><bdi dir="ltr">{surahInfo?.englishNameTranslation}</bdi><span aria-hidden="true">•</span><bdi>{ayahCountLabel(surahInfo?.numberOfAyahs || 0)}</bdi></p>
           </div>
           
           {/* Settings Sheet */}
@@ -355,7 +356,7 @@ const SurahPage = () => {
               <div className="text-sm opacity-90">استماع للسورة كاملة</div>
               <div className="text-lg font-bold truncate">{surahInfo?.name}</div>
               <div className="text-xs opacity-80 mt-0.5">
-                {convertToArabicNumber(surahInfo?.numberOfAyahs || 0)} آية • {surahInfo?.revelationType === "Meccan" ? "مكية" : "مدنية"}
+                {ayahCountLabel(surahInfo?.numberOfAyahs || 0)} • {surahInfo?.revelationType === "Meccan" ? "مكية" : "مدنية"}
               </div>
             </div>
           </div>

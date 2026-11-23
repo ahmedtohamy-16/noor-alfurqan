@@ -13,15 +13,9 @@ const HadithOfTheDayCard = ({ hadith, loading, onShare }: Props) => {
   const book = hadith ? getBookById(hadith.bookId) : undefined;
 
   return (
-    <div className="relative overflow-hidden rounded-3xl mx-4 mt-2 shadow-xl">
-      {/* gradient + pattern */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[hsl(var(--gold-gradient-start))] via-[hsl(var(--gold-gradient-end))] to-emerald-700" />
-      <div className="absolute inset-0 opacity-20 mix-blend-overlay islamic-pattern" />
-      <div className="absolute -top-12 -right-12 w-44 h-44 bg-white/20 rounded-full blur-3xl" />
-      <div className="absolute -bottom-12 -left-12 w-44 h-44 bg-black/20 rounded-full blur-3xl" />
-
-      <div className="relative p-6 text-white">
-        <div className="flex items-center gap-2 mb-4">
+    <div className="relative overflow-hidden rounded-2xl mx-4 mt-2 border border-primary/25 bg-card shadow-sm">
+      <div className="relative p-6 text-card-foreground">
+        <div className="flex items-center gap-2 mb-4 text-primary">
           <Sparkles className="w-4 h-4" />
           <span className="text-[11px] font-semibold tracking-wide uppercase opacity-90">
             حديث اليوم
@@ -54,7 +48,7 @@ const HadithOfTheDayCard = ({ hadith, loading, onShare }: Props) => {
             <Button
               onClick={() => hadith && onShare(hadith)}
               variant="secondary"
-              className="mt-5 w-full bg-white/95 text-[hsl(var(--gold-gradient-end))] hover:bg-white font-bold gap-2"
+              className="mt-5 w-full bg-primary text-primary-foreground hover:bg-primary/90 font-bold gap-2"
             >
               <Share2 className="w-4 h-4" />
               شارك حديث اليوم

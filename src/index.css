@@ -26,6 +26,7 @@
     --success-foreground: 0 0% 100%;
 
     --muted: 40 20% 90%;
+    --loading-surface: 0 0% 88%;
     --muted-foreground: 0 0% 40%;
 
     --accent: 43 47% 59%; /* Gold accent #C9A961 */
@@ -79,6 +80,7 @@
     --success-foreground: 0 0% 100%;
 
     --muted: 215 40% 20%;
+    --loading-surface: 0 0% 24%;
     --muted-foreground: 0 0% 70%;
 
     --accent: 43 60% 55%;
@@ -142,6 +144,15 @@
   .arabic-ui {
     font-family: 'Cairo', sans-serif;
     direction: rtl;
+  }
+
+  /* Explicit numeral fallback: UI webfonts may omit Arabic-Indic glyphs. */
+  .arabic-digits {
+    font-family: Arial, Tahoma, sans-serif;
+  }
+
+  .loading-placeholder {
+    background-color: hsl(var(--loading-surface));
   }
 
   /* Quran font families */

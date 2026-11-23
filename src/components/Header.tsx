@@ -1,18 +1,12 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Book, Heart, Settings, Menu, Users, UserCircle2, Bell, X } from "lucide-react";
+import { Book, Heart, Settings, Users, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import ThemeToggle from "./ThemeToggle";
 import { useAuth } from "@/hooks/useAuth";
 import HeaderLocationButton from "./HeaderLocationButton";
-
-const getGreeting = () => {
-  const h = new Date().getHours();
-  if (h >= 4 && h < 12) return "صباح الخير";
-  if (h >= 12 && h < 17) return "نهارك سعيد";
-  if (h >= 17 && h < 21) return "مساء الخير";
-  return "ليلة هانئة";
-};
+import MobileMenu from "./MobileMenu";
+import { greetingForHour } from "@/lib/displayFormat";
 
 const GREETING_KEY = "noor:appStartTs";
 const GREETING_DURATION_MS = 3 * 60 * 1000; // 3 minutes
@@ -20,7 +14,6 @@ const GREETING_DURATION_MS = 3 * 60 * 1000; // 3 minutes
 const Header = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { user, userProfile } = useAuth();
   const [showGreeting, setShowGreeting] = useState(true);
 
@@ -41,7 +34,7 @@ const Header = () => {
   }, []);
 
   const isHome = location.pathname === "/";
-  const greeting = getGreeting();
+  const greeting = greetingForHour(new Date().getHours());
   // Use full registered display name (no split). Guests get no salam at all.
   const displayName =
     (userProfile as any)?.display_name ||
@@ -66,7 +59,7 @@ const Header = () => {
               {/* Bell */}
               <button
                 onClick={() => navigate("/notifications")}
-                className="w-10 h-10 rounded-full bg-muted/50 flex items-center justify-center text-foreground hover:bg-muted transition-colors relative"
+                className="w-11 h-11 rounded-full bg-muted/50 flex items-center justify-center text-foreground hover:bg-muted transition-colors relative"
                 aria-label="الإشعارات"
               >
                 <Bell className="w-5 h-5" />
@@ -89,14 +82,7 @@ const Header = () => {
                 )}
               </div>
 
-              {/* Menu */}
-              <button
-                onClick={() => setIsMenuOpen(true)}
-                className="w-10 h-10 rounded-full bg-muted/50 flex items-center justify-center text-foreground hover:bg-muted transition-colors"
-                aria-label="القائمة"
-              >
-                <Menu className="w-5 h-5" />
-              </button>
+              <MobileMenu className="bg-muted/50" />
             </div>
           ) : (
             <div className="flex items-center justify-between h-14">
@@ -108,13 +94,7 @@ const Header = () => {
               </Link>
               <div className="flex items-center gap-1">
                 <ThemeToggle />
-                <button
-                  onClick={() => setIsMenuOpen(true)}
-                  className="w-9 h-9 rounded-full hover:bg-muted flex items-center justify-center"
-                  aria-label="القائمة"
-                >
-                  <Menu className="w-5 h-5" />
-                </button>
+                <MobileMenu />
               </div>
             </div>
           )}
@@ -154,53 +134,6 @@ const Header = () => {
         </div>
       </div>
 
-      {/* Slide-down mobile menu */}
-      {isMenuOpen && (
-        <div className="md:hidden fixed inset-0 z-50 bg-background/95 backdrop-blur-md animate-[fade-in_0.2s_ease-out]">
-          <div className="container mx-auto px-4 py-4">
-            <div className="flex items-center justify-between mb-6">
-              <span className="font-bold text-lg arabic-ui">القائمة</span>
-              <button
-                onClick={() => setIsMenuOpen(false)}
-                className="w-9 h-9 rounded-full bg-muted flex items-center justify-center"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="grid grid-cols-2 gap-3 arabic-ui">
-              {navLinks.map((link) => {
-                const Icon = link.icon;
-                return (
-                  <Link
-                    key={link.path}
-                    to={link.path}
-                    onClick={() => setIsMenuOpen(false)}
-                    className="flex items-center gap-3 p-4 rounded-xl bg-muted/50 hover:bg-muted active:scale-[0.97] transition-all"
-                  >
-                    <div className="w-10 h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
-                      <Icon className="w-5 h-5" />
-                    </div>
-                    <span className="font-medium text-sm">{link.label}</span>
-                  </Link>
-                );
-              })}
-            </div>
-            <div className="mt-6 flex items-center justify-between">
-              <ThemeToggle />
-              {!user ? (
-                <Link to="/auth" onClick={() => setIsMenuOpen(false)}>
-                  <Button>تسجيل الدخول</Button>
-                </Link>
-              ) : (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground arabic-ui">
-                  <UserCircle2 className="w-4 h-4" />
-                  {user.displayName || user.email}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
     </header>
   );
 };
