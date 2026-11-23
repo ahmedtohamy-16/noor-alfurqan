@@ -15,6 +15,8 @@ import { reciters, getAyahAudioUrl, type Reciter } from '@/data/reciters';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useDownloadManager } from './DownloadManager';
+import { startAyahDownload } from '@/lib/ayahDownloads';
+import { surahs } from '@/data/surahs';
 
 interface DownloadAudioDialogProps {
   open: boolean;
@@ -121,62 +123,12 @@ export const DownloadAudioDialog = ({
 
     try {
       if (downloadType === 'ayah' && globalAyahNumber) {
-        // Download single ayah using global ayah number
-        const url = getAyahAudioUrl(selectedReciter, globalAyahNumber);
-        const blob = await downloadWithProgress(url);
-        
-        if (!blob) throw new Error('فشل في تحميل الملف');
-        
-        const downloadUrl = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = downloadUrl;
-        a.download = `${surahName}_آية_${ayahNumber}_${selectedReciter.nameArabic}.mp3`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(downloadUrl);
-        toast.success('تم تحميل الآية بنجاح');
+        startAyahDownload(selectedReciter, globalAyahNumber, surahName);
+        toast.success('بدأ تنزيل الآية — تابعها من صفحة التنزيلات');
       } else if (downloadType === 'range') {
-        // Download range of ayahs and merge them
-        toast.info('جاري تحميل الآيات...', { duration: 10000 });
-        
-        // Calculate first ayah global number
-        // We need to get the first ayah's global number from the surah
-        const startGlobalAyah = globalAyahNumber ? globalAyahNumber - (ayahNumber || 1) + rangeStart : rangeStart;
-        
-        const blobs: Blob[] = [];
-        const total = rangeEnd - rangeStart + 1;
-        
-        for (let i = rangeStart; i <= rangeEnd; i++) {
-          const ayahGlobalNum = startGlobalAyah + (i - rangeStart);
-          const url = getAyahAudioUrl(selectedReciter, ayahGlobalNum);
-          
-          try {
-            const response = await fetch(url);
-            if (response.ok) {
-              const blob = await response.blob();
-              blobs.push(blob);
-            }
-          } catch (e) {
-            console.error(`Error fetching ayah ${i}:`, e);
-          }
-          
-          setDownloadProgress(((i - rangeStart + 1) / total) * 100);
-        }
-        
-        if (blobs.length === 0) throw new Error('فشل في تحميل الآيات');
-        
-        // Merge all audio blobs
-        const mergedBlob = new Blob(blobs, { type: 'audio/mpeg' });
-        const downloadUrl = window.URL.createObjectURL(mergedBlob);
-        const a = document.createElement('a');
-        a.href = downloadUrl;
-        a.download = `${surahName}_من_${rangeStart}_إلى_${rangeEnd}_${selectedReciter.nameArabic}.mp3`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(downloadUrl);
-        toast.success(`تم تحميل ${blobs.length} آية بنجاح`);
+        const firstGlobal = surahs.filter((x) => x.number < surahNumber).reduce((t, x) => t + x.numberOfAyahs, 0) + 1;
+        for (let n = rangeStart; n <= rangeEnd; n++) startAyahDownload(selectedReciter, firstGlobal + n - 1, surahName);
+        toast.success(`بدأ تنزيل ${rangeEnd - rangeStart + 1} آية — تابعها من صفحة التنزيلات`);
       } else {
         // Download full surah
         const surahFormatted = surahNumber.toString().padStart(3, '0');

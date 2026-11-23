@@ -20,3 +20,4 @@
 - Auth changes must be exercised in the running preview (sign-up, sign-in, refresh, sign-out, protected route, password reset), not only type-checked.
 - Database state is shared between the preview and the published app, so temporary auth settings must be reverted in the same turn they are changed.
 - Quran ayah audio comes from everyayah.com (CORS-enabled, SSSAAA.mp3) via `getAyahAudioUrl`; stop/advance logic lives in `src/lib/playbackRules.ts` and the player uses one shared audio element, so modes, repeats and background playback stay consistent.
+- Downloaded ayah audio is stored on-device (IndexedDB blobs + localStorage metadata) by `src/lib/ayahDownloads.ts`, shown on /downloads; all ayah/range download buttons queue through it so status, retry and delete stay in one place.

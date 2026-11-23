@@ -32,6 +32,7 @@ const LegalPage = lazy(() => import("./pages/LegalPage"));
 const SurahPage = lazy(() => import("./pages/SurahPage"));
 const MushafPage = lazy(() => import("./pages/MushafPage"));
 const FavoritesPage = lazy(() => import("./pages/FavoritesPage"));
+const DownloadsPage = lazy(() => import("./pages/DownloadsPage"));
 const SearchPage = lazy(() => import("./pages/SearchPage"));
 const KhatmahPage = lazy(() => import("./pages/KhatmahPage"));
 const AuthPage = lazy(() => import("./pages/AuthPage"));
@@ -105,6 +106,7 @@ const App = () => (
                           <Route path="/quran/:surahNumber" element={<LegacySurahRedirect />} />
                           <Route path="/mushaf" element={<MushafPage />} />
                           <Route path="/favorites" element={<FavoritesPage />} />
+                          <Route path="/downloads" element={<DownloadsPage />} />
                           <Route path="/search" element={<SearchPage />} />
                           <Route path="/khatmah" element={<KhatmahPage />} />
                           <Route path="/auth" element={<AuthPage />} />

@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Book, Bell, Users, Heart, Settings, Menu } from "lucide-react";
+import { Book, Bell, Users, Heart, Settings, Menu, Download } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -12,6 +12,7 @@ const links = [
   { path: "/notifications", label: "الإشعارات", icon: Bell },
   { path: "/khatmah", label: "الختمة", icon: Users },
   { path: "/favorites", label: "المفضلة", icon: Heart },
+  { path: "/downloads", label: "التنزيلات", icon: Download },
   { path: "/settings", label: "الإعدادات", icon: Settings },
 ];
 

@@ -3,6 +3,7 @@ import { getVerifiedReciters, getAyahAudioUrl, DEFAULT_RECITER_ID, type Reciter 
 import { toast } from 'sonner';
 import { surahs } from '@/data/surahs';
 import { getAyahsBySurahAsync } from '@/data/quranAyats';
+import { startAyahDownload } from '@/lib/ayahDownloads';
 import { decideAfterAyah, type PlayMode, type RepeatMode } from '@/lib/playbackRules';
 
 export type { PlayMode, RepeatMode };
@@ -348,24 +349,11 @@ export const GlobalAudioProvider: React.FC<{ children: ReactNode }> = ({ childre
     } else setRepeatModeState('none');
   }, []);
 
-  const downloadAyah = useCallback(async (ayahNumber: number, surahName: string, ayahNumberInSurah: number) => {
-    const reciter = live.current.selectedReciter;
-    try {
-      toast.info('جاري تحميل الآية...');
-      const response = await fetch(getAyahAudioUrl(reciter, ayahNumber));
-      if (!response.ok) throw new Error('Failed to fetch');
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${surahName}_آية_${ayahNumberInSurah}_${reciter.nameArabic}.mp3`;
-      document.body.appendChild(a); a.click(); document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      toast.success('تم تحميل الآية بنجاح');
-    } catch (e) {
-      console.error('Download error:', e);
-      toast.error('فشل تحميل الآية. تحقق من الاتصال وجرب مرة أخرى.');
-    }
+  const downloadAyah = useCallback((ayahNumber: number, surahName: string, _ayahNumberInSurah: number) => {
+    startAyahDownload(live.current.selectedReciter, ayahNumber, surahName);
+    toast.success('بدأ تنزيل الآية', {
+      action: { label: 'عرض التنزيلات', onClick: () => { window.location.assign('/downloads'); } },
+    });
   }, []);
 
   const close = useCallback(() => {
