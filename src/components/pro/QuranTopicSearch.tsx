@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, Loader2, LockKeyhole, Search, Sparkles, Square } from "lucide-react";
+import { ArrowLeft, Loader2, Search, Sparkles, Square } from "lucide-react";
 import { supabase } from "@/integrations/supabase/untypedClient";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -92,21 +92,31 @@ export default function QuranTopicSearch() {
     } finally { setBusy(false); abort.current = null; }
   };
 
+  // Non-subscribers see a single compact Pro strip so the surah list stays the focus.
+  if (access !== "paid") {
+    return (
+      <Link
+        to={access === "locked" && !user ? "/auth?mode=login&next=%2Fquran" : "/pro"}
+        className="mb-4 flex items-center gap-2 rounded-xl border border-primary/20 bg-primary/5 px-3 py-2 text-xs hover:bg-primary/10 transition-colors"
+        dir="rtl"
+      >
+        <Sparkles className="w-4 h-4 text-primary shrink-0" />
+        <span className="flex-1 truncate text-foreground">البحث بالموضوع ووضع الحافظ المتقدم</span>
+        <span className="text-primary bg-primary/10 px-1.5 py-0.5 rounded text-[10px] font-bold" dir="ltr">PRO</span>
+        <ArrowLeft className="w-3.5 h-3.5 text-muted-foreground" />
+      </Link>
+    );
+  }
+
   return (
     <section className="mb-6 border-y border-primary/20 py-5" dir="rtl" aria-labelledby="quran-topic-title">
       <div className="flex items-center gap-2 mb-3">
         <Sparkles className="w-5 h-5 text-primary" />
         <h2 id="quran-topic-title" className="font-bold text-lg">آيات مرتبطة بموضوعك</h2>
         <span className="text-primary bg-primary/10 px-2 py-0.5 rounded text-xs font-bold" dir="ltr">PRO</span>
+        <Link to="/memorization" className="mr-auto text-xs text-primary hover:underline">وضع الحافظ</Link>
       </div>
-      {access === "checking" ? <Loader2 className="w-5 h-5 animate-spin text-primary" aria-label="التحقق من الاشتراك" /> : access === "error" ? (
-        <p role="alert" className="text-destructive text-sm">تعذّر التحقق من اشتراكك؛ أعد فتح الصفحة لاحقًا.</p>
-      ) : access === "locked" ? (
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <p className="text-sm text-muted-foreground flex items-center gap-2"><LockKeyhole className="w-4 h-4" />حصري لمشتركي Pro المدفوع</p>
-          <Button asChild variant="outline" size="sm"><Link to={user ? "/pro" : "/auth?mode=login&next=%2Fquran"}>{user ? "اشتراك Pro" : "تسجيل الدخول"}<ArrowLeft className="w-4 h-4 mr-2" /></Link></Button>
-        </div>
-      ) : (
+      {(
         <form onSubmit={submit} className="space-y-3">
           <label htmlFor="quran-topic-question" className="text-sm">سؤالك أو موضوعك</label>
           <Textarea id="quran-topic-question" value={question} onChange={e => setQuestion(e.target.value)} placeholder="مثل: الصبر عند الشدائد" maxLength={1000} disabled={busy} className="min-h-24 resize-y" />

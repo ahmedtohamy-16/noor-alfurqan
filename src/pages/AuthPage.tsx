@@ -663,7 +663,7 @@ const AuthPage = () => {
           {!isLogin && (
             <div className="mt-4 flex items-center justify-center gap-2 text-xs text-muted-foreground">
               <Shield className="w-3.5 h-3.5" />
-              <span>بإنشاء حساب، أنت توافق على شروط الاستخدام</span>
+              <span>بإنشاء حساب، أنت توافق على <Link to="/terms" className="text-primary underline">شروط الاستخدام</Link> و<Link to="/privacy" className="text-primary underline">سياسة الخصوصية</Link></span>
             </div>
           )}
         </div>

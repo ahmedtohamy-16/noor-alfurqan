@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { BookOpen, ArrowLeft, UserPlus, LogIn, User } from "lucide-react";
+import { BookOpen, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const WelcomePage = () => {
@@ -27,7 +27,7 @@ const WelcomePage = () => {
             <span className="text-primary">نور الفرقان</span>
           </h1>
           <p className="text-base text-muted-foreground mb-2">
-            رفيقك اليومي للقرآن، الأذكار، والمجتمع المسلم
+            اقرأ القرآن واستمع إليه، مع الأذكار والحديث ومواقيت الصلاة — مجانًا وبدون إعلانات
           </p>
           <p className="text-xs text-muted-foreground/70 tracking-wide">
             Welcome to Noor Alfurqan
@@ -39,32 +39,28 @@ const WelcomePage = () => {
           <Button
             size="lg"
             className="w-full h-14 text-base font-bold shadow-lg shadow-primary/20"
-            onClick={() => navigate("/auth?mode=signup")}
+            onClick={() => navigate("/quran")}
           >
-            <UserPlus className="w-5 h-5" />
-            إنشاء حساب جديد
+            <BookOpen className="w-5 h-5" />
+            ابدأ القراءة
           </Button>
 
           <Button
             size="lg"
             variant="outline"
-            className="w-full h-14 text-base font-bold"
-            onClick={() => navigate("/auth?mode=login")}
-          >
-            <LogIn className="w-5 h-5" />
-            تسجيل الدخول
-          </Button>
-
-          <Button
-            size="lg"
-            variant="ghost"
-            className="w-full h-12 text-sm text-muted-foreground hover:text-foreground"
+            className="w-full h-12 text-sm font-bold"
             onClick={() => navigate("/")}
           >
-            <User className="w-4 h-4" />
-            الدخول كضيف
+            استكشف التطبيق
             <ArrowLeft className="w-4 h-4 mr-auto" />
           </Button>
+
+          <p className="pt-2 text-center text-xs text-muted-foreground">
+            التسجيل اختياري لحفظ تقدمك على كل أجهزتك —{" "}
+            <button type="button" className="text-primary font-bold hover:underline" onClick={() => navigate("/auth?mode=signup")}>إنشاء حساب</button>
+            {" · "}
+            <button type="button" className="text-primary font-bold hover:underline" onClick={() => navigate("/auth?mode=login")}>تسجيل الدخول</button>
+          </p>
         </div>
 
         {/* Footer */}

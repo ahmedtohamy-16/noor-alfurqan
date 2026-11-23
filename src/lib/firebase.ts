@@ -1,23 +1,6 @@
 // Firebase configuration and services
 import { initializeApp, getApps, getApp, FirebaseApp } from "firebase/app";
 import { 
-  getAuth, 
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  signOut as firebaseSignOut,
-  onAuthStateChanged,
-  sendEmailVerification,
-  User as FirebaseUserType,
-  Auth,
-  browserLocalPersistence,
-  setPersistence,
-  GoogleAuthProvider,
-  signInWithPopup,
-  signInWithRedirect,
-  getRedirectResult,
-  updateProfile
-} from "firebase/auth";
-import { 
   getFirestore, 
   collection, 
   doc, 
@@ -54,7 +37,6 @@ const VAPID_KEY = "BP155IMLyCP2dszPBBJOglRtDuL0TNZkWNhxtk6EQFqtoGJ99q5yL4RxvPxU8
 
 // Initialize Firebase app
 let app: FirebaseApp;
-let auth: Auth;
 let db: Firestore;
 let messaging: Messaging | null = null;
 
@@ -70,13 +52,8 @@ const initializeFirebaseApp = (): FirebaseApp => {
 
 // Initialize app on module load
 app = initializeFirebaseApp();
-auth = getAuth(app);
 db = getFirestore(app);
 
-// Set persistence for Safari/iOS compatibility
-setPersistence(auth, browserLocalPersistence).catch((error) => {
-  console.warn("Could not set auth persistence:", error);
-});
 
 // User Roles
 export type UserRole = "admin" | "teacher" | "student";
@@ -101,8 +78,6 @@ export interface UserProfile {
   updatedAt: Timestamp;
 }
 
-// Get Firebase Auth
-export const getFirebaseAuth = (): Auth => auth;
 
 // Get Firestore
 export const getFirestoreDb = (): Firestore => db;
@@ -147,262 +122,6 @@ export const COLLECTIONS = {
 
 // ==================== AUTH FUNCTIONS ====================
 
-// Get device info for analytics
-const getDeviceInfo = (): string => {
-  if (typeof window === "undefined") return "unknown";
-  const ua = navigator.userAgent;
-  if (/iPad|iPhone|iPod/.test(ua)) return "iOS";
-  if (/Android/.test(ua)) return "Android";
-  if (/Windows/.test(ua)) return "Windows";
-  if (/Mac/.test(ua)) return "macOS";
-  if (/Linux/.test(ua)) return "Linux";
-  return "Other";
-};
-
-export const signUp = async (
-  email: string, 
-  password: string, 
-  username?: string,
-  role: UserRole = "student"
-) => {
-  // Defense-in-depth: never allow client to self-assign admin.
-  // Only "student" or "teacher" can be requested from the client.
-  const safeRole: UserRole = role === "teacher" ? "teacher" : "student";
-  const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-  const user = userCredential.user;
-  
-  const displayName = username || email.split("@")[0];
-  const deviceInfo = getDeviceInfo();
-
-  // Store the name on the auth account itself so greetings work even if
-  // profile storage is unreachable.
-  try { await updateProfile(user, { displayName }); } catch (e) { console.error("updateProfile failed", e); }
-
-  // Send verification email first — must not depend on profile writes.
-  try { await sendEmailVerification(user); } catch (e) { console.error("sendEmailVerification failed", e); }
-
-  // Profile writes run in the background with a timeout so signup never hangs.
-  const withTimeout = <T,>(p: Promise<T>, ms = 8000) =>
-    Promise.race([p, new Promise<never>((_, rej) => setTimeout(() => rej(new Error("timeout")), ms))]);
-  withTimeout(Promise.all([
-    setDoc(doc(db, COLLECTIONS.USERS, user.uid), {
-      uid: user.uid,
-      email: user.email,
-      displayName,
-      photoURL: null,
-      role: safeRole,
-      device_type: deviceInfo,
-      user_agent: typeof navigator !== "undefined" ? navigator.userAgent : null,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp()
-    }, { merge: true }),
-    setDoc(doc(db, COLLECTIONS.USER_ROLES, user.uid), {
-      uid: user.uid,
-      role: safeRole,
-      createdAt: serverTimestamp()
-    }, { merge: true }),
-    setDoc(doc(db, COLLECTIONS.PROFILES, user.uid), {
-      id: user.uid,
-      username: displayName,
-      avatar_url: null,
-      created_at: Timestamp.now(),
-    }, { merge: true }),
-  ])).catch((e) => console.error("Profile creation failed:", e));
-  
-  return user;
-};
-
-export const resendVerificationEmail = async () => {
-  if (!auth.currentUser) throw new Error("no-user");
-  await sendEmailVerification(auth.currentUser);
-};
-
-export const signIn = async (email: string, password: string) => {
-  const userCredential = await signInWithEmailAndPassword(auth, email, password);
-  return userCredential.user;
-};
-
-export const signOut = async () => {
-  await firebaseSignOut(auth);
-};
-
-// ==================== GOOGLE OAuth ====================
-
-const googleProvider = new GoogleAuthProvider();
-googleProvider.setCustomParameters({
-  prompt: 'select_account'
-});
-
-export const signInWithGoogle = async (role: UserRole = "student") => {
-  try {
-    const result = await signInWithPopup(auth, googleProvider);
-    const user = result.user;
-    
-    // Check if user profile already exists
-    const existingProfile = await getDoc(doc(db, COLLECTIONS.USERS, user.uid));
-    
-    if (!existingProfile.exists()) {
-      // Create new user profile for first-time Google sign-in
-      const displayName = user.displayName || user.email?.split("@")[0] || "مستخدم";
-      const deviceInfo = getDeviceInfo();
-      
-      // Create user profile in Firestore
-      await setDoc(doc(db, COLLECTIONS.USERS, user.uid), {
-        uid: user.uid,
-        email: user.email,
-        displayName: displayName,
-        photoURL: user.photoURL,
-        role: role,
-        device_type: deviceInfo,
-        user_agent: typeof navigator !== "undefined" ? navigator.userAgent : null,
-        authProvider: 'google',
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
-      });
-      
-      // Create user role entry
-      await setDoc(doc(db, COLLECTIONS.USER_ROLES, user.uid), {
-        uid: user.uid,
-        role: role,
-        createdAt: serverTimestamp()
-      });
-      
-      // Create profile for backward compatibility
-      await setDoc(doc(db, COLLECTIONS.PROFILES, user.uid), {
-        id: user.uid,
-        username: displayName.replace(/\s+/g, '_').toLowerCase() + '_' + Date.now().toString(36),
-        display_name: displayName,
-        avatar_url: user.photoURL,
-        created_at: Timestamp.now(),
-      });
-    }
-    
-    return user;
-  } catch (error: any) {
-    console.error("Google sign-in error:", error);
-    throw error;
-  }
-};
-
-// Handle redirect result for mobile devices
-export const handleGoogleRedirect = async (role: UserRole = "student") => {
-  try {
-    const result = await getRedirectResult(auth);
-    if (result) {
-      const user = result.user;
-      
-      // Check if user profile already exists
-      const existingProfile = await getDoc(doc(db, COLLECTIONS.USERS, user.uid));
-      
-      if (!existingProfile.exists()) {
-        const displayName = user.displayName || user.email?.split("@")[0] || "مستخدم";
-        const deviceInfo = getDeviceInfo();
-        
-        await setDoc(doc(db, COLLECTIONS.USERS, user.uid), {
-          uid: user.uid,
-          email: user.email,
-          displayName: displayName,
-          photoURL: user.photoURL,
-          role: role,
-          device_type: deviceInfo,
-          user_agent: typeof navigator !== "undefined" ? navigator.userAgent : null,
-          authProvider: 'google',
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp()
-        });
-        
-        await setDoc(doc(db, COLLECTIONS.USER_ROLES, user.uid), {
-          uid: user.uid,
-          role: role,
-          createdAt: serverTimestamp()
-        });
-        
-        await setDoc(doc(db, COLLECTIONS.PROFILES, user.uid), {
-          id: user.uid,
-          username: displayName.replace(/\s+/g, '_').toLowerCase() + '_' + Date.now().toString(36),
-          display_name: displayName,
-          avatar_url: user.photoURL,
-          created_at: Timestamp.now(),
-        });
-      }
-      
-      return user;
-    }
-    return null;
-  } catch (error: any) {
-    console.error("Google redirect error:", error);
-    throw error;
-  }
-};
-
-export const onAuthChange = (callback: (user: FirebaseUser | null) => void) => {
-  return onAuthStateChanged(auth, (user) => {
-    if (user) {
-      callback({
-        uid: user.uid,
-        email: user.email,
-        displayName: user.displayName,
-        photoURL: user.photoURL,
-        emailVerified: user.emailVerified,
-      });
-    } else {
-      callback(null);
-    }
-  });
-};
-
-export const getCurrentUser = (): FirebaseUser | null => {
-  const user = auth.currentUser;
-  if (user) {
-    return {
-      uid: user.uid,
-      email: user.email,
-      displayName: user.displayName,
-      photoURL: user.photoURL,
-      emailVerified: user.emailVerified,
-    };
-  }
-  return null;
-};
-
-// ==================== USER ROLE FUNCTIONS ====================
-
-// Owner email — auto-promoted to admin on every auth check
-const OWNER_ADMIN_EMAILS = ["3hmedbakry@gmail.com"];
-
-export const getUserRole = async (uid: string): Promise<UserRole | null> => {
-  try {
-    const currentUser = auth.currentUser;
-    const isOwner =
-      currentUser?.uid === uid &&
-      currentUser.email &&
-      OWNER_ADMIN_EMAILS.includes(currentUser.email.toLowerCase());
-
-    const roleDoc = await getDoc(doc(db, COLLECTIONS.USER_ROLES, uid));
-    const existingRole = roleDoc.exists() ? (roleDoc.data().role as UserRole) : null;
-
-    if (isOwner && existingRole !== "admin") {
-      // Auto-promote owner email to admin (idempotent)
-      await setDoc(
-        doc(db, COLLECTIONS.USER_ROLES, uid),
-        { role: "admin", updatedAt: serverTimestamp() },
-        { merge: true }
-      );
-      await setDoc(
-        doc(db, COLLECTIONS.USERS, uid),
-        { role: "admin", updatedAt: serverTimestamp() },
-        { merge: true }
-      );
-      return "admin";
-    }
-
-    return existingRole;
-  } catch (error) {
-    console.error("Error getting user role:", error);
-    return null;
-  }
-};
-
 export const getUserProfile = async (uid: string): Promise<UserProfile | null> => {
   try {
     const userDoc = await getDoc(doc(db, COLLECTIONS.USERS, uid));
@@ -427,26 +146,6 @@ export const updateUserRole = async (uid: string, newRole: UserRole): Promise<vo
   });
 };
 
-export const hasRole = async (uid: string, requiredRole: UserRole): Promise<boolean> => {
-  const role = await getUserRole(uid);
-  if (!role) return false;
-  
-  const roleHierarchy: Record<UserRole, number> = {
-    admin: 3,
-    teacher: 2,
-    student: 1
-  };
-  
-  return roleHierarchy[role] >= roleHierarchy[requiredRole];
-};
-
-export const isAdmin = async (uid: string): Promise<boolean> => {
-  return hasRole(uid, "admin");
-};
-
-export const isTeacher = async (uid: string): Promise<boolean> => {
-  return hasRole(uid, "teacher");
-};
 
 // ==================== FIRESTORE HELPER FUNCTIONS ====================
 
@@ -646,5 +345,4 @@ export const onForegroundMessage = async (callback: (payload: any) => void) => {
 };
 
 // Export instances and utilities
-export { app, auth, db, Timestamp, collection, doc, query, where, orderBy, limit, getDocs, onSnapshot, serverTimestamp };
-export type { FirebaseUserType };
+export { app, db, Timestamp, collection, doc, query, where, orderBy, limit, getDocs, onSnapshot, serverTimestamp };

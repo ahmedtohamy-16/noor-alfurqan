@@ -18,7 +18,8 @@ import GlobalAudioPlayer from "@/components/GlobalAudioPlayer";
 
 // Eager load critical pages
 import Index from "./pages/Index";
-import QuranPage from "./pages/QuranPage";
+const QuranPage = lazy(() => import("./pages/QuranPage"));
+const LegalPage = lazy(() => import("./pages/LegalPage"));
 
 // Lazy load non-critical pages for code splitting
 const SurahPage = lazy(() => import("./pages/SurahPage"));
@@ -124,6 +125,8 @@ const App = () => (
                           <Route path="/support" element={<SupportPage />} />
                           <Route path="/welcome" element={<WelcomePage />} />
                           <Route path="/splash" element={<SplashScreen />} />
+                          <Route path="/terms" element={<LegalPage kind="terms" />} />
+                          <Route path="/privacy" element={<LegalPage kind="privacy" />} />
                           <Route path="/asma-ul-husna" element={<AsmaUlHusnaPage />} />
                           <Route path="/pro" element={<ProPage />} />
                           <Route path="/memorization" element={<MemorizationPage />} />

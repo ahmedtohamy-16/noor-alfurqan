@@ -49,7 +49,7 @@ const Index = () => {
       />
       <Header />
 
-      <main className="container mx-auto px-4 py-4 arabic-ui max-w-3xl">
+      <main className="container mx-auto px-4 py-4 arabic-ui max-w-3xl lg:max-w-6xl">
         <h1 className="sr-only">نور الفرقان — القرآن الكريم، مواقيت الصلاة، والأذكار</h1>
         <IslamicHome lastRead={lastRead} />
 
@@ -105,7 +105,7 @@ const IslamicHome = ({ lastRead }: { lastRead: any }) => {
       {/* Services Grid 4x2 */}
       <section>
         <h2 className="text-base font-bold text-foreground mb-3 text-center arabic-ui">الخدمات الإسلامية</h2>
-        <div className="grid grid-cols-4 gap-3">
+        <div className="grid grid-cols-4 lg:grid-cols-8 gap-3">
           {services.map((s) => (
             <Link key={s.title} to={s.link}>
               <Card className="p-3 h-full hover:shadow-md transition-all group cursor-pointer hover:scale-[1.04] flex flex-col items-center justify-center text-center gap-1.5 aspect-square">
