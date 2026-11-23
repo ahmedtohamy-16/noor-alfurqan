@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { arabicDigits } from "@/lib/displayFormat";
+import { IMAGE_WEBSITE_URL } from "@/lib/exportBranding";
 
 interface ShareAyahDialogProps {
   isOpen: boolean;
@@ -104,7 +105,7 @@ const ShareAyahDialog = ({
 
     ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
     ctx.font = "20px 'Cairo', sans-serif";
-    ctx.fillText("تطبيق قراءة القرآن الكريم", canvas.width / 2, canvas.height - 60);
+    ctx.fillText(IMAGE_WEBSITE_URL, canvas.width / 2, canvas.height - 60);
 
     return new Promise((resolve) => {
       canvas.toBlob((blob) => resolve(blob), "image/png");
@@ -173,6 +174,7 @@ const ShareAyahDialog = ({
             {ayahText.length > 100 ? ayahText.slice(0, 100) + "..." : ayahText}
           </p>
           <p className="text-accent text-xs">نور الفرقان</p>
+          <p className="mt-1 text-muted-foreground text-xs" dir="ltr">{IMAGE_WEBSITE_URL}</p>
         </div>
 
         {/* Hidden canvas for image generation */}

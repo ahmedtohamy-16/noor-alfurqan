@@ -458,7 +458,7 @@ const SettingsPage = () => {
                 <Info className="w-8 h-8 text-primary-foreground" />
               </div>
               <p className="font-bold text-foreground text-xl">نور الفرقان</p>
-              <p className="text-sm text-muted-foreground mt-1">الإصدار 1.0.0</p>
+              <p className="text-sm text-muted-foreground mt-1">الإصدار ١.٠.٠</p>
               <p className="text-xs text-muted-foreground mt-3">
                 تطبيق إسلامي شامل للقرآن الكريم والأحاديث والأذكار
               </p>

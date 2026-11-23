@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { arabicDigits } from "@/lib/displayFormat";
+import { IMAGE_WEBSITE_URL } from "@/lib/exportBranding";
 import ExportThemeSelector, { exportThemes, type ExportTheme } from "./ExportThemeSelector";
 
 interface ShareAyahWithThemesProps {
@@ -170,7 +171,7 @@ const ShareAyahWithThemes = ({
 
     ctx.fillStyle = `${selectedTheme.textColor}80`;
     ctx.font = "22px 'Cairo', sans-serif";
-    ctx.fillText("تطبيق قراءة القرآن الكريم", width / 2, height - 60);
+    ctx.fillText(IMAGE_WEBSITE_URL, width / 2, height - 60);
 
     return new Promise((resolve) => {
       canvas.toBlob((blob) => resolve(blob), "image/png", 1.0);

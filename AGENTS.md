@@ -33,3 +33,4 @@
 - Hadiths use shared CSV mapping; snapshot hydration is display-only to preserve saved records.
 - PWA uses guarded generateSW and a separate messaging scope to protect previews and pushes.
 - Shared numeral/location/reference rules keep UI and notifications consistent; verse hearts resolve the runtime corpus and retain existing storage.
+- Image exporters share one branding URL to avoid hosting-domain leaks.

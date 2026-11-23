@@ -6,6 +6,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import ExportThemeSelector, { exportThemes, type ExportTheme } from "./ExportThemeSelector";
+import { fullTextLines } from "@/lib/textLines";
+import { IMAGE_WEBSITE_URL } from "@/lib/exportBranding";
 
 interface HadithShareDialogProps {
   isOpen: boolean;
@@ -54,9 +56,13 @@ const HadithShareDialog = ({
     const ctx = canvas.getContext("2d");
     if (!ctx) return null;
 
-    const scale = 3;
     const width = 1080;
-    const height = 1350; // Taller for hadith
+    await document.fonts.load("38px 'Noor Amiri'").catch(() => {});
+    ctx.font = "38px 'Noor Amiri', 'Amiri', serif";
+    const lineHeight = 70;
+    const lines = fullTextLines(hadithText, width - 160, line => ctx.measureText(line).width);
+    const height = Math.max(1350, 280 + lines.length * lineHeight + (narrator ? 100 : 0) + 220);
+    const scale = Math.min(3, 16380 / height);
 
     canvas.width = width * scale;
     canvas.height = height * scale;
@@ -126,42 +132,15 @@ const HadithShareDialog = ({
 
     // Hadith text - word wrap with larger font
     ctx.fillStyle = selectedTheme.textColor;
-    ctx.font = "38px 'Amiri', serif";
-    
-    const maxWidth = width - 160;
-    const lineHeight = 70;
-    const words = hadithText.split(" ");
-    const lines: string[] = [];
-    let currentLine = "";
-
-    for (const word of words) {
-      const testLine = currentLine ? currentLine + " " + word : word;
-      const metrics = ctx.measureText(testLine);
-      if (metrics.width > maxWidth) {
-        lines.push(currentLine);
-        currentLine = word;
-      } else {
-        currentLine = testLine;
-      }
-    }
-    if (currentLine) lines.push(currentLine);
-
-    // Limit lines and add ellipsis if too long
-    const maxLines = 12;
-    let displayLines = lines;
-    if (lines.length > maxLines) {
-      displayLines = lines.slice(0, maxLines);
-      displayLines[maxLines - 1] += "...";
-    }
-
-    const startY = 280 + ((maxLines - displayLines.length) * lineHeight) / 4;
-    displayLines.forEach((line, index) => {
+    ctx.font = "38px 'Noor Amiri', 'Amiri', serif";
+    const startY = 280;
+    lines.forEach((line, index) => {
       ctx.fillText(line, width / 2, startY + index * lineHeight);
     });
 
     // Narrator (if available)
     if (narrator) {
-      const narratorY = startY + displayLines.length * lineHeight + 50;
+      const narratorY = startY + lines.length * lineHeight + 50;
       ctx.fillStyle = `${selectedTheme.accentColor}90`;
       ctx.font = "italic 28px 'Amiri', serif";
       ctx.fillText(`الراوي: ${narrator}`, width / 2, narratorY);
@@ -174,7 +153,7 @@ const HadithShareDialog = ({
 
     ctx.fillStyle = `${selectedTheme.textColor}80`;
     ctx.font = "22px 'Cairo', sans-serif";
-    ctx.fillText("تطبيق قراءة القرآن الكريم والأحاديث", width / 2, height - 65);
+    ctx.fillText(IMAGE_WEBSITE_URL, width / 2, height - 65);
 
     return new Promise((resolve) => {
       canvas.toBlob((blob) => resolve(blob), "image/png", 1.0);
@@ -237,7 +216,7 @@ const HadithShareDialog = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg arabic-ui">
+      <DialogContent className="w-[calc(100vw-1.5rem)] max-w-lg max-h-[90dvh] overflow-y-auto arabic-ui">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Image className="w-5 h-5 text-primary" />
@@ -282,7 +261,7 @@ const HadithShareDialog = ({
           </Button>
           <Button onClick={handleDownload} variant="outline" className="flex-col h-auto py-3 gap-1">
             <Download className="w-5 h-5" />
-            <span className="text-xs">تحميل 4K</span>
+            <span className="text-xs">تحميل ٤K</span>
           </Button>
           <Button onClick={handleCopyText} variant="outline" className="flex-col h-auto py-3 gap-1">
             {copied ? <Check className="w-5 h-5 text-green-500" /> : <Copy className="w-5 h-5" />}

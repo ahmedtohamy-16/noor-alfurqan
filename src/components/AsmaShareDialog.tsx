@@ -7,6 +7,7 @@ import { Download, Share2, Loader2 } from "lucide-react";
 import html2canvas from "html2canvas";
 import { toast } from "sonner";
 import type { AsmaName } from "@/data/asmaUlHusna";
+import { IMAGE_WEBSITE_URL } from "@/lib/exportBranding";
 
 const THEMES = [
   { id: "emerald", label: "زمردي", from: "#064e3b", to: "#022c22", text: "#ecfdf5" },
@@ -133,10 +134,11 @@ const AsmaShareDialog = ({ name, open, onClose }: Props) => {
                 right: 0,
                 fontSize: 11,
                 opacity: 0.6,
-                letterSpacing: 1,
+                letterSpacing: 0,
               }}
             >
-              نور الفرقان · Noor Al-Furqan
+              <div>نور الفرقان · Noor Al-Furqan</div>
+              <div dir="ltr">{IMAGE_WEBSITE_URL}</div>
             </div>
           </div>
         </div>

@@ -5,6 +5,7 @@
 
 import { 
   firestoreSet, 
+  firestoreGet,
   firestoreQuery,
   COLLECTIONS 
 } from "@/lib/firebase";
@@ -183,7 +184,8 @@ export const migrateGuestDataToUser = async (userId: string): Promise<{
       try {
         for (const fav of guestData.favorites) {
           const docId = `${userId}_${fav.surah_number}_${fav.ayah_number}`;
-          await firestoreSet(COLLECTIONS.FAVORITES, docId, {
+          const existing = await firestoreGet(COLLECTIONS.FAVORITES, docId);
+          if (!existing) await firestoreSet(COLLECTIONS.FAVORITES, docId, {
             user_id: userId,
             surah_number: fav.surah_number,
             surah_name: fav.surah_name,
@@ -249,7 +251,8 @@ export const migrateGuestDataToUser = async (userId: string): Promise<{
     // 5. Migrate pinned hadith
     if (guestData.pinnedHadith) {
       try {
-        await firestoreSet("pinned_hadiths", userId, {
+        const existing = await firestoreGet("pinned_hadiths", userId);
+        if (!existing) await firestoreSet("pinned_hadiths", userId, {
           ...guestData.pinnedHadith,
           user_id: userId,
         });

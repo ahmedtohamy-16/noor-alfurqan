@@ -1,5 +1,6 @@
 import { arabicDigits } from "@/lib/displayFormat";
 import { arabicCityName, arabicCityLabel, hasLocationCoordinates } from "@/lib/cityNames";
+import { IMAGE_WEBSITE_URL } from "@/lib/exportBranding";
 import { useState, useEffect, useRef } from "react";
 import { Download, Image as ImageIcon, MapPin, Loader2, FileJson, FileText } from "lucide-react";
 import {
@@ -317,7 +318,7 @@ const PrayerExportDialog = ({
 
     ctx.fillStyle = isLight ? "#6b7280" : `${selectedTheme.textColor}90`;
     ctx.font = "15px 'Segoe UI', Arial, sans-serif";
-    ctx.fillText("noor-alfurqan.lovable.app", width / 2, footerY + 62);
+    ctx.fillText(IMAGE_WEBSITE_URL, width / 2, footerY + 62);
     ctx.font = "13px 'Segoe UI', Arial, sans-serif";
     ctx.fillText("© جميع الحقوق محفوظة - تطبيق نور الفرقان", width / 2, footerY + 85);
 
