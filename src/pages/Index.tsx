@@ -67,10 +67,10 @@ const IslamicHome = ({ lastRead }: { lastRead: any }) => {
     { icon: Book, title: "Quran", titleAr: "القرآن", link: "/quran", color: "bg-emerald-500/10 text-emerald-600" },
     { icon: Clock, title: "Prayer Times", titleAr: "الصلاة", link: "/prayer-times", color: "bg-blue-500/10 text-blue-600" },
     { icon: Sparkles, title: "Azkar", titleAr: "الأذكار", link: "/azkar", color: "bg-amber-500/10 text-amber-600" },
-    { icon: Compass, title: "Qibla", titleAr: "القبلة", link: "/prayer-times", color: "bg-teal-500/10 text-teal-600" },
+    { icon: Compass, title: "Prophet Stories", titleAr: "قصص الأنبياء", link: "/prophet-stories", color: "bg-teal-500/10 text-teal-600" },
     { icon: CircleDot, title: "Tasbeeh", titleAr: "السبحة", link: "/tasbih", color: "bg-indigo-500/10 text-indigo-600" },
     { icon: Library, title: "Hadith", titleAr: "الأحاديث", link: "/hadith", color: "bg-rose-500/10 text-rose-600" },
-    { icon: BookOpen, title: "Asma Ul Husna", titleAr: "أسماء الله", link: "/azkar", color: "bg-purple-500/10 text-purple-600" },
+    { icon: BookOpen, title: "Asma Ul Husna", titleAr: "أسماء الله", link: "/asma-ul-husna", color: "bg-purple-500/10 text-purple-600" },
     { icon: MoreHorizontal, title: "More", titleAr: "المزيد", link: "/settings", color: "bg-slate-500/10 text-slate-600" },
   ];
 

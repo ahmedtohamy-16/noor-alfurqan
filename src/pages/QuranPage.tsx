@@ -77,7 +77,9 @@ const QuranPage = () => {
     return null;
   };
 
-  const ayahRef = parseAyahReference(searchQuery);
+  const rawRef = parseAyahReference(searchQuery.trim());
+  const refSurah = rawRef ? surahs.find((s) => s.number === rawRef.surah) : undefined;
+  const ayahRef = rawRef && refSurah && rawRef.ayah >= 1 && rawRef.ayah <= refSurah.numberOfAyahs ? rawRef : null;
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -167,6 +169,12 @@ const QuranPage = () => {
           </div>
         )}
 
+        {rawRef && !ayahRef && (
+          <p className="mb-4 text-center text-muted-foreground">
+            {refSurah ? `سورة ${refSurah.name} عدد آياتها ${refSurah.numberOfAyahs} فقط` : "رقم السورة يجب أن يكون من 1 إلى 114"}
+          </p>
+        )}
+
         {/* Ayah Search Results */}
         {searchType === "ayah" && searchQuery.trim().length >= 2 && (
           <div className="mb-6">
@@ -205,9 +213,9 @@ const QuranPage = () => {
                   ))}
                 </div>
               </div>
-            ) : (
+            ) : rawRef ? null : (
               <p className="text-center text-muted-foreground py-8">
-                لم يتم العثور على نتائج
+                لا توجد آيات تحتوي على «{searchQuery.trim()}»
               </p>
             )}
           </div>
@@ -226,7 +234,7 @@ const QuranPage = () => {
             </Tabs>
 
             {/* Results Count */}
-            {searchQuery.trim() && (
+            {searchQuery.trim() && !rawRef && (
               <p className="text-muted-foreground mb-4">
                 {filteredSurahs.length > 0
                   ? `تم العثور على ${filteredSurahs.length} سورة`

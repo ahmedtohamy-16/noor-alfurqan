@@ -297,7 +297,14 @@ const PrayerTimesPage = () => {
 
   const fmt = (n: number) => n.toString().padStart(2, "0");
   const today = new Date();
-  const formatTime = (t?: string) => (t ? t.split(" ")[0] : "--:--");
+  // 12-hour display with an Arabic period suffix (ص / م), never mixed with 24h.
+  const formatTime = (t?: string) => {
+    if (!t) return "--:--";
+    const [hh, mm] = t.split(" ")[0].split(":").map(Number);
+    if (Number.isNaN(hh)) return "--:--";
+    const h12 = hh % 12 === 0 ? 12 : hh % 12;
+    return `${h12}:${String(mm).padStart(2, "0")} ${hh < 12 ? "ص" : "م"}`;
+  };
   const tzOffset = -new Date().getTimezoneOffset() / 60;
   const tzLabel = `GMT${tzOffset >= 0 ? "+" : ""}${tzOffset}`;
 
@@ -366,6 +373,7 @@ const PrayerTimesPage = () => {
 
 
         {/* Hero countdown */}
+        {hasLocation && (
         <div className={cn("relative px-4 py-8 rounded-3xl overflow-hidden bg-gradient-to-br shadow-xl", palette.heroGrad,
           isDark ? "shadow-blue-950/40" : "shadow-blue-300/40")}>
           <div className="absolute bottom-0 left-0 right-0 opacity-10 pointer-events-none">
@@ -392,6 +400,8 @@ const PrayerTimesPage = () => {
             </div>
           </div>
         </div>
+
+        )}
 
         {/* Location card — two states */}
         {hasLocation ? (
@@ -502,6 +512,7 @@ const PrayerTimesPage = () => {
 
 
         {/* Today's times */}
+        {hasLocation && (
         <div className={cn("relative rounded-3xl p-5 border", palette.card)}>
           <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-3">
@@ -549,13 +560,13 @@ const PrayerTimesPage = () => {
                     <Icon className={cn("w-5 h-5 mb-1", isNext ? "text-white" : "opacity-60")} />
                     <span className={cn("text-xs font-medium", isNext ? "text-white" : "opacity-70")}>{p.name}</span>
                     <span className={cn("text-sm font-bold font-mono", isNext ? "text-white" : "opacity-80")}>{formatTime(t)}</span>
-                    <span className={cn("text-[9px]", isNext ? "text-white/70" : "opacity-40")}>{p.period}</span>
                   </div>
                 );
               })}
             </div>
           )}
         </div>
+        )}
 
 
         {/* Reminders & Adhan card */}

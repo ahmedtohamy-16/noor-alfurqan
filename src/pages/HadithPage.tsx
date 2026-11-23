@@ -47,7 +47,9 @@ const HadithPage = () => {
   const { fetchHadiths, searchHadiths } = useHadith();
   const { bookmarks, isBookmarked, toggle: toggleBookmark } = useHadithBookmarks();
   const { incrementShare, fetchTopShared } = useHadithShareCount();
-  const { hadith: hadithOfDay, loading: loadingDay } = useHadithOfTheDay();
+  const { hadith: hadithOfDay, loading: loadingDay, error: dayError, retry: retryDay } = useHadithOfTheDay();
+  const [listError, setListError] = useState(false);
+  const [listAttempt, setListAttempt] = useState(0);
 
   const [selectedBook, setSelectedBook] = useState<string>("bukhari"); // 'all' supported
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
@@ -78,6 +80,7 @@ const HadithPage = () => {
     if (isSearchMode) return;
     let cancelled = false;
     setLoadingList(true);
+    setListError(false);
     setHadiths([]);
     setCurrentPage(1);
     (async () => {
@@ -88,6 +91,8 @@ const HadithPage = () => {
         if (cancelled) return;
         setHadiths(data.hadiths);
         setHasMore(data.hasMore);
+      } catch {
+        if (!cancelled) setListError(true);
       } finally {
         if (!cancelled) setLoadingList(false);
       }
@@ -95,7 +100,7 @@ const HadithPage = () => {
     return () => {
       cancelled = true;
     };
-  }, [selectedBook, isSearchMode, fetchHadiths]);
+  }, [selectedBook, isSearchMode, fetchHadiths, listAttempt]);
 
   // Load more
   const handleLoadMore = useCallback(async () => {
@@ -250,11 +255,19 @@ const HadithPage = () => {
         <HadithPageHeader bookmarkCount={bookmarks.length} />
 
         <main className="relative z-10 space-y-5">
-          <HadithOfTheDayCard
-            hadith={hadithOfDay}
-            loading={loadingDay}
-            onShare={handleShare}
-          />
+          {dayError && !hadithOfDay ? (
+            <div className="mx-4 rounded-2xl border border-destructive/30 bg-destructive/5 p-4 text-center">
+              <p className="text-sm font-bold mb-1">تعذّر تحميل حديث اليوم</p>
+              <p className="text-xs text-muted-foreground mb-3">تحقق من اتصالك بالإنترنت ثم حاول مرة أخرى</p>
+              <Button size="sm" variant="outline" onClick={retryDay}>إعادة المحاولة</Button>
+            </div>
+          ) : (
+            <HadithOfTheDayCard
+              hadith={hadithOfDay}
+              loading={loadingDay}
+              onShare={handleShare}
+            />
+          )}
 
           <HadithSearchBar
             value={searchQuery}
@@ -291,13 +304,19 @@ const HadithPage = () => {
           {/* List */}
           {loadingList || (isSearchMode && isSearching) ? (
             <HadithSkeleton />
+          ) : listError && !isSearchMode ? (
+            <div className="px-6 py-16 text-center">
+              <p className="text-base font-bold mb-2">تعذّر تحميل الأحاديث</p>
+              <p className="text-xs text-muted-foreground mb-4">حدث خطأ في الاتصال، وليست المشكلة في بحثك</p>
+              <Button size="sm" variant="outline" onClick={() => setListAttempt((a) => a + 1)}>إعادة المحاولة</Button>
+            </div>
           ) : displayed.length === 0 ? (
             <div className="px-6 py-16 text-center">
               <p
                 className="text-base font-bold mb-2"
                 style={{ fontFamily: "'Amiri', 'Scheherazade New', serif" }}
               >
-                لا توجد نتائج
+                {isSearchMode ? "لا توجد أحاديث مطابقة لبحثك" : "لا توجد أحاديث مطابقة للموضوع المختار"}
               </p>
               <p className="text-xs text-muted-foreground">
                 جرّب كلمة أخرى أو غيّر الكتاب/الموضوع

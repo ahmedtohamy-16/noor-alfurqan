@@ -211,7 +211,8 @@ export const useHadith = (): UseHadithResult => {
       };
     } catch (error) {
       console.error('Error fetching hadiths:', error);
-      return { hadiths: [], total: 0, hasMore: false };
+      // Rethrow so pages can tell a load failure apart from an empty result.
+      throw error;
     } finally {
       setLoading(false);
     }

@@ -9,6 +9,8 @@ export const useHadithOfTheDay = () => {
   const { fetchHadiths } = useHadith();
   const [hadith, setHadith] = useState<Hadith | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     const todayKey = new Date().toISOString().slice(0, 10);
@@ -26,6 +28,8 @@ export const useHadithOfTheDay = () => {
     } catch {}
 
     let cancelled = false;
+    setLoading(true);
+    setError(false);
     (async () => {
       try {
         const seed = todayKey.split("-").reduce((a, b) => a + parseInt(b, 10), 0);
@@ -50,6 +54,7 @@ export const useHadithOfTheDay = () => {
         }
       } catch (e) {
         console.error("Hadith of the day failed", e);
+        if (!cancelled) setError(true);
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -58,7 +63,7 @@ export const useHadithOfTheDay = () => {
     return () => {
       cancelled = true;
     };
-  }, [fetchHadiths]);
+  }, [fetchHadiths, attempt]);
 
-  return { hadith, loading };
+  return { hadith, loading, error, retry: () => setAttempt((a) => a + 1) };
 };
