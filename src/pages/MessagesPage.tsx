@@ -311,7 +311,7 @@ const MessagesPage = () => {
 
   const formatTime = (dateStr: string) => {
     const date = new Date(dateStr);
-    return date.toLocaleTimeString("ar", { hour: "2-digit", minute: "2-digit" });
+    return date.toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" });
   };
 
   const formatDate = (dateStr: string) => {
@@ -322,7 +322,7 @@ const MessagesPage = () => {
 
     if (date.toDateString() === today.toDateString()) return "اليوم";
     if (date.toDateString() === yesterday.toDateString()) return "أمس";
-    return date.toLocaleDateString("ar");
+    return date.toLocaleDateString("ar-EG");
   };
 
   if (authLoading || isLoading) {

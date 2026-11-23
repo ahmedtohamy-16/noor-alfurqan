@@ -8,10 +8,10 @@ interface StatsPeriodFilterProps {
 
 const periods: { value: TimePeriod; label: string; shortLabel: string }[] = [
   { value: "today", label: "اليوم", shortLabel: "اليوم" },
-  { value: "week", label: "أسبوع", shortLabel: "7 أيام" },
-  { value: "30days", label: "30 يوم", shortLabel: "30" },
-  { value: "60days", label: "60 يوم", shortLabel: "60" },
-  { value: "90days", label: "90 يوم", shortLabel: "90" },
+  { value: "week", label: "أسبوع", shortLabel: "٧ أيام" },
+  { value: "30days", label: "٣٠ يومًا", shortLabel: "٣٠" },
+  { value: "60days", label: "٦٠ يومًا", shortLabel: "٦٠" },
+  { value: "90days", label: "٩٠ يومًا", shortLabel: "٩٠" },
   { value: "all", label: "الكل", shortLabel: "الكل" },
 ];
 

@@ -23,7 +23,7 @@ interface AzkarSettings {
 
 const NotificationSettingsPage = () => {
   const { settings, updateSettings } = useUserSettings();
-  const { isEnabled, enableNotifications, disableNotifications, testNotification } = useFCMNotifications();
+  const { isEnabled, permission, enableNotifications, disableNotifications, testNotification } = useFCMNotifications();
   const { previewAdhan, stopAdhan } = useAdhanAudio();
   
   const [azkarOpen, setAzkarOpen] = useState(false);
@@ -197,9 +197,29 @@ const NotificationSettingsPage = () => {
                   </p>
                 </div>
               </div>
-              <Switch checked={isEnabled} onCheckedChange={handleMainToggle} />
+              <Switch checked={isEnabled && permission === "granted"} disabled={permission === "denied"} onCheckedChange={handleMainToggle} aria-label="تفعيل الإشعارات" />
             </div>
           </Card>
+
+          {permission === "denied" && (
+            <Card className="p-4 border-destructive/40 bg-destructive/5">
+              <p className="font-medium text-foreground">الإشعارات محظورة من المتصفح</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                اضغط على علامة القفل بجوار عنوان الموقع، واختر «الإشعارات» ثم «السماح»، وبعدها أعد تحميل الصفحة.
+              </p>
+            </Card>
+          )}
+
+          {!isEnabled && permission !== "denied" && (
+            <Card className="p-4">
+              <p className="font-medium text-foreground">بعد التفعيل يمكنك ضبط:</p>
+              <ul className="text-sm text-muted-foreground mt-2 space-y-1 list-disc ps-5">
+                <li>تنبيه الأذان لكل صلاة وصوت المؤذن</li>
+                <li>التنبيه قبل الصلاة بوقت تختاره</li>
+                <li>أذكار الصباح والمساء والنوم والاستيقاظ</li>
+              </ul>
+            </Card>
+          )}
 
           {/* Test Notification Button */}
           {isEnabled && (

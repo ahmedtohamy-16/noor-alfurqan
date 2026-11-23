@@ -19,6 +19,8 @@ interface GlobalAudioState {
   progress: number;
   duration: number;
   volume: number;
+  playbackRate: number;
+  setPlaybackRate: (rate: number) => void;
   isMuted: boolean;
   selectedReciter: Reciter;
   isExpanded: boolean;
@@ -91,6 +93,10 @@ export const GlobalAudioProvider: React.FC<{ children: ReactNode }> = ({ childre
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolumeState] = useState(80);
+  const [playbackRate, setPlaybackRateState] = useState<number>(() => {
+    const n = Number(typeof window !== 'undefined' ? localStorage.getItem('quranPlaybackRate') : 1);
+    return [0.75, 1, 1.25, 1.5, 2].includes(n) ? n : 1;
+  });
   const [isMuted, setIsMuted] = useState(false);
   const [selectedReciter, setSelectedReciter] = useState<Reciter>(getInitialReciter);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -253,6 +259,20 @@ export const GlobalAudioProvider: React.FC<{ children: ReactNode }> = ({ childre
     if (audioRef.current) audioRef.current.volume = isMuted ? 0 : volume / 100;
   }, [volume, isMuted]);
 
+  useEffect(() => {
+    const a = audioRef.current;
+    if (!a) return;
+    const apply = () => { a.defaultPlaybackRate = playbackRate; a.playbackRate = playbackRate; };
+    apply();
+    a.addEventListener('loadedmetadata', apply);
+    a.addEventListener('play', apply);
+    return () => { a.removeEventListener('loadedmetadata', apply); a.removeEventListener('play', apply); };
+  }, [playbackRate]);
+  const setPlaybackRate = useCallback((rate: number) => {
+    setPlaybackRateState(rate);
+    localStorage.setItem('quranPlaybackRate', String(rate));
+  }, []);
+
   const resetForNewSession = (surah: SurahInfo, index: number) => {
     setCurrentRepeat(0);
     live.current.currentRepeat = 0;
@@ -380,7 +400,7 @@ export const GlobalAudioProvider: React.FC<{ children: ReactNode }> = ({ childre
   }, [currentSurah, currentAyahIndex, selectedReciter, togglePlayPause, next, previous]);
 
   const value: GlobalAudioContextType = {
-    isPlaying, isLoading, currentSurah, currentAyahIndex, progress, duration, volume, isMuted,
+    isPlaying, isLoading, currentSurah, currentAyahIndex, progress, duration, volume, isMuted, playbackRate, setPlaybackRate,
     selectedReciter, isExpanded, isVisible, repeatMode, repeatCount, currentRepeat, rangeStart,
     rangeEnd, playMode, error, playSurah, playAyah, togglePlayPause, stop, next, previous, seek,
     setVolume, toggleMute, setReciter, setExpanded: setIsExpanded, close, setRepeatMode,

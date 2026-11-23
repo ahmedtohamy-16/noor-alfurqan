@@ -28,3 +28,5 @@
 - Dhikr catalogue icons use an explicit subject-based mapping per section, avoiding shared keyword matches that give related sections identical glyphs.
 - Daily azkar are derived from the bundled source with stable morning/existing IDs and a separate evening ID; only documented evening variants are applied and mismatched recordings are omitted to preserve text/audio accuracy and existing progress.
 - Dhikr reading renders Quran excerpts as separate blocks with global Quran font/size settings and a safe minimum line height so vowel marks cannot collide between lines.
+- The daily wird reminder is shown by `WirdReminderScheduler` (rules in `src/lib/wirdReminderRules.ts`) while the app is open; it fires once per day, so settings toggles always have a real effect without a server push job.
+- Reading stats count a mushaf page only after it stays visible for a dwell time in SurahPage, so opening a surah alone never records reading.

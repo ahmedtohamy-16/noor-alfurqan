@@ -1,3 +1,4 @@
+import { arabicDigits } from "@/lib/displayFormat";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, Check, Sparkles, ShieldCheck, Crown, Gift, ChevronDown, ChevronUp } from "lucide-react";
@@ -32,7 +33,7 @@ const comparison: { name: string; free: boolean; pro: boolean }[] = [
 
 const ProPage = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const { isPro, source, expiresAt } = usePro();
   const [showAll, setShowAll] = useState(false);
   const [plan, setPlan] = useState<"monthly" | "yearly">("yearly");
@@ -112,10 +113,10 @@ const ProPage = () => {
                 <Badge variant="secondary">مرن</Badge>
               </div>
               <div className="flex items-baseline gap-2 mb-1">
-                <span className="text-3xl font-bold">150</span>
+                <span className="text-3xl font-bold">١٥٠</span>
                 <span className="text-muted-foreground">ج.م / شهر</span>
               </div>
-              <p className="text-sm text-muted-foreground">≈ 3$ شهريًا</p>
+              <p className="text-sm text-muted-foreground">≈ ٣$ شهريًا</p>
             </Card>
 
             <Card
@@ -129,14 +130,14 @@ const ProPage = () => {
               </div>
               <div className="flex items-center justify-between mb-3 mt-4">
                 <h3 className="font-bold text-lg">سنوي</h3>
-                <Badge style={{ background: PRO_COLOR, color: "white" }}>خصم 16.7%</Badge>
+                <Badge style={{ background: PRO_COLOR, color: "white" }}>خصم ١٦٫٧٪</Badge>
               </div>
               <div className="flex items-baseline gap-2 mb-1">
-                <span className="text-3xl font-bold">1500</span>
+                <span className="text-3xl font-bold">١٥٠٠</span>
                 <span className="text-muted-foreground">ج.م / سنة</span>
               </div>
               <p className="text-sm text-muted-foreground">
-                ≈ 30$ سنويًا · بدلاً من 1800 ج.م
+                ≈ ٣٠$ سنويًا · بدلاً من ١٨٠٠ ج.م
               </p>
             </Card>
           </section>
@@ -151,13 +152,13 @@ const ProPage = () => {
               onClick={handleSubscribe}
             >
               <Sparkles className="w-5 h-5 ml-2" />
-              ابدأ الآن — {plan === "yearly" ? "1500 ج.م/سنة" : "150 ج.م/شهر"}
+              ابدأ الآن — {plan === "yearly" ? "١٥٠٠ ج.م/سنة" : "١٥٠ ج.م/شهر"}
             </Button>
             <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
               <Gift className="w-4 h-4" style={{ color: PRO_COLOR }} />
-              3 أيام تجربة مجانية للمستخدمين داخل الدول العربية — يمكن الإلغاء في أي وقت
+              ٣ أيام تجربة مجانية للمستخدمين داخل الدول العربية — يمكن الإلغاء في أي وقت
             </div>
-            <ProRedeemCard />
+            {isAdmin && <ProRedeemCard />}
           </div>
         )}
 
@@ -215,7 +216,7 @@ const ProPage = () => {
             className="w-full"
             onClick={() => setShowAll((v) => !v)}
           >
-            {showAll ? (<><ChevronUp className="w-4 h-4 ml-2" /> عرض أقل</>) : (<><ChevronDown className="w-4 h-4 ml-2" /> عرض المزيد ({PRO_FEATURES.length - 6} ميزة إضافية)</>)}
+            {showAll ? (<><ChevronUp className="w-4 h-4 ml-2" /> عرض أقل</>) : (<><ChevronDown className="w-4 h-4 ml-2" /> عرض المزيد ({arabicDigits(PRO_FEATURES.length - 6)} ميزة إضافية)</>)}
           </Button>
         </section>
 

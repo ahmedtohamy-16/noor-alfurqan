@@ -1,3 +1,4 @@
+import { arabicDigits } from "@/lib/displayFormat";
 import { useState, useEffect, useRef } from "react";
 import { Download, Image as ImageIcon, MapPin, Loader2, FileJson, FileText } from "lucide-react";
 import {
@@ -422,7 +423,7 @@ const PrayerExportDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg arabic-ui max-h-[90vh] overflow-y-auto" dir="rtl">
+      <DialogContent className="w-[calc(100vw-1.5rem)] max-w-lg arabic-ui max-h-[90dvh] overflow-y-auto overflow-x-hidden p-4 sm:p-6 grid-cols-[minmax(0,1fr)] [&>*]:min-w-0" dir="rtl">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold flex items-center gap-2">
             <Download className="w-5 h-5 text-primary" />
@@ -471,7 +472,7 @@ const PrayerExportDialog = ({
                   <SelectTrigger className="h-11"><SelectValue placeholder="السنة" /></SelectTrigger>
                   <SelectContent>
                     {Array.from({ length: 5 }, (_, i) => (hijriToday?.year || 1446) - 1 + i).map((y) => (
-                      <SelectItem key={y} value={String(y)}>{y}هـ</SelectItem>
+                      <SelectItem key={y} value={String(y)}>{arabicDigits(y)}هـ</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>

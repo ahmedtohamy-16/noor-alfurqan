@@ -48,7 +48,8 @@ const TasbihPage = () => {
           className="absolute inset-0 bg-cover bg-center"
           style={{ backgroundImage: `url(${mosqueBg})` }}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-primary/90 via-primary/80 to-primary" />
+        <div className="absolute inset-0 bg-gradient-to-b from-primary/90 via-primary/85 to-primary/95" />
+        <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-b from-transparent to-background" />
         <div className="relative px-4 pt-6 pb-32 arabic-ui" dir="rtl">
           <div className="flex items-center justify-between mb-6">
             <Link to="/reading-stats" aria-label="إحصائيات التسبيح" className="w-11 h-11 rounded-full bg-primary-foreground/15 flex items-center justify-center text-primary-foreground">
@@ -69,7 +70,7 @@ const TasbihPage = () => {
 
       <main className="container mx-auto px-4 -mt-24 relative z-10 arabic-ui" dir="rtl">
         {/* Counter card */}
-        <Card className="bg-white dark:bg-card rounded-3xl p-6 shadow-2xl border-0">
+        <Card className="bg-card rounded-3xl p-6 shadow-2xl border-0">
           <TasbihCounter
             count={count}
             increment={increment}

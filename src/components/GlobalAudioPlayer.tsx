@@ -45,6 +45,8 @@ const GlobalAudioPlayer = () => {
     isExpanded,
     isVisible,
     repeatMode,
+    playbackRate,
+    setPlaybackRate,
     repeatCount,
     currentRepeat,
     rangeStart,
@@ -325,6 +327,20 @@ const GlobalAudioPlayer = () => {
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+
+              {/* Playback speed */}
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground shrink-0">السرعة</span>
+                <div className="flex flex-1 gap-1" role="group" aria-label="سرعة التشغيل">
+                  {[0.75, 1, 1.25, 1.5, 2].map((r) => (
+                    <Button key={r} type="button" size="sm" variant={playbackRate === r ? 'default' : 'outline'}
+                      className="h-9 flex-1 px-0 text-xs" aria-pressed={playbackRate === r}
+                      onClick={() => setPlaybackRate(r)}>
+                      <span dir="ltr">{toArabic(r)}×</span>
+                    </Button>
+                  ))}
+                </div>
               </div>
 
               {/* Play mode */}

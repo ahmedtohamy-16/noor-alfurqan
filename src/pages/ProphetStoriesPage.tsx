@@ -1,3 +1,4 @@
+import { arabicDigits } from "@/lib/displayFormat";
 import { useState, useMemo, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import { ChevronRight, Book, Globe, Search, X } from "lucide-react";
@@ -195,7 +196,7 @@ const ProphetStoriesPage = () => {
                         <div className="flex items-center justify-between" dir={isRTL ? 'rtl' : 'ltr'}>
                           <div className="flex items-center gap-4">
                             <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                              <span className="text-lg font-bold text-primary">{prophet.order}</span>
+                              <span className="text-lg font-bold text-primary">{isRTL ? arabicDigits(prophet.order) : prophet.order}</span>
                             </div>
                             <div>
                               <h3 className="font-bold text-lg text-foreground">{prophetName}</h3>
@@ -205,7 +206,7 @@ const ProphetStoriesPage = () => {
                                 </Badge>
                                 {story && (
                                   <span className="text-xs text-muted-foreground">
-                                    {story.lessons.length} {isRTL ? 'دروس' : 'lessons'}
+                                    {isRTL ? arabicDigits(story.lessons.length) : story.lessons.length} {isRTL ? 'دروس' : 'lessons'}
                                   </span>
                                 )}
                               </div>

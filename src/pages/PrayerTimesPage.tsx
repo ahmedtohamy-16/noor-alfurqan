@@ -1,4 +1,4 @@
-import { rememberFajrTime } from "@/lib/displayFormat";
+import { rememberFajrTime, arabicDigits } from "@/lib/displayFormat";
 import { recommendedPrayerMethod } from "@/lib/prayerMethods";
 import { useState, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -224,7 +224,7 @@ const PrayerTimesPage = () => {
         const rem = t.getTime() - reminderMin * 60000;
         if (rem > now) {
           timers.push(window.setTimeout(() => {
-            toast.info(`⏰ تذكير: صلاة ${p.name} بعد ${reminderMin} دقيقة`, { duration: 8000 });
+            toast.info(`تذكير: صلاة ${p.name} بعد ${arabicDigits(reminderMin)} دقيقة`, { duration: 8000 });
           }, rem - now));
         }
       }
@@ -306,7 +306,7 @@ const PrayerTimesPage = () => {
     const [hh, mm] = t.split(" ")[0].split(":").map(Number);
     if (Number.isNaN(hh)) return "--:--";
     const h12 = hh % 12 === 0 ? 12 : hh % 12;
-    return `${h12}:${String(mm).padStart(2, "0")} ${hh < 12 ? "ص" : "م"}`;
+    return arabicDigits(`${h12}:${String(mm).padStart(2, "0")}`) + ` ${hh < 12 ? "ص" : "م"}`;
   };
   const tzOffset = -new Date().getTimezoneOffset() / 60;
   const tzLabel = `GMT${tzOffset >= 0 ? "+" : ""}${tzOffset}`;
@@ -667,7 +667,7 @@ const PrayerTimesPage = () => {
         </div>
 
         <p className={cn("text-center text-[10px] px-2 lg:col-span-2", palette.subText)}>
-          آخر تحديث: {new Date().toLocaleTimeString("ar", { hour: "2-digit", minute: "2-digit" })}
+          آخر تحديث: {new Date().toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" })}
         </p>
       </div>
 

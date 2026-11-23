@@ -121,7 +121,7 @@ interface ExportThemeSelectorProps {
 
 const ExportThemeSelector = ({ selectedTheme, onSelectTheme }: ExportThemeSelectorProps) => {
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 min-w-0 max-w-full">
       <label className="text-sm font-medium text-foreground">اختر الثيم</label>
       <div className="flex gap-2 overflow-x-auto py-2 scrollbar-hide">
         {exportThemes.map((theme) => (

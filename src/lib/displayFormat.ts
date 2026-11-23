@@ -1,8 +1,8 @@
-export const arabicDigits = (value: number) =>
+export const arabicDigits = (value: number | string) =>
   String(value).replace(/\d/g, (digit) => "٠١٢٣٤٥٦٧٨٩"[Number(digit)]);
 
 export const ayahCountLabel = (count: number) =>
-  `${arabicDigits(count)} ${count % 100 >= 3 && count % 100 <= 10 ? "آيات" : "آية"}`;
+  `${arabicDigits(count)} ${count >= 3 && count <= 10 ? "آيات" : "آية"}`;
 
 const FAJR_KEY = "todayFajrTime";
 const toMinutes = (t: string) => { const [h, m] = t.split(":").map(Number); return h * 60 + (m || 0); };

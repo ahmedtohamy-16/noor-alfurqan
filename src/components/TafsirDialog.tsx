@@ -1,3 +1,4 @@
+import { arabicDigits } from "@/lib/displayFormat";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { BookOpen } from "lucide-react";
@@ -73,7 +74,7 @@ const TafsirDialog = ({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
             <BookOpen className="w-5 h-5 text-primary" />
-            تفسير الآية {ayahNumber}
+            تفسير الآية {arabicDigits(ayahNumber)}
           </DialogTitle>
         </DialogHeader>
 

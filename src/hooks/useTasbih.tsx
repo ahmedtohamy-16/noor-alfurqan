@@ -35,8 +35,14 @@ const defaultAppearance: TasbihAppearance = {
 
 export const useTasbih = () => {
   const { user } = useAuth();
-  const [count, setCount] = useState(0);
-  const [currentDhikr, setCurrentDhikr] = useState(defaultDhikrs[0]);
+  const [count, setCount] = useState<number>(() => {
+    const n = Number(typeof window !== "undefined" ? localStorage.getItem("tasbihCurrentCount") : 0);
+    return Number.isFinite(n) && n > 0 ? Math.floor(n) : 0;
+  });
+  const [currentDhikr, setCurrentDhikr] = useState<string>(() =>
+    (typeof window !== "undefined" && localStorage.getItem("tasbihCurrentDhikr")) || defaultDhikrs[0]);
+  useEffect(() => { localStorage.setItem("tasbihCurrentCount", String(count)); }, [count]);
+  useEffect(() => { localStorage.setItem("tasbihCurrentDhikr", currentDhikr); }, [currentDhikr]);
   const [stats, setStats] = useState<TasbihStats>({ totalCount: 0, todayCount: 0, dhikrTypes: [] });
   const [isLoading, setIsLoading] = useState(false);
   const [appearance, setAppearance] = useState<TasbihAppearance>(() => {

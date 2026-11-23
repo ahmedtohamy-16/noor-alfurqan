@@ -5,10 +5,13 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { reciters, type Reciter } from '@/data/reciters';
 import { cn } from '@/lib/utils';
+import { surahs } from '@/data/surahs';
+import { estimateSurahMB, formatSizeMB } from '@/lib/reciterSizeEstimate';
 import { useGlobalAudio } from '@/hooks/useGlobalAudio';
 import { useAuth } from '@/hooks/useAuth';
 import { firestoreGet, firestoreSet, COLLECTIONS } from '@/lib/firebase';
 import { toast } from 'sonner';
+import { arabicDigits } from '@/lib/displayFormat';
 
 interface ReciterSettingsPanelProps {
   surahNumber?: number;
@@ -69,14 +72,6 @@ const ReciterSettingsPanel = ({ surahNumber, surahName }: ReciterSettingsPanelPr
       'ar.ahmedajamy': 'ahmed_ibn_ali_al-ajamy',
     };
     return paths[reciterId] || 'mishary_rashid_alafasy';
-  };
-
-  const estimateSurahSize = (surahNum: number): string => {
-    const sizes: Record<number, number> = {
-      1: 0.5, 2: 85, 3: 45, 4: 40, 5: 35, 6: 30, 7: 45, 8: 15, 9: 35, 10: 20,
-    };
-    const sizeMB = sizes[surahNum] || Math.max(2, Math.min(50, surahNum * 0.5));
-    return `~${sizeMB.toFixed(1)} MB`;
   };
 
   const handleDownloadReciter = async (reciter: Reciter, e: React.MouseEvent) => {
@@ -192,7 +187,7 @@ const ReciterSettingsPanel = ({ surahNumber, surahName }: ReciterSettingsPanelPr
                     <div className="flex items-center gap-2 min-w-[100px]">
                       <Progress value={downloadProgress} className="h-1.5 w-16" />
                       <span className="text-xs text-muted-foreground">
-                        {Math.round(downloadProgress)}%
+                        <span dir="ltr">{arabicDigits(Math.round(downloadProgress))}٪</span>
                       </span>
                     </div>
                   ) : (
@@ -203,7 +198,7 @@ const ReciterSettingsPanel = ({ surahNumber, surahName }: ReciterSettingsPanelPr
                       onClick={(e) => handleDownloadReciter(reciter, e)}
                     >
                       <Download className="w-3 h-3" />
-                      <span className="text-xs">{estimateSurahSize(surahNumber)}</span>
+                      <span className="text-xs">{formatSizeMB(estimateSurahMB(reciter.id, reciter.server, surahs.find((x) => x.number === surahNumber)?.numberOfAyahs ?? 7))}</span>
                     </Button>
                   )}
                 </div>

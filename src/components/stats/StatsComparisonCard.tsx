@@ -30,9 +30,9 @@ const StatsComparisonCard = ({
     switch (p) {
       case "today": return "مقارنة بالأمس";
       case "week": return "مقارنة بالأسبوع السابق";
-      case "30days": return "مقارنة بالـ 30 يوم السابقة";
-      case "60days": return "مقارنة بالـ 60 يوم السابقة";
-      case "90days": return "مقارنة بالـ 90 يوم السابقة";
+      case "30days": return "مقارنة بالـ ٣٠ يومًا السابقة";
+      case "60days": return "مقارنة بالـ ٦٠ يومًا السابقة";
+      case "90days": return "مقارنة بالـ ٩٠ يومًا السابقة";
       case "all": return "";
       default: return "";
     }
@@ -84,7 +84,7 @@ const StatsComparisonCard = ({
               ) : (
                 <TrendingDown className="w-3 h-3" />
               )}
-              <span>{isPositive ? "+" : ""}{convertToArabicNumber(changePercent)}%</span>
+              <span dir="ltr">{isPositive ? "+" : ""}{convertToArabicNumber(changePercent)}٪</span>
             </div>
             
             {previousValue > 0 && (

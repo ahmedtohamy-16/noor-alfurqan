@@ -1,3 +1,4 @@
+import { arabicDigits, ayahCountLabel } from "@/lib/displayFormat";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowRight, Book, Search, Hash, BookOpen } from "lucide-react";
@@ -146,7 +147,7 @@ const QuranPage = () => {
               <div className="bg-primary/10 border border-primary/20 rounded-xl p-4 hover:bg-primary/20 transition-colors">
                 <p className="text-sm text-primary mb-1">الذهاب مباشرة إلى:</p>
                 <p className="font-bold text-foreground">
-                  سورة {surahs.find(s => s.number === ayahRef.surah)?.name || ayahRef.surah} - الآية {ayahRef.ayah}
+                  سورة {surahs.find(s => s.number === ayahRef.surah)?.name || arabicDigits(ayahRef.surah)} - الآية {arabicDigits(ayahRef.ayah)}
                 </p>
               </div>
             </Link>
@@ -155,7 +156,7 @@ const QuranPage = () => {
 
         {rawRef && !ayahRef && (
           <p className="mb-4 text-center text-muted-foreground">
-            {refSurah ? `سورة ${refSurah.name} عدد آياتها ${refSurah.numberOfAyahs} فقط` : "رقم السورة يجب أن يكون من 1 إلى 114"}
+            {refSurah ? `سورة ${refSurah.name} عدد آياتها ${arabicDigits(refSurah.numberOfAyahs)} فقط` : "رقم السورة يجب أن يكون من ١ إلى ١١٤"}
           </p>
         )}
 
@@ -171,7 +172,7 @@ const QuranPage = () => {
             ) : ayahResults && ayahResults.length > 0 ? (
               <div>
                 <p className="text-muted-foreground mb-4">
-                  تم العثور على {ayahResults.length} آية
+                  تم العثور على {ayahCountLabel(ayahResults.length)}
                 </p>
                 <div className="space-y-4">
                   {ayahResults.slice(0, 50).map((ayah) => (
@@ -186,7 +187,7 @@ const QuranPage = () => {
                             {ayah.surah.name}
                           </span>
                           <span className="text-sm text-muted-foreground">
-                            الآية {ayah.numberInSurah}
+                            الآية {arabicDigits(ayah.numberInSurah)}
                           </span>
                         </div>
                         <p className="text-foreground font-quran text-lg leading-loose line-clamp-3">

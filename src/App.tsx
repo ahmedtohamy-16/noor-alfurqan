@@ -12,6 +12,11 @@ const LegacySurahRedirect = () => {
   const { search, hash } = useLocation();
   return <Navigate to={`/surah/${surahNumber}${search}${hash}`} replace />;
 };
+const isValidSurahParam = (v?: string) => !!v && /^\d{1,3}$/.test(v) && Number(v) >= 1 && Number(v) <= 114;
+const SurahRoute = () => {
+  const { surahNumber } = useParams();
+  return isValidSurahParam(surahNumber) ? <SurahPage /> : <NotFound />;
+};
 import { HelmetProvider } from "react-helmet-async";
 import { ThemeProvider } from "@/hooks/useTheme";
 import { AuthProvider } from "@/hooks/useAuth";
@@ -22,6 +27,7 @@ import { useGuestMigration } from "@/hooks/useGuestMigration";
 import { ProProvider } from "@/hooks/usePro";
 import BottomNavigation from "@/components/BottomNavigation";
 import GlobalAudioPlayer from "@/components/GlobalAudioPlayer";
+import WirdReminderScheduler from "@/components/WirdReminderScheduler";
 
 // Eager load critical pages
 import Index from "./pages/Index";
@@ -94,6 +100,7 @@ const App = () => (
                 <TooltipProvider>
                   <>
                   <GuestMigrationHandler>
+                    <WirdReminderScheduler />
                     <Toaster />
                     <Sonner />
                     <BrowserRouter>
@@ -102,7 +109,7 @@ const App = () => (
                         <Routes>
                           <Route path="/" element={<Index />} />
                           <Route path="/quran" element={<QuranPage />} />
-                          <Route path="/surah/:surahNumber" element={<SurahPage />} />
+                          <Route path="/surah/:surahNumber" element={<SurahRoute />} />
                           <Route path="/quran/:surahNumber" element={<LegacySurahRedirect />} />
                           <Route path="/mushaf" element={<MushafPage />} />
                           <Route path="/favorites" element={<FavoritesPage />} />

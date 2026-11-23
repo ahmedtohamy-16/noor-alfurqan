@@ -32,6 +32,8 @@ import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { readingAyahIndex } from "@/lib/readingPositionRules";
 
+const PAGE_READ_DWELL_MS = 20_000;
+
 interface Ayah {
   number: number;
   text: string;
@@ -68,6 +70,7 @@ const SurahPage = () => {
   const [shareAyah, setShareAyah] = useState<{ number: number; text: string } | null>(null);
   const [highlightedForTafsir, setHighlightedForTafsir] = useState<number | null>(null);
   const [selectedTranslation, setSelectedTranslation] = useState<string | null>(readingSettings.selectedTranslation);
+  useEffect(() => { setSelectedTranslation(readingSettings.selectedTranslation); }, [readingSettings.selectedTranslation]);
   const [showDownloadDialog, setShowDownloadDialog] = useState(false);
   const [downloadType, setDownloadType] = useState<'surah' | 'ayah' | 'range'>('surah');
   const [downloadAyahNumber, setDownloadAyahNumber] = useState<number | null>(null);
@@ -169,9 +172,23 @@ const SurahPage = () => {
   useEffect(() => {
     if (surah && surahInfo) {
       saveProgress(surah.number, 1, surahInfo.name, surah.numberOfAyahs);
-      incrementPage();
     }
   }, [surah?.number]); // Only trigger on surah change
+
+  // Count a mushaf page as read only after it stayed on screen for a while
+  const countedPagesRef = useRef<Set<string>>(new Set());
+  const visiblePage = visibleAyah?.page_number;
+  useEffect(() => {
+    if (!visiblePage || !surahNumber) return;
+    const key = `${surahNumber}:${visiblePage}`;
+    if (countedPagesRef.current.has(key)) return;
+    const id = window.setTimeout(() => {
+      if (document.visibilityState !== "visible") return;
+      countedPagesRef.current.add(key);
+      incrementPage();
+    }, PAGE_READ_DWELL_MS);
+    return () => window.clearTimeout(id);
+  }, [visiblePage, surahNumber, incrementPage]);
 
   // Persist audio listening progress per surah (localStorage)
   const audioProgressKey = surah ? `noor:audioProgress:${surah.number}` : null;
@@ -355,7 +372,7 @@ const SurahPage = () => {
                   <h4 className="font-medium mb-3">الترجمة</h4>
                   <TranslationSelector
                     value={selectedTranslation}
-                    onChange={setSelectedTranslation}
+                    onChange={(v) => { setSelectedTranslation(v); void updateSettings({ selectedTranslation: v }); }}
                   />
                 </div>
                 <DisplaySettingsPanel
@@ -381,10 +398,10 @@ const SurahPage = () => {
 
         {visibleAyah && (
           <div ref={readingBarRef} role="status" aria-live="off" aria-label="موضع القراءة الحالي" className="sticky top-14 md:top-16 z-20 mb-5 flex min-h-11 items-center justify-between gap-3 border-y border-border bg-background/95 px-3 py-2 text-sm backdrop-blur-md">
-            <span className="flex items-center gap-2 font-semibold text-primary">
+            <Link to={`/mushaf?page=${visibleAyah.page_number}`} aria-label={`فتح الصفحة ${convertToArabicNumber(visibleAyah.page_number)} في المصحف`} className="-my-2 flex min-h-11 items-center gap-2 rounded-md font-semibold text-primary underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
               <BookOpen className="h-4 w-4 shrink-0" aria-hidden="true" />
               الصفحة <span className="arabic-digits" data-reading-page>{convertToArabicNumber(visibleAyah.page_number)}</span>
-            </span>
+            </Link>
             <span className="flex items-center gap-2 text-muted-foreground">
               <span>الجزء <span className="arabic-digits">{convertToArabicNumber(visibleAyah.juz_number)}</span></span>
               <span aria-hidden="true" className="text-border">/</span>
@@ -516,7 +533,7 @@ const SurahPage = () => {
                       {convertToArabicNumber(ayah.numberInSurah)}
                     </span>
                     {selectedTranslation && translatedText && (
-                      <span className="block text-base text-muted-foreground mb-4 mt-2 pr-4 border-r-2 border-primary/30">
+                      <span dir="auto" className="block text-start font-sans text-base leading-relaxed text-muted-foreground mb-4 mt-2 ps-4 border-s-2 border-primary/30">
                         {translatedText}
                       </span>
                     )}
