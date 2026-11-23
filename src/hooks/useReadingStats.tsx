@@ -1,6 +1,8 @@
-import { useState, useEffect, useCallback } from "react";
+import { useCallback } from "react";
+import { useSyncedState } from "./useSyncedState";
+import { queueUserState, getUserRow } from "@/lib/userStateStore";
 import { useAuth } from "./useAuth";
-import { COLLECTIONS, firestoreGet, firestoreSet } from "@/lib/firebase";
+
 
 interface ReadingStats {
   pagesRead: number;
@@ -15,44 +17,14 @@ const LOCAL_STORAGE_KEY = "readingStats";
 
 export const useReadingStats = () => {
   const { user } = useAuth();
-  const [stats, setStats] = useState<ReadingStats>({
+  const [stats, setStats, status] = useSyncedState<ReadingStats>("reading_stats", user?.uid || "guest", {
     pagesRead: 0,
     totalReadingTime: 0,
     sessionsCount: 0,
     lastSessionDate: "",
     streakDays: 0,
     todayPagesRead: 0,
-  });
-  const [isLoading, setIsLoading] = useState(true);
-
-  // Load stats from localStorage or initialize
-  useEffect(() => {
-    const loadStats = () => {
-      const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved) as ReadingStats;
-        // Check if it's a new day and reset todayPagesRead
-        const today = new Date().toDateString();
-        const lastSession = new Date(parsed.lastSessionDate).toDateString();
-        if (today !== lastSession) {
-          parsed.todayPagesRead = 0;
-          // Check streak
-          const yesterday = new Date();
-          yesterday.setDate(yesterday.getDate() - 1);
-          if (lastSession === yesterday.toDateString()) {
-            // Continue streak
-          } else if (lastSession !== today) {
-            // Break streak
-            parsed.streakDays = 0;
-          }
-        }
-        setStats(parsed);
-      }
-      setIsLoading(false);
-    };
-
-    loadStats();
-  }, [user]);
+  }, LOCAL_STORAGE_KEY);
 
   const updateStats = useCallback((pagesReadInSession: number, readingTimeMinutes: number) => {
     setStats((prev) => {
@@ -83,10 +55,18 @@ export const useReadingStats = () => {
           : pagesReadInSession,
       };
 
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newStats));
+      if (user) {
+        const date = new Date().toLocaleDateString("en-CA");
+        const record = getUserRow(user.uid, "reading_sessions", date) || {};
+        queueUserState(user.uid, "reading_sessions", date, {
+          ...record, user_id: user.uid, session_date: date, created_at: newStats.lastSessionDate,
+          pages_read: Number(record.pages_read || 0) + pagesReadInSession,
+          duration_minutes: Number(record.duration_minutes || 0) + readingTimeMinutes,
+        });
+      }
       return newStats;
     });
-  }, []);
+  }, [setStats, user?.uid]);
 
   const incrementPage = useCallback(() => {
     updateStats(1, 0);
@@ -98,7 +78,7 @@ export const useReadingStats = () => {
 
   return {
     stats,
-    isLoading,
+    isLoading: status.isLoading,
     updateStats,
     incrementPage,
     addReadingTime,

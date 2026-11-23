@@ -3,6 +3,7 @@ import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/untypedClient";
 import type { UserRole } from "@/lib/firebase";
 import { toast } from "sonner";
+import { activateUserState } from "@/lib/userStateStore";
 
 /**
  * Supabase Auth is the only account system.
@@ -113,6 +114,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     // Listener first, then restore the persisted session.
     const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => {
+      activateUserState(s?.user?.id || null);
       setSession(s);
       setUser(s?.user ? toAppUser(s.user) : null);
       setIsLoading(false);
@@ -126,6 +128,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     });
     supabase.auth.getSession().then(({ data }) => {
+      activateUserState(data.session?.user?.id || null);
       setSession(data.session);
       setUser(data.session?.user ? toAppUser(data.session.user) : null);
       setIsLoading(false);

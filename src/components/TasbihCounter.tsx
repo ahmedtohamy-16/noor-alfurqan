@@ -62,11 +62,11 @@ const TasbihCounter = ({ count, increment, reset, saveSession, appearance }: Tas
   });
 
   return (
-    <div className="relative arabic-ui flex flex-col items-center">
+    <div className="relative arabic-ui flex flex-col items-center w-full min-w-0 overflow-hidden">
       <Button variant="ghost"
         onClick={handleClick}
         className={cn(
-          "relative w-full max-w-[360px] h-auto aspect-square p-0 hover:bg-transparent flex items-center justify-center select-none transition-transform duration-150",
+          "relative w-full max-w-[360px] h-auto aspect-square p-0 overflow-hidden hover:bg-transparent flex items-center justify-center select-none transition-transform duration-150",
           isPressed ? "scale-[0.97]" : "active:scale-[0.97]"
         )}
         aria-label="عدّاد التسبيح"

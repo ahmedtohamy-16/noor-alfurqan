@@ -1,4 +1,4 @@
-import { ArrowRight, Moon, Sun, LogOut, User, Clock, Shield, Bell, Sunrise, Type, Headphones, Palette, Info, Settings } from "lucide-react";
+import { ArrowRight, Moon, Sun, LogOut, User, Clock, Shield, Bell, Sunrise, Type, Headphones, Palette, Info, Settings, Save, RotateCcw, Loader2, Check } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -25,6 +25,9 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/untypedClient";
 import { countryHasDST, isInDSTForCountry, getDSTStatusText } from "@/utils/dstUtils";
 import { arabicDigits } from "@/lib/displayFormat";
+import { useGlobalAudio } from "@/hooks/useGlobalAudio";
+import { getReciterById } from "@/data/reciters";
+import { flushUserState } from "@/lib/userStateStore";
 
 const fontOptions = [
   { id: "Amiri", name: "خط Amiri", arabicName: "أميري", preview: "font-amiri" },
@@ -34,40 +37,47 @@ const fontOptions = [
 ];
 
 const SettingsPage = () => {
-  const { theme, toggleTheme } = useTheme();
-  const { user, signOut } = useAuth();
-  const { settings, updateSettings } = useUserSettings();
-  const { settings: readingSettings, updateSettings: updateReadingSettings } = useReadingSettings();
+  const { theme: savedTheme, setTheme } = useTheme();
+  const { user, signOut, isAdmin } = useAuth();
+  const { settings: savedSettings, updateSettings: persistSettings, isLoading } = useUserSettings();
+  const { settings: savedReading, updateSettings: persistReading } = useReadingSettings();
+  const { selectedReciter, setReciter } = useGlobalAudio();
   const { permission, requestPermission } = useNotifications();
   const navigate = useNavigate();
-  const [wirdTime, setWirdTime] = useState("06:00");
-  const [isAdmin, setIsAdmin] = useState(false);
-
-  useEffect(() => {
-    if (settings.daily_wird_time) {
-      setWirdTime(settings.daily_wird_time.slice(0, 5));
-    }
-  }, [settings.daily_wird_time]);
-
-  useEffect(() => {
-    checkAdminStatus();
-  }, [user]);
-
-  const checkAdminStatus = async () => {
-    if (!user) return;
+  const [settings, setSettings] = useState(savedSettings);
+  const [readingSettings, setReadingSettings] = useState(savedReading);
+  const [theme, setDraftTheme] = useState(savedTheme);
+  const [reciterId, setReciterId] = useState(selectedReciter.id);
+  const [dirty, setDirty] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [wirdTime, setWirdTime] = useState(savedSettings.daily_wird_time.slice(0, 5));
+  const resetDraft = () => {
+    setSettings(savedSettings); setReadingSettings(savedReading); setDraftTheme(savedTheme);
+    setReciterId(selectedReciter.id); setWirdTime(savedSettings.daily_wird_time.slice(0, 5));
+    setDirty(false); setSaved(false);
+  };
+  useEffect(() => { if (!dirty) resetDraft(); }, [JSON.stringify(savedSettings), JSON.stringify(savedReading), savedTheme, selectedReciter.id]);
+  const updateSettings = (patch: Partial<typeof settings>) => { setSettings(previous => ({ ...previous, ...patch })); setDirty(true); setSaved(false); };
+  const updateReadingSettings = (patch: Partial<typeof readingSettings>) => { setReadingSettings(previous => ({ ...previous, ...patch })); setDirty(true); setSaved(false); };
+  const toggleTheme = () => { setDraftTheme(previous => previous === "dark" ? "light" : "dark"); setDirty(true); setSaved(false); };
+  const handleSave = async () => {
+    if (saving || !dirty) return;
+    setSaving(true);
     try {
-      const { data, error } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", user.uid)
-        .eq("role", "admin")
-        .maybeSingle();
-      if (error) throw error;
-      setIsAdmin(!!data);
-    } catch (error) {
-      console.error("Error checking admin status:", error);
-      setIsAdmin(false);
-    }
+      if ((settings.daily_wird_enabled || settings.notifications_enabled) && permission !== "granted" && !await requestPermission()) {
+        toast.error("اسمح بالإشعارات أو أوقف التذكير قبل الحفظ"); return;
+      }
+      await persistSettings(settings, false);
+      await persistReading(readingSettings, false);
+      setTheme(theme);
+      const reciter = getReciterById(reciterId);
+      if (reciter) setReciter(reciter);
+      if (user) await flushUserState(user.uid);
+      setDirty(false); setSaved(true);
+      toast.success(user && navigator.onLine ? "تم حفظ الإعدادات في حسابك" : "تم الحفظ على الجهاز" , { description: user && !navigator.onLine ? "ستتم المزامنة عند عودة الاتصال" : undefined });
+    } catch { toast.error("تعذّر حفظ الإعدادات في حسابك؛ أعد المحاولة"); }
+    finally { setSaving(false); }
   };
 
   const handleSignOut = async () => {
@@ -76,30 +86,8 @@ const SettingsPage = () => {
     navigate("/");
   };
 
-  const handleWirdTimeChange = async (time: string) => {
-    setWirdTime(time);
-    await updateSettings({ daily_wird_time: time + ":00" });
-    toast.success("تم تحديث وقت الورد");
-  };
-
-  const handleDailyWirdToggle = async () => {
-    const next = !settings.daily_wird_enabled;
-
-    if (next) {
-      const ok = permission === "granted" ? true : await requestPermission();
-      if (!ok) {
-        toast.error("لا يمكن تفعيل تذكير الورد بدون السماح بالإشعارات");
-        return;
-      }
-
-      await updateSettings({ daily_wird_enabled: true });
-      toast.success("تم تفعيل تذكير الورد اليومي");
-      return;
-    }
-
-    await updateSettings({ daily_wird_enabled: false });
-    toast.success("تم إيقاف تذكير الورد اليومي");
-  };
+  const handleWirdTimeChange = (time: string) => { setWirdTime(time); updateSettings({ daily_wird_time: time + ":00" }); };
+  const handleDailyWirdToggle = () => updateSettings({ daily_wird_enabled: !settings.daily_wird_enabled });
 
   const getFontClass = (fontFamily: string) => {
     const font = fontOptions.find(f => f.id === fontFamily);
@@ -107,7 +95,7 @@ const SettingsPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-24">
+    <div className="min-h-screen bg-background pb-48">
       <Header />
 
       <main className="container mx-auto px-4 py-8 arabic-ui">
@@ -186,7 +174,6 @@ const SettingsPage = () => {
                       value={readingSettings.fontFamily}
                       onValueChange={(val: "Amiri" | "Scheherazade" | "Noto Naskh" | "Uthmani") => {
                         updateReadingSettings({ fontFamily: val });
-                        toast.success(`تم تغيير الخط إلى ${fontOptions.find(f => f.id === val)?.arabicName}`);
                       }}
                     >
                       <SelectTrigger className="h-11">
@@ -268,7 +255,7 @@ const SettingsPage = () => {
               <h2 className="text-lg font-bold text-foreground">الصوتيات</h2>
             </div>
             
-            <ReciterSelector />
+            <ReciterSelector value={reciterId} onValueChange={id => { setReciterId(id); setDirty(true); setSaved(false); }} />
           </section>
 
           <Separator />
@@ -347,7 +334,6 @@ const SettingsPage = () => {
                     value={settings.dst_mode}
                     onValueChange={(val: 'auto' | 'manual') => {
                       updateSettings({ dst_mode: val });
-                      toast.success(val === 'auto' ? "تم التبديل للوضع التلقائي" : "تم التبديل للوضع اليدوي");
                     }}
                   >
                     <SelectTrigger className="h-11">
@@ -367,7 +353,6 @@ const SettingsPage = () => {
                       checked={settings.dst_enabled}
                       onCheckedChange={(checked) => {
                         updateSettings({ dst_enabled: checked });
-                        toast.success(checked ? "تم تفعيل التوقيت الصيفي" : "تم إلغاء التوقيت الصيفي");
                       }}
                     />
                   </div>
@@ -466,6 +451,13 @@ const SettingsPage = () => {
           </section>
         </div>
       </main>
+      <div className="fixed inset-x-0 bottom-20 z-40 px-4 pointer-events-none">
+        <div className="max-w-2xl mx-auto border border-border bg-background/95 backdrop-blur-lg shadow-lg rounded-lg p-3 pointer-events-auto flex items-center justify-between gap-3 arabic-ui" dir="rtl">
+          <p role="status" className="text-sm text-muted-foreground flex-1 min-w-0">{saving ? "جارٍ حفظ إعداداتك…" : dirty ? "تغييرات غير محفوظة" : saved ? "تم الحفظ" : "الإعدادات المحفوظة"}</p>
+          <Button aria-label="إلغاء التغييرات" title="إلغاء التغييرات" size="icon" variant="ghost" className="h-11 w-11 shrink-0" disabled={!dirty || saving} onClick={resetDraft}><RotateCcw className="w-5 h-5" /></Button>
+          <Button className="h-11 gap-2 shrink-0" disabled={!dirty || saving || isLoading} onClick={handleSave}>{saving ? <Loader2 className="w-4 h-4 animate-spin" /> : saved ? <Check className="w-4 h-4" /> : <Save className="w-4 h-4" />}حفظ</Button>
+        </div>
+      </div>
     </div>
   );
 };

@@ -1,4 +1,14 @@
 # Roadmap
+- [ ] Clip rotating tasbih ring and verify nonzero/persisted counts at 360/390px
+- [ ] Remove always-visible ayah hearts; retain tap-menu favorites
+- [ ] Supabase user settings, reading/adhkar/tasbih state + private RLS and cached batched synchronization
+- [ ] Explicit settings confirmation, including reciter; no automatic draft application
+- [ ] Selectable offline Quran text/audio downloads and storage management
+- [ ] Real profile identity/avatar and account controls
+- [ ] First-name-only home greeting
+- [ ] Review prayer methods, coordinates/timezone and compare Abu Hammad with the official Egyptian survey timetable
+- [ ] Verify canonical export URL and improve resolution
+- [ ] Present modern verse-image design alternatives; hold final template until user chooses
 - [x] Replace the displayed website in generated ayah/hadith/prayer/asma images with https://nooralfurqan.app
 - [x] Verify fresh branded ayah/hadith/prayer/asma image exports in the running app
 - [x] Sweep shared hadith, Arabic displays, GPS city, Quran navigation/favorites, tasbih layout and offline rules across current consumers; preserve stored records and unrelated settings/permissions

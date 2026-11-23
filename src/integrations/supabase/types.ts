@@ -43,6 +43,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          avatar_url: string | null
           created_at: string
           display_name: string | null
           email: string | null
@@ -52,6 +53,7 @@ export type Database = {
           username: string
         }
         Insert: {
+          avatar_url?: string | null
           created_at?: string
           display_name?: string | null
           email?: string | null
@@ -61,6 +63,7 @@ export type Database = {
           username: string
         }
         Update: {
+          avatar_url?: string | null
           created_at?: string
           display_name?: string | null
           email?: string | null
@@ -116,6 +119,51 @@ export type Database = {
         }
         Relationships: []
       }
+      user_state: {
+        Row: {
+          created_at: string
+          deleted: boolean
+          namespace: string
+          payload: Json
+          record_key: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          deleted?: boolean
+          namespace: string
+          payload?: Json
+          record_key: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          deleted?: boolean
+          namespace?: string
+          payload?: Json
+          record_key?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_state_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_state_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       public_profiles: {
@@ -148,6 +196,9 @@ export type Database = {
         Returns: boolean
       }
       is_reserved_username: { Args: { name: string }; Returns: boolean }
+      merge_user_json: { Args: { base: Json; patch: Json }; Returns: Json }
+      read_user_state: { Args: never; Returns: Json }
+      sync_user_state: { Args: { changes: Json }; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"

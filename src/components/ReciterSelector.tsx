@@ -15,38 +15,22 @@ import { firestoreGet, firestoreSet, COLLECTIONS } from "@/lib/firebase";
 
 interface ReciterSelectorProps {
   compact?: boolean;
+  value?: string;
+  onValueChange?: (id: string) => void;
 }
 
-const ReciterSelector = ({ compact = false }: ReciterSelectorProps) => {
-  const { user } = useAuth();
-  const { selectedReciter, setReciter, isPlaying } = useGlobalAudio();
-  const isLoading = false;
-
-
-  const handleReciterChange = async (value: string) => {
-    const reciter = getVerifiedReciters().find(r => r.id === value);
-    if (!reciter) return;
-    
-    // Update global audio state (this will be the source of truth)
-    setReciter(reciter);
-    
-    // Persist to localStorage (for offline/guest users)
-    localStorage.setItem("selectedReciter", value);
-
-    // Persist to Firestore (for logged-in users)
-    if (user) {
-      await firestoreSet(COLLECTIONS.USER_READING_SETTINGS, user.uid, {
-        user_id: user.uid,
-        selected_reciter: value,
-      });
-    }
-  };
+const ReciterSelector = ({ compact = false, value, onValueChange }: ReciterSelectorProps) => {
+  const { selectedReciter } = useGlobalAudio();
+  const selectedId = value || selectedReciter.id;
+  const selected = getReciterById(selectedId) || selectedReciter;
+  const handleReciterChange = (id: string) => onValueChange?.(id);
+  const isPlaying = false;
 
   const verifiedReciters = getVerifiedReciters();
 
   if (compact) {
     return (
-      <Select value={selectedReciter.id} onValueChange={handleReciterChange} disabled={isPlaying}>
+      <Select value={selectedId} onValueChange={handleReciterChange} disabled={isPlaying}>
         <SelectTrigger className="w-full">
           <SelectValue placeholder="اختر القارئ" />
         </SelectTrigger>
@@ -68,12 +52,12 @@ const ReciterSelector = ({ compact = false }: ReciterSelectorProps) => {
         <div>
           <p className="font-medium text-foreground">القارئ</p>
           <p className="text-sm text-muted-foreground">
-            {selectedReciter.nameArabic}
+            {selected.nameArabic}
           </p>
         </div>
       </div>
 
-      <Select value={selectedReciter.id} onValueChange={handleReciterChange} disabled={isPlaying}>
+      <Select value={selectedId} onValueChange={handleReciterChange} disabled={isPlaying}>
         <SelectTrigger className="w-full">
           <SelectValue placeholder="اختر القارئ" />
         </SelectTrigger>

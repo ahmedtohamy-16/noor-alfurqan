@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "./useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { useSyncedState } from "./useSyncedState";
 
 export interface TasbihStats {
   totalCount: number;
@@ -56,30 +57,13 @@ function summarize(rows: { dhikr: string; count: number; session_date: string; c
 
 export const useTasbih = () => {
   const { user } = useAuth();
-  const [count, setCount] = useState<number>(() => {
-    const n = Number(typeof window !== "undefined" ? localStorage.getItem("tasbihCurrentCount") : 0);
-    return Number.isFinite(n) && n > 0 ? Math.floor(n) : 0;
-  });
-  const [currentDhikr, setCurrentDhikr] = useState<string>(() =>
-    (typeof window !== "undefined" && localStorage.getItem("tasbihCurrentDhikr")) || defaultDhikrs[0]);
-  useEffect(() => { localStorage.setItem("tasbihCurrentCount", String(count)); }, [count]);
-  useEffect(() => { localStorage.setItem("tasbihCurrentDhikr", currentDhikr); }, [currentDhikr]);
+  const [count, setCount, state] = useSyncedState<number>("tasbih", "count", 0, "tasbihCurrentCount");
+  const [currentDhikr, setCurrentDhikr] = useSyncedState<string>("tasbih", "dhikr", defaultDhikrs[0], "tasbihCurrentDhikr");
+  const [dailyGoal, setDailyGoal] = useSyncedState<number>("tasbih", "goal", 1000, "tasbih_daily_goal");
+  const saving = useRef(false);
   const [stats, setStats] = useState<TasbihStats>({ totalCount: 0, todayCount: 0, dhikrTypes: [], weekCount: 0, streakDays: 0 });
   const [isLoading, setIsLoading] = useState(false);
-  const [appearance, setAppearance] = useState<TasbihAppearance>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem(APPEARANCE_KEY);
-      if (saved) {
-        try {
-          const parsed = JSON.parse(saved);
-          return { ...defaultAppearance, ...parsed };
-        } catch {
-          return defaultAppearance;
-        }
-      }
-    }
-    return defaultAppearance;
-  });
+  const [appearance, setAppearance] = useSyncedState<TasbihAppearance>("tasbih", "appearance", defaultAppearance, APPEARANCE_KEY);
 
   const today = new Date().toISOString().split("T")[0];
 
@@ -127,7 +111,8 @@ export const useTasbih = () => {
   }, []);
 
   const saveSession = useCallback(async () => {
-    if (count === 0) return;
+    if (count === 0 || saving.current) return;
+    saving.current = true;
 
     const newTodayCount = stats.todayCount + count;
     const newTotalCount = stats.totalCount + count;
@@ -139,7 +124,7 @@ export const useTasbih = () => {
         dhikr: currentDhikr.slice(0, 200),
         session_date: today,
       });
-      if (error) { console.error("Error saving tasbih:", error); return; }
+      if (error) { saving.current = false; console.error("Error saving tasbih:", error); throw error; }
     } else {
       const stored = localStorage.getItem("tasbihStats");
       const parsed = stored ? JSON.parse(stored) : { totalCount: 0, todayCount: 0, dhikrTypes: [] };
@@ -165,19 +150,18 @@ export const useTasbih = () => {
     }));
     
     setCount(0);
-  }, [count, currentDhikr, stats, today, user]);
+    saving.current = false;
+  }, [count, currentDhikr, stats, today, user, setCount]);
 
   const changeDhikr = useCallback((dhikr: string) => {
     if (count > 0) {
-      saveSession();
-    }
-    setCurrentDhikr(dhikr);
+      void saveSession().then(() => setCurrentDhikr(dhikr)).catch(() => {});
+    } else setCurrentDhikr(dhikr);
   }, [count, saveSession]);
 
   const updateAppearance = useCallback((updates: Partial<TasbihAppearance>) => {
     setAppearance((prev) => {
       const next = { ...prev, ...updates };
-      localStorage.setItem(APPEARANCE_KEY, JSON.stringify(next));
       return next;
     });
   }, []);
@@ -186,7 +170,9 @@ export const useTasbih = () => {
     count,
     currentDhikr,
     stats,
-    isLoading,
+    isLoading: isLoading || state.isLoading,
+    dailyGoal,
+    setDailyGoal,
     appearance,
     increment,
     reset,

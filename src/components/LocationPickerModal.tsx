@@ -1,5 +1,5 @@
 import { recommendedPrayerMethod } from "@/lib/prayerMethods";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { MapPin, Navigation, Loader2, Check, AlertCircle } from "lucide-react";
 import {
   Dialog,
@@ -39,6 +39,11 @@ const LocationPickerModal = ({ open, onOpenChange }: LocationPickerModalProps) =
   const [selectedMethod, setSelectedMethod] = useState<number>(settings.prayer_method || recommendedPrayerMethod(settings.country_code));
   const [selectedMadhab, setSelectedMadhab] = useState<number>(settings.prayer_madhab || 0);
 
+  useEffect(() => {
+    if (!open) return;
+    setSelectedMethod(settings.prayer_method || recommendedPrayerMethod(settings.country_code));
+    setSelectedMadhab(settings.prayer_madhab || 0);
+  }, [open, settings.prayer_method, settings.prayer_madhab, settings.country_code]);
   const hasCurrentLocation = hasLocationCoordinates(settings.latitude, settings.longitude);
 
   const handleAutoDetect = async () => {
@@ -66,12 +71,7 @@ const LocationPickerModal = ({ open, onOpenChange }: LocationPickerModalProps) =
 
   const handleConfirm = async () => {
     if (selectedCity) {
-      await updateLocation(selectedCity.latitude, selectedCity.longitude, selectedCity.name_ar);
-      await updateSettings({ 
-        prayer_method: selectedMethod, 
-        prayer_madhab: selectedMadhab,
-        country_code: selectedCountry 
-      });
+      await updateLocation(selectedCity.latitude, selectedCity.longitude, selectedCity.name_ar, { prayer_method: selectedMethod, prayer_madhab: selectedMadhab, country_code: selectedCountry });
       onOpenChange(false);
     }
   };

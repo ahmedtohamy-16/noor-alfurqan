@@ -1,6 +1,6 @@
 import { useState, useEffect, createContext, useContext, ReactNode } from "react";
 import { useAuth } from "./useAuth";
-import { COLLECTIONS, firestoreGet, firestoreSet } from "@/lib/firebase";
+import { useSyncedState } from "./useSyncedState";
 
 type Theme = "light" | "dark";
 
@@ -20,39 +20,9 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   });
   const { user } = useAuth();
 
-  // Load theme from Firestore when user logs in
-  useEffect(() => {
-    if (user) {
-      loadThemeFromDB(user.uid);
-    }
-  }, [user]);
-
-  const loadThemeFromDB = async (uid: string) => {
-    try {
-      const settings = await firestoreGet<any>(COLLECTIONS.USER_SETTINGS, uid);
-      
-      if (settings && settings.dark_mode !== undefined) {
-        const dbTheme = settings.dark_mode ? "dark" : "light";
-        setThemeState(dbTheme);
-        localStorage.setItem("theme", dbTheme);
-      }
-    } catch (error) {
-      console.error("Error loading theme:", error);
-    }
-  };
-
-  const saveThemeToDB = async (newTheme: Theme) => {
-    if (!user) return;
-    
-    try {
-      await firestoreSet(COLLECTIONS.USER_SETTINGS, user.uid, {
-        user_id: user.uid,
-        dark_mode: newTheme === "dark",
-      });
-    } catch (error) {
-      console.error("Error saving theme:", error);
-    }
-  };
+  const [savedTheme, saveTheme] = useSyncedState<Theme>("preferences", "theme", theme, "theme.synced");
+  useEffect(() => { setThemeState(savedTheme); }, [savedTheme]);
+  const saveThemeToDB = (newTheme: Theme) => saveTheme(newTheme);
 
   useEffect(() => {
     const root = document.documentElement;

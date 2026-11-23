@@ -22,6 +22,7 @@ import {
   QueryConstraint
 } from "firebase/firestore";
 import { getMessaging, getToken, onMessage, Messaging } from "firebase/messaging";
+import { personalCollections, personalGet, personalSet, personalDelete, personalQuery } from "./personalDataBridge";
 
 // Firebase configuration - these are public/publishable keys
 const FIREBASE_CONFIG = {
@@ -150,6 +151,7 @@ export const updateUserRole = async (uid: string, newRole: UserRole): Promise<vo
 // ==================== FIRESTORE HELPER FUNCTIONS ====================
 
 export const firestoreGet = async <T>(collectionName: string, docId: string): Promise<T | null> => {
+  if (personalCollections.has(collectionName)) return personalGet<T>(collectionName, docId);
   try {
     const docRef = doc(db, collectionName, docId);
     const docSnap = await getDoc(docRef);
@@ -169,6 +171,7 @@ export const firestoreSet = async (
   data: DocumentData,
   merge: boolean = true
 ) => {
+  if (personalCollections.has(collectionName)) return personalSet(collectionName, docId, data, merge);
   try {
     const docRef = doc(db, collectionName, docId);
     await setDoc(docRef, { 
@@ -185,6 +188,11 @@ export const firestoreAdd = async (
   collectionName: string,
   data: DocumentData
 ): Promise<string> => {
+  if (personalCollections.has(collectionName)) {
+    const id = crypto.randomUUID();
+    await personalSet(collectionName, id, { ...data, created_at: data.created_at || new Date().toISOString() });
+    return id;
+  }
   try {
     const colRef = collection(db, collectionName);
     const docRef = await addDoc(colRef, {
@@ -217,6 +225,7 @@ export const firestoreUpdate = async (
 };
 
 export const firestoreDelete = async (collectionName: string, docId: string) => {
+  if (personalCollections.has(collectionName)) return personalDelete(collectionName, docId);
   try {
     const docRef = doc(db, collectionName, docId);
     await deleteDoc(docRef);
@@ -233,6 +242,7 @@ export const firestoreQuery = async <T>(
   orderDirection: "asc" | "desc" = "desc",
   limitCount?: number
 ): Promise<T[]> => {
+  if (personalCollections.has(collectionName)) return personalQuery<T>(collectionName, conditions, orderByField, orderDirection, limitCount);
   try {
     let q = collection(db, collectionName);
     let constraints: any[] = conditions.map(c => where(c.field, c.op, c.value));

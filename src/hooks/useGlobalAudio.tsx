@@ -3,7 +3,8 @@ import { getVerifiedReciters, getAyahAudioUrl, DEFAULT_RECITER_ID, type Reciter 
 import { toast } from 'sonner';
 import { surahs } from '@/data/surahs';
 import { getAyahsBySurahAsync } from '@/data/quranAyats';
-import { startAyahDownload } from '@/lib/ayahDownloads';
+import { startAyahDownload, getDownloadBlob } from '@/lib/ayahDownloads';
+import { useSyncedState } from './useSyncedState';
 import { decideAfterAyah, type PlayMode, type RepeatMode } from '@/lib/playbackRules';
 import { arabicDigits } from '@/lib/displayFormat';
 
@@ -109,6 +110,14 @@ export const GlobalAudioProvider: React.FC<{ children: ReactNode }> = ({ childre
   const [rangeEnd, setRangeEnd] = useState(1);
   const [playMode, setPlayModeState] = useState<PlayMode>(getInitialPlayMode);
   const [error, setError] = useState<string | null>(null);
+  const [preferences, savePreferences] = useSyncedState('audio_preferences', 'player', { reciterId: DEFAULT_RECITER_ID, playMode: 'surah' as PlayMode, playbackRate: 1, volume: 80 }, 'noor:audioPreferences');
+  useEffect(() => {
+    const reciter = getVerifiedReciters().find(r => r.id === preferences.reciterId);
+    if (reciter) { setSelectedReciter(reciter); live.current.selectedReciter = reciter; }
+    setPlayModeState(preferences.playMode); setPlaybackRateState(preferences.playbackRate); setVolumeState(preferences.volume);
+  }, [preferences.reciterId, preferences.playMode, preferences.playbackRate, preferences.volume]);
+  const offlineUrl = useRef<string | null>(null);
+
 
   // Single audio element for the whole app (keeps playing in background tabs).
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -152,7 +161,11 @@ export const GlobalAudioProvider: React.FC<{ children: ReactNode }> = ({ childre
     setError(null);
     setIsLoading(true);
     setProgress(0);
-    audio.src = getAyahAudioUrl(r, ayah.number);
+    const downloaded = await getDownloadBlob(`${r.id}:${ayah.number}`).catch(() => undefined);
+    if (token !== playTokenRef.current) return;
+    if (offlineUrl.current) URL.revokeObjectURL(offlineUrl.current);
+    offlineUrl.current = downloaded ? URL.createObjectURL(downloaded) : null;
+    audio.src = offlineUrl.current || getAyahAudioUrl(r, ayah.number);
     try {
       await audio.play();
       if (token !== playTokenRef.current) return;
@@ -272,7 +285,8 @@ export const GlobalAudioProvider: React.FC<{ children: ReactNode }> = ({ childre
   const setPlaybackRate = useCallback((rate: number) => {
     setPlaybackRateState(rate);
     localStorage.setItem('quranPlaybackRate', String(rate));
-  }, []);
+    savePreferences(previous => ({ ...previous, playbackRate: rate }));
+  }, [savePreferences]);
 
   const resetForNewSession = (surah: SurahInfo, index: number) => {
     setCurrentRepeat(0);
@@ -331,25 +345,27 @@ export const GlobalAudioProvider: React.FC<{ children: ReactNode }> = ({ childre
     if (audioRef.current) { audioRef.current.currentTime = value; setProgress(value); }
   }, []);
 
-  const setVolume = useCallback((value: number) => { setVolumeState(value); setIsMuted(false); }, []);
+  const setVolume = useCallback((value: number) => { setVolumeState(value); setIsMuted(false); savePreferences(previous => ({ ...previous, volume: value })); }, [savePreferences]);
   const toggleMute = useCallback(() => setIsMuted((p) => !p), []);
 
   const setReciter = useCallback((reciter: Reciter) => {
     try { localStorage.setItem(RECITER_KEY, reciter.id); } catch { /* ignore */ }
     setSelectedReciter(reciter);
+    savePreferences(previous => ({ ...previous, reciterId: reciter.id }));
     live.current.selectedReciter = reciter;
     const audio = audioRef.current;
     const s = live.current;
     // If something is playing, continue the same ayah with the new reciter.
     if (audio && !audio.paused && s.currentSurah) startAyah(s.currentSurah, s.currentAyahIndex, reciter);
-  }, [startAyah]);
+  }, [startAyah, savePreferences]);
 
   const setPlayMode = useCallback((mode: PlayMode) => {
     try { localStorage.setItem(PLAYMODE_KEY, mode); } catch { /* ignore */ }
     setPlayModeState(mode);
+    savePreferences(previous => ({ ...previous, playMode: mode }));
     // Range repeat has its own end; picking a play mode switches range off.
     if (live.current.repeatMode === 'range') setRepeatModeState('none');
-  }, []);
+  }, [savePreferences]);
 
   const setRepeatMode = useCallback((mode: RepeatMode) => {
     setRepeatModeState(mode);

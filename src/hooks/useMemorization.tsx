@@ -1,15 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import {
-  collection,
-  doc,
-  onSnapshot,
-  setDoc,
-  serverTimestamp,
-  query,
-  where,
-  Timestamp,
-} from "firebase/firestore";
-import { getFirestoreDb } from "@/lib/firebase";
+import { useSyncedState } from "./useSyncedState";
 import { useAuth } from "@/hooks/useAuth";
 
 export type MemoStatus = "new" | "learning" | "memorized" | "review";
@@ -62,35 +52,8 @@ const computeNext = (rec: Partial<AyahMemoRecord>, grade: "again" | "hard" | "go
 
 export const useMemorization = () => {
   const { user } = useAuth();
-  const [records, setRecords] = useState<Record<string, AyahMemoRecord>>({});
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (!user) {
-      setRecords({});
-      setLoading(false);
-      return;
-    }
-    setLoading(true);
-    const db = getFirestoreDb();
-    const ref = collection(db, COLLECTION, user.uid, SUB);
-    const unsub = onSnapshot(
-      ref,
-      (snap) => {
-        const map: Record<string, AyahMemoRecord> = {};
-        snap.forEach((d) => {
-          map[d.id] = { id: d.id, ...(d.data() as any) };
-        });
-        setRecords(map);
-        setLoading(false);
-      },
-      (err) => {
-        console.error("memorization sync", err);
-        setLoading(false);
-      }
-    );
-    return () => unsub();
-  }, [user?.uid]);
+  const [records, setRecords, state] = useSyncedState<Record<string, AyahMemoRecord>>("memorization", "ayahs", {});
+  const loading = state.isLoading;
 
   const grade = useCallback(
     async (surah: number, ayah: number, g: "again" | "hard" | "good" | "easy") => {
@@ -108,32 +71,21 @@ export const useMemorization = () => {
         nextReview: updates.nextReview,
         lastReviewed: Date.now(),
       };
-      const db = getFirestoreDb();
-      await setDoc(
-        doc(db, COLLECTION, user.uid, SUB, id),
-        { ...rec, updatedAt: serverTimestamp() },
-        { merge: true }
-      );
+      setRecords(previous => ({ ...previous, [id]: rec }));
     },
-    [user, records]
+    [user, records, setRecords]
   );
 
   const reset = useCallback(
     async (surah: number, ayah: number) => {
       if (!user) return;
       const id = docId(surah, ayah);
-      const db = getFirestoreDb();
-      await setDoc(
-        doc(db, COLLECTION, user.uid, SUB, id),
-        {
-          id, surah, ayah, status: "new" as MemoStatus,
-          ease: 2.5, reviewCount: 0, nextReview: Date.now(), lastReviewed: 0,
-          updatedAt: serverTimestamp(),
-        },
-        { merge: true }
-      );
+      setRecords(previous => ({ ...previous, [id]: {
+        id, surah, ayah, status: "new", ease: 2.5, reviewCount: 0,
+        nextReview: Date.now(), lastReviewed: 0,
+      } }));
     },
-    [user]
+    [user, setRecords]
   );
 
   const dueToday = Object.values(records).filter(

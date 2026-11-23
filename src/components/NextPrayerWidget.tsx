@@ -1,3 +1,4 @@
+import { usePrayerSchedule } from "@/hooks/usePrayerSchedule";
 import { recommendedPrayerMethod } from "@/lib/prayerMethods";
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -26,91 +27,10 @@ const prayers = [
   { key: "Isha", name: "العشاء" },
 ];
 
-const fetchPrayerTimes = async (lat: number, lng: number, method: number): Promise<PrayerTimesData> => {
-  const today = new Date();
-  const dateStr = `${today.getDate()}-${today.getMonth() + 1}-${today.getFullYear()}`;
-  const response = await fetch(
-    `https://api.aladhan.com/v1/timings/${dateStr}?latitude=${lat}&longitude=${lng}&method=${method}`
-  );
-  const data = await response.json();
-  return data.data.timings;
-};
-
 const NextPrayerWidget = () => {
   const { settings } = useUserSettings();
-  const [countdown, setCountdown] = useState({ hours: 0, minutes: 0, seconds: 0 });
-  const [nextPrayer, setNextPrayer] = useState<{ name: string; time: string } | null>(null);
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
-
-  const lat = settings.latitude;
-  const lng = settings.longitude;
-  const method = settings.prayer_method || recommendedPrayerMethod(settings.country_code);
-  const hasLocation = hasLocationCoordinates(lat, lng);
-
-  const { data: prayerTimes } = useQuery({
-    queryKey: ["prayerTimesWidget", lat, lng, method],
-    queryFn: () => {
-      if (lat === null || lng === null) throw new Error("لم يُحدد الموقع");
-      return fetchPrayerTimes(lat, lng, method);
-    },
-    enabled: hasLocation,
-    staleTime: 1000 * 60 * 60,
-  });
-
-  useEffect(() => {
-    if (!prayerTimes) return;
-
-    const updateNextPrayer = () => {
-      const now = new Date();
-      let found = false;
-
-      for (const prayer of prayers) {
-        const [hours, minutes] = prayerTimes[prayer.key as keyof PrayerTimesData].split(":").map(Number);
-        const prayerDate = new Date();
-        prayerDate.setHours(hours, minutes, 0, 0);
-
-        if (prayerDate > now) {
-          setNextPrayer({ name: prayer.name, time: prayerTimes[prayer.key as keyof PrayerTimesData] });
-          found = true;
-          break;
-        }
-      }
-
-      if (!found) {
-        setNextPrayer({ name: "الفجر", time: prayerTimes.Fajr });
-      }
-    };
-
-    updateNextPrayer();
-    const interval = setInterval(updateNextPrayer, 60000);
-    return () => clearInterval(interval);
-  }, [prayerTimes]);
-
-  useEffect(() => {
-    if (!prayerTimes || !nextPrayer) return;
-
-    const updateCountdown = () => {
-      const now = new Date();
-      const [hours, minutes] = nextPrayer.time.split(":").map(Number);
-      const prayerDate = new Date();
-      prayerDate.setHours(hours, minutes, 0, 0);
-
-      if (prayerDate < now) {
-        prayerDate.setDate(prayerDate.getDate() + 1);
-      }
-
-      const diff = prayerDate.getTime() - now.getTime();
-      const h = Math.floor(diff / (1000 * 60 * 60));
-      const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-      const s = Math.floor((diff % (1000 * 60)) / 1000);
-
-      setCountdown({ hours: h, minutes: m, seconds: s });
-    };
-
-    updateCountdown();
-    const interval = setInterval(updateCountdown, 1000);
-    return () => clearInterval(interval);
-  }, [prayerTimes, nextPrayer]);
+  const { nextPrayer, countdown, hasLocation } = usePrayerSchedule();
 
   const formatNumber = (num: number) => arabicDigits(num.toString().padStart(2, "0"));
 

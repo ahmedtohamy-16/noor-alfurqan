@@ -1,11 +1,7 @@
-import { useState, useEffect, useCallback } from "react";
+import { useCallback } from "react";
+import { useSyncedState } from "./useSyncedState";
+import { loadUserState } from "@/lib/userStateStore";
 import { useAuth } from "./useAuth";
-import { 
-  firestoreGet, 
-  firestoreSet, 
-  COLLECTIONS 
-} from "@/lib/firebase";
-
 interface ReadingProgress {
   surah_number: number;
   ayah_number: number;
@@ -16,42 +12,7 @@ interface ReadingProgress {
 
 export const useReadingProgress = () => {
   const { user } = useAuth();
-  const [lastRead, setLastRead] = useState<ReadingProgress | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    if (user) {
-      fetchLastRead();
-    } else {
-      const saved = localStorage.getItem("lastRead");
-      if (saved) {
-        setLastRead(JSON.parse(saved));
-      }
-      setIsLoading(false);
-    }
-  }, [user]);
-
-  const fetchLastRead = async () => {
-    if (!user) return;
-
-    try {
-      const data = await firestoreGet<any>(COLLECTIONS.READING_PROGRESS, user.uid);
-
-      if (data) {
-        setLastRead({
-          surah_number: data.surah_number,
-          ayah_number: data.ayah_number,
-          surah_name: data.surah_name,
-          progress_percentage: Number(data.progress_percentage) || 0,
-          last_read_at: data.last_read_at || "",
-        });
-      }
-    } catch (error) {
-      console.error("Error fetching progress:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const [lastRead, setLastRead, status] = useSyncedState<ReadingProgress | null>("reading_progress", user?.uid || "guest", null, "lastRead");
 
   const saveProgress = useCallback(async (
     surahNumber: number,
@@ -70,24 +31,12 @@ export const useReadingProgress = () => {
 
     setLastRead(progress);
 
-    if (user) {
-      try {
-        await firestoreSet(COLLECTIONS.READING_PROGRESS, user.uid, {
-          user_id: user.uid,
-          ...progress,
-        });
-      } catch (error) {
-        console.error("Error saving progress:", error);
-      }
-    } else {
-      localStorage.setItem("lastRead", JSON.stringify(progress));
-    }
-  }, [user]);
+  }, [setLastRead]);
 
   return {
     lastRead,
-    isLoading,
+    isLoading: status.isLoading,
     saveProgress,
-    refetch: fetchLastRead,
+    refetch: () => user ? loadUserState(user.uid, true) : Promise.resolve(),
   };
 };

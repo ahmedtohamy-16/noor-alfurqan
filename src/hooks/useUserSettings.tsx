@@ -1,13 +1,10 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useCallback } from "react";
+import tzLookup from "tz-lookup";
+import { useSyncedState } from "./useSyncedState";
+import { flushUserState, loadUserState } from "@/lib/userStateStore";
 import { useAuth } from "./useAuth";
 import { toast } from "sonner";
 import { arabicCityName, preferredCityName, hasLocationCoordinates } from "@/lib/cityNames";
-import { 
-  firestoreGet, 
-  firestoreSet, 
-  COLLECTIONS
-} from "@/lib/firebase";
-
 export interface UserSettings {
   latitude: number | null;
   longitude: number | null;
@@ -44,7 +41,7 @@ export interface UserSettings {
   azkar_prayer_delay_minutes: number;
 }
 
-const defaultSettings: UserSettings = {
+export const defaultSettings: UserSettings = {
   latitude: null,
   longitude: null,
   city_name: null,
@@ -79,7 +76,7 @@ const defaultSettings: UserSettings = {
 const SETTINGS_STORAGE_KEY = "userSettings";
 
 // Helper to get city name from coordinates
-const reverseGeocode = async (lat: number, lng: number): Promise<string> => {
+const reverseGeocode = async (lat: number, lng: number): Promise<{ city: string; country: string | null }> => {
   let fallback: string | null = null;
   const providers = [
     { url: `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=ar`, names: (data: any) => [data.city, data.locality, data.principalSubdivision] },
@@ -89,16 +86,17 @@ const reverseGeocode = async (lat: number, lng: number): Promise<string> => {
     try {
       const response = await fetch(provider.url, { signal: AbortSignal.timeout(5000) });
       if (!response.ok) continue;
-      const name = preferredCityName(provider.names(await response.json()));
-      if (name && /[\u0621-\u064A]/.test(name)) return name;
+      const data = await response.json();
+      const name = preferredCityName(provider.names(data));
+      if (name && /[\u0621-\u064A]/.test(name)) return { city: name, country: data.countryCode || data.address?.country_code?.toUpperCase() || null };
       fallback ??= name;
     } catch { /* Each provider can fail independently. */ }
   }
-  return fallback || "موقعك الحالي";
+  return { city: fallback || "موقعك الحالي", country: null };
 };
 
 // IP-based geolocation fallback
-const getLocationByIP = async (): Promise<{ lat: number; lng: number; city: string } | null> => {
+const getLocationByIP = async (): Promise<{ lat: number; lng: number; city: string; country: string | null } | null> => {
   try {
     const response = await fetch("https://ipapi.co/json/");
     const data = await response.json();
@@ -107,6 +105,7 @@ const getLocationByIP = async (): Promise<{ lat: number; lng: number; city: stri
         lat: data.latitude,
         lng: data.longitude,
         city: arabicCityName(data.city) || "موقعك",
+        country: data.country_code || null,
       };
     }
   } catch (error) {
@@ -115,167 +114,19 @@ const getLocationByIP = async (): Promise<{ lat: number; lng: number; city: stri
   return null;
 };
 
-const SETTINGS_EVENT = "user-settings-changed";
-
 export const useUserSettings = () => {
   const { user } = useAuth();
-  const [settings, setSettings] = useState<UserSettings>(() => {
-    // Initialize from localStorage immediately
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem(SETTINGS_STORAGE_KEY);
-      if (saved) {
-        try {
-          const data = JSON.parse(saved);
-          const repaired = { ...defaultSettings, ...data, city_name: arabicCityName(data.city_name) };
-          if (repaired.city_name !== data.city_name) localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(repaired));
-          return repaired;
-        } catch {
-          return defaultSettings;
-        }
-      }
-    }
-    return defaultSettings;
-  });
-  const [isLoading, setIsLoading] = useState(true);
-  // Latest settings, so consecutive updates never overwrite each other with stale values.
-  const settingsRef = useRef(settings);
-  settingsRef.current = settings;
-
-  // Every component calls this hook separately; keep all instances in sync.
-  useEffect(() => {
-    const onChange = (e: Event) => {
-      const next = (e as CustomEvent<UserSettings>).detail;
-      if (next) { settingsRef.current = next; setSettings(next); }
-    };
-    window.addEventListener(SETTINGS_EVENT, onChange);
-    return () => window.removeEventListener(SETTINGS_EVENT, onChange);
-  }, []);
-
-  // Fetch settings on mount or user change
-  useEffect(() => {
-    if (user) {
-      fetchSettings();
-    } else {
-      // Already loaded from localStorage in initial state
-      setIsLoading(false);
-    }
-  }, [user]);
-
-  const fetchSettings = async () => {
-    if (!user) return;
-
-    try {
-      const data = await firestoreGet<any>(COLLECTIONS.USER_SETTINGS, user.uid);
-
-      if (data) {
-        const loadedSettings: UserSettings = {
-          latitude: data.latitude ?? null,
-          longitude: data.longitude ?? null,
-          city_name: arabicCityName(data.city_name),
-          country_code: data.country_code ?? null,
-          timezone: data.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
-          notifications_enabled: data.notifications_enabled || false,
-          daily_wird_enabled: data.daily_wird_enabled || false,
-          daily_wird_time: data.daily_wird_time || "06:00:00",
-          prayer_method: data.prayer_method || 0,
-          prayer_madhab: data.prayer_madhab ?? 0,
-          prayer_reminder_minutes: data.prayer_reminder_minutes || 15,
-          dst_mode: data.dst_mode || 'auto',
-          dst_enabled: data.dst_enabled ?? false,
-          adhan_sound: data.adhan_sound || "makkah",
-          prayer_fajr_enabled: data.prayer_fajr_enabled ?? true,
-          prayer_dhuhr_enabled: data.prayer_dhuhr_enabled ?? true,
-          prayer_asr_enabled: data.prayer_asr_enabled ?? true,
-          prayer_maghrib_enabled: data.prayer_maghrib_enabled ?? true,
-          prayer_isha_enabled: data.prayer_isha_enabled ?? true,
-          azkar_morning_enabled: data.azkar_morning_enabled ?? true,
-          azkar_morning_time: data.azkar_morning_time || "06:00:00",
-          azkar_evening_enabled: data.azkar_evening_enabled ?? true,
-          azkar_evening_time: data.azkar_evening_time || "17:00:00",
-          azkar_sleep_enabled: data.azkar_sleep_enabled ?? false,
-          azkar_sleep_time: data.azkar_sleep_time || "22:00:00",
-          azkar_wakeup_enabled: data.azkar_wakeup_enabled ?? false,
-          azkar_wakeup_time: data.azkar_wakeup_time || "05:00:00",
-          azkar_prayer_enabled: data.azkar_prayer_enabled ?? false,
-          azkar_prayer_delay_minutes: data.azkar_prayer_delay_minutes || 10,
-        };
-        setSettings(loadedSettings);
-        // Also save to localStorage for offline/guest access
-        localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(loadedSettings));
-        window.dispatchEvent(new CustomEvent(SETTINGS_EVENT, { detail: loadedSettings }));
-      }
-    } catch (error) {
-      console.error("Error fetching settings:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const updateSettings = useCallback(async (newSettings: Partial<UserSettings>) => {
-    const updated = { ...settingsRef.current, ...newSettings };
-    updated.city_name = arabicCityName(updated.city_name);
-    settingsRef.current = updated;
-    setSettings(updated);
-    window.dispatchEvent(new CustomEvent(SETTINGS_EVENT, { detail: updated }));
-    
-    // Always save to localStorage
-    localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(updated));
-
-    if (user) {
-      try {
-        await firestoreSet(COLLECTIONS.USER_SETTINGS, user.uid, {
-          user_id: user.uid,
-          ...updated,
-        });
-      } catch (error) {
-        console.error("Error saving settings:", error);
-        toast.error("حدث خطأ في حفظ الإعدادات");
-      }
-    }
-  }, [user]);
-
-  const updateLocation = useCallback(async (lat: number, lng: number, cityName?: string) => {
-    const detectedTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
-    
-    // Get device info
-    const getDeviceInfo = (): string => {
-      if (typeof window === "undefined") return "unknown";
-      const ua = navigator.userAgent;
-      if (/iPad|iPhone|iPod/.test(ua)) return "iOS";
-      if (/Android/.test(ua)) return "Android";
-      if (/Windows/.test(ua)) return "Windows";
-      if (/Mac/.test(ua)) return "macOS";
-      if (/Linux/.test(ua)) return "Linux";
-      return "Other";
-    };
-    
-    await updateSettings({
-      latitude: lat,
-      longitude: lng,
-      city_name: arabicCityName(cityName),
-      timezone: detectedTimezone,
-    });
-
-    // Update user profile with location and device info in Firestore
-    if (user) {
-      try {
-        await firestoreSet(COLLECTIONS.USERS, user.uid, {
-          last_location: {
-            latitude: lat,
-            longitude: lng,
-            city_name: arabicCityName(cityName),
-            updated_at: new Date().toISOString(),
-          },
-          device_type: getDeviceInfo(),
-        });
-      } catch (error) {
-        console.error("Error updating user location in profile:", error);
-      }
-    }
-
-    toast.success("تم تحديث الموقع بنجاح");
-  }, [updateSettings, user]);
-
+  const [stored, setStored, status] = useSyncedState<UserSettings>("user_settings", user?.uid || "guest", defaultSettings, SETTINGS_STORAGE_KEY);
+  const settings = { ...defaultSettings, ...stored, city_name: arabicCityName(stored.city_name) };
+  const updateSettings = useCallback(async (patch: Partial<UserSettings>, commit = true) => {
+    setStored(previous => ({ ...defaultSettings, ...previous, ...patch, city_name: arabicCityName(patch.city_name === undefined ? previous.city_name : patch.city_name) }));
+    if (user && commit) await flushUserState(user.uid);
+  }, [setStored, user?.uid]);
+  const updateLocation = useCallback(async (lat: number, lng: number, cityName?: string, patch: Partial<UserSettings> = {}) => {
+    if (!hasLocationCoordinates(lat, lng)) throw new Error("الإحداثيات غير صالحة");
+    await updateSettings({ latitude: lat, longitude: lng, city_name: arabicCityName(cityName), timezone: tzLookup(lat, lng), ...patch });
+    toast.success(navigator.onLine ? "تم تحديث الموقع" : "حُفظ الموقع على الجهاز؛ تتم المزامنة عند الاتصال");
+  }, [updateSettings]);
   const requestLocation = useCallback((): Promise<{ lat: number; lng: number }> => {
     return new Promise((resolve, reject) => {
       if (!navigator.geolocation) {
@@ -307,8 +158,8 @@ export const useUserSettings = () => {
     try {
       // Try GPS first
       const { lat, lng } = await requestLocation();
-      const cityName = await reverseGeocode(lat, lng);
-      await updateLocation(lat, lng, cityName);
+      const location = await reverseGeocode(lat, lng);
+      await updateLocation(lat, lng, location.city, { country_code: location.country });
       return true;
     } catch (gpsError: any) {
       console.log("GPS failed, trying IP fallback:", gpsError);
@@ -316,7 +167,7 @@ export const useUserSettings = () => {
       // Fallback to IP-based location
       const ipLocation = await getLocationByIP();
       if (ipLocation) {
-        await updateLocation(ipLocation.lat, ipLocation.lng, ipLocation.city);
+        await updateLocation(ipLocation.lat, ipLocation.lng, ipLocation.city, { country_code: ipLocation.country });
         toast.info("تم تحديد الموقع عبر IP");
         return true;
       }
@@ -337,11 +188,12 @@ export const useUserSettings = () => {
 
   return {
     settings,
-    isLoading,
+    isLoading: status.isLoading,
+    error: status.error,
     updateSettings,
     updateLocation,
     requestLocation,
     autoDetectLocation,
-    refetch: fetchSettings,
+    refetch: () => user ? loadUserState(user.uid, true) : Promise.resolve(),
   };
 };

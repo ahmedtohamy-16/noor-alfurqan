@@ -22,8 +22,7 @@ const quickDhikrs = [
 ];
 
 const TasbihPage = () => {
-  const { stats, currentDhikr, changeDhikr, count, increment, reset, saveSession, appearance, updateAppearance } = useTasbih();
-  const [dailyGoal, setDailyGoal] = useState(1000);
+  const { stats, currentDhikr, changeDhikr, count, increment, reset, saveSession, appearance, updateAppearance, dailyGoal, setDailyGoal, isLoading } = useTasbih();
   const greeting = greetingForTime();
   const [showSettings, setShowSettings] = useState(false);
   const [customDhikr, setCustomDhikr] = useState("");
@@ -32,14 +31,8 @@ const TasbihPage = () => {
     if (!Number.isFinite(n) || n < 1) return;
     const v = Math.min(100000, Math.floor(n));
     setDailyGoal(v);
-    localStorage.setItem("tasbih_daily_goal", String(v));
     setGoalInput("");
   };
-
-  useEffect(() => {
-    const stored = localStorage.getItem("tasbih_daily_goal");
-    if (stored) setDailyGoal(parseInt(stored));
-  }, []);
 
   const arabic = (n: number) => {
     const a = ["٠", "١", "٢", "٣", "٤", "٥", "٦", "٧", "٨", "٩"];
@@ -80,14 +73,14 @@ const TasbihPage = () => {
 
       <main className="container mx-auto px-4 -mt-24 relative z-10 arabic-ui" dir="rtl">
         {/* Counter card */}
-        <Card className="bg-card rounded-3xl p-4 sm:p-6 shadow-2xl border-0 min-w-0">
-          <TasbihCounter
+        <Card className="bg-card rounded-3xl p-4 sm:p-6 shadow-2xl border-0 min-w-0 overflow-hidden">
+          {isLoading ? <div role="status" className="aspect-square grid place-items-center text-muted-foreground">جارٍ تحميل عدّادك…</div> : <TasbihCounter
             count={count}
             increment={increment}
             reset={reset}
             saveSession={saveSession}
             appearance={appearance}
-          />
+          />}
         </Card>
 
         {/* Appearance Settings */}

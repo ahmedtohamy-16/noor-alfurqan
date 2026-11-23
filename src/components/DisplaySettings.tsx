@@ -1,4 +1,6 @@
-import { Paintbrush, Type } from "lucide-react";
+import { Paintbrush, Type, Save } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
@@ -36,7 +38,10 @@ const fonts = [
   { id: "Uthmani", name: "عثماني" },
 ];
 
-const DisplaySettingsPanel = ({ settings, onChange }: DisplaySettingsProps) => {
+const DisplaySettingsPanel = ({ settings: savedSettings, onChange: commit }: DisplaySettingsProps) => {
+  const [settings, onChange] = useState(savedSettings);
+  useEffect(() => { onChange(savedSettings); }, [JSON.stringify(savedSettings)]);
+  const dirty = JSON.stringify(settings) !== JSON.stringify(savedSettings);
   return (
     <Card className="p-4 space-y-4 arabic-ui">
       <div className="flex items-center gap-2 mb-2">
@@ -110,6 +115,10 @@ const DisplaySettingsPanel = ({ settings, onChange }: DisplaySettingsProps) => {
             </button>
           ))}
         </div>
+      </div>
+      <div className="flex gap-2">
+        <Button className="flex-1 h-11 gap-2" disabled={!dirty} onClick={() => commit(settings)}><Save className="w-4 h-4" />حفظ العرض</Button>
+        <Button variant="outline" className="h-11" disabled={!dirty} onClick={() => onChange(savedSettings)}>إلغاء</Button>
       </div>
     </Card>
   );

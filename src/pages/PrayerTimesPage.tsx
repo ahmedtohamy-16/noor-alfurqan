@@ -1,3 +1,4 @@
+import { usePrayerSchedule } from "@/hooks/usePrayerSchedule";
 import { rememberFajrTime, arabicDigits } from "@/lib/displayFormat";
 import { recommendedPrayerMethod } from "@/lib/prayerMethods";
 import { arabicCityLabel, hasLocationCoordinates } from "@/lib/cityNames";
@@ -61,46 +62,6 @@ const prayers = [
 
 const monthNames = ["يناير","فبراير","مارس","أبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"];
 
-const PRAYER_CACHE_PREFIX = "prayerTimesCache:v1:";
-const CACHE_TTL_MS = 1000 * 60 * 60 * 6; // 6 hours
-
-const cacheKey = (lat: number, lng: number, method: number, madhab: number, dateStr: string) =>
-  `${PRAYER_CACHE_PREFIX}${lat.toFixed(3)}|${lng.toFixed(3)}|${method}|${madhab}|${dateStr}`;
-
-const readCache = (key: string): PrayerTimesData | null => {
-  try {
-    const raw = localStorage.getItem(key);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as { ts: number; data: PrayerTimesData };
-    if (Date.now() - parsed.ts > CACHE_TTL_MS) return null;
-    return parsed.data;
-  } catch {
-    return null;
-  }
-};
-
-const writeCache = (key: string, data: PrayerTimesData) => {
-  try {
-    localStorage.setItem(key, JSON.stringify({ ts: Date.now(), data }));
-  } catch {}
-};
-
-const fetchPrayerTimes = async (lat: number, lng: number, method: number, madhab: number): Promise<PrayerTimesData> => {
-  const today = new Date();
-  const dateStr = `${today.getDate()}-${today.getMonth() + 1}-${today.getFullYear()}`;
-  const key = cacheKey(lat, lng, method, madhab, dateStr);
-  const cached = readCache(key);
-  if (cached) { rememberFajrTime(cached.Fajr); return cached; }
-  const r = await fetch(`https://api.aladhan.com/v1/timings/${dateStr}?latitude=${lat}&longitude=${lng}&method=${method}&school=${madhab}`);
-  if (!r.ok) throw new Error(`Prayer API error: ${r.status}`);
-  const d = await r.json();
-  const timings = d?.data?.timings;
-  if (!timings) throw new Error("بيانات المواقيت غير متاحة");
-  writeCache(key, timings);
-  rememberFajrTime(timings.Fajr);
-  return timings;
-};
-
 const PrayerTimesPage = () => {
   const navigate = useNavigate();
   const { settings, updateSettings, updateLocation, autoDetectLocation } = useUserSettings();
@@ -111,9 +72,7 @@ const PrayerTimesPage = () => {
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
   const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
   const [isDetecting, setIsDetecting] = useState(false);
-  const [countdown, setCountdown] = useState({ hours: 0, minutes: 0, seconds: 0 });
-  const [nextPrayer, setNextPrayer] = useState<{ name: string; time: string; key: string } | null>(null);
-  const [hijriDate, setHijriDate] = useState<string>("");
+
 
   const lat = settings.latitude ?? 21.4225;
   const lng = settings.longitude ?? 39.8262;
@@ -123,14 +82,10 @@ const PrayerTimesPage = () => {
 
   const [isSavingSettings, setIsSavingSettings] = useState(false);
 
-  const { data: prayerTimes, isLoading: isLoadingTimes, isFetching: isFetchingTimes, error: prayerError, refetch: refetchPrayer } = useQuery({
-    queryKey: ["prayerTimes", lat, lng, method, madhab],
-    queryFn: () => fetchPrayerTimes(lat, lng, method, madhab),
-    enabled: hasLocation,
-    staleTime: 1000 * 60 * 60,
-    gcTime: 1000 * 60 * 60 * 6,
-    retry: 1,
-  });
+  const schedule = usePrayerSchedule();
+  const { prayerTimes, nextPrayer, countdown, days, context, date, isLoading: isLoadingTimes, isFetching: isFetchingTimes, error: prayerError, refetch: refetchPrayer } = schedule;
+  const h = schedule.hijri;
+  const hijriDate = h ? arabicDigits(`${h.weekday.ar}، ${h.day} ${h.month.ar} ${h.year}هـ`) : "";
 
   // Error alert with retry button on fetch failure
   useEffect(() => {
@@ -145,59 +100,6 @@ const PrayerTimesPage = () => {
     });
   }, [prayerError, refetchPrayer]);
 
-
-  useEffect(() => {
-    fetch(`https://api.aladhan.com/v1/gToH?date=${new Date().toLocaleDateString("en-GB").replace(/\//g, "-")}`)
-      .then((r) => r.json())
-      .then((d) => {
-        const h = d.data.hijri;
-        setHijriDate(arabicDigits(`${h.weekday.ar}، ${h.day} ${h.month.ar} ${h.year}هـ`));
-      })
-      .catch(() => {});
-  }, []);
-
-  useEffect(() => {
-    if (!prayerTimes) return;
-    const update = () => {
-      const now = new Date();
-      let found = false;
-      for (const p of prayers) {
-        if (p.key === "Sunrise") continue;
-        const [h, m] = (prayerTimes[p.key as keyof PrayerTimesData] as string).split(":").map(Number);
-        const d = new Date();
-        d.setHours(h, m, 0, 0);
-        if (d > now) {
-          setNextPrayer({ name: p.name, time: prayerTimes[p.key as keyof PrayerTimesData] as string, key: p.key });
-          found = true;
-          break;
-        }
-      }
-      if (!found) setNextPrayer({ name: "الفجر", time: prayerTimes.Fajr, key: "Fajr" });
-    };
-    update();
-    const i = setInterval(update, 60000);
-    return () => clearInterval(i);
-  }, [prayerTimes]);
-
-  useEffect(() => {
-    if (!nextPrayer) return;
-    const tick = () => {
-      const now = new Date();
-      const [h, m] = nextPrayer.time.split(":").map(Number);
-      const d = new Date();
-      d.setHours(h, m, 0, 0);
-      if (d < now) d.setDate(d.getDate() + 1);
-      const diff = d.getTime() - now.getTime();
-      setCountdown({
-        hours: Math.floor(diff / 3600000),
-        minutes: Math.floor((diff % 3600000) / 60000),
-        seconds: Math.floor((diff % 60000) / 1000),
-      });
-    };
-    tick();
-    const i = setInterval(tick, 1000);
-    return () => clearInterval(i);
-  }, [nextPrayer]);
 
   useEffect(() => {
     if (!hasLocation) setIsLocationModalOpen(true);
@@ -215,31 +117,19 @@ const PrayerTimesPage = () => {
     };
     const timers: number[] = [];
     const reminderMin = settings.prayer_reminder_minutes || 0;
-    prayers.forEach((p) => {
-      if (p.key === "Sunrise" || !enabledMap[p.key]) return;
-      const [h, m] = (prayerTimes[p.key as keyof PrayerTimesData] as string).split(":").map(Number);
-      const t = new Date();
-      t.setHours(h, m, 0, 0);
+    days.flatMap(day => day.events).forEach((p) => {
+      if (!enabledMap[p.key]) return;
       const now = Date.now();
-      if (reminderMin > 0) {
-        const rem = t.getTime() - reminderMin * 60000;
-        if (rem > now) {
-          timers.push(window.setTimeout(() => {
-            toast.info(`تذكير: صلاة ${p.name} بعد ${arabicDigits(reminderMin)} دقيقة`, { duration: 8000 });
-          }, rem - now));
-        }
+      if (reminderMin > 0 && p.instant - reminderMin * 60000 > now) {
+        timers.push(window.setTimeout(() => { toast.info(`تذكير: صلاة ${p.name} بعد ${arabicDigits(reminderMin)} دقيقة`); }, p.instant - reminderMin * 60000 - now));
       }
-      if (t.getTime() > now) {
-        timers.push(window.setTimeout(() => {
-          toast.success(`حان الآن وقت صلاة ${p.name}`, { duration: 10000 });
-          if (settings.notifications_enabled) {
-            playAdhan(getAdhanUrl(settings.adhan_sound as AdhanSoundId, p.key === "Fajr"), p.name);
-          }
-        }, t.getTime() - now));
-      }
+      if (p.instant > now) timers.push(window.setTimeout(() => {
+        toast.success(`حان الآن وقت صلاة ${p.name}`);
+        if (settings.notifications_enabled) playAdhan(getAdhanUrl(settings.adhan_sound as AdhanSoundId, p.key === "Fajr"), p.name);
+      }, p.instant - now));
     });
     return () => timers.forEach(clearTimeout);
-  }, [prayerTimes, settings.prayer_reminder_minutes, settings.adhan_sound, settings.notifications_enabled,
+  }, [days, settings.prayer_reminder_minutes, settings.adhan_sound, settings.notifications_enabled,
       settings.prayer_fajr_enabled, settings.prayer_dhuhr_enabled, settings.prayer_asr_enabled,
       settings.prayer_maghrib_enabled, settings.prayer_isha_enabled, playAdhan, getAdhanUrl]);
 
@@ -287,8 +177,7 @@ const PrayerTimesPage = () => {
     }
     setIsDetecting(true);
     try {
-      await updateLocation(city.latitude, city.longitude, city.name_ar);
-      await updateSettings({ country_code: city.country_code, prayer_method: recommendedPrayerMethod(city.country_code) });
+      await updateLocation(city.latitude, city.longitude, city.name_ar, { country_code: city.country_code, prayer_method: settings.prayer_method || recommendedPrayerMethod(city.country_code) });
     } catch {
       toast.error("تعذّر تحديث الموقع", {
         action: { label: "إعادة المحاولة", onClick: () => handleCityPick(city) },
@@ -300,7 +189,7 @@ const PrayerTimesPage = () => {
 
 
   const fmt = (n: number) => arabicDigits(n.toString().padStart(2, "0"));
-  const today = new Date();
+  const today = new Date(`${date}T12:00:00`);
   // 12-hour display with an Arabic period suffix (ص / م), never mixed with 24h.
   const formatTime = (t?: string) => {
     if (!t) return "--:--";
@@ -309,8 +198,7 @@ const PrayerTimesPage = () => {
     const h12 = hh % 12 === 0 ? 12 : hh % 12;
     return arabicDigits(`${h12}:${String(mm).padStart(2, "0")}`) + ` ${hh < 12 ? "ص" : "م"}`;
   };
-  const tzOffset = -new Date().getTimezoneOffset() / 60;
-  const tzLabel = arabicDigits(`GMT${tzOffset >= 0 ? "+" : ""}${tzOffset}`);
+  const tzLabel = arabicDigits(new Intl.DateTimeFormat("ar-EG", { timeZone: context.timeZone, timeZoneName: "shortOffset" }).formatToParts(new Date()).find(p => p.type === "timeZoneName")?.value || context.timeZone);
 
   // theme palette
   const palette = useMemo(() => isDark ? {

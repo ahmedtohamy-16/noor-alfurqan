@@ -1,4 +1,4 @@
-import { rememberFajrTime } from "@/lib/displayFormat";
+import { usePrayerSchedule } from "@/hooks/usePrayerSchedule";
 import { recommendedPrayerMethod } from "@/lib/prayerMethods";
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -27,17 +27,6 @@ const prayers = [
   { key: "Isha", name: "العشاء" },
 ];
 
-const fetchPrayerTimes = async (lat: number, lng: number, method: number): Promise<PrayerTimesData> => {
-  const today = new Date();
-  const dateStr = `${today.getDate()}-${today.getMonth() + 1}-${today.getFullYear()}`;
-  const response = await fetch(
-    `https://api.aladhan.com/v1/timings/${dateStr}?latitude=${lat}&longitude=${lng}&method=${method}`
-  );
-  const data = await response.json();
-  rememberFajrTime(data.data.timings?.Fajr);
-  return data.data.timings;
-};
-
 const formatTime12 = (t: string) => {
   const [h, m] = t.split(":").map(Number);
   const period = h >= 12 ? "م" : "ص";
@@ -47,66 +36,8 @@ const formatTime12 = (t: string) => {
 
 const NextPrayerHeroCard = () => {
   const { settings } = useUserSettings();
-  const [countdown, setCountdown] = useState({ hours: 0, minutes: 0, seconds: 0 });
-  const [nextPrayer, setNextPrayer] = useState<{ name: string; time: string } | null>(null);
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
-
-  const lat = settings.latitude;
-  const lng = settings.longitude;
-  const method = settings.prayer_method || recommendedPrayerMethod(settings.country_code);
-  const hasLocation = hasLocationCoordinates(lat, lng);
-
-  const { data: prayerTimes } = useQuery({
-    queryKey: ["prayerTimesHero", lat, lng, method],
-    queryFn: () => {
-      if (lat === null || lng === null) throw new Error("لم يُحدد الموقع");
-      return fetchPrayerTimes(lat, lng, method);
-    },
-    enabled: hasLocation,
-    staleTime: 1000 * 60 * 60,
-  });
-
-  useEffect(() => {
-    if (!prayerTimes) return;
-    const update = () => {
-      const now = new Date();
-      let found = false;
-      for (const p of prayers) {
-        const [h, m] = prayerTimes[p.key as keyof PrayerTimesData].split(":").map(Number);
-        const d = new Date();
-        d.setHours(h, m, 0, 0);
-        if (d > now) {
-          setNextPrayer({ name: p.name, time: prayerTimes[p.key as keyof PrayerTimesData] });
-          found = true;
-          break;
-        }
-      }
-      if (!found) setNextPrayer({ name: prayers[0].name, time: prayerTimes.Fajr });
-    };
-    update();
-    const i = setInterval(update, 60000);
-    return () => clearInterval(i);
-  }, [prayerTimes]);
-
-  useEffect(() => {
-    if (!nextPrayer) return;
-    const tick = () => {
-      const now = new Date();
-      const [h, m] = nextPrayer.time.split(":").map(Number);
-      const d = new Date();
-      d.setHours(h, m, 0, 0);
-      if (d < now) d.setDate(d.getDate() + 1);
-      const diff = d.getTime() - now.getTime();
-      setCountdown({
-        hours: Math.floor(diff / 3_600_000),
-        minutes: Math.floor((diff % 3_600_000) / 60_000),
-        seconds: Math.floor((diff % 60_000) / 1000),
-      });
-    };
-    tick();
-    const i = setInterval(tick, 1000);
-    return () => clearInterval(i);
-  }, [nextPrayer]);
+  const { nextPrayer, countdown, hasLocation } = usePrayerSchedule();
 
   const f = (n: number) => n.toString().padStart(2, "0").replace(/\d/g, (d) => "٠١٢٣٤٥٦٧٨٩"[+d]);
 

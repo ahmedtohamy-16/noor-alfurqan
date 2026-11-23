@@ -14,6 +14,8 @@ import { separateDailyAzkar } from "@/lib/dailyAzkar";
 import { toast } from "sonner";
 import { useDownloadManager } from "@/components/DownloadManager";
 import { useNotifications } from "@/hooks/useNotifications";
+import { useSyncedState } from "@/hooks/useSyncedState";
+import { useUserSettings } from "@/hooks/useUserSettings";
 
 const AUDIO_BASE_URL = "https://raw.githubusercontent.com/rn0x/Adhkar-json/main";
 import mosqueBg from "@/assets/mosque-night-hero.jpg";
@@ -42,7 +44,9 @@ const AzkarPage = () => {
   const [categories] = useState<AzkarCategory[]>(() => separateDailyAzkar(adhkarData));
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<AzkarCategory | null>(null);
-  const [progress, setProgress] = useState<UserProgress>({});
+  const today = new Date().toLocaleDateString("en-CA");
+  const [progress, setProgress] = useSyncedState<UserProgress>("azkar_progress", today, {}, `azkar_progress_${today}`);
+  const { settings: reminderSettings, updateSettings: updateReminderSettings } = useUserSettings();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isCategoryAudioPlaying, setIsCategoryAudioPlaying] = useState(false);
@@ -50,16 +54,8 @@ const AzkarPage = () => {
   const categoryAudioRef = useRef<HTMLAudioElement | null>(null);
   const { addTask, updateTask } = useDownloadManager();
   const { permission, requestPermission, sendNotification, isEnabled: notificationsEnabled } = useNotifications();
-  const [morningReminderEnabled, setMorningReminderEnabled] = useState(false);
-  const [eveningReminderEnabled, setEveningReminderEnabled] = useState(false);
-
-  // Load reminder settings
-  useEffect(() => {
-    const morningEnabled = localStorage.getItem("azkar_morning_reminder") === "true";
-    const eveningEnabled = localStorage.getItem("azkar_evening_reminder") === "true";
-    setMorningReminderEnabled(morningEnabled);
-    setEveningReminderEnabled(eveningEnabled);
-  }, []);
+  const morningReminderEnabled = reminderSettings.azkar_morning_enabled;
+  const eveningReminderEnabled = reminderSettings.azkar_evening_enabled;
 
   // Schedule reminders
   useEffect(() => {
@@ -124,8 +120,7 @@ const AzkarPage = () => {
       if (!granted) return;
     }
     const newValue = !morningReminderEnabled;
-    setMorningReminderEnabled(newValue);
-    localStorage.setItem("azkar_morning_reminder", String(newValue));
+    await updateReminderSettings({ azkar_morning_enabled: newValue });
     toast.success(newValue ? "تم تفعيل تذكير أذكار الصباح" : "تم إيقاف تذكير أذكار الصباح");
   };
 
@@ -135,8 +130,7 @@ const AzkarPage = () => {
       if (!granted) return;
     }
     const newValue = !eveningReminderEnabled;
-    setEveningReminderEnabled(newValue);
-    localStorage.setItem("azkar_evening_reminder", String(newValue));
+    await updateReminderSettings({ azkar_evening_enabled: newValue });
     toast.success(newValue ? "تم تفعيل تذكير أذكار المساء" : "تم إيقاف تذكير أذكار المساء");
   };
 
@@ -246,21 +240,6 @@ const AzkarPage = () => {
       };
     });
   };
-
-  // Load progress from localStorage
-  useEffect(() => {
-    const today = new Date().toISOString().split("T")[0];
-    const savedProgress = localStorage.getItem(`azkar_progress_${today}`);
-    if (savedProgress) {
-      setProgress(JSON.parse(savedProgress));
-    }
-  }, []);
-
-  // Save progress to localStorage
-  useEffect(() => {
-    const today = new Date().toISOString().split("T")[0];
-    localStorage.setItem(`azkar_progress_${today}`, JSON.stringify(progress));
-  }, [progress]);
 
   // Cleanup audio on unmount
   useEffect(() => {
