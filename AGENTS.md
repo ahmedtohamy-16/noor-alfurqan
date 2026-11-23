@@ -23,3 +23,4 @@
 - Downloaded ayah audio is stored on-device (IndexedDB blobs + localStorage metadata) by `src/lib/ayahDownloads.ts`, shown on /downloads; all ayah/range download buttons queue through it so status, retry and delete stay in one place.
 - Same-surah range downloads decode one verse at a time and encode one continuous MP3 in a worker; enforce device storage limits across concurrent queue jobs and await IndexedDB transaction completion before marking files saved.
 - Audio storage quotas are synchronized globally from the signed-in user's Supabase pro_entitlements, never legacy Firebase flags or persisted client overrides; subscription expiry/sign-out lowers the limit without deleting existing files.
+- Surah reading position uses the first ayah crossing the line beneath the sticky reading bar and runtime corpus page/juz metadata, so its page indicator follows scrolling rather than the surah's starting page.

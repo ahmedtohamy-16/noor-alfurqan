@@ -1,5 +1,9 @@
 # Roadmap
 
+## Surah header and reading position
+- [x] Refine the compact surah title and separate fixed surah details from reading position.
+- [x] Verify the sticky Mushaf page/juz indicator follows visible ayahs forward and backward on mobile and desktop; five rule tests passed and both surahs opened without runtime errors.
+
 ## Audio downloads improvements
 - [x] Storage summary with automatic limits: regular users 10 MiB, Pro users 100 MiB; limit enforcement and concurrent reservations tested.
 - [x] Select multiple downloads and confirm bulk deletion.

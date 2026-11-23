@@ -1,7 +1,7 @@
 import { ayahCountLabel } from "@/lib/displayFormat";
 import { useParams, Link, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, Headphones, Settings2, Download } from "lucide-react";
+import { ArrowRight, BookOpen, Headphones, Settings2, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { surahs } from "@/data/surahs";
 import { getAyahsBySurahAsync } from "@/data/quranAyats";
@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
+import { readingAyahIndex } from "@/lib/readingPositionRules";
 
 interface Ayah {
   number: number;
@@ -73,6 +74,8 @@ const SurahPage = () => {
   const [downloadGlobalAyahNumber, setDownloadGlobalAyahNumber] = useState<number | null>(null);
   const globalAudio = useGlobalAudio();
   const ayahRefs = useRef<{ [key: number]: HTMLSpanElement | null }>({});
+  const readingBarRef = useRef<HTMLDivElement | null>(null);
+  const [readingPosition, setReadingPosition] = useState({ surah: surahNumber, index: 0 });
 
   const surahInfo = surahs.find((s) => s.number === Number(surahNumber));
 
@@ -111,11 +114,56 @@ const SurahPage = () => {
     ? new Error("Surah not found")
     : null;
 
+  const visibleAyah = localAyahs[readingPosition.surah === surahNumber ? readingPosition.index : 0] ?? localAyahs[0];
+
   const { data: translationData } = useQuery({
     queryKey: ["translation", surahNumber, selectedTranslation],
-    queryFn: () => fetchTranslation(surahNumber!, selectedTranslation!),
+    queryFn: () => {
+      if (!surahNumber || !selectedTranslation) throw new Error("Translation not selected");
+      return fetchTranslation(surahNumber, selectedTranslation);
+    },
     enabled: !!surahNumber && !!selectedTranslation,
   });
+
+  useEffect(() => {
+    if (!localAyahs.length) return;
+    let frame = 0;
+    const updatePosition = () => {
+      frame = 0;
+      const headerBottom = document.querySelector("header")?.getBoundingClientRect().bottom ?? 56;
+      const barHeight = readingBarRef.current?.getBoundingClientRect().height ?? 44;
+      const readingLine = headerBottom + barHeight + 24;
+      function* ayahBounds() {
+        for (let index = 0; index < localAyahs.length; index++) {
+          const element = ayahRefs.current[localAyahs[index].ayat_number_in_sura];
+          if (!element) continue;
+          const rect = element.getBoundingClientRect();
+          yield { index, top: rect.top, bottom: rect.bottom };
+        }
+      }
+      const index = readingAyahIndex(ayahBounds(), readingLine);
+      setReadingPosition(previous => previous.surah === surahNumber && previous.index === index
+        ? previous : { surah: surahNumber, index });
+    };
+    const scheduleUpdate = () => {
+      if (!frame) frame = requestAnimationFrame(updatePosition);
+    };
+    scheduleUpdate();
+    window.addEventListener("scroll", scheduleUpdate, { passive: true });
+    window.addEventListener("resize", scheduleUpdate);
+    const resizeObserver = new ResizeObserver(scheduleUpdate);
+    const firstAyah = ayahRefs.current[localAyahs[0].ayat_number_in_sura];
+    if (firstAyah?.parentElement) resizeObserver.observe(firstAyah.parentElement);
+    let active = true;
+    document.fonts.ready.then(() => { if (active) scheduleUpdate(); });
+    return () => {
+      active = false;
+      cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", scheduleUpdate);
+      window.removeEventListener("resize", scheduleUpdate);
+      resizeObserver.disconnect();
+    };
+  }, [localAyahs, surahNumber, readingSettings.fontSize, readingSettings.lineHeight, readingSettings.fontFamily, selectedTranslation, translationData]);
 
   // Auto-save reading progress and increment page
   useEffect(() => {
@@ -256,31 +304,21 @@ const SurahPage = () => {
         />
       )}
       <Header />
-      <main className="container mx-auto px-4 py-6 arabic-ui">
-        <div className="flex items-center gap-2 mb-4">
-          <Link to="/quran"><Button variant="ghost" size="icon"><ArrowRight className="w-5 h-5" /></Button></Link>
-          <div className="flex-1">
-            <h1 className="text-2xl md:text-3xl font-bold text-foreground font-quran">{surahInfo?.name}</h1>
-            <p className="text-muted-foreground text-xs flex flex-wrap items-center gap-1.5 mt-0.5">
+      <main className="container mx-auto max-w-4xl px-4 py-5 arabic-ui">
+        <div className="grid grid-cols-[44px_minmax(0,1fr)_44px] items-center gap-x-3 gap-y-2 mb-5">
+          <Link to="/quran"><Button variant="ghost" size="icon" className="h-11 w-11 rounded-full" aria-label="العودة لقائمة السور"><ArrowRight className="w-5 h-5" /></Button></Link>
+          <div className="text-center min-w-0">
+            <h1 className="text-3xl md:text-4xl leading-relaxed font-bold text-foreground font-quran">{surahInfo?.name}</h1>
+            <p className="text-muted-foreground text-sm flex flex-wrap justify-center items-center gap-2 mt-1">
               <span>{surahInfo?.revelationType === "Meccan" ? "مكية" : "مدنية"}</span>
               <span aria-hidden="true">•</span>
               <span className="arabic-digits">{ayahCountLabel(surahInfo?.numberOfAyahs || 0)}</span>
-              {localAyahs && localAyahs.length > 0 && (<>
-                <span aria-hidden="true">•</span>
-                <span>الجزء <span className="arabic-digits">{convertToArabicNumber(localAyahs[0].juz_number)}</span></span>
-                <span aria-hidden="true">•</span>
-                <span>صفحة <span className="arabic-digits">{convertToArabicNumber(localAyahs[0].page_number)}</span></span>
-              </>)}
             </p>
           </div>
-          
-          <Button size="icon" onClick={playSurahFromStart} aria-label="استمع للسورة كاملة" className="rounded-full shrink-0">
-            <Headphones className="w-5 h-5" />
-          </Button>
           {/* Settings Sheet */}
           <Sheet>
             <SheetTrigger asChild>
-              <Button variant="outline" size="icon">
+              <Button variant="ghost" size="icon" className="h-11 w-11 rounded-full" aria-label="إعدادات القراءة والاستماع">
                 <Settings2 className="w-5 h-5" />
               </Button>
             </SheetTrigger>
@@ -333,7 +371,27 @@ const SurahPage = () => {
               </div>
             </SheetContent>
           </Sheet>
+          <div className="col-span-3 flex justify-center">
+            <Button variant="ghost" onClick={playSurahFromStart} disabled={!surah} className="h-11 gap-2 text-primary rounded-full px-5">
+              <Headphones className="w-4 h-4" />
+              استماع للسورة
+            </Button>
+          </div>
         </div>
+
+        {visibleAyah && (
+          <div ref={readingBarRef} role="status" aria-live="off" aria-label="موضع القراءة الحالي" className="sticky top-14 md:top-16 z-20 mb-5 flex min-h-11 items-center justify-between gap-3 border-y border-border bg-background/95 px-3 py-2 text-sm backdrop-blur-md">
+            <span className="flex items-center gap-2 font-semibold text-primary">
+              <BookOpen className="h-4 w-4 shrink-0" aria-hidden="true" />
+              الصفحة <span className="arabic-digits" data-reading-page>{convertToArabicNumber(visibleAyah.page_number)}</span>
+            </span>
+            <span className="flex items-center gap-2 text-muted-foreground">
+              <span>الجزء <span className="arabic-digits">{convertToArabicNumber(visibleAyah.juz_number)}</span></span>
+              <span aria-hidden="true" className="text-border">/</span>
+              <span>الآية <span className="arabic-digits" data-reading-ayah>{convertToArabicNumber(visibleAyah.ayat_number_in_sura)}</span></span>
+            </span>
+          </div>
+        )}
 
         {/* Resume listening banner */}
         {resumeIndex !== null && surah && globalAudio.currentSurah?.number !== surah.number && (
@@ -416,6 +474,7 @@ const SurahPage = () => {
                 return (
                   <span 
                     key={ayah.number} 
+                    data-ayah-number={ayah.numberInSurah}
                     className="inline"
                     ref={(el) => { ayahRefs.current[ayah.numberInSurah] = el; }}
                   >
