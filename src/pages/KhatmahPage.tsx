@@ -480,7 +480,7 @@ const KhatmahCard = ({
           />
         </div>
         <p className="text-xs text-muted-foreground mt-1 text-center">
-          {convertToArabicNumber(Math.round(progress))}% مكتمل
+          <span dir="ltr" className="inline-block arabic-digits">{convertToArabicNumber(Math.round(progress))}٪</span> مكتمل
         </p>
       </div>
 

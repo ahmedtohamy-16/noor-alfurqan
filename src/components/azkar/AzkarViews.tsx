@@ -291,7 +291,7 @@ export function AzkarReader({ section, index, progress, isPlaying, onBack, onInd
           <button onClick={onBack} aria-label="رجوع" className="w-11 h-11 flex items-center justify-center rounded-full hover:bg-muted"><ArrowRight className="w-5 h-5" /></button>
           <div className="flex-1 min-w-0">
             <h1 className="font-bold text-foreground truncate">{section.category}</h1>
-            <p className="text-xs text-muted-foreground arabic-digits">الذكر {ar(index + 1)} من {ar(total)} · {ar(sp.pct)}٪ من القسم</p>
+            <p className="text-xs text-muted-foreground arabic-digits">الذكر {ar(index + 1)} من {ar(total)} · <span dir="ltr" className="inline-block">{ar(sp.pct)}٪</span> من القسم</p>
           </div>
           <button onClick={onReset} aria-label="إعادة تعيين تقدم القسم" className="w-11 h-11 flex items-center justify-center rounded-full hover:bg-muted text-muted-foreground"><RotateCcw className="w-5 h-5" /></button>
         </div>

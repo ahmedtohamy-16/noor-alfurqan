@@ -1,6 +1,7 @@
 # Roadmap
 
 ## Touch menus and remaining worship details
+- [x] Sweep Mushaf, Quran/search results, favorites, daily verse and ruqyah: no alternate pointer-down ayah menu; fix reversed completion percentages in dhikr reader, last reading, khatmah and reading stats without changing records or settings.
 - [x] Open ayah menus only after a stationary tap; verified real touch swipes do not open menus and scrolling dismisses an open menu.
 - [x] Give all 132 dhikr sections distinct icons, inset reader actions, and correct goal percentage direction.
 - [x] Exercise dhikr card/circle counting (3→2→1) and tasbih counting (0→1→2) in the mobile preview; 12 focused tests passed.

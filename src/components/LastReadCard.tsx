@@ -26,7 +26,7 @@ const LastReadCard = ({ surahName, surahNumber, ayahNumber, progress }: LastRead
             <span className="text-sm opacity-90">آخر قراءة</span>
           </div>
           <span className="text-xs bg-white/20 px-3 py-1 rounded-full">
-            {arabicDigits(Math.round(progress))}٪ مكتمل
+            <span dir="ltr" className="inline-block arabic-digits">{arabicDigits(Math.round(progress))}٪</span> مكتمل
           </span>
         </div>
 

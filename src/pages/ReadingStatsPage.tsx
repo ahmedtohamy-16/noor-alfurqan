@@ -230,7 +230,7 @@ const ReadingStatsPage = () => {
           <Card className="p-4 text-center">
             <Target className="w-6 h-6 text-orange-500 mx-auto mb-2" />
             <p className="text-lg font-bold text-foreground">
-              {convertToArabicNumber(stats.wirdCompletionRate)}%
+              <span dir="ltr" className="inline-block arabic-digits">{convertToArabicNumber(stats.wirdCompletionRate)}٪</span>
             </p>
             <p className="text-xs text-muted-foreground">نسبة إتمام الورد</p>
           </Card>
