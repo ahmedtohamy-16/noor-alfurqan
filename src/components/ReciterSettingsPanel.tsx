@@ -34,22 +34,6 @@ const ReciterSettingsPanel = ({ surahNumber, surahName }: ReciterSettingsPanelPr
     }
   }, []);
 
-  // Load selected reciter from database
-  useEffect(() => {
-    const loadReciter = async () => {
-      if (user) {
-        const data = await firestoreGet<any>(COLLECTIONS.USER_READING_SETTINGS, user.uid);
-        
-        if (data?.selected_reciter) {
-          const reciter = reciters.find(r => r.id === data.selected_reciter);
-          if (reciter && reciter.id !== selectedReciter.id) {
-            setReciter(reciter);
-          }
-        }
-      }
-    };
-    loadReciter();
-  }, [user]);
 
   const handleReciterSelect = async (reciter: Reciter) => {
     if (isPlaying) {

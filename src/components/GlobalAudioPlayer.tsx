@@ -64,6 +64,7 @@ const GlobalAudioPlayer = () => {
     setRangeEnd,
     setPlayMode,
     cycleRepeatMode,
+    error,
   } = useGlobalAudio();
 
   const [showDownloadDialog, setShowDownloadDialog] = useState(false);
@@ -85,7 +86,6 @@ const GlobalAudioPlayer = () => {
     num.toString().replace(/\d/g, (d) => '٠١٢٣٤٥٦٧٨٩'[+d]);
 
   const handleReciterChange = (reciterId: string) => {
-    if (isPlaying) return;
     const reciter = reciters.find((r) => r.id === reciterId);
     if (reciter) setReciter(reciter);
   };
@@ -144,8 +144,11 @@ const GlobalAudioPlayer = () => {
               </button>
 
               <div className="flex-1 min-w-0 leading-tight">
+                <p className="text-[10px] text-primary font-semibold leading-none mb-0.5">
+                  {error ? 'تعذّر التشغيل' : isLoading ? 'جاري التحميل…' : isPlaying ? 'يُشغَّل الآن' : 'متوقف مؤقتًا'}
+                </p>
                 <p className="text-xs font-semibold text-foreground truncate">
-                  {currentSurah.name}
+                  سورة {currentSurah.name}
                   <span className="text-muted-foreground font-normal mx-1">
                     · آية {currentAyah ? toArabic(currentAyah.numberInSurah) : '١'}
                   </span>
@@ -186,7 +189,9 @@ const GlobalAudioPlayer = () => {
             {/* Header: surah + close */}
             <div className="flex items-center justify-between px-5 pt-5 pb-3">
               <div className="min-w-0">
-                <p className="text-xs text-muted-foreground">تشغيل الآن</p>
+                <p className="text-xs text-primary font-semibold">
+                  {error ? 'تعذّر التشغيل' : isLoading ? 'جاري التحميل…' : isPlaying ? 'يُشغَّل الآن' : 'متوقف مؤقتًا'}
+                </p>
                 <h3 className="font-quran text-2xl font-bold text-foreground truncate">
                   {currentSurah.name}
                 </h3>
@@ -205,6 +210,13 @@ const GlobalAudioPlayer = () => {
                 <X className="w-4 h-4" />
               </button>
             </div>
+
+            {error && (
+              <div className="mx-5 mb-3 rounded-xl border border-destructive/40 bg-destructive/10 px-4 py-2 text-xs text-destructive flex items-center justify-between gap-2">
+                <span>{error}</span>
+                <Button size="sm" variant="outline" className="h-8" onClick={togglePlayPause}>إعادة المحاولة</Button>
+              </div>
+            )}
 
             {/* Current Ayah Preview */}
             {currentAyah && (
@@ -301,9 +313,8 @@ const GlobalAudioPlayer = () => {
                 <Select
                   value={selectedReciter.id}
                   onValueChange={handleReciterChange}
-                  disabled={isPlaying}
                 >
-                  <SelectTrigger className={cn('h-9 text-sm flex-1', isPlaying && 'opacity-60 cursor-not-allowed')}>
+                  <SelectTrigger className="h-9 text-sm flex-1">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -315,11 +326,6 @@ const GlobalAudioPlayer = () => {
                   </SelectContent>
                 </Select>
               </div>
-              {isPlaying && (
-                <p className="text-[11px] text-muted-foreground -mt-1 pr-6">
-                  أوقف الصوت لتغيير القارئ
-                </p>
-              )}
 
               {/* Play mode */}
               <div className="flex items-center gap-2">
@@ -336,6 +342,13 @@ const GlobalAudioPlayer = () => {
                   </SelectContent>
                 </Select>
               </div>
+              <p className="text-[11px] text-muted-foreground -mt-1">
+                {repeatMode === 'range'
+                  ? 'تكرار المجموعة مفعّل: تُعاد الآيات المحددة ثم يتوقف التشغيل.'
+                  : repeatMode === 'single'
+                  ? `تُكرَّر كل آية ${toArabic(repeatCount)} مرات ثم ${playMode === 'single' ? 'يتوقف' : 'ينتقل للتالية حتى ' + ({ surah: 'نهاية السورة', juz: 'نهاية الجزء', quran: 'نهاية القرآن' } as Record<string, string>)[playMode]}.`
+                  : ({ single: 'يتوقف بعد الآية الحالية.', surah: 'يتوقف عند نهاية السورة.', juz: 'يتوقف عند نهاية الجزء وينتقل بين السور.', quran: 'يستمر سورة بعد سورة حتى نهاية المصحف.' } as Record<string, string>)[playMode]}
+              </p>
 
               {/* Repeat controls */}
               <div className="flex flex-wrap items-center gap-2">

@@ -20,25 +20,8 @@ interface ReciterSelectorProps {
 const ReciterSelector = ({ compact = false }: ReciterSelectorProps) => {
   const { user } = useAuth();
   const { selectedReciter, setReciter, isPlaying } = useGlobalAudio();
-  const [isLoading, setIsLoading] = useState(true);
+  const isLoading = false;
 
-  // Sync from Firestore on mount (for logged-in users)
-  useEffect(() => {
-    const loadReciter = async () => {
-      if (user) {
-        const data = await firestoreGet<any>(COLLECTIONS.USER_READING_SETTINGS, user.uid);
-        if (data?.selected_reciter && data.selected_reciter !== selectedReciter.id) {
-          const reciter = getVerifiedReciters().find(r => r.id === data.selected_reciter);
-          if (reciter) {
-            setReciter(reciter);
-          }
-        }
-      }
-      setIsLoading(false);
-    };
-
-    loadReciter();
-  }, [user]);
 
   const handleReciterChange = async (value: string) => {
     const reciter = getVerifiedReciters().find(r => r.id === value);

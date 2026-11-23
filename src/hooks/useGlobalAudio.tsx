@@ -1,24 +1,14 @@
 import React, { createContext, useContext, useState, useRef, useCallback, useEffect, ReactNode } from 'react';
-import { reciters, getVerifiedReciters, type Reciter } from '@/data/reciters';
+import { getVerifiedReciters, getAyahAudioUrl, DEFAULT_RECITER_ID, type Reciter } from '@/data/reciters';
 import { toast } from 'sonner';
 import { surahs } from '@/data/surahs';
 import { getAyahsBySurahAsync } from '@/data/quranAyats';
-import { getJuzOfAyah } from '@/data/juzData';
+import { decideAfterAyah, type PlayMode, type RepeatMode } from '@/lib/playbackRules';
 
-type RepeatMode = 'none' | 'single' | 'range';
-type PlayMode = 'single' | 'surah' | 'juz' | 'quran';
+export type { PlayMode, RepeatMode };
 
-interface AyahInfo {
-  number: number;
-  numberInSurah: number;
-  text: string;
-}
-
-interface SurahInfo {
-  number: number;
-  name: string;
-  ayahs: AyahInfo[];
-}
+interface AyahInfo { number: number; numberInSurah: number; text: string; }
+interface SurahInfo { number: number; name: string; ayahs: AyahInfo[]; }
 
 interface GlobalAudioState {
   isPlaying: boolean;
@@ -38,6 +28,7 @@ interface GlobalAudioState {
   rangeStart: number;
   rangeEnd: number;
   playMode: PlayMode;
+  error: string | null;
 }
 
 interface GlobalAudioContextType extends GlobalAudioState {
@@ -66,30 +57,32 @@ const GlobalAudioContext = createContext<GlobalAudioContextType | null>(null);
 
 export const useGlobalAudio = () => {
   const context = useContext(GlobalAudioContext);
-  if (!context) {
-    throw new Error('useGlobalAudio must be used within GlobalAudioProvider');
-  }
+  if (!context) throw new Error('useGlobalAudio must be used within GlobalAudioProvider');
   return context;
 };
 
-interface GlobalAudioProviderProps {
-  children: ReactNode;
-}
+const RECITER_KEY = 'selectedReciter';
+const PLAYMODE_KEY = 'audioPlayMode';
 
-// Number of ayahs to preload ahead for smooth playback
-const PRELOAD_AHEAD_COUNT = 3;
-
-// Helper to get initial reciter from localStorage
 const getInitialReciter = (): Reciter => {
-  const stored = localStorage.getItem("selectedReciter");
-  if (stored) {
-    const found = getVerifiedReciters().find(r => r.id === stored);
+  const list = getVerifiedReciters();
+  try {
+    const stored = localStorage.getItem(RECITER_KEY);
+    const found = stored && list.find((r) => r.id === stored);
     if (found) return found;
-  }
-  return getVerifiedReciters()[0];
+  } catch { /* ignore */ }
+  return list.find((r) => r.id === DEFAULT_RECITER_ID) ?? list[0];
 };
 
-export const GlobalAudioProvider: React.FC<GlobalAudioProviderProps> = ({ children }) => {
+const getInitialPlayMode = (): PlayMode => {
+  try {
+    const v = localStorage.getItem(PLAYMODE_KEY);
+    if (v === 'single' || v === 'surah' || v === 'juz' || v === 'quran') return v;
+  } catch { /* ignore */ }
+  return 'surah';
+};
+
+export const GlobalAudioProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [currentSurah, setCurrentSurah] = useState<SurahInfo | null>(null);
@@ -101,571 +94,310 @@ export const GlobalAudioProvider: React.FC<GlobalAudioProviderProps> = ({ childr
   const [selectedReciter, setSelectedReciter] = useState<Reciter>(getInitialReciter);
   const [isExpanded, setIsExpanded] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
-  const [repeatMode, setRepeatMode] = useState<RepeatMode>('none');
-  const [repeatCount, setRepeatCount] = useState(1);
+  const [repeatMode, setRepeatModeState] = useState<RepeatMode>('none');
+  const [repeatCount, setRepeatCount] = useState(3);
   const [currentRepeat, setCurrentRepeat] = useState(0);
   const [rangeStart, setRangeStart] = useState(1);
   const [rangeEnd, setRangeEnd] = useState(1);
-  const [playMode, setPlayMode] = useState<PlayMode>('surah');
+  const [playMode, setPlayModeState] = useState<PlayMode>(getInitialPlayMode);
+  const [error, setError] = useState<string | null>(null);
 
+  // Single audio element for the whole app (keeps playing in background tabs).
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const pendingPlayRef = useRef<number | null>(null);
-  
-  // Enhanced preloading: cache multiple audio elements for instant switching
-  const preloadCache = useRef<Map<string, HTMLAudioElement>>(new Map());
-  const preloadedUrls = useRef<Set<string>>(new Set());
+  if (!audioRef.current && typeof Audio !== 'undefined') {
+    audioRef.current = new Audio();
+    audioRef.current.preload = 'auto';
+  }
 
-  // Initialize audio element
-  useEffect(() => {
-    if (!audioRef.current) {
-      audioRef.current = new Audio();
-      audioRef.current.addEventListener('timeupdate', handleTimeUpdate);
-      audioRef.current.addEventListener('ended', handleEnded);
-      audioRef.current.addEventListener('loadstart', () => setIsLoading(true));
-      audioRef.current.addEventListener('canplay', () => setIsLoading(false));
-      audioRef.current.addEventListener('error', () => setIsLoading(false));
+  // Live mirror of state for event handlers (avoids stale closures).
+  const live = useRef({
+    currentSurah, currentAyahIndex, repeatMode, repeatCount, currentRepeat,
+    rangeStart, rangeEnd, playMode, selectedReciter,
+  });
+  live.current = {
+    currentSurah, currentAyahIndex, repeatMode, repeatCount, currentRepeat,
+    rangeStart, rangeEnd, playMode, selectedReciter,
+  };
+  const playTokenRef = useRef(0);
+  const retryRef = useRef(0);
+
+  const preload = useCallback((surah: SurahInfo, fromIndex: number, reciter: Reciter) => {
+    for (let i = fromIndex; i < Math.min(fromIndex + 2, surah.ayahs.length); i++) {
+      const a = new Audio();
+      a.preload = 'auto';
+      a.src = getAyahAudioUrl(reciter, surah.ayahs[i].number);
     }
+  }, []);
 
-    return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.removeEventListener('timeupdate', handleTimeUpdate);
-        audioRef.current.removeEventListener('ended', handleEnded);
-      }
-      // Cleanup preload cache
-      preloadCache.current.forEach(audio => {
-        audio.pause();
-        audio.src = '';
-      });
-      preloadCache.current.clear();
+  /** Core: play the ayah at `index` of `surah`. Everything goes through here. */
+  const startAyah = useCallback(async (surah: SurahInfo, index: number, reciter?: Reciter) => {
+    const audio = audioRef.current;
+    const ayah = surah.ayahs[index];
+    if (!audio || !ayah) return;
+    const r = reciter ?? live.current.selectedReciter;
+    const token = ++playTokenRef.current;
+    live.current.currentSurah = surah;
+    live.current.currentAyahIndex = index;
+    setCurrentSurah(surah);
+    setCurrentAyahIndex(index);
+    setIsVisible(true);
+    setError(null);
+    setIsLoading(true);
+    setProgress(0);
+    audio.src = getAyahAudioUrl(r, ayah.number);
+    try {
+      await audio.play();
+      if (token !== playTokenRef.current) return;
+      retryRef.current = 0;
+      setIsPlaying(true);
+      preload(surah, index + 1, r);
+    } catch (e) {
+      if (token !== playTokenRef.current) return;
+      if ((e as DOMException)?.name === 'AbortError') return;
+      console.error('Audio play failed', e);
+      setIsPlaying(false);
+      setIsLoading(false);
+    }
+  }, [preload]);
+
+  const loadSurah = useCallback(async (n: number): Promise<SurahInfo | null> => {
+    const meta = surahs.find((s) => s.number === n);
+    if (!meta) return null;
+    const raw = await getAyahsBySurahAsync(n);
+    return {
+      number: meta.number,
+      name: meta.name,
+      ayahs: raw.map((a) => ({ number: a.id, numberInSurah: a.ayat_number_in_sura, text: a.text_uthmani })),
     };
   }, []);
 
-  // Update volume
-  useEffect(() => {
-    if (audioRef.current) {
-      audioRef.current.volume = isMuted ? 0 : volume / 100;
-    }
-  }, [volume, isMuted]);
+  const handleEnded = useCallback(async () => {
+    const s = live.current;
+    if (!s.currentSurah) return;
+    const decision = decideAfterAyah({
+      surahNumber: s.currentSurah.number,
+      ayahCount: s.currentSurah.ayahs.length,
+      index: s.currentAyahIndex,
+      globalAyah: s.currentSurah.ayahs[s.currentAyahIndex].number,
+      playMode: s.playMode,
+      repeatMode: s.repeatMode,
+      repeatCount: s.repeatCount,
+      currentRepeat: s.currentRepeat,
+      rangeStart: s.rangeStart,
+      rangeEnd: s.rangeEnd,
+    });
+    setCurrentRepeat(decision.nextRepeat);
+    live.current.currentRepeat = decision.nextRepeat;
 
-  // Handle reciter change - resume playback
-  useEffect(() => {
-    if (pendingPlayRef.current !== null && currentSurah) {
-      const indexToPlay = pendingPlayRef.current;
-      pendingPlayRef.current = null;
-      setTimeout(() => {
-        playAyahInternal(indexToPlay);
-      }, 50);
-    }
-  }, [selectedReciter.id]);
-
-  const getAudioUrl = useCallback((ayahNumber: number, reciter?: Reciter) => {
-    const server = reciter?.server || selectedReciter.server;
-    return `${server}/${ayahNumber}.mp3`;
-  }, [selectedReciter]);
-
-  // Enhanced preloading: preload multiple upcoming ayahs for instant switching
-  const preloadMultipleAyahs = useCallback((startIndex: number, count: number = PRELOAD_AHEAD_COUNT) => {
-    if (!currentSurah) return;
-    
-    for (let i = 0; i < count; i++) {
-      const nextIndex = startIndex + i;
-      if (nextIndex >= currentSurah.ayahs.length) break;
-      
-      const ayah = currentSurah.ayahs[nextIndex];
-      const url = getAudioUrl(ayah.number);
-      
-      if (!preloadedUrls.current.has(url)) {
-        const preloadAudio = new Audio();
-        preloadAudio.preload = 'auto';
-        preloadAudio.src = url;
-        preloadAudio.load();
-        
-        // Store in cache for instant playback
-        preloadCache.current.set(url, preloadAudio);
-        preloadedUrls.current.add(url);
-        
-        // Clean up old entries if cache gets too large
-        if (preloadCache.current.size > 10) {
-          const firstKey = preloadCache.current.keys().next().value;
-          if (firstKey) {
-            const oldAudio = preloadCache.current.get(firstKey);
-            if (oldAudio) {
-              oldAudio.pause();
-              oldAudio.src = '';
-            }
-            preloadCache.current.delete(firstKey);
-            preloadedUrls.current.delete(firstKey);
-          }
-        }
-      }
-    }
-  }, [currentSurah, getAudioUrl]);
-
-  const handleTimeUpdate = useCallback(() => {
-    if (audioRef.current) {
-      setProgress(audioRef.current.currentTime);
-      setDuration(audioRef.current.duration || 0);
-      
-      // Aggressive preloading: start at 50% for smoother transitions
-      const percentComplete = audioRef.current.duration 
-        ? (audioRef.current.currentTime / audioRef.current.duration) * 100 
-        : 0;
-      if (percentComplete > 50 && currentSurah) {
-        preloadMultipleAyahs(currentAyahIndex + 1);
-      }
-    }
-  }, [currentSurah, currentAyahIndex, preloadMultipleAyahs]);
-
-  // Load next surah and start playback from the beginning (used for juz/quran modes).
-  const loadNextSurahAndPlay = useCallback(async (nextSurahNumber: number) => {
-    if (nextSurahNumber < 1 || nextSurahNumber > 114) {
-      setIsPlaying(false);
-      return;
-    }
-    const meta = surahs.find((s) => s.number === nextSurahNumber);
-    if (!meta) { setIsPlaying(false); return; }
-    try {
+    if (decision.action === 'play') {
+      startAyah(s.currentSurah, decision.index);
+    } else if (decision.action === 'nextSurah') {
       setIsLoading(true);
-      const raw = await getAyahsBySurahAsync(nextSurahNumber);
-      const nextSurah = {
-        number: meta.number,
-        name: meta.name,
-        ayahs: raw.map((a) => ({
-          number: a.id,
-          numberInSurah: a.ayat_number_in_sura,
-          text: a.text_uthmani,
-        })),
-      };
-      setCurrentSurah(nextSurah);
-      setCurrentAyahIndex(0);
-      setCurrentRepeat(0);
-      const ayah = nextSurah.ayahs[0];
-      if (ayah && audioRef.current) {
-        audioRef.current.src = `${selectedReciter.server}/${ayah.number}.mp3`;
-        await audioRef.current.play();
-        setIsPlaying(true);
-      }
-    } catch (err) {
-      console.error('Failed to load next surah:', err);
-      setIsPlaying(false);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [selectedReciter]);
-
-  const handleEnded = useCallback(() => {
-    if (!currentSurah) return;
-
-    const ayahs = currentSurah.ayahs;
-    const advanceOrCross = () => {
-      const nextIndex = currentAyahIndex + 1;
-      if (nextIndex < ayahs.length) {
-        // juz mode: stop if crossing juz boundary within surah
-        if (playMode === 'juz') {
-          const currJuz = getJuzOfAyah(ayahs[currentAyahIndex].number);
-          const nextJuz = getJuzOfAyah(ayahs[nextIndex].number);
-          if (currJuz !== nextJuz) { setIsPlaying(false); return; }
-        }
-        setCurrentAyahIndex(nextIndex);
-        playAyahInternal(nextIndex);
-        return;
-      }
-      // End of surah reached
-      if (playMode === 'quran' && currentSurah.number < 114) {
-        loadNextSurahAndPlay(currentSurah.number + 1);
-        return;
-      }
-      if (playMode === 'juz' && currentSurah.number < 114) {
-        // continue into next surah only if same juz
-        const currJuz = getJuzOfAyah(ayahs[currentAyahIndex].number);
-        // Next surah's first ayah global number is currentSurah last + 1
-        const nextGlobal = ayahs[currentAyahIndex].number + 1;
-        if (getJuzOfAyah(nextGlobal) === currJuz) {
-          loadNextSurahAndPlay(currentSurah.number + 1);
-          return;
-        }
-      }
-      setIsPlaying(false);
-      setCurrentAyahIndex(0);
-    };
-
-    // Handle repeat logic
-    if (repeatMode === 'single') {
-      if (currentRepeat < repeatCount - 1) {
-        setCurrentRepeat(prev => prev + 1);
-        playAyahInternal(currentAyahIndex);
-        return;
-      } else {
-        setCurrentRepeat(0);
-        if (playMode === 'single') { setIsPlaying(false); return; }
-        advanceOrCross();
-      }
-    } else if (repeatMode === 'range') {
-      const rangeStartIndex = rangeStart - 1;
-      const rangeEndIndex = rangeEnd - 1;
-
-      if (currentAyahIndex < rangeEndIndex) {
-        const nextIndex = currentAyahIndex + 1;
-        setCurrentAyahIndex(nextIndex);
-        playAyahInternal(nextIndex);
-      } else {
-        if (currentRepeat < repeatCount - 1) {
-          setCurrentRepeat(prev => prev + 1);
-          setCurrentAyahIndex(rangeStartIndex);
-          playAyahInternal(rangeStartIndex);
-        } else {
-          setCurrentRepeat(0);
-          setIsPlaying(false);
-          setCurrentAyahIndex(rangeStartIndex);
-        }
-      }
+      const next = await loadSurah(decision.surah);
+      if (next) startAyah(next, 0);
+      else { setIsPlaying(false); setIsLoading(false); }
     } else {
-      if (playMode === 'single') { setIsPlaying(false); return; }
-      advanceOrCross();
+      // Stop and stay on the last played ayah (no jumping back to the start).
+      setIsPlaying(false);
+      setIsLoading(false);
+      setProgress(0);
+      toast.success(decision.message);
     }
-  }, [currentSurah, currentAyahIndex, repeatMode, repeatCount, currentRepeat, playMode, rangeStart, rangeEnd, loadNextSurahAndPlay]);
+  }, [startAyah, loadSurah]);
 
-  // Re-attach ended handler when dependencies change
+  // Attach audio listeners once; handlers read live refs.
+  const endedRef = useRef(handleEnded);
+  endedRef.current = handleEnded;
   useEffect(() => {
     const audio = audioRef.current;
-    if (audio) {
-      audio.removeEventListener('ended', handleEnded);
-      audio.addEventListener('ended', handleEnded);
-    }
-  }, [handleEnded]);
-
-  const playAyahInternal = useCallback(async (index: number) => {
-    if (!currentSurah || !currentSurah.ayahs[index]) return;
-
-    const ayah = currentSurah.ayahs[index];
-    const url = getAudioUrl(ayah.number);
-
-    // Check if audio is already preloaded in cache for instant playback
-    const cachedAudio = preloadCache.current.get(url);
-    
-    if (cachedAudio && cachedAudio.readyState >= 3) {
-      // Use cached audio for instant playback
-      if (audioRef.current) {
-        audioRef.current.pause();
+    if (!audio) return;
+    const onTime = () => { setProgress(audio.currentTime); setDuration(audio.duration || 0); };
+    const onEnded = () => endedRef.current();
+    const onWaiting = () => setIsLoading(true);
+    const onPlaying = () => { setIsLoading(false); setIsPlaying(true); };
+    const onPause = () => { if (!audio.ended) setIsPlaying(false); };
+    const onError = () => {
+      if (!audio.src || audio.src === window.location.href) return;
+      const s = live.current;
+      if (retryRef.current < 2 && s.currentSurah) {
+        retryRef.current += 1;
+        setTimeout(() => s.currentSurah && startAyah(s.currentSurah, s.currentAyahIndex), 800);
+        return;
       }
-      audioRef.current = cachedAudio;
-      audioRef.current.volume = isMuted ? 0 : volume / 100;
-      try {
-        await audioRef.current.play();
-        setIsPlaying(true);
-        setCurrentAyahIndex(index);
-        // Preload next batch
-        preloadMultipleAyahs(index + 1);
-      } catch (error) {
-        console.error('Error playing cached audio:', error);
-        setIsPlaying(false);
-      }
-    } else {
-      // Standard playback
-      setIsLoading(true);
-      if (audioRef.current) {
-        audioRef.current.src = url;
-        try {
-          await audioRef.current.play();
-          setIsPlaying(true);
-          setCurrentAyahIndex(index);
-          // Preload next batch
-          preloadMultipleAyahs(index + 1);
-        } catch (error) {
-          console.error('Error playing audio:', error);
-          setIsPlaying(false);
-        }
-      }
+      retryRef.current = 0;
       setIsLoading(false);
-    }
-  }, [currentSurah, getAudioUrl, isMuted, volume, preloadMultipleAyahs]);
+      setIsPlaying(false);
+      setError('تعذّر تشغيل الآية. تحقق من اتصال الإنترنت ثم اضغط تشغيل.');
+      toast.error('تعذّر تشغيل الآية. تحقق من اتصال الإنترنت.');
+    };
+    audio.addEventListener('timeupdate', onTime);
+    audio.addEventListener('loadedmetadata', onTime);
+    audio.addEventListener('ended', onEnded);
+    audio.addEventListener('waiting', onWaiting);
+    audio.addEventListener('playing', onPlaying);
+    audio.addEventListener('pause', onPause);
+    audio.addEventListener('error', onError);
+    return () => {
+      audio.removeEventListener('timeupdate', onTime);
+      audio.removeEventListener('loadedmetadata', onTime);
+      audio.removeEventListener('ended', onEnded);
+      audio.removeEventListener('waiting', onWaiting);
+      audio.removeEventListener('playing', onPlaying);
+      audio.removeEventListener('pause', onPause);
+      audio.removeEventListener('error', onError);
+    };
+  }, [startAyah]);
 
-  const playSurah = useCallback((surah: SurahInfo, startIndex: number = 0) => {
-    setCurrentSurah(surah);
-    setCurrentAyahIndex(startIndex);
-    setRangeEnd(surah.ayahs.length);
-    setIsVisible(true);
-    setPlayMode('surah');
-    setRepeatMode('none');
+  useEffect(() => {
+    if (audioRef.current) audioRef.current.volume = isMuted ? 0 : volume / 100;
+  }, [volume, isMuted]);
+
+  const resetForNewSession = (surah: SurahInfo, index: number) => {
     setCurrentRepeat(0);
-    
-    // Need to wait for state to update
-    setTimeout(() => {
-      const ayah = surah.ayahs[startIndex];
-      if (ayah && audioRef.current) {
-        const url = `${selectedReciter.server}/${ayah.number}.mp3`;
-        audioRef.current.src = url;
-        audioRef.current.play().then(() => {
-          setIsPlaying(true);
-        }).catch(console.error);
-      }
-    }, 50);
-  }, [selectedReciter]);
+    live.current.currentRepeat = 0;
+    if (live.current.repeatMode === 'range') {
+      const n = surah.ayahs[index]?.numberInSurah ?? 1;
+      setRangeStart(n); setRangeEnd(Math.min(n + 2, surah.ayahs.length));
+      live.current.rangeStart = n; live.current.rangeEnd = Math.min(n + 2, surah.ayahs.length);
+    }
+  };
+
+  const playSurah = useCallback((surah: SurahInfo, startIndex = 0) => {
+    resetForNewSession(surah, startIndex);
+    startAyah(surah, startIndex);
+  }, [startAyah]);
 
   const playAyah = useCallback((surah: SurahInfo, ayahIndex: number) => {
-    setCurrentSurah(surah);
-    setCurrentAyahIndex(ayahIndex);
-    setRangeEnd(surah.ayahs.length);
-    setIsVisible(true);
-    setPlayMode('surah');
-    setCurrentRepeat(0);
-    
-    setTimeout(() => {
-      const ayah = surah.ayahs[ayahIndex];
-      if (ayah && audioRef.current) {
-        const url = `${selectedReciter.server}/${ayah.number}.mp3`;
-        audioRef.current.src = url;
-        audioRef.current.play().then(() => {
-          setIsPlaying(true);
-        }).catch(console.error);
-      }
-    }, 50);
-  }, [selectedReciter]);
+    resetForNewSession(surah, ayahIndex);
+    startAyah(surah, ayahIndex);
+  }, [startAyah]);
 
   const togglePlayPause = useCallback(() => {
-    if (!audioRef.current) return;
-
-    if (isPlaying) {
-      audioRef.current.pause();
-      setIsPlaying(false);
+    const audio = audioRef.current;
+    const s = live.current;
+    if (!audio || !s.currentSurah) return;
+    if (!audio.paused) { audio.pause(); setIsPlaying(false); return; }
+    if (error || !audio.src || audio.src === window.location.href || audio.ended || audio.currentTime === 0) {
+      startAyah(s.currentSurah, s.currentAyahIndex);
     } else {
-      if (!audioRef.current.src || audioRef.current.src === window.location.href) {
-        if (currentSurah && currentSurah.ayahs[currentAyahIndex]) {
-          const ayah = currentSurah.ayahs[currentAyahIndex];
-          audioRef.current.src = getAudioUrl(ayah.number);
-        }
-      }
-      audioRef.current.play().then(() => setIsPlaying(true)).catch(console.error);
+      audio.play().then(() => setIsPlaying(true)).catch(console.error);
     }
-  }, [isPlaying, currentSurah, currentAyahIndex, getAudioUrl]);
+  }, [startAyah, error]);
 
   const stop = useCallback(() => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-    }
-    setIsPlaying(false);
-    setProgress(0);
+    playTokenRef.current++;
+    const audio = audioRef.current;
+    if (audio) { audio.pause(); audio.currentTime = 0; }
+    setIsPlaying(false); setIsLoading(false); setProgress(0);
   }, []);
 
   const next = useCallback(() => {
-    if (!currentSurah) return;
-    if (currentAyahIndex < currentSurah.ayahs.length - 1) {
-      const nextIndex = currentAyahIndex + 1;
-      setCurrentAyahIndex(nextIndex);
-      setCurrentRepeat(0);
-      if (isPlaying) {
-        const ayah = currentSurah.ayahs[nextIndex];
-        if (ayah && audioRef.current) {
-          audioRef.current.src = getAudioUrl(ayah.number);
-          audioRef.current.play().catch(console.error);
-        }
-      }
-    }
-  }, [currentSurah, currentAyahIndex, isPlaying, getAudioUrl]);
+    const s = live.current;
+    if (!s.currentSurah) return;
+    setCurrentRepeat(0);
+    if (s.currentAyahIndex < s.currentSurah.ayahs.length - 1) startAyah(s.currentSurah, s.currentAyahIndex + 1);
+  }, [startAyah]);
 
   const previous = useCallback(() => {
-    if (!currentSurah) return;
-    if (currentAyahIndex > 0) {
-      const prevIndex = currentAyahIndex - 1;
-      setCurrentAyahIndex(prevIndex);
-      setCurrentRepeat(0);
-      if (isPlaying) {
-        const ayah = currentSurah.ayahs[prevIndex];
-        if (ayah && audioRef.current) {
-          audioRef.current.src = getAudioUrl(ayah.number);
-          audioRef.current.play().catch(console.error);
-        }
-      }
-    }
-  }, [currentSurah, currentAyahIndex, isPlaying, getAudioUrl]);
+    const s = live.current;
+    if (!s.currentSurah) return;
+    setCurrentRepeat(0);
+    if (s.currentAyahIndex > 0) startAyah(s.currentSurah, s.currentAyahIndex - 1);
+  }, [startAyah]);
 
   const seek = useCallback((value: number) => {
-    if (audioRef.current) {
-      audioRef.current.currentTime = value;
-      setProgress(value);
-    }
+    if (audioRef.current) { audioRef.current.currentTime = value; setProgress(value); }
   }, []);
 
-  const setVolume = useCallback((value: number) => {
-    setVolumeState(value);
-    setIsMuted(false);
-  }, []);
-
-  const toggleMute = useCallback(() => {
-    setIsMuted(prev => !prev);
-  }, []);
+  const setVolume = useCallback((value: number) => { setVolumeState(value); setIsMuted(false); }, []);
+  const toggleMute = useCallback(() => setIsMuted((p) => !p), []);
 
   const setReciter = useCallback((reciter: Reciter) => {
-    // Store current time position for seamless transition
-    const currentTime = audioRef.current?.currentTime || 0;
-    const wasPlaying = isPlaying;
-    
-    if (!currentSurah) {
-      setSelectedReciter(reciter);
-      return;
-    }
-
-    const currentAyah = currentSurah.ayahs[currentAyahIndex];
-    if (!currentAyah || !audioRef.current) {
-      setSelectedReciter(reciter);
-      return;
-    }
-
-    // Clear old cache immediately for instant switching
-    preloadCache.current.forEach(audio => {
-      audio.pause();
-      audio.src = '';
-    });
-    preloadCache.current.clear();
-    preloadedUrls.current.clear();
-    
-    // Update reciter state FIRST for instant UI feedback
+    try { localStorage.setItem(RECITER_KEY, reciter.id); } catch { /* ignore */ }
     setSelectedReciter(reciter);
-    
-    // Get new URL with the new reciter
-    const newUrl = `${reciter.server}/${currentAyah.number}.mp3`;
-    
-    // Create new audio element for instant switching (avoid reusing same element)
-    const newAudio = new Audio();
-    newAudio.preload = 'auto';
-    newAudio.volume = isMuted ? 0 : volume / 100;
-    
-    // Stop current audio immediately
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.src = '';
-    }
-    
-    // Set up new audio with instant loading
-    newAudio.src = newUrl;
-    
-    // Transfer event listeners to new audio
-    newAudio.addEventListener('timeupdate', handleTimeUpdate);
-    newAudio.addEventListener('ended', handleEnded);
-    newAudio.addEventListener('loadstart', () => setIsLoading(true));
-    newAudio.addEventListener('canplay', () => setIsLoading(false));
-    newAudio.addEventListener('error', () => setIsLoading(false));
-    
-    audioRef.current = newAudio;
-    
-    if (wasPlaying) {
-      // Use 'canplaythrough' for faster start
-      newAudio.addEventListener('canplaythrough', () => {
-        newAudio.play()
-          .then(() => {
-            setIsPlaying(true);
-            setIsLoading(false);
-            // Preload next ayahs for new reciter
-            preloadMultipleAyahs(currentAyahIndex + 1);
-          })
-          .catch((err) => {
-            console.error('Error switching reciter:', err);
-            setIsLoading(false);
-          });
-      }, { once: true });
-      
-      // Start loading immediately
-      newAudio.load();
-      setIsLoading(true);
-    }
-  }, [isPlaying, currentAyahIndex, currentSurah, isMuted, volume, handleTimeUpdate, handleEnded, preloadMultipleAyahs]);
+    live.current.selectedReciter = reciter;
+    const audio = audioRef.current;
+    const s = live.current;
+    // If something is playing, continue the same ayah with the new reciter.
+    if (audio && !audio.paused && s.currentSurah) startAyah(s.currentSurah, s.currentAyahIndex, reciter);
+  }, [startAyah]);
+
+  const setPlayMode = useCallback((mode: PlayMode) => {
+    try { localStorage.setItem(PLAYMODE_KEY, mode); } catch { /* ignore */ }
+    setPlayModeState(mode);
+    // Range repeat has its own end; picking a play mode switches range off.
+    if (live.current.repeatMode === 'range') setRepeatModeState('none');
+  }, []);
+
+  const setRepeatMode = useCallback((mode: RepeatMode) => {
+    setRepeatModeState(mode);
+    setCurrentRepeat(0);
+  }, []);
+
+  const cycleRepeatMode = useCallback(() => {
+    const s = live.current;
+    setCurrentRepeat(0);
+    if (s.repeatMode === 'none') setRepeatModeState('single');
+    else if (s.repeatMode === 'single') {
+      setRepeatModeState('range');
+      if (s.currentSurah) {
+        const n = s.currentSurah.ayahs[s.currentAyahIndex]?.numberInSurah || 1;
+        setRangeStart(n);
+        setRangeEnd(Math.min(n + 2, s.currentSurah.ayahs.length));
+      }
+    } else setRepeatModeState('none');
+  }, []);
 
   const downloadAyah = useCallback(async (ayahNumber: number, surahName: string, ayahNumberInSurah: number) => {
-    const url = getAudioUrl(ayahNumber);
-    
+    const reciter = live.current.selectedReciter;
     try {
       toast.info('جاري تحميل الآية...');
-      const response = await fetch(url);
+      const response = await fetch(getAyahAudioUrl(reciter, ayahNumber));
       if (!response.ok) throw new Error('Failed to fetch');
-      
       const blob = await response.blob();
-      const downloadUrl = window.URL.createObjectURL(blob);
+      const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = downloadUrl;
-      a.download = `${surahName}_آية_${ayahNumberInSurah}_${selectedReciter.nameArabic}.mp3`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(downloadUrl);
+      a.href = url;
+      a.download = `${surahName}_آية_${ayahNumberInSurah}_${reciter.nameArabic}.mp3`;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      URL.revokeObjectURL(url);
       toast.success('تم تحميل الآية بنجاح');
-    } catch (error) {
-      console.error('Download error:', error);
-      toast.error('فشل تحميل الآية. جرب مرة أخرى.');
+    } catch (e) {
+      console.error('Download error:', e);
+      toast.error('فشل تحميل الآية. تحقق من الاتصال وجرب مرة أخرى.');
     }
-  }, [getAudioUrl, selectedReciter.nameArabic]);
-
-  const setExpanded = useCallback((expanded: boolean) => {
-    setIsExpanded(expanded);
   }, []);
 
   const close = useCallback(() => {
     stop();
-    setIsVisible(false);
-    setCurrentSurah(null);
-    setCurrentAyahIndex(0);
-    setIsExpanded(false);
+    setIsVisible(false); setCurrentSurah(null); setCurrentAyahIndex(0); setIsExpanded(false);
   }, [stop]);
 
-  const cycleRepeatMode = useCallback(() => {
-    if (repeatMode === 'none') {
-      setRepeatMode('single');
-    } else if (repeatMode === 'single') {
-      setRepeatMode('range');
-      if (currentSurah) {
-        const currentAyah = currentSurah.ayahs[currentAyahIndex];
-        setRangeStart(currentAyah?.numberInSurah || 1);
-        setRangeEnd(Math.min((currentAyah?.numberInSurah || 1) + 2, currentSurah.ayahs.length));
-      }
-    } else {
-      setRepeatMode('none');
-      setCurrentRepeat(0);
-    }
-  }, [repeatMode, currentSurah, currentAyahIndex]);
+  // Lock-screen / notification controls so playback keeps going outside the app.
+  useEffect(() => {
+    if (!('mediaSession' in navigator) || !currentSurah) return;
+    const ayah = currentSurah.ayahs[currentAyahIndex];
+    try {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: `سورة ${currentSurah.name} · آية ${ayah?.numberInSurah ?? ''}`,
+        artist: selectedReciter.nameArabic,
+        album: 'نور الفرقان',
+        artwork: [{ src: '/favicon.ico', sizes: '64x64' }],
+      });
+      navigator.mediaSession.setActionHandler('play', () => togglePlayPause());
+      navigator.mediaSession.setActionHandler('pause', () => togglePlayPause());
+      navigator.mediaSession.setActionHandler('nexttrack', () => next());
+      navigator.mediaSession.setActionHandler('previoustrack', () => previous());
+    } catch { /* unsupported */ }
+  }, [currentSurah, currentAyahIndex, selectedReciter, togglePlayPause, next, previous]);
 
   const value: GlobalAudioContextType = {
-    isPlaying,
-    isLoading,
-    currentSurah,
-    currentAyahIndex,
-    progress,
-    duration,
-    volume,
-    isMuted,
-    selectedReciter,
-    isExpanded,
-    isVisible,
-    repeatMode,
-    repeatCount,
-    currentRepeat,
-    rangeStart,
-    rangeEnd,
-    playMode,
-    playSurah,
-    playAyah,
-    togglePlayPause,
-    stop,
-    next,
-    previous,
-    seek,
-    setVolume,
-    toggleMute,
-    setReciter,
-    setExpanded,
-    close,
-    setRepeatMode,
-    setRepeatCount,
-    setRangeStart,
-    setRangeEnd,
-    setPlayMode,
-    cycleRepeatMode,
-    downloadAyah,
+    isPlaying, isLoading, currentSurah, currentAyahIndex, progress, duration, volume, isMuted,
+    selectedReciter, isExpanded, isVisible, repeatMode, repeatCount, currentRepeat, rangeStart,
+    rangeEnd, playMode, error, playSurah, playAyah, togglePlayPause, stop, next, previous, seek,
+    setVolume, toggleMute, setReciter, setExpanded: setIsExpanded, close, setRepeatMode,
+    setRepeatCount, setRangeStart, setRangeEnd, setPlayMode, cycleRepeatMode, downloadAyah,
   };
 
-  return (
-    <GlobalAudioContext.Provider value={value}>
-      {children}
-    </GlobalAudioContext.Provider>
-  );
+  return <GlobalAudioContext.Provider value={value}>{children}</GlobalAudioContext.Provider>;
 };

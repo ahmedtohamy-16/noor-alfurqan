@@ -21,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { reciters, type Reciter } from "@/data/reciters";
+import { reciters, getAyahAudioUrl, type Reciter } from "@/data/reciters";
 import { cn } from "@/lib/utils";
 
 type RepeatMode = "none" | "single" | "range";
@@ -69,7 +69,7 @@ const AudioPlayer = forwardRef<AudioPlayerHandle, AudioPlayerProps>(
 
     const getAudioUrl = useCallback(
       (ayahNumber: number) => {
-        return `${selectedReciter.server}/${ayahNumber}.mp3`;
+        return getAyahAudioUrl(selectedReciter, ayahNumber);
       },
       [selectedReciter]
     );

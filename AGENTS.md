@@ -19,3 +19,4 @@
 - Use displayFormat for time-based greetings and Arabic count labels; numeral-only displays use the arabic-digits fallback font to avoid missing glyphs.
 - Auth changes must be exercised in the running preview (sign-up, sign-in, refresh, sign-out, protected route, password reset), not only type-checked.
 - Database state is shared between the preview and the published app, so temporary auth settings must be reverted in the same turn they are changed.
+- Quran ayah audio comes from everyayah.com (CORS-enabled, SSSAAA.mp3) via `getAyahAudioUrl`; stop/advance logic lives in `src/lib/playbackRules.ts` and the player uses one shared audio element, so modes, repeats and background playback stay consistent.

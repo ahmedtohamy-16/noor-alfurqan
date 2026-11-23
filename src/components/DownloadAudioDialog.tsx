@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { reciters, type Reciter } from '@/data/reciters';
+import { reciters, getAyahAudioUrl, type Reciter } from '@/data/reciters';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useDownloadManager } from './DownloadManager';
@@ -122,7 +122,7 @@ export const DownloadAudioDialog = ({
     try {
       if (downloadType === 'ayah' && globalAyahNumber) {
         // Download single ayah using global ayah number
-        const url = `${selectedReciter.server}/${globalAyahNumber}.mp3`;
+        const url = getAyahAudioUrl(selectedReciter, globalAyahNumber);
         const blob = await downloadWithProgress(url);
         
         if (!blob) throw new Error('فشل في تحميل الملف');
@@ -149,7 +149,7 @@ export const DownloadAudioDialog = ({
         
         for (let i = rangeStart; i <= rangeEnd; i++) {
           const ayahGlobalNum = startGlobalAyah + (i - rangeStart);
-          const url = `${selectedReciter.server}/${ayahGlobalNum}.mp3`;
+          const url = getAyahAudioUrl(selectedReciter, ayahGlobalNum);
           
           try {
             const response = await fetch(url);
