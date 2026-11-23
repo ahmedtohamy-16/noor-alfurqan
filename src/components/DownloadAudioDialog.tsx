@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Download, Loader2 } from 'lucide-react';
 import {
   Dialog,
@@ -11,12 +11,13 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { reciters, getAyahAudioUrl, type Reciter } from '@/data/reciters';
-import { cn } from '@/lib/utils';
+import { getVerifiedReciters, DEFAULT_RECITER_ID, type Reciter } from '@/data/reciters';
 import { toast } from 'sonner';
 import { useDownloadManager } from './DownloadManager';
-import { startAyahDownload } from '@/lib/ayahDownloads';
+import { startAyahDownload, startRangeDownload } from '@/lib/ayahDownloads';
 import { surahs } from '@/data/surahs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { arabicDigits, ayahCountLabel } from '@/lib/displayFormat';
 
 interface DownloadAudioDialogProps {
   open: boolean;
@@ -27,6 +28,7 @@ interface DownloadAudioDialogProps {
   globalAyahNumber?: number | null;
   downloadType: 'surah' | 'ayah' | 'range';
   totalAyahs?: number;
+  chooseSurah?: boolean;
 }
 
 export const DownloadAudioDialog = ({
@@ -38,13 +40,24 @@ export const DownloadAudioDialog = ({
   globalAyahNumber,
   downloadType,
   totalAyahs = 0,
+  chooseSurah = false,
 }: DownloadAudioDialogProps) => {
-  const [selectedReciter, setSelectedReciter] = useState<Reciter | null>(null);
+  const reciters = getVerifiedReciters();
+  const [selectedReciter, setSelectedReciter] = useState<Reciter | null>(reciters.find((r) => r.id === DEFAULT_RECITER_ID) ?? null);
+  const [chosenSurah, setChosenSurah] = useState(surahNumber);
+  const effectiveSurahNumber = chooseSurah ? chosenSurah : surahNumber;
+  const effectiveSurah = surahs.find((s) => s.number === effectiveSurahNumber);
+  const effectiveName = chooseSurah ? effectiveSurah?.name || surahName : surahName;
+  const effectiveTotal = effectiveSurah?.numberOfAyahs || totalAyahs;
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [rangeStart, setRangeStart] = useState(1);
   const [rangeEnd, setRangeEnd] = useState(totalAyahs || 10);
   const { addTask, updateTask } = useDownloadManager();
+  useEffect(() => {
+    if (open) { setRangeStart(ayahNumber || 1); setRangeEnd(Math.min(effectiveTotal, (ayahNumber || 1) + 8)); }
+  }, [open, effectiveTotal, ayahNumber]);
+  const validRange = Number.isInteger(rangeStart) && Number.isInteger(rangeEnd) && rangeStart >= 1 && rangeEnd >= rangeStart && rangeEnd <= effectiveTotal;
 
   // Map reciter IDs to quranicaudio.com paths
   const getReciterPath = (reciterId: string): string => {
@@ -126,9 +139,8 @@ export const DownloadAudioDialog = ({
         startAyahDownload(selectedReciter, globalAyahNumber, surahName);
         toast.success('بدأ تنزيل الآية — تابعها من صفحة التنزيلات');
       } else if (downloadType === 'range') {
-        const firstGlobal = surahs.filter((x) => x.number < surahNumber).reduce((t, x) => t + x.numberOfAyahs, 0) + 1;
-        for (let n = rangeStart; n <= rangeEnd; n++) startAyahDownload(selectedReciter, firstGlobal + n - 1, surahName);
-        toast.success(`بدأ تنزيل ${rangeEnd - rangeStart + 1} آية — تابعها من صفحة التنزيلات`);
+        startRangeDownload(selectedReciter, effectiveSurahNumber, rangeStart, rangeEnd, effectiveName);
+        toast.success('بدأ تجهيز المقطع — تابع حالته من التنزيلات');
       } else {
         // Download full surah
         const surahFormatted = surahNumber.toString().padStart(3, '0');
@@ -162,62 +174,64 @@ export const DownloadAudioDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md arabic-ui" dir="rtl">
-        <DialogHeader>
+      <DialogContent className="max-w-md max-h-[90dvh] overflow-y-auto arabic-ui" dir="rtl">
+        <DialogHeader className="pr-10">
           <DialogTitle className="text-right">
             {downloadType === 'surah' && 'تحميل السورة كاملة'}
             {downloadType === 'ayah' && 'تحميل الآية'}
-            {downloadType === 'range' && 'تحميل نطاق من الآيات'}
+            {downloadType === 'range' && 'تنزيل مقطع من سورة'}
           </DialogTitle>
           <DialogDescription className="text-right">
-            اختر القارئ الذي تريد تحميل الصوت بصوته
+            {downloadType === 'range' ? `سورة ${effectiveName} · مقطع صوتي واحد` : 'اختر القارئ'}
           </DialogDescription>
         </DialogHeader>
 
+        {chooseSurah && (
+          <div className="space-y-2">
+            <Label>السورة</Label>
+            <Select value={String(chosenSurah)} onValueChange={(v) => setChosenSurah(Number(v))} dir="rtl">
+              <SelectTrigger aria-label="السورة"><SelectValue /></SelectTrigger>
+              <SelectContent className="arabic-ui">{surahs.map((s) => <SelectItem key={s.number} value={String(s.number)}>سورة {s.name}</SelectItem>)}</SelectContent>
+            </Select>
+          </div>
+        )}
         {downloadType === 'range' && (
           <div className="grid grid-cols-2 gap-4 py-2">
             <div className="space-y-2">
-              <Label>من آية</Label>
+              <Label htmlFor="range-start">من آية</Label>
               <Input
+                id="range-start"
                 type="number"
                 min={1}
-                max={totalAyahs}
+                max={effectiveTotal}
                 value={rangeStart}
-                onChange={(e) => setRangeStart(Math.min(parseInt(e.target.value) || 1, rangeEnd))}
+                onChange={(e) => setRangeStart(Number(e.target.value))}
               />
             </div>
             <div className="space-y-2">
-              <Label>إلى آية</Label>
+              <Label htmlFor="range-end">إلى آية</Label>
               <Input
+                id="range-end"
                 type="number"
                 min={rangeStart}
-                max={totalAyahs}
+                max={effectiveTotal}
                 value={rangeEnd}
-                onChange={(e) => setRangeEnd(Math.max(parseInt(e.target.value) || totalAyahs, rangeStart))}
+                onChange={(e) => setRangeEnd(Number(e.target.value))}
               />
             </div>
           </div>
         )}
 
-        <div className="space-y-3 max-h-[300px] overflow-y-auto py-4">
-          {reciters.map((reciter) => (
-            <button
-              key={reciter.id}
-              onClick={() => setSelectedReciter(reciter)}
-              disabled={isDownloading}
-              className={cn(
-                'w-full p-3 rounded-lg border text-right transition-all',
-                selectedReciter?.id === reciter.id
-                  ? 'border-primary bg-primary/10 text-primary'
-                  : 'border-border hover:border-primary/50 hover:bg-muted/50',
-                isDownloading && 'opacity-50 cursor-not-allowed'
-              )}
-            >
-              <p className="font-semibold">{reciter.nameArabic}</p>
-              <p className="text-sm text-muted-foreground">{reciter.name}</p>
-            </button>
-          ))}
+        <div className="space-y-2">
+          <Label>القارئ</Label>
+          <Select value={selectedReciter?.id} onValueChange={(id) => setSelectedReciter(reciters.find((r) => r.id === id) ?? null)} disabled={isDownloading} dir="rtl">
+            <SelectTrigger aria-label="القارئ"><SelectValue /></SelectTrigger>
+            <SelectContent className="arabic-ui">{reciters.map((r) => <SelectItem key={r.id} value={r.id}>{r.nameArabic}</SelectItem>)}</SelectContent>
+          </Select>
         </div>
+        {downloadType === 'range' && <p className={validRange ? 'text-sm text-muted-foreground arabic-digits' : 'text-sm text-destructive'}>
+          {validRange ? `من الآية ${arabicDigits(rangeStart)} إلى ${arabicDigits(rangeEnd)} · ${ayahCountLabel(rangeEnd - rangeStart + 1)}` : `اختر آيات بين ١ و${arabicDigits(effectiveTotal)}، والنهاية بعد البداية`}
+        </p>}
 
         {isDownloading && (
           <div className="space-y-2">
@@ -230,7 +244,7 @@ export const DownloadAudioDialog = ({
 
         <Button
           onClick={handleDownload}
-          disabled={!selectedReciter || isDownloading}
+          disabled={!selectedReciter || isDownloading || (downloadType === 'range' && !validRange)}
           className="w-full gap-2"
         >
           {isDownloading ? (
@@ -241,7 +255,7 @@ export const DownloadAudioDialog = ({
           ) : (
             <>
               <Download className="w-4 h-4" />
-              تحميل
+              {downloadType === 'range' ? 'تنزيل المقطع' : 'تحميل'}
             </>
           )}
         </Button>

@@ -1,5 +1,12 @@
 # Roadmap
 
+## Audio downloads improvements
+- [x] Storage summary with automatic limits: regular users 10 MiB, Pro users 100 MiB; limit enforcement and concurrent reservations tested.
+- [x] Select multiple downloads and confirm bulk deletion.
+- [x] Download a same-surah ayah range as one playable MP3 from a prominent Downloads action and existing range action.
+- [x] Verify real range audio, forced failure/retry, refresh persistence, offline playback, actual IndexedDB bulk deletion and mobile layout; 25 focused tests passed.
+- [ ] Verify an actual Pro account's entitlement read — blocked: external Supabase does not provide a managed preview session; no account sign-in performed.
+
 ## Current design review
 - [x] Repair mobile menu and tasbih numeral rendering; verify light/dark mobile.
 - [x] Isolate mixed-language surah labels and widen desktop prayer layout.

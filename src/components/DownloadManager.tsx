@@ -3,6 +3,7 @@ import { X, Download, ChevronUp, ChevronDown, Loader2, CheckCircle, XCircle } fr
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
+import { useAudioDownloadQuota } from '@/hooks/useAudioDownloadQuota';
 
 interface DownloadTask {
   id: string;
@@ -38,6 +39,7 @@ interface DownloadManagerProviderProps {
 }
 
 export const DownloadManagerProvider = ({ children }: DownloadManagerProviderProps) => {
+  useAudioDownloadQuota();
   const [tasks, setTasks] = useState<DownloadTask[]>([]);
   const [isVisible, setIsVisible] = useState(false);
 
