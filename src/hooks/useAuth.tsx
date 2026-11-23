@@ -173,7 +173,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signInWithGoogle = async () => {
-    toast.error("تسجيل الدخول عبر Google غير متاح حالياً");
+    const next = new URLSearchParams(window.location.search).get("next") || "/";
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: window.location.origin + next,
+        queryParams: { prompt: "select_account" },
+      },
+    });
+    if (error) throw error;
   };
 
   const signOut = async () => {

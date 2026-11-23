@@ -258,18 +258,15 @@ const AuthPage = () => {
   const handleGoogle = async () => {
     setIsGoogleLoading(true);
     try {
+      // Redirects the page to Google's account chooser; the session arrives on return.
       await signInWithGoogle();
-      toast.success("تم تسجيل الدخول عبر Google");
-      navigate("/");
     } catch (error: any) {
-      if (error.code !== "auth/popup-closed-by-user") {
-        if (error.code === "auth/popup-blocked") {
-          toast.error("تم حظر النافذة المنبثقة");
-        } else {
-          toast.error("حدث خطأ في تسجيل الدخول عبر Google");
-        }
-      }
-    } finally {
+      console.error("Google auth error:", error);
+      toast.error(
+        /provider is not enabled|Unsupported provider/i.test(error?.message || "")
+          ? "تسجيل الدخول عبر Google غير مفعّل بعد، استخدم البريد الإلكتروني"
+          : "حدث خطأ في تسجيل الدخول عبر Google",
+      );
       setIsGoogleLoading(false);
     }
   };
@@ -658,6 +655,16 @@ const AuthPage = () => {
               )}
               <span>المتابعة عبر Google</span>
             </Button>
+          </div>
+
+          <div className="mt-4 flex items-center justify-center gap-4 text-xs">
+            <a href="mailto:support@nooralfurqan.app?subject=%D8%B7%D9%84%D8%A8%20%D8%AF%D8%B9%D9%85" className="text-primary hover:underline min-h-11 inline-flex items-center">
+              التواصل مع الدعم
+            </a>
+            <span className="text-muted-foreground">•</span>
+            <a href="mailto:support@nooralfurqan.app?subject=%D8%A7%D9%84%D8%A5%D8%A8%D9%84%D8%A7%D8%BA%20%D8%B9%D9%86%20%D9%85%D8%B4%D9%83%D9%84%D8%A9" className="text-primary hover:underline min-h-11 inline-flex items-center">
+              الإبلاغ عن مشكلة
+            </a>
           </div>
 
           {!isLogin && (
