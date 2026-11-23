@@ -14,12 +14,105 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      pro_entitlements: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          is_pro: boolean
+          plan: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          is_pro?: boolean
+          plan?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          is_pro?: boolean
+          plan?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          email: string | null
+          id: string
+          is_blocked: boolean
+          updated_at: string
+          username: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          email?: string | null
+          id: string
+          is_blocked?: boolean
+          updated_at?: string
+          username: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          email?: string | null
+          id?: string
+          is_blocked?: boolean
+          updated_at?: string
+          username?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
-      [_ in never]: never
+      public_profiles: {
+        Row: {
+          display_name: string | null
+          id: string | null
+          username: string | null
+        }
+        Insert: {
+          display_name?: string | null
+          id?: string | null
+          username?: string | null
+        }
+        Update: {
+          display_name?: string | null
+          id?: string | null
+          username?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      check_username_available: { Args: { name: string }; Returns: boolean }
+      get_email_by_username: { Args: { name: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -27,6 +120,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_reserved_username: { Args: { name: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
