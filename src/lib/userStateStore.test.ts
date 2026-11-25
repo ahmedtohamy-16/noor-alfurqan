@@ -32,6 +32,6 @@ describe('authenticated account hydration', () => {
     store.queueUserState('test', 'azkar_progress', 'today', { value: { b: 3 } });
     await store.flushUserState('test');
     expect(rpc).toHaveBeenCalledTimes(2);
-    expect(rpc).toHaveBeenLastCalledWith('sync_user_state', { changes: [{ namespace: 'azkar_progress', key: 'today', payload: { value: { a: null, b: 3 } }, replace: false, deleted: false }] });
+    expect(rpc).toHaveBeenLastCalledWith('sync_account_state', { expected_owner: 'test', changes: [{ namespace: 'azkar_progress', key: 'today', payload: { value: { a: null, b: 3 } }, replace: false, deleted: false }] });
   });
 });

@@ -58,7 +58,7 @@ export async function loadUserState(uid: string, force = false): Promise<void> {
     try {
       const { data: sessionData } = await supabase.auth.getSession();
       if (sessionData.session?.user.id !== uid || activeUid !== uid) return;
-      const { data, error } = await supabase.rpc('read_user_state');
+      const { data, error } = await supabase.rpc('read_account_state', { expected_owner: uid });
       if (error) throw error;
       if (activeUid !== uid) return;
       cache.rows = (data as Row[]) || [];
@@ -106,7 +106,7 @@ export async function flushUserState(uid: string): Promise<void> {
   const running = (async () => {
     while (cache.pending.length && activeUid === uid && navigator.onLine) {
       const batch = cache.pending.slice(0, USER_STATE_BATCH_SIZE);
-      const { error } = await supabase.rpc('sync_user_state', { changes: batch });
+      const { error } = await supabase.rpc('sync_account_state', { changes: batch, expected_owner: uid });
       if (error) { lastError = 'تعذّر حفظ التغييرات في حسابك؛ أعد المحاولة'; emit(); throw error; }
       cache.pending = cache.pending.filter(change => !batch.includes(change));
       lastError = null; persist(uid); emit();

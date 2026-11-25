@@ -32,27 +32,10 @@ const adhanSounds: Record<string, { url: string; fajrUrl?: string }> = {
   egypt: { url: "https://www.islamcan.com/audio/adhan/azan5.mp3" },
 };
 
-// Get timezone offset in minutes
-function getTimezoneOffset(timezone: string): number {
-  try {
-    const now = new Date();
-    const utcDate = new Date(now.toLocaleString("en-US", { timeZone: "UTC" }));
-    const tzDate = new Date(now.toLocaleString("en-US", { timeZone: timezone }));
-    return Math.round((tzDate.getTime() - utcDate.getTime()) / (1000 * 60));
-  } catch {
-    return 0;
-  }
-}
-
-// Convert local time to UTC minutes
-function localTimeToUTCMinutes(localTime: string, timezoneOffset: number): number {
-  const [hours, minutes] = localTime.split(":").map(Number);
-  let utcMinutes = (hours * 60 + minutes) - timezoneOffset;
-  
-  if (utcMinutes < 0) utcMinutes += 24 * 60;
-  if (utcMinutes >= 24 * 60) utcMinutes -= 24 * 60;
-  
-  return utcMinutes;
+// Matches a saved local wall-clock time on the user's location date, including DST changes.
+function localTimeMatches(localTime: string, localDate: string, timeZone: string, now: Date): boolean {
+  try { return Math.abs(now.getTime() - zonedInstant(localDate, localTime.slice(0, 5), timeZone)) <= 60000; }
+  catch { return false; }
 }
 
 // Request-local deduplication shares identical location/method/school/day requests.
@@ -67,12 +50,6 @@ async function getPrayerTimes(user: UserSettings, date: string, requests: Map<st
     catch { return null; }
   })();
   requests.set(url, request); return request;
-}
-
-// Convert HH:MM to minutes since midnight
-function timeToMinutes(time: string): number {
-  const [hours, minutes] = time.split(":").map(Number);
-  return hours * 60 + minutes;
 }
 
 interface UserSettings {
@@ -153,11 +130,7 @@ serve(async (req) => {
 
   try {
     const now = new Date();
-    const currentHour = now.getUTCHours();
-    const currentMinute = now.getUTCMinutes();
-    const currentUTCMinutes = currentHour * 60 + currentMinute;
-
-    console.log(`⏰ Scheduled check at ${currentHour}:${String(currentMinute).padStart(2, "0")} UTC`);
+    console.log(`⏰ Scheduled check at ${now.toISOString()}`);
 
     // Get users with notifications enabled
     const { data: settingRows, error: settingsError } = await supabase.from("user_state").select("user_id,payload").eq("namespace", "user_settings").eq("deleted", false);
@@ -188,17 +161,11 @@ serve(async (req) => {
       const userTimezone = user.timezone || "UTC";
       const localDate = localDateAt(now, userTimezone);
       const prayerDays = user.latitude !== null && user.longitude !== null ? (await Promise.all([getPrayerTimes(user, localDate, requests), getPrayerTimes(user, nextDate(localDate), requests)])).filter((day): day is PrayerDay => !!day) : [];
-      const timezoneOffset = getTimezoneOffset(userTimezone);
-      
-      console.log(`👤 Processing user ${user.user_id} (timezone: ${userTimezone}, offset: ${timezoneOffset} min)`);
+      console.log(`👤 Processing user ${user.user_id} (timezone: ${userTimezone})`);
 
       // === Daily Wird Reminder ===
       if (user.daily_wird_enabled && user.daily_wird_time) {
-        const wirdUTCMinutes = localTimeToUTCMinutes(user.daily_wird_time, timezoneOffset);
-        
-        console.log(`📖 User wird time: ${user.daily_wird_time} local = ${Math.floor(wirdUTCMinutes/60)}:${String(wirdUTCMinutes%60).padStart(2,"0")} UTC`);
-        
-        if (Math.abs(currentUTCMinutes - wirdUTCMinutes) <= 1) {
+        if (localTimeMatches(user.daily_wird_time, localDate, userTimezone, now)) {
           console.log(`✅ Wird time matched for user ${user.user_id}`);
           notifications.push({
             user_id: user.user_id,
@@ -260,8 +227,7 @@ serve(async (req) => {
       // === Morning Azkar ===
       if (user.azkar_morning_enabled) {
         const morningTime = user.azkar_morning_time || "06:00:00";
-        const morningUTCMinutes = localTimeToUTCMinutes(morningTime.slice(0, 5), timezoneOffset);
-        if (Math.abs(currentUTCMinutes - morningUTCMinutes) <= 1) {
+        if (localTimeMatches(morningTime, localDate, userTimezone, now)) {
           notifications.push({
             user_id: user.user_id,
             title: "🌅 أذكار الصباح",
@@ -275,8 +241,7 @@ serve(async (req) => {
       // === Evening Azkar ===
       if (user.azkar_evening_enabled) {
         const eveningTime = user.azkar_evening_time || "17:00:00";
-        const eveningUTCMinutes = localTimeToUTCMinutes(eveningTime.slice(0, 5), timezoneOffset);
-        if (Math.abs(currentUTCMinutes - eveningUTCMinutes) <= 1) {
+        if (localTimeMatches(eveningTime, localDate, userTimezone, now)) {
           notifications.push({
             user_id: user.user_id,
             title: "🌙 أذكار المساء",
@@ -290,8 +255,7 @@ serve(async (req) => {
       // === Sleep Azkar ===
       if (user.azkar_sleep_enabled) {
         const sleepTime = user.azkar_sleep_time || "22:00:00";
-        const sleepUTCMinutes = localTimeToUTCMinutes(sleepTime.slice(0, 5), timezoneOffset);
-        if (Math.abs(currentUTCMinutes - sleepUTCMinutes) <= 1) {
+        if (localTimeMatches(sleepTime, localDate, userTimezone, now)) {
           notifications.push({
             user_id: user.user_id,
             title: "🌙 أذكار النوم",
@@ -305,8 +269,7 @@ serve(async (req) => {
       // === Wakeup Azkar ===
       if (user.azkar_wakeup_enabled) {
         const wakeupTime = user.azkar_wakeup_time || "05:00:00";
-        const wakeupUTCMinutes = localTimeToUTCMinutes(wakeupTime.slice(0, 5), timezoneOffset);
-        if (Math.abs(currentUTCMinutes - wakeupUTCMinutes) <= 1) {
+        if (localTimeMatches(wakeupTime, localDate, userTimezone, now)) {
           notifications.push({
             user_id: user.user_id,
             title: "🌅 أذكار الاستيقاظ",

@@ -197,7 +197,12 @@ export type Database = {
       }
       is_reserved_username: { Args: { name: string }; Returns: boolean }
       merge_user_json: { Args: { base: Json; patch: Json }; Returns: Json }
+      read_account_state: { Args: { expected_owner: string }; Returns: Json }
       read_user_state: { Args: never; Returns: Json }
+      sync_account_state: {
+        Args: { changes: Json; expected_owner: string }
+        Returns: undefined
+      }
       sync_user_state: { Args: { changes: Json }; Returns: undefined }
     }
     Enums: {
