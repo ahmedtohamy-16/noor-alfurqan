@@ -20,7 +20,11 @@ export function useSyncedState<T>(namespace: string, key: string, defaultValue: 
     const payload = getUserRow(user.uid, namespace, key);
     if (payload && 'value' in payload) value = payload.value as T;
   } else if (guestKey) {
-    try { const raw = localStorage.getItem(guestKey); if (raw !== null) value = JSON.parse(raw) as T; } catch { /* Invalid guest data falls back safely. */ }
+    const raw = localStorage.getItem(guestKey);
+    if (raw !== null) {
+      try { value = JSON.parse(raw) as T; }
+      catch { if (typeof defaultValue === 'string') value = raw as T; }
+    }
   }
   const current = useRef(value); current.current = value;
   const setter = useCallback((next: SetStateAction<T>) => {

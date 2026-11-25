@@ -3,7 +3,7 @@ import { activateUserState, loadUserState, getUserRow, getUserRows, queueUserSta
 import type { StatePayload } from './userStateRules';
 
 /** Only personal collections; never roles, Pro grants, support, administration or shared content. */
-export const personalCollections = new Set(['favorites', 'user_settings', 'user_reading_settings', 'reading_progress', 'reading_sessions', 'daily_wird', 'user_azkar_progress', 'hadith_bookmarks', 'pinned_hadith', 'notification_history', 'export_logs']);
+export const personalCollections = new Set(['favorites', 'user_settings', 'user_reading_settings', 'reading_progress', 'reading_sessions', 'reading_stats', 'daily_wird', 'user_azkar_progress', 'hadith_bookmarks', 'pinned_hadiths', 'notification_history', 'export_logs']);
 async function owner() {
   const { data } = await supabase.auth.getSession();
   const uid = data.session?.user.id;

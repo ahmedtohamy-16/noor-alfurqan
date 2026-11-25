@@ -1,7 +1,9 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useSyncExternalStore } from "react";
 import { useAuth } from "./useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useSyncedState } from "./useSyncedState";
+import { useQuery } from "@tanstack/react-query";
+import { getUserRows, queueUserState, subscribeUserState, userStateRevision } from "@/lib/userStateStore";
 
 export interface TasbihStats {
   totalCount: number;
@@ -61,42 +63,32 @@ export const useTasbih = () => {
   const [currentDhikr, setCurrentDhikr] = useSyncedState<string>("tasbih", "dhikr", defaultDhikrs[0], "tasbihCurrentDhikr");
   const [dailyGoal, setDailyGoal] = useSyncedState<number>("tasbih", "goal", 1000, "tasbih_daily_goal");
   const saving = useRef(false);
-  const [stats, setStats] = useState<TasbihStats>({ totalCount: 0, todayCount: 0, dhikrTypes: [], weekCount: 0, streakDays: 0 });
-  const [isLoading, setIsLoading] = useState(false);
+  const [guestStats, setGuestStats] = useState<TasbihStats>({ totalCount: 0, todayCount: 0, dhikrTypes: [], weekCount: 0, streakDays: 0 });
   const [appearance, setAppearance] = useSyncedState<TasbihAppearance>("tasbih", "appearance", defaultAppearance, APPEARANCE_KEY);
-
-  const today = new Date().toISOString().split("T")[0];
-
-  useEffect(() => {
-    const loadStats = async () => {
-      if (!user) {
-        const stored = localStorage.getItem("tasbihStats");
-        if (stored) {
-          const parsed = JSON.parse(stored);
-          setStats((prev) => ({ ...prev, ...parsed, todayCount: parsed.todayDate === today ? parsed.todayCount || 0 : 0 }));
-        }
-        return;
-      }
-
-      setIsLoading(true);
-      try {
-        const { data, error } = await supabase
-          .from("tasbih_sessions" as any)
-          .select("dhikr,count,session_date,created_at")
-          .eq("user_id", user.uid)
-          .order("created_at", { ascending: false })
-          .limit(1000);
+  const today = new Date().toLocaleDateString("en-CA");
+  useSyncExternalStore(subscribeUserState, userStateRevision, userStateRevision);
+  const legacy = useQuery({
+    queryKey: ["legacyTasbihSessions", user?.uid], enabled: !!user,
+    staleTime: 300000, gcTime: 86400000,
+    queryFn: async () => {
+      if (!user) return [];
+      const rows: { dhikr: string; count: number; session_date: string; created_at: string }[] = [];
+      for (let from = 0; ; from += 1000) {
+        const { data, error } = await supabase.from("tasbih_sessions").select("dhikr,count,session_date,created_at").eq("user_id", user.uid).order("created_at", { ascending: false }).range(from, from + 999);
         if (error) throw error;
-        setStats(summarize((data as any[]) || [], today));
-      } catch (error) {
-        console.error("Error loading stats:", error);
-      } finally {
-        setIsLoading(false);
+        rows.push(...(data || []));
+        if (!data || data.length < 1000) break;
       }
-    };
-
-    loadStats();
-  }, [user, today]);
+      return rows;
+    },
+  });
+  useEffect(() => {
+    if (user) return;
+    try { const stored = JSON.parse(localStorage.getItem("tasbihStats") || "null"); if (stored) setGuestStats({ ...guestStats, ...stored, todayCount: stored.todayDate === today ? stored.todayCount || 0 : 0 }); }
+    catch { /* Ignore broken guest copy. */ }
+  }, [user?.uid, today]);
+  const sessionRecords = user ? [...(legacy.data || []), ...getUserRows(user.uid, "tasbih_saved_sessions").map(r => r.payload as unknown as { dhikr: string; count: number; session_date: string; created_at: string })].sort((a, b) => b.created_at.localeCompare(a.created_at)) : [];
+  const stats = user ? summarize(sessionRecords, today) : guestStats;
 
   const increment = useCallback(() => {
     setCount((prev) => prev + 1);
@@ -104,11 +96,11 @@ export const useTasbih = () => {
     if (navigator.vibrate) {
       navigator.vibrate(10);
     }
-  }, []);
+  }, [setCount]);
 
   const reset = useCallback(() => {
     setCount(0);
-  }, []);
+  }, [setCount]);
 
   const saveSession = useCallback(async () => {
     if (count === 0 || saving.current) return;
@@ -118,13 +110,7 @@ export const useTasbih = () => {
     const newTotalCount = stats.totalCount + count;
 
     if (user) {
-      const { error } = await supabase.from("tasbih_sessions" as any).insert({
-        user_id: user.uid,
-        count,
-        dhikr: currentDhikr.slice(0, 200),
-        session_date: today,
-      });
-      if (error) { saving.current = false; console.error("Error saving tasbih:", error); throw error; }
+      queueUserState(user.uid, "tasbih_saved_sessions", crypto.randomUUID(), { user_id: user.uid, count, dhikr: currentDhikr.slice(0, 200), session_date: today, created_at: new Date().toISOString() });
     } else {
       const stored = localStorage.getItem("tasbihStats");
       const parsed = stored ? JSON.parse(stored) : { totalCount: 0, todayCount: 0, dhikrTypes: [] };
@@ -141,7 +127,7 @@ export const useTasbih = () => {
       localStorage.setItem("tasbihStats", JSON.stringify(updatedStats));
     }
 
-    setStats((prev) => ({
+    if (!user) setGuestStats((prev) => ({
       ...prev,
       totalCount: newTotalCount,
       todayCount: newTodayCount,
@@ -157,20 +143,21 @@ export const useTasbih = () => {
     if (count > 0) {
       void saveSession().then(() => setCurrentDhikr(dhikr)).catch(() => {});
     } else setCurrentDhikr(dhikr);
-  }, [count, saveSession]);
+  }, [count, saveSession, setCurrentDhikr]);
 
   const updateAppearance = useCallback((updates: Partial<TasbihAppearance>) => {
     setAppearance((prev) => {
       const next = { ...prev, ...updates };
       return next;
     });
-  }, []);
+  }, [setAppearance]);
 
   return {
     count,
     currentDhikr,
     stats,
-    isLoading: isLoading || state.isLoading,
+    isLoading: (!!user && legacy.isLoading) || state.isLoading,
+    sessionRecords,
     dailyGoal,
     setDailyGoal,
     appearance,

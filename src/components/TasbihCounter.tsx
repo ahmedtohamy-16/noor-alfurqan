@@ -11,7 +11,7 @@ interface TasbihCounterProps {
   count: number;
   increment: () => void;
   reset: () => void;
-  saveSession: () => void;
+  saveSession: () => Promise<void>;
   appearance: TasbihAppearance;
 }
 
@@ -35,9 +35,9 @@ const TasbihCounter = ({ count, increment, reset, saveSession, appearance }: Tas
     }
   };
 
-  const handleReset = () => {
-    if (count > 0) saveSession();
-    reset();
+  const handleReset = async () => {
+    try { if (count > 0) await saveSession(); else reset(); }
+    catch { toast.error("تعذّر حفظ الجلسة؛ العدّاد لم يُحذف"); }
   };
 
   // Marker positions based on markerCount

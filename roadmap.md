@@ -12,7 +12,7 @@
 - [x] Replace the displayed website in generated ayah/hadith/prayer/asma images with https://nooralfurqan.app
 - [x] Verify fresh branded ayah/hadith/prayer/asma image exports in the running app
 - [x] Sweep shared hadith, Arabic displays, GPS city, Quran navigation/favorites, tasbih layout and offline rules across current consumers; preserve stored records and unrelated settings/permissions
-- [ ] Signed-in persistence and member-only screens — blocked: explicit approval required before signing in; admin impersonation prohibited
+- [ ] Verify settings/progress/profile between two devices with the explicitly approved temporary test account only; never use requester/admin accounts
 - [ ] Scheduled push delivery — blocked: hosted CRON_SECRET_TOKEN is missing; existing settings synchronization/messaging audio needs separate work, no settings/permissions changed
 - [x] OTP screen: hide form, 60s resend, 5 sends / 6h per device
 - [x] Mushaf next/prev direction, 404 for invalid page, juz browsing
