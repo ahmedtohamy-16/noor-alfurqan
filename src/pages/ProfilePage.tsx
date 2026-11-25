@@ -34,8 +34,6 @@ interface ProfileData {
   display_name: string | null;
   avatar_url: string | null;
   created_at: string | null;
-  username_change_count: number | null;
-  displayname_change_count: number | null;
 }
 
 const PROFILE_COLUMNS = "id, username, display_name, avatar_url, created_at";
@@ -443,29 +441,6 @@ const ProfilePage = () => {
                 </span>
               </div>
               
-              <Separator />
-              
-              <div className="flex items-center justify-between py-2">
-                <span className="text-muted-foreground flex items-center gap-2">
-                  <History className="w-4 h-4" />
-                  تغييرات اسم المستخدم
-                </span>
-                <span className="font-medium">
-                  {profile?.username_change_count || 0} مرات
-                </span>
-              </div>
-              
-              <Separator />
-              
-              <div className="flex items-center justify-between py-2">
-                <span className="text-muted-foreground flex items-center gap-2">
-                  <History className="w-4 h-4" />
-                  تغييرات الاسم (هذا الأسبوع)
-                </span>
-                <span className="font-medium">
-                  {profile?.displayname_change_count || 0} / 3
-                </span>
-              </div>
             </CardContent>
           </Card>
           
@@ -486,6 +461,7 @@ const ProfilePage = () => {
                 </span>
               </Button>
               
+              <Button variant="outline" className="w-full justify-between" disabled={!user.email} onClick={async () => { if (!user.email) return; try { await resetPassword(user.email); toast.success("أُرسل رابط تغيير كلمة المرور إلى بريدك"); } catch { toast.error("تعذّر إرسال رابط تغيير كلمة المرور"); } }}>تغيير كلمة المرور</Button>
               <Button 
                 variant="destructive" 
                 className="w-full justify-between"

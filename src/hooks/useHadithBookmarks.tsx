@@ -3,6 +3,7 @@ import { useAuth } from "./useAuth";
 import { firestoreGet, firestoreSet, COLLECTIONS } from "@/lib/firebase";
 import { toast } from "sonner";
 import { safeHadithSnapshot, refreshHadithSnapshots, preserveSavedHadiths } from "@/lib/hadithContent";
+import { subscribeUserState } from "@/lib/userStateStore";
 
 export interface HadithBookmark {
   bookId: string;
@@ -19,9 +20,9 @@ const LS_KEY = "hadith_bookmarks_v1";
 const bookmarkKey = (b: { bookId: string; hadithNumber: number }) =>
   `${b.bookId}::${b.hadithNumber}`;
 
-const readLocal = (): HadithBookmark[] => {
+const readLocal = (key = LS_KEY): HadithBookmark[] => {
   try {
-    const raw = localStorage.getItem(LS_KEY);
+    const raw = localStorage.getItem(key);
     if (!raw) return [];
     const parsed = JSON.parse(raw);
     return Array.isArray(parsed) ? parsed : [];
@@ -30,20 +31,24 @@ const readLocal = (): HadithBookmark[] => {
   }
 };
 
-const writeLocal = (items: HadithBookmark[]) => {
+const writeLocal = (items: HadithBookmark[], key = LS_KEY) => {
   try {
-    localStorage.setItem(LS_KEY, JSON.stringify(items));
+    localStorage.setItem(key, JSON.stringify(items));
   } catch {}
 };
 
 export const useHadithBookmarks = () => {
   const { user } = useAuth();
-  const storedRecords = useRef<HadithBookmark[]>(readLocal());
-  const [bookmarks, setBookmarks] = useState<HadithBookmark[]>(() => readLocal().map(safeHadithSnapshot));
+  const localKey = user ? `${LS_KEY}:${user.uid}` : LS_KEY;
+  const storedRecords = useRef<HadithBookmark[]>(readLocal(localKey));
+  const [bookmarks, setBookmarks] = useState<HadithBookmark[]>(() => readLocal(localKey).map(safeHadithSnapshot));
   const [loading, setLoading] = useState(false);
+  const [revision, setRevision] = useState(0);
+  useEffect(() => subscribeUserState(() => setRevision(n => n + 1)), []);
 
   // Sync from Firestore on login + merge with local
   useEffect(() => {
+    setBookmarks(readLocal(localKey).map(safeHadithSnapshot));
     if (!user) {
       let cancelled = false;
       const records = readLocal();
@@ -59,11 +64,11 @@ export const useHadithBookmarks = () => {
           COLLECTIONS.HADITH_BOOKMARKS,
           user.uid
         );
-        const local = readLocal();
+        const local = readLocal(localKey);
         const remoteItems = remote?.items || [];
         // Merge by key, prefer most recent savedAt
         const map = new Map<string, HadithBookmark>();
-        [...remoteItems, ...local].forEach((b) => {
+        remoteItems.forEach((b) => {
           const k = bookmarkKey(b);
           const existing = map.get(k);
           if (!existing || (b.savedAt > existing.savedAt)) {
@@ -77,11 +82,7 @@ export const useHadithBookmarks = () => {
         if (cancelled) return;
         setBookmarks(merged);
         storedRecords.current = records;
-        writeLocal(records);
-        // Push merged back if local had extras
-        if (local.length > remoteItems.length) {
-          await firestoreSet(COLLECTIONS.HADITH_BOOKMARKS, user.uid, { items: records });
-        }
+        writeLocal(records, localKey);
       } catch (e) {
         console.error("Bookmark sync failed", e);
       } finally {
@@ -91,14 +92,14 @@ export const useHadithBookmarks = () => {
     return () => {
       cancelled = true;
     };
-  }, [user?.uid]);
+  }, [user?.uid, revision]);
 
   const persist = useCallback(
     async (next: HadithBookmark[]) => {
       setBookmarks(next);
       const records = preserveSavedHadiths(next, storedRecords.current);
       storedRecords.current = records;
-      writeLocal(records);
+      writeLocal(records, localKey);
       if (user) {
         try {
           await firestoreSet(COLLECTIONS.HADITH_BOOKMARKS, user.uid, { items: records });

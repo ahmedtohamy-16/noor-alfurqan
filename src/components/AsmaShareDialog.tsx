@@ -36,9 +36,10 @@ const AsmaShareDialog = ({ name, open, onClose }: Props) => {
 
   const generateBlob = async (): Promise<Blob | null> => {
     if (!cardRef.current) return null;
+    await document.fonts.ready;
     const canvas = await html2canvas(cardRef.current, {
       backgroundColor: null,
-      scale: 2,
+      scale: Math.min(6, 2160 / Math.max(1, cardRef.current.offsetWidth)),
       useCORS: true,
     });
     return new Promise((res) => canvas.toBlob((b) => res(b), "image/png"));

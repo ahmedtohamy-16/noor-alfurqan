@@ -3,6 +3,7 @@ import { useAuth } from "./useAuth";
 import { toast } from "sonner";
 import { getAyahAsync } from "@/data/quranAyats";
 import { surahs } from "@/data/surahs";
+import { subscribeUserState } from "@/lib/userStateStore";
 import { 
   firestoreQuery, 
   firestoreSet, 
@@ -67,7 +68,8 @@ export const useFavorites = () => {
       if (detail?.userId === (user?.uid ?? null)) setFavorites(detail.favorites);
     };
     window.addEventListener(FAVORITES_EVENT, synchronize);
-    return () => window.removeEventListener(FAVORITES_EVENT, synchronize);
+    const unsubscribe = subscribeUserState(() => { if (user) void fetchFavorites(); });
+    return () => { unsubscribe(); window.removeEventListener(FAVORITES_EVENT, synchronize); };
   }, [user?.uid]);
 
   const addFavorite = async (

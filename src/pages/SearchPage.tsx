@@ -2,8 +2,6 @@ import { arabicDigits, westernDigits, ayahCountLabel } from "@/lib/displayFormat
 import { parseQuranReference, validQuranReference } from "@/lib/quranReferenceRules";
 import { normalizeArabic } from "@/lib/arabicNormalize";
 import { searchAyahsAsync } from "@/data/quranAyats";
-import { useFavorites } from "@/hooks/useFavorites";
-import FavoriteAyahButton from "@/components/FavoriteAyahButton";
 import { useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { Search, ArrowRight, BookOpen, Hash } from "lucide-react";
@@ -39,7 +37,6 @@ const fetchAyahSearch = async (query: string): Promise<AyahResult[]> => {
 
 const SearchPage = () => {
   const [searchParams] = useSearchParams();
-  const { isFavorite, toggleFavorite } = useFavorites();
   const initialQuery = searchParams.get("q") || "";
   const [query, setQuery] = useState(initialQuery);
   const [searchType, setSearchType] = useState<"surah" | "ayah">("surah");
@@ -195,7 +192,7 @@ const SearchPage = () => {
                           </p>
                         </div>
                       </Link>
-                      <div className="absolute left-1 top-1"><FavoriteAyahButton ayah={ayah.numberInSurah} active={isFavorite(ayah.surah.number, ayah.numberInSurah)} onToggle={() => toggleFavorite(ayah.surah.number, ayah.numberInSurah)} /></div>
+                      
                       </div>
                     ))}
                   </div>

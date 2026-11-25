@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ArrowRight, Bell, Clock, Moon, Sunrise, BookOpen, ChevronDown, ChevronUp, Volume2, Play, Square } from "lucide-react";
+import { ArrowRight, Bell, Clock, Moon, Sunrise, BookOpen, ChevronDown, ChevronUp, Volume2, Play, Square, Save } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -13,6 +13,8 @@ import { useFCMNotifications } from "@/hooks/useFCMNotifications";
 import { useAdhanAudio, adhanSounds, AdhanSoundId } from "@/hooks/useAdhanAudio";
 import { toast } from "sonner";
 import { arabicDigits } from "@/lib/displayFormat";
+import { useAuth } from "@/hooks/useAuth";
+import { flushUserState } from "@/lib/userStateStore";
 
 interface AzkarSettings {
   morning: { enabled: boolean; time: string };
@@ -23,7 +25,17 @@ interface AzkarSettings {
 }
 
 const NotificationSettingsPage = () => {
-  const { settings, updateSettings } = useUserSettings();
+  const { settings, updateSettings: commitSettings } = useUserSettings();
+  const { user } = useAuth();
+  const [pending, setPending] = useState<Record<string, unknown>>({});
+  const [saving, setSaving] = useState(false);
+  const updateSettings = (patch: Record<string, unknown>) => setPending(prev => ({ ...prev, ...patch }));
+  const saveSettings = async () => {
+    setSaving(true);
+    try { await commitSettings(pending); if (user) await flushUserState(user.uid); setPending({}); toast.success(user && !navigator.onLine ? "حُفظ على الجهاز؛ سيُرسل عند الاتصال" : "تم حفظ إعدادات التنبيهات"); }
+    catch { toast.error("تعذّر حفظ التنبيهات في حسابك؛ أعد المحاولة"); }
+    finally { setSaving(false); }
+  };
   const { isEnabled, permission, enableNotifications, disableNotifications, testNotification } = useFCMNotifications();
   const { previewAdhan, stopAdhan } = useAdhanAudio();
   
@@ -42,7 +54,7 @@ const NotificationSettingsPage = () => {
 
   // Load settings from database
   useEffect(() => {
-    if (settings) {
+    if (settings && !Object.keys(pending).length) {
       setAzkarSettings({
         morning: { 
           enabled: (settings as any).azkar_morning_enabled ?? true, 
@@ -84,7 +96,7 @@ const NotificationSettingsPage = () => {
   const handleAdhanChange = async (soundId: AdhanSoundId) => {
     setSelectedAdhan(soundId);
     await updateSettings({ adhan_sound: soundId } as any);
-    toast.success(`تم اختيار: ${adhanSounds[soundId].name}`);
+
   };
 
   const handlePreviewAdhan = (soundId: AdhanSoundId) => {
@@ -120,7 +132,7 @@ const NotificationSettingsPage = () => {
       prayer: { ...prev.prayer, delayMinutes } 
     }));
     await updateSettings({ azkar_prayer_delay_minutes: delayMinutes } as any);
-    toast.success("تم تحديث وقت التنبيه");
+
   };
 
   const handleAzkarTimeChange = async (type: "morning" | "evening" | "sleep" | "wakeup", time: string) => {
@@ -129,7 +141,7 @@ const NotificationSettingsPage = () => {
       [type]: { ...prev[type], time }
     }));
     await updateSettings({ [`azkar_${type}_time`]: time + ":00" } as any);
-    toast.success("تم تحديث وقت التنبيه");
+
   };
 
   // Available time options for azkar
@@ -437,6 +449,7 @@ const NotificationSettingsPage = () => {
         </div>
       </main>
 
+      {!!Object.keys(pending).length && <div className="fixed bottom-20 md:bottom-5 left-4 right-4 z-30 mx-auto max-w-md border border-border bg-card p-3 rounded-lg shadow-lg flex items-center justify-between gap-3"><span className="text-sm text-muted-foreground">تغييرات غير محفوظة</span><Button onClick={saveSettings} disabled={saving} className="gap-2"><Save className="w-4 h-4" />حفظ</Button></div>}
       <BottomNavigation />
     </div>
   );

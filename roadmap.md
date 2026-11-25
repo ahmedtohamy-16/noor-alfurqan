@@ -8,11 +8,15 @@
 - [ ] First-name-only home greeting
 - [ ] Review prayer methods, coordinates/timezone and compare Abu Hammad with the official Egyptian survey timetable
 - [ ] Verify canonical export URL and improve resolution
-- [ ] Present modern verse-image design alternatives; hold final template until user chooses
+- [x] Present three 2160px verse-image design alternatives with exact corpus text
+- [ ] Prepare stronger modern verse-image alternatives; owner rejected first ornate-frame set; hold permanent layout until approval
+- [x] Differentiate typography across new image alternatives and use clear hierarchy between verse, title, reference and branding
 - [x] Replace the displayed website in generated ayah/hadith/prayer/asma images with https://nooralfurqan.app
 - [x] Verify fresh branded ayah/hadith/prayer/asma image exports in the running app
 - [x] Sweep shared hadith, Arabic displays, GPS city, Quran navigation/favorites, tasbih layout and offline rules across current consumers; preserve stored records and unrelated settings/permissions
-- [ ] Verify settings/progress/profile between two devices with the explicitly approved temporary test account only; never use requester/admin accounts
+- [x] Create the explicitly requested new email test account with a strong generated password; no existing/admin account used
+- [x] Confirm test account with supplied one-use code and verify its identity; no requester/admin session used
+- [x] Verify selected reciter, persisted tasbih count and profile across independent 390px/360px contexts; no browser errors
 - [ ] Scheduled push delivery — blocked: hosted CRON_SECRET_TOKEN is missing; existing settings synchronization/messaging audio needs separate work, no settings/permissions changed
 - [x] OTP screen: hide form, 60s resend, 5 sends / 6h per device
 - [x] Mushaf next/prev direction, 404 for invalid page, juz browsing

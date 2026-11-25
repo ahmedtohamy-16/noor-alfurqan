@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.89.0";
 import { arabicDigits } from "../_shared/displayNumbers.ts";
+import { localDateAt, nextDate, zonedInstant, prayerDayUrl, normalizePrayerDay, type PrayerDay } from "../_shared/prayerTimeRules.ts";
 
 const allowedOrigins = [
   "https://noor-alfurqan.lovable.app",
@@ -54,24 +55,18 @@ function localTimeToUTCMinutes(localTime: string, timezoneOffset: number): numbe
   return utcMinutes;
 }
 
-// Prayer API for calculating prayer times
-async function getPrayerTimes(lat: number, lng: number, method: number = 4): Promise<Record<string, string> | null> {
-  try {
-    const today = new Date();
-    const date = `${today.getDate()}-${today.getMonth() + 1}-${today.getFullYear()}`;
-    
-    const response = await fetch(
-      `https://api.aladhan.com/v1/timings/${date}?latitude=${lat}&longitude=${lng}&method=${method}`
-    );
-    
-    if (!response.ok) return null;
-    
-    const data = await response.json();
-    return data.data?.timings || null;
-  } catch (error) {
-    console.error("Error fetching prayer times:", error);
-    return null;
-  }
+// Request-local deduplication shares identical location/method/school/day requests.
+async function getPrayerTimes(user: UserSettings, date: string, requests: Map<string, Promise<PrayerDay | null>>): Promise<PrayerDay | null> {
+  if (user.latitude === null || user.longitude === null) return null;
+  const methods: Record<string, number> = { EG: 5, SA: 4, KW: 9, QA: 10, AE: 16, TR: 13, MA: 21, JO: 23, DZ: 19, TN: 18, BH: 8, OM: 8, YE: 4, SD: 5, LY: 5, SY: 5, LB: 5, IQ: 3, PS: 5 };
+  const context = { latitude: user.latitude, longitude: user.longitude, timeZone: user.timezone || "UTC", method: user.prayer_method || methods[user.country_code || ""] || 3, school: user.prayer_madhab || 0 };
+  const url = prayerDayUrl(context, date);
+  const existing = requests.get(url); if (existing) return existing;
+  const request = (async () => {
+    try { const response = await fetch(url); if (!response.ok) return null; const body = await response.json(); if (body.code !== 200 || !body.data?.timings) return null; return normalizePrayerDay(context, date, body.data); }
+    catch { return null; }
+  })();
+  requests.set(url, request); return request;
 }
 
 // Convert HH:MM to minutes since midnight
@@ -89,6 +84,8 @@ interface UserSettings {
   latitude: number | null;
   longitude: number | null;
   prayer_method: number;
+  prayer_madhab: number;
+  country_code: string | null;
   timezone: string | null;
   // Prayer toggles
   adhan_sound: string | null;
@@ -163,18 +160,9 @@ serve(async (req) => {
     console.log(`⏰ Scheduled check at ${currentHour}:${String(currentMinute).padStart(2, "0")} UTC`);
 
     // Get users with notifications enabled
-    const { data: settings, error: settingsError } = await supabase
-      .from("user_settings")
-      .select(`
-        user_id, notifications_enabled, daily_wird_enabled, daily_wird_time, 
-        prayer_reminder_minutes, latitude, longitude, prayer_method, timezone,
-        adhan_sound, prayer_fajr_enabled, prayer_dhuhr_enabled, prayer_asr_enabled,
-        prayer_maghrib_enabled, prayer_isha_enabled,
-        azkar_morning_enabled, azkar_morning_time, azkar_evening_enabled, azkar_evening_time,
-        azkar_sleep_enabled, azkar_sleep_time, azkar_wakeup_enabled, azkar_wakeup_time,
-        azkar_prayer_enabled, azkar_prayer_delay_minutes
-      `)
-      .eq("notifications_enabled", true);
+    const { data: settingRows, error: settingsError } = await supabase.from("user_state").select("user_id,payload").eq("namespace", "user_settings").eq("deleted", false);
+    const settings = (settingRows || []).map(row => ({ ...row.payload.value, user_id: row.user_id })).filter(row => row.notifications_enabled);
+    const requests = new Map<string, Promise<PrayerDay | null>>();
 
     if (settingsError) throw settingsError;
 
@@ -198,6 +186,8 @@ serve(async (req) => {
 
     for (const user of settings as UserSettings[]) {
       const userTimezone = user.timezone || "UTC";
+      const localDate = localDateAt(now, userTimezone);
+      const prayerDays = user.latitude !== null && user.longitude !== null ? (await Promise.all([getPrayerTimes(user, localDate, requests), getPrayerTimes(user, nextDate(localDate), requests)])).filter((day): day is PrayerDay => !!day) : [];
       const timezoneOffset = getTimezoneOffset(userTimezone);
       
       console.log(`👤 Processing user ${user.user_id} (timezone: ${userTimezone}, offset: ${timezoneOffset} min)`);
@@ -222,13 +212,8 @@ serve(async (req) => {
 
       // === Prayer Time Reminders with Adhan ===
       if (user.latitude !== null && user.longitude !== null && user.prayer_reminder_minutes > 0) {
-        const prayerTimes = await getPrayerTimes(
-          user.latitude,
-          user.longitude,
-          user.prayer_method || 4
-        );
-
-        if (prayerTimes) {
+        for (const prayerDay of prayerDays) {
+          const prayerTimes = prayerDay.timings;
           const adhanSoundId = user.adhan_sound || "makkah";
           const adhanConfig = adhanSounds[adhanSoundId] || adhanSounds.makkah;
 
@@ -244,15 +229,10 @@ serve(async (req) => {
             const prayerTime = prayerTimes[prayer];
             if (!prayerTime) continue;
 
-            const prayerLocalMinutes = timeToMinutes(prayerTime);
-            const reminderLocalMinutes = prayerLocalMinutes - user.prayer_reminder_minutes;
-            
-            const reminderUTCMinutes = localTimeToUTCMinutes(
-              `${Math.floor(reminderLocalMinutes / 60)}:${String(reminderLocalMinutes % 60).padStart(2, "0")}`,
-              timezoneOffset
-            );
-            
-            if (Math.abs(currentUTCMinutes - reminderUTCMinutes) <= 1) {
+            const event = prayerDay.events.find(e => e.key === prayer);
+            if (!event) continue;
+            const reminderInstant = event.instant - user.prayer_reminder_minutes * 60000;
+            if (Math.abs(now.getTime() - reminderInstant) <= 60000) {
               console.log(`🕌 Prayer reminder for ${prayer} matched for user ${user.user_id}`);
               
               // Use Fajr-specific adhan if available
@@ -339,28 +319,17 @@ serve(async (req) => {
 
       // === After Prayer Azkar ===
       if (user.azkar_prayer_enabled && user.latitude !== null && user.longitude !== null) {
-        const prayerTimes = await getPrayerTimes(
-          user.latitude,
-          user.longitude,
-          user.prayer_method || 4
-        );
-
-        if (prayerTimes) {
+        for (const prayerDay of prayerDays) {
+          const prayerTimes = prayerDay.timings;
           const delayMinutes = user.azkar_prayer_delay_minutes || 10;
           
           for (const [prayer, info] of Object.entries(prayerNames)) {
             const prayerTime = prayerTimes[prayer];
             if (!prayerTime) continue;
 
-            const prayerLocalMinutes = timeToMinutes(prayerTime);
-            const azkarLocalMinutes = prayerLocalMinutes + delayMinutes;
-            
-            const azkarUTCMinutes = localTimeToUTCMinutes(
-              `${Math.floor(azkarLocalMinutes / 60)}:${String(azkarLocalMinutes % 60).padStart(2, "0")}`,
-              timezoneOffset
-            );
-            
-            if (Math.abs(currentUTCMinutes - azkarUTCMinutes) <= 1) {
+            const event = prayerDay.events.find(e => e.key === prayer);
+            if (!event) continue;
+            if (Math.abs(now.getTime() - (event.instant + delayMinutes * 60000)) <= 60000) {
               console.log(`📿 After prayer azkar for ${prayer} matched for user ${user.user_id}`);
               notifications.push({
                 user_id: user.user_id,
@@ -405,12 +374,12 @@ serve(async (req) => {
             console.log(`✅ Sent to ${notification.user_id}: ${notification.title}`);
             
             // Save to notification history
-            await supabase.from("notification_history").insert({
-              user_id: notification.user_id,
+            await supabase.from("user_state").insert({
+              user_id: notification.user_id, namespace: "notification_history", record_key: crypto.randomUUID(), payload: {
               title: notification.title,
               body: notification.body,
               notification_type: notification.notification_type,
-              tag: notification.tag,
+              tag: notification.tag, }
             });
           }
         } catch (error) {

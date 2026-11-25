@@ -10,6 +10,7 @@ import {
 import { toast } from "sonner";
 import { arabicDigits } from "@/lib/displayFormat";
 import { IMAGE_WEBSITE_URL } from "@/lib/exportBranding";
+import { fullTextLines } from "@/lib/textLines";
 
 interface ShareAyahDialogProps {
   isOpen: boolean;
@@ -36,26 +37,32 @@ const ShareAyahDialog = ({
     const ctx = canvas.getContext("2d");
     if (!ctx) return null;
 
-    // Set canvas size
-    canvas.width = 1080;
-    canvas.height = 1080;
+    await document.fonts.load("40px 'Noor Amiri'");
+    await document.fonts.ready;
+    ctx.font = "40px 'Noor Amiri', serif";
+    const lines = fullTextLines(ayahText, 920, line => ctx.measureText(line).width);
+    const width = 1080;
+    const height = Math.max(1080, 420 + lines.length * 70);
+    canvas.width = width * 3;
+    canvas.height = height * 3;
+    ctx.scale(3, 3);
 
     // Background gradient
-    const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+    const gradient = ctx.createLinearGradient(0, 0, width, height);
     gradient.addColorStop(0, "#1a2f1a");
     gradient.addColorStop(1, "#0d1f0d");
     ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(0, 0, width, height);
 
     // Decorative border
     ctx.strokeStyle = "#c9a961";
     ctx.lineWidth = 4;
-    ctx.strokeRect(40, 40, canvas.width - 80, canvas.height - 80);
+    ctx.strokeRect(40, 40, width - 80, height - 80);
 
     // Inner decorative frame
     ctx.strokeStyle = "rgba(201, 169, 97, 0.3)";
     ctx.lineWidth = 2;
-    ctx.strokeRect(60, 60, canvas.width - 120, canvas.height - 120);
+    ctx.strokeRect(60, 60, width - 120, height - 120);
 
     // Load Arabic font
     ctx.textAlign = "center";
@@ -63,49 +70,31 @@ const ShareAyahDialog = ({
 
     // Surah name
     ctx.fillStyle = "#c9a961";
-    ctx.font = "bold 36px 'Amiri', serif";
-    ctx.fillText(surahName, canvas.width / 2, 120);
+    ctx.font = "bold 36px 'Noor Amiri', serif";
+    ctx.fillText(surahName, width / 2, 120);
 
     // Ayah number
     ctx.fillStyle = "rgba(201, 169, 97, 0.7)";
-    ctx.font = "28px 'Amiri', serif";
-    ctx.fillText(`الآية ${arabicDigits(ayahNumber)}`, canvas.width / 2, 170);
+    ctx.font = "28px 'Noor Amiri', serif";
+    ctx.fillText(`الآية ${arabicDigits(ayahNumber)}`, width / 2, 170);
 
     // Ayah text - word wrap
     ctx.fillStyle = "#ffffff";
-    ctx.font = "40px 'Amiri', serif";
-    
-    const maxWidth = canvas.width - 160;
+    ctx.font = "40px 'Noor Amiri', serif";
     const lineHeight = 70;
-    const words = ayahText.split(" ");
-    let lines: string[] = [];
-    let currentLine = "";
-
-    for (const word of words) {
-      const testLine = currentLine ? currentLine + " " + word : word;
-      const metrics = ctx.measureText(testLine);
-      if (metrics.width > maxWidth) {
-        lines.push(currentLine);
-        currentLine = word;
-      } else {
-        currentLine = testLine;
-      }
-    }
-    if (currentLine) lines.push(currentLine);
-
-    const startY = (canvas.height - lines.length * lineHeight) / 2;
+    const startY = (height - (lines.length - 1) * lineHeight) / 2;
     lines.forEach((line, index) => {
-      ctx.fillText(line, canvas.width / 2, startY + index * lineHeight);
+      ctx.fillText(line, width / 2, startY + index * lineHeight);
     });
 
     // App branding
     ctx.fillStyle = "#c9a961";
     ctx.font = "bold 32px 'Cairo', sans-serif";
-    ctx.fillText("نور الفرقان", canvas.width / 2, canvas.height - 100);
+    ctx.fillText("نور الفرقان", width / 2, height - 100);
 
     ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
     ctx.font = "20px 'Cairo', sans-serif";
-    ctx.fillText(IMAGE_WEBSITE_URL, canvas.width / 2, canvas.height - 60);
+    ctx.fillText(IMAGE_WEBSITE_URL, width / 2, height - 60);
 
     return new Promise((resolve) => {
       canvas.toBlob((blob) => resolve(blob), "image/png");

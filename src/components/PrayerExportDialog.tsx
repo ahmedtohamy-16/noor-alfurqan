@@ -24,6 +24,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { firestoreAdd } from "@/lib/firebase";
 import ExportThemeSelector, { exportThemes, type ExportTheme } from "./ExportThemeSelector";
 import jsPDF from "jspdf";
+import tzLookup from "tz-lookup";
+import { localDateAt, nextDate, prayerClock, prayerDayUrl } from "../../supabase/functions/_shared/prayerTimeRules";
+import { recommendedPrayerMethod } from "@/lib/prayerMethods";
 
 interface PrayerDay {
   date: {
@@ -94,11 +97,15 @@ const PrayerExportDialog = ({
   const finalLng = useCustomLocation && selectedCity ? selectedCity.longitude : defaultLng;
   const finalCityName = arabicCityName(useCustomLocation && selectedCity ? selectedCity.name_ar : defaultCityName);
 
+  const exportZone = hasLocationCoordinates(finalLat, finalLng) ? tzLookup(finalLat, finalLng) : "UTC";
+  const exportMethod = useCustomLocation && selectedCountry ? recommendedPrayerMethod(selectedCountry) : method;
+  const exportContext = { latitude: finalLat ?? 0, longitude: finalLng ?? 0, method: exportMethod, school: madhab, timeZone: exportZone };
+
   // Detect current Hijri month/year on open
   useEffect(() => {
     if (!open || hijriToday) return;
-    const today = new Date();
-    const dateStr = `${today.getDate()}-${today.getMonth() + 1}-${today.getFullYear()}`;
+    const [y, m, day] = localDateAt(new Date(), exportZone).split("-");
+    const dateStr = `${day}-${m}-${y}`;
     fetch(`https://api.aladhan.com/v1/gToH?date=${dateStr}`)
       .then((r) => r.json())
       .then((d) => {
@@ -110,7 +117,7 @@ const PrayerExportDialog = ({
         setHijriYear(yNum);
       })
       .catch(() => {});
-  }, [open, hijriToday]);
+  }, [open, hijriToday, exportZone]);
 
   const handleCountryChange = (code: string) => {
     setSelectedCountry(code);
@@ -146,16 +153,20 @@ const PrayerExportDialog = ({
     if (!hasLocationCoordinates(finalLat, finalLng)) throw new Error("Location not set");
 
     if (period === "gregorian") {
-      const r = await fetch(`https://api.aladhan.com/v1/calendar/${currentYear}/${currentMonth}?latitude=${finalLat}&longitude=${finalLng}&method=${method}&school=${madhab}`);
+      const r = await fetch(`https://api.aladhan.com/v1/calendar/${currentYear}/${currentMonth}?latitude=${finalLat}&longitude=${finalLng}&method=${exportMethod}&school=${madhab}&timezonestring=${encodeURIComponent(exportZone)}`);
+      if (!r.ok) throw new Error("تعذّر تحميل المواقيت");
       const d = await r.json();
+      if (d.code !== 200 || !Array.isArray(d.data)) throw new Error("المواقيت غير متاحة");
       const days = d.data as PrayerDay[];
       const subtitle = `${gregorianMonthNames[currentMonth - 1]} ${currentYear}م`;
       return { days, titleSubtitle: subtitle };
     }
 
     if (period === "hijri") {
-      const r = await fetch(`https://api.aladhan.com/v1/hijriCalendar/${hijriYear}/${hijriMonth}?latitude=${finalLat}&longitude=${finalLng}&method=${method}&school=${madhab}`);
+      const r = await fetch(`https://api.aladhan.com/v1/hijriCalendar/${hijriYear}/${hijriMonth}?latitude=${finalLat}&longitude=${finalLng}&method=${exportMethod}&school=${madhab}&timezonestring=${encodeURIComponent(exportZone)}`);
+      if (!r.ok) throw new Error("تعذّر تحميل المواقيت");
       const d = await r.json();
+      if (d.code !== 200 || !Array.isArray(d.data)) throw new Error("المواقيت غير متاحة");
       const days = d.data as PrayerDay[];
       const subtitle = `شهر ${hijriMonthNamesAr[hijriMonth - 1]} ${hijriYear}هـ`;
       return { days, titleSubtitle: subtitle };
@@ -163,13 +174,14 @@ const PrayerExportDialog = ({
 
     // Week: 7 days starting from today
     const out: PrayerDay[] = [];
-    const base = new Date();
+    let selectedDate = localDateAt(new Date(), exportZone);
     for (let i = 0; i < 7; i++) {
-      const d = new Date(base);
-      d.setDate(base.getDate() + i);
-      const ds = `${d.getDate()}-${d.getMonth() + 1}-${d.getFullYear()}`;
-      const r = await fetch(`https://api.aladhan.com/v1/timings/${ds}?latitude=${finalLat}&longitude=${finalLng}&method=${method}&school=${madhab}`);
+      const r = await fetch(prayerDayUrl(exportContext, selectedDate));
+      if (!r.ok) throw new Error("تعذّر تحميل المواقيت");
+      selectedDate = nextDate(selectedDate);
       const j = await r.json();
+      if (j.code !== 200 || !j.data?.timings) throw new Error("المواقيت غير متاحة");
+      for (const [key, value] of Object.entries(j.data.timings)) j.data.timings[key] = prayerClock(String(value));
       out.push(j.data as PrayerDay);
     }
     const start = out[0].date.hijri;
@@ -334,6 +346,7 @@ const PrayerExportDialog = ({
     setIsExporting(true); setExportType("image");
     try {
       const { days, titleSubtitle } = await fetchDays();
+      await document.fonts.ready;
       const canvas = renderCanvas(days, titleSubtitle);
       const dataUrl = canvas.toDataURL("image/png", 1.0);
       const a = document.createElement("a");

@@ -14,12 +14,11 @@ import { AZKAR_FILTERS, searchAzkar, sectionInFilter, sectionProgress, type Azka
 import { sectionIcon } from "./sectionIcons";
 import DhikrText from "./DhikrText";
 import { toast } from "sonner";
+import { useSyncedState } from "@/hooks/useSyncedState";
 
 const FAV_KEY = "azkar_favorite_sections";
 const LAST_KEY = "azkar_last_position";
 
-const readFavs = (): number[] => { try { return JSON.parse(localStorage.getItem(FAV_KEY) || "[]"); } catch { return []; } };
-const readLast = (): { id: number; index: number } | null => { try { return JSON.parse(localStorage.getItem(LAST_KEY) || "null"); } catch { return null; } };
 
 function Bar({ pct, className, label }: { pct: number; className?: string; label: string }) {
   return (
@@ -71,10 +70,10 @@ interface HomeProps {
 
 export function AzkarHome({ sections, progress, searchQuery, onSearch, onOpen, morningReminderEnabled, onToggleReminder, onDownloadAll }: HomeProps) {
   const [filter, setFilter] = useState<AzkarFilter>("all");
-  const [favs, setFavs] = useState<number[]>(readFavs);
+  const [favs, setFavs] = useSyncedState<number[]>("azkar_preferences", "favorite_sections", [], FAV_KEY);
   const [catalogOpen, setCatalogOpen] = useState(false);
   const [catalogQuery, setCatalogQuery] = useState("");
-  const last = readLast();
+  const [last] = useSyncedState<{ id: number; index: number } | null>("azkar_preferences", "last_position", null, LAST_KEY);
   const lastSection = sections.find((s) => s.id === last?.id) ?? sections[0];
   const lastIndex = last && lastSection.id === last.id ? Math.min(last.index, lastSection.array.length - 1) : 0;
   const lastPct = sectionProgress(lastSection, progress).pct;
@@ -85,7 +84,6 @@ export function AzkarHome({ sections, progress, searchQuery, onSearch, onOpen, m
 
   const toggleFav = (id: number) => setFavs((prev) => {
     const next = prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id];
-    localStorage.setItem(FAV_KEY, JSON.stringify(next));
     return next;
   });
 
@@ -232,6 +230,7 @@ interface ReaderProps {
 }
 
 export function AzkarReader({ section, index, progress, isPlaying, onBack, onIndex, onCount, onToggleAudio, onReset, nextSection, onOpenSection }: ReaderProps) {
+  const [, setLastPosition] = useSyncedState<{ id: number; index: number } | null>("azkar_preferences", "last_position", null, LAST_KEY);
   const dhikr = section.array[index];
   const count = progress[`${section.id}_${dhikr.id}`] || 0;
   const remaining = Math.max(0, dhikr.count - count);
@@ -242,7 +241,7 @@ export function AzkarReader({ section, index, progress, isPlaying, onBack, onInd
   const [celebrate, setCelebrate] = useState(false);
   const wasFinished = useRef(finished);
 
-  useEffect(() => { localStorage.setItem(LAST_KEY, JSON.stringify({ id: section.id, index })); }, [section.id, index]);
+  useEffect(() => { setLastPosition({ id: section.id, index }); }, [section.id, index, setLastPosition]);
   useEffect(() => {
     if (finished && !wasFinished.current) setCelebrate(true);
     wasFinished.current = finished;

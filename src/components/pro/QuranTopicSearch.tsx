@@ -8,14 +8,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { getAyahAsync } from "@/data/quranAyats";
 import { surahs } from "@/data/surahs";
 import { arabicDigits } from "@/lib/displayFormat";
-import { useFavorites } from "@/hooks/useFavorites";
-import FavoriteAyahButton from "@/components/FavoriteAyahButton";
 
 interface Suggestion { surah: number; ayah: number; text: string; name: string }
 
 export default function QuranTopicSearch() {
   const { user } = useAuth();
-  const { isFavorite, toggleFavorite } = useFavorites();
   const [question, setQuestion] = useState("");
   const [access, setAccess] = useState<"checking" | "paid" | "locked" | "error">("checking");
   const [busy, setBusy] = useState(false);
@@ -136,7 +133,7 @@ export default function QuranTopicSearch() {
         {suggestions?.length === 0 && <p className="text-sm text-muted-foreground">لم يُعثر على آيات ذات صلة واضحة بهذا الموضوع.</p>}
         {suggestions && suggestions.length > 0 && <div className="space-y-3 mt-4">{suggestions.map(s => (
           <article key={`${s.surah}:${s.ayah}`} className="rounded-lg border border-border bg-card p-4">
-            <div className="flex flex-wrap items-center justify-between gap-3 mb-3"><h3 className="text-primary text-sm font-bold">{s.name} · الآية {arabicDigits(s.ayah)}</h3><span dir="ltr" className="text-xs text-muted-foreground arabic-digits">{arabicDigits(s.surah)}:{arabicDigits(s.ayah)}</span><FavoriteAyahButton ayah={s.ayah} active={isFavorite(s.surah, s.ayah)} onToggle={() => toggleFavorite(s.surah, s.ayah)} /></div>
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-3"><h3 className="text-primary text-sm font-bold">{s.name} · الآية {arabicDigits(s.ayah)}</h3><span dir="ltr" className="text-xs text-muted-foreground arabic-digits">{arabicDigits(s.surah)}:{arabicDigits(s.ayah)}</span></div>
             <p className="font-quran text-xl leading-loose text-foreground">{s.text}</p>
             <Button asChild variant="ghost" size="sm" className="mt-2"><Link to={`/surah/${s.surah}?ayah=${s.ayah}`}>قراءة في السياق<ArrowLeft className="w-4 h-4 mr-2" /></Link></Button>
           </article>

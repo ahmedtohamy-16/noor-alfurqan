@@ -10,8 +10,6 @@ import { ruqyahCategories, ruqyahAudioLinks, RuqyahCategory, RuqyahItem, getAyah
 import { toast } from "sonner";
 import { useDownloadManager } from "@/components/DownloadManager";
 import { arabicDigits } from "@/lib/displayFormat";
-import { useFavorites } from "@/hooks/useFavorites";
-import FavoriteAyahButton from "@/components/FavoriteAyahButton";
 
 const RuqyahPage = () => {
   const [selectedCategory, setSelectedCategory] = useState<RuqyahCategory | null>(null);
@@ -23,7 +21,6 @@ const RuqyahPage = () => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const fullAudioRef = useRef<HTMLAudioElement | null>(null);
   const { addTask, updateTask } = useDownloadManager();
-  const { isFavorite, toggleFavorite } = useFavorites();
 
   useEffect(() => {
     return () => {
@@ -351,7 +348,7 @@ const RuqyahPage = () => {
 
             {/* Actions */}
             <div className="flex flex-wrap justify-center gap-2 mt-4">
-              {currentItem.surahNumber && currentItem.ayahNumber && <FavoriteAyahButton ayah={currentItem.ayahNumber} active={isFavorite(currentItem.surahNumber, currentItem.ayahNumber)} onToggle={() => toggleFavorite(currentItem.surahNumber || 0, currentItem.ayahNumber || 0)} />}
+              {currentItem.surahNumber && currentItem.ayahNumber && <Button asChild variant="outline"><Link to={`/surah/${currentItem.surahNumber}?ayah=${currentItem.ayahNumber}`}>قراءة الآية</Link></Button>}
               {currentItem.surahNumber && !currentItem.ayahNumber && <Button asChild variant="outline"><Link to={`/surah/${currentItem.surahNumber}?ayah=${currentItem.ayahStart || 1}`}>قراءة الآيات</Link></Button>}
               <Button
                 variant="outline"

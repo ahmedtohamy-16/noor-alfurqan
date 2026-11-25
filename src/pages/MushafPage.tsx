@@ -14,7 +14,7 @@ import { surahs } from "@/data/surahs";
 import { arabicDigits, westernDigits } from "@/lib/displayFormat";
 import { TOTAL_MUSHAF_PAGES as TOTAL_PAGES, JUZ_START_PAGES } from "@/lib/mushafNavigation";
 import { useFavorites } from "@/hooks/useFavorites";
-import FavoriteAyahButton from "@/components/FavoriteAyahButton";
+import AyahOptionsMenu from "@/components/AyahOptionsMenu";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 const toAr = (n: number) => n.toLocaleString("ar-EG");
 
@@ -66,9 +66,10 @@ const MushafPage = () => {
     setInputPage(arabicDigits(parsedPage));
   }, [parsedPage, invalidPage]);
   useEffect(() => {
-    if (invalidPage) return;
-    incrementPage();
-  }, [currentPage]);
+    if (invalidPage || !pageAyahs.length || document.visibilityState !== "visible") return;
+    const timer = setTimeout(() => { if (document.visibilityState === "visible") incrementPage(); }, 4000);
+    return () => clearTimeout(timer);
+  }, [currentPage, pageAyahs]);
 
   // Save reading progress when page loads
   useEffect(() => {
@@ -235,19 +236,9 @@ const MushafPage = () => {
                       
                       return (
                         <span key={ayah.number} className="inline">
-                          <Link 
-                            to={`/surah/${surah.number}?ayah=${ayah.numberInSurah}`}
-                            className="hover:bg-primary/10 rounded px-1 transition-colors"
-                          >
-                            {displayText}
-                          </Link>
-                          <span className="inline-flex items-center justify-center w-8 h-8 mx-1 text-sm bg-primary/10 text-primary rounded-full font-arabic align-middle">
-                            {convertToArabicNumber(ayah.numberInSurah)}
-                          </span>
-                          <FavoriteAyahButton active={isFavorite(surah.number, ayah.numberInSurah)} ayah={ayah.numberInSurah}
-                            onToggle={() => isFavorite(surah.number, ayah.numberInSurah)
-                              ? removeFavorite(surah.number, ayah.numberInSurah)
-                              : addFavorite(surah.number, surah.name, ayah.numberInSurah, displayText)} />
+                          <AyahOptionsMenu ayahNumber={ayah.numberInSurah} ayahText={displayText} surahNumber={surah.number} surahName={surah.name} globalAyahNumber={ayah.number} isFavorite={isFavorite(surah.number, ayah.numberInSurah)} onToggleFavorite={() => { if (isFavorite(surah.number, ayah.numberInSurah)) void removeFavorite(surah.number, ayah.numberInSurah); else void addFavorite(surah.number, surah.name, ayah.numberInSurah, displayText); }}>
+                            <span tabIndex={0} role="button" className="cursor-pointer hover:bg-primary/10 rounded px-1 transition-colors">{displayText}<span className="inline-flex items-center justify-center w-8 h-8 mx-1 text-sm bg-primary/10 text-primary rounded-full font-arabic align-middle">{convertToArabicNumber(ayah.numberInSurah)}</span></span>
+                          </AyahOptionsMenu>
                         </span>
                       );
                     })}

@@ -3,6 +3,7 @@ import { useAuth } from "./useAuth";
 import { firestoreGet, firestoreSet, firestoreDelete, COLLECTIONS } from "@/lib/firebase";
 import { Hadith } from "@/data/hadithBooks";
 import { refreshHadithSnapshots } from "@/lib/hadithContent";
+import { subscribeUserState } from "@/lib/userStateStore";
 
 const PINNED_HADITH_KEY = "pinnedDailyHadith";
 const PINNED_HADITH_COLLECTION = "pinned_hadiths";
@@ -86,6 +87,7 @@ export const usePinnedHadith = () => {
 
   useEffect(() => {
     loadPinnedHadith();
+    return subscribeUserState(() => { if (user) void loadPinnedHadith(); });
   }, [loadPinnedHadith]);
 
   const pinHadith = async (hadith: Hadith): Promise<boolean> => {

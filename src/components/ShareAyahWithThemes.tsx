@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { arabicDigits } from "@/lib/displayFormat";
 import { IMAGE_WEBSITE_URL } from "@/lib/exportBranding";
+import { fullTextLines } from "@/lib/textLines";
 import ExportThemeSelector, { exportThemes, type ExportTheme } from "./ExportThemeSelector";
 
 interface ShareAyahWithThemesProps {
@@ -18,7 +19,7 @@ interface ShareAyahWithThemesProps {
 }
 
 const fontOptions = [
-  { id: "amiri", name: "أميري", family: "'Amiri', serif" },
+  { id: "amiri", name: "أميري", family: "'Noor Amiri', serif" },
   { id: "scheherazade", name: "شهرزاد", family: "'Scheherazade New', serif" },
   { id: "noto-naskh", name: "نسخ عربي", family: "'Noto Naskh Arabic', serif" },
 ];
@@ -59,13 +60,16 @@ const ShareAyahWithThemes = ({
     const ctx = canvas.getContext("2d");
     if (!ctx) return null;
 
-    const scale = 4; // 4K resolution
-    canvas.width = 1080 * scale;
-    canvas.height = 1080 * scale;
-    ctx.scale(scale, scale);
-
+    await document.fonts.load(`52px ${selectedFont.family}`);
+    await document.fonts.ready;
+    ctx.font = `52px ${selectedFont.family}`;
+    const lines = fullTextLines(ayahText, 920, line => ctx.measureText(line).width);
     const width = 1080;
-    const height = 1080;
+    const height = Math.max(1080, 460 + lines.length * 90);
+    const scale = Math.min(4, 16380 / height);
+    canvas.width = width * scale;
+    canvas.height = height * scale;
+    ctx.scale(scale, scale);
 
     // Background gradient
     const gradient = ctx.createLinearGradient(0, 0, width, height);
@@ -135,32 +139,8 @@ const ShareAyahWithThemes = ({
     
     const maxWidth = width - 160;
     const lineHeight = 90;
-    const words = ayahText.split(" ");
-    const lines: string[] = [];
-    let currentLine = "";
-
-    for (const word of words) {
-      const testLine = currentLine ? currentLine + " " + word : word;
-      const metrics = ctx.measureText(testLine);
-      if (metrics.width > maxWidth) {
-        lines.push(currentLine);
-        currentLine = word;
-      } else {
-        currentLine = testLine;
-      }
-    }
-    if (currentLine) lines.push(currentLine);
-
-    // Limit lines if too many
-    const maxLines = 8;
-    let displayLines = lines;
-    if (lines.length > maxLines) {
-      displayLines = lines.slice(0, maxLines);
-      displayLines[maxLines - 1] += "...";
-    }
-
-    const startY = (height - displayLines.length * lineHeight) / 2 + 40;
-    displayLines.forEach((line, index) => {
+    const startY = (height - (lines.length - 1) * lineHeight) / 2 + 20;
+    lines.forEach((line, index) => {
       ctx.fillText(line, width / 2, startY + index * lineHeight);
     });
 

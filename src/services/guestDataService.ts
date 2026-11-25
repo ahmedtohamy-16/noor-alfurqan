@@ -3,12 +3,8 @@
  * Manages localStorage data for guest users and handles migration to authenticated accounts
  */
 
-import { 
-  firestoreSet, 
-  firestoreGet,
-  firestoreQuery,
-  COLLECTIONS 
-} from "@/lib/firebase";
+import { supabase } from "@/integrations/supabase/untypedClient";
+import { activateUserState, loadUserState, getUserRow, queueUserState, flushUserState, userSyncError } from "@/lib/userStateStore";
 import { getGuestId, clearGuestIdentity, GUEST_IDENTITY_KEYS } from "./guestIdentityService";
 
 // Storage keys for guest data
@@ -74,7 +70,7 @@ export const getGuestData = (): GuestData => {
     userSettings: getData(GUEST_STORAGE_KEYS.USER_SETTINGS),
     readingStats: getData(GUEST_STORAGE_KEYS.READING_STATS),
     pinnedHadith: getData(GUEST_STORAGE_KEYS.PINNED_HADITH),
-    dailyWird: getData(GUEST_STORAGE_KEYS.DAILY_WIRD),
+    dailyWird: getData(`dailyWird_${new Date().toLocaleDateString("en-CA")}`) || getData(GUEST_STORAGE_KEYS.DAILY_WIRD),
     tasbihStats: getData(GUEST_STORAGE_KEYS.TASBIH_STATS),
     selectedReciter: localStorage.getItem(GUEST_STORAGE_KEYS.SELECTED_RECITER),
   };
@@ -90,6 +86,7 @@ export const hasGuestData = (): boolean => {
     guestData.readingProgress ||
     guestData.readingSettings ||
     guestData.userSettings ||
+    guestData.readingStats || guestData.selectedReciter ||
     guestData.pinnedHadith ||
     guestData.dailyWird ||
     guestData.tasbihStats
@@ -160,140 +157,35 @@ export const migrateGuestDataToUser = async (userId: string): Promise<{
   migratedItems: string[];
   errors: string[];
 }> => {
-  const guestData = getGuestData();
-  const guestId = getGuestId();
   const migratedItems: string[] = [];
-  const errors: string[] = [];
-
   try {
-    // 0. Attach previous guest_id to user profile (audit trail)
-    if (guestId) {
-      try {
-        await firestoreSet(COLLECTIONS.USERS, userId, {
-          previous_guest_id: guestId,
-          migrated_at: new Date().toISOString(),
-        }, true);
-      } catch (e) {
-        // Non-fatal — continue with data migration
-        console.warn("Could not attach guest_id to profile:", e);
-      }
-    }
-
-    // 1. Migrate favorites
-    if (guestData.favorites.length > 0) {
-      try {
-        for (const fav of guestData.favorites) {
-          const docId = `${userId}_${fav.surah_number}_${fav.ayah_number}`;
-          const existing = await firestoreGet(COLLECTIONS.FAVORITES, docId);
-          if (!existing) await firestoreSet(COLLECTIONS.FAVORITES, docId, {
-            user_id: userId,
-            surah_number: fav.surah_number,
-            surah_name: fav.surah_name,
-            ayah_number: fav.ayah_number,
-            ayah_text: fav.ayah_text,
-            created_at: fav.created_at,
-          });
-        }
-        migratedItems.push(`${guestData.favorites.length} آية مفضلة`);
-      } catch (error) {
-        console.error("Error migrating favorites:", error);
-        errors.push("المفضلة");
-      }
-    }
-
-    // 2. Migrate reading progress
-    if (guestData.readingProgress) {
-      try {
-        await firestoreSet(COLLECTIONS.READING_PROGRESS, userId, {
-          user_id: userId,
-          ...guestData.readingProgress,
-        });
-        migratedItems.push("موضع القراءة الأخير");
-      } catch (error) {
-        console.error("Error migrating reading progress:", error);
-        errors.push("موضع القراءة");
-      }
-    }
-
-    // 3. Migrate reading settings
-    if (guestData.readingSettings) {
-      try {
-        await firestoreSet(COLLECTIONS.USER_READING_SETTINGS, userId, {
-          user_id: userId,
-          font_size: guestData.readingSettings.fontSize,
-          line_height: guestData.readingSettings.lineHeight,
-          theme: guestData.readingSettings.theme,
-          font_family: guestData.readingSettings.fontFamily,
-          show_translation: guestData.readingSettings.showTranslation,
-          selected_translation: guestData.readingSettings.selectedTranslation,
-        });
-        migratedItems.push("إعدادات القراءة");
-      } catch (error) {
-        console.error("Error migrating reading settings:", error);
-        errors.push("إعدادات القراءة");
-      }
-    }
-
-    // 4. Migrate user settings (location, notifications, etc.)
-    if (guestData.userSettings) {
-      try {
-        await firestoreSet(COLLECTIONS.USER_SETTINGS, userId, {
-          user_id: userId,
-          ...guestData.userSettings,
-        });
-        migratedItems.push("الإعدادات العامة");
-      } catch (error) {
-        console.error("Error migrating user settings:", error);
-        errors.push("الإعدادات العامة");
-      }
-    }
-
-    // 5. Migrate pinned hadith
-    if (guestData.pinnedHadith) {
-      try {
-        const existing = await firestoreGet("pinned_hadiths", userId);
-        if (!existing) await firestoreSet("pinned_hadiths", userId, {
-          ...guestData.pinnedHadith,
-          user_id: userId,
-        });
-        migratedItems.push("الحديث المثبت");
-      } catch (error) {
-        console.error("Error migrating pinned hadith:", error);
-        errors.push("الحديث المثبت");
-      }
-    }
-
-    // 6. Migrate reading stats
-    if (guestData.readingStats) {
-      try {
-        await firestoreSet("reading_stats", userId, {
-          user_id: userId,
-          ...guestData.readingStats,
-        });
-        migratedItems.push("إحصائيات القراءة");
-      } catch (error) {
-        console.error("Error migrating reading stats:", error);
-        errors.push("إحصائيات القراءة");
-      }
-    }
-
-    // Clear guest data after successful migration
-    if (migratedItems.length > 0 && errors.length === 0) {
-      clearGuestData();
-    }
-
-    return {
-      success: errors.length === 0,
-      migratedItems,
-      errors,
+    const { data } = await supabase.auth.getSession();
+    if (data.session?.user.id !== userId) throw new Error("لا يمكن نقل البيانات إلى حساب آخر");
+    if (!navigator.onLine) throw new Error("اتصل بالإنترنت قبل نقل بيانات الضيف");
+    activateUserState(userId);
+    await loadUserState(userId, true);
+    if (userSyncError()) throw new Error("تعذّرت قراءة بيانات الحساب؛ لم يُنقل أو يُحذف شيء");
+    const guest = getGuestData();
+    const copyMissing = (namespace: string, key: string, payload: Record<string, unknown>, label: string) => {
+      if (getUserRow(userId, namespace, key)) return;
+      queueUserState(userId, namespace, key, payload);
+      migratedItems.push(label);
     };
-  } catch (error) {
-    console.error("Error during migration:", error);
-    return {
-      success: false,
-      migratedItems,
-      errors: ["حدث خطأ غير متوقع أثناء نقل البيانات"],
-    };
+    for (const fav of guest.favorites) copyMissing("favorites", `${userId}_${fav.surah_number}_${fav.ayah_number}`, { ...fav, user_id: userId }, "آية مفضلة");
+    if (guest.readingProgress) copyMissing("reading_progress", userId, { value: guest.readingProgress }, "موضع القراءة");
+    if (guest.readingSettings) copyMissing("user_reading_settings", userId, { value: guest.readingSettings }, "إعدادات القراءة");
+    if (guest.userSettings) copyMissing("user_settings", userId, { value: guest.userSettings }, "الإعدادات العامة");
+    if (guest.readingStats) copyMissing("reading_stats", userId, { value: guest.readingStats }, "إحصائيات القراءة");
+    if (guest.pinnedHadith) copyMissing("pinned_hadiths", userId, { ...guest.pinnedHadith, user_id: userId }, "الحديث المثبت");
+    if (guest.dailyWird) copyMissing("daily_wird", guest.dailyWird.target_date || new Date().toLocaleDateString("en-CA"), { value: guest.dailyWird }, "الورد اليومي");
+    if (guest.selectedReciter) copyMissing("audio_preferences", "player", { value: { reciterId: guest.selectedReciter.replace(/^"|"$/g, ""), playMode: "surah", volume: 80, playbackRate: 1 } }, "القارئ");
+    const count = Number(localStorage.getItem("tasbihCount") || 0);
+    if (count) copyMissing("tasbih", "count", { value: count }, "عداد التسبيح");
+    await flushUserState(userId);
+    // Preserve guest originals and any existing account record; never delete settled history.
+    return { success: true, migratedItems: [...new Set(migratedItems)], errors: [] };
+  } catch {
+    return { success: false, migratedItems: [], errors: ["تعذّر النقل؛ بياناتك على الجهاز لم تُحذف"] };
   }
 };
 

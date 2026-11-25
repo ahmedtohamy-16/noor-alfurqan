@@ -34,3 +34,7 @@
 - PWA uses guarded generateSW and a separate messaging scope to protect previews and pushes.
 - Shared numeral/location/reference rules keep UI and notifications consistent; verse hearts resolve the runtime corpus and retain existing storage.
 - Image exporters share one branding URL to avoid hosting-domain leaks.
+- Personal preferences/progress use account-scoped user_state RPCs and useSyncedState with batched changed-field writes; legacy wrappers bridge only an explicit personal allowlist, never roles, Pro or shared content.
+- Prayer screens and notification jobs share _shared/prayerTimeRules with location-zone dates and absolute instants, so device timezones cannot change the prayer schedule.
+- Partial Quran text downloads are read explicitly from CacheStorage; only a verified complete corpus may back the generic loader, to prevent incomplete scripture views.
+- Profile avatars use private UID-scoped storage and signed URLs; identity/ban guards remain authoritative.

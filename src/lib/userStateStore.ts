@@ -1,5 +1,5 @@
 import { supabase } from '@/integrations/supabase/untypedClient';
-import { changedFields, mergeState, sameState, userCacheKey, USER_STATE_BATCH_SIZE, USER_STATE_FRESH_MS, type StatePayload } from './userStateRules';
+import { changedFields, composeChanges, mergeState, sameState, userCacheKey, USER_STATE_BATCH_SIZE, USER_STATE_FRESH_MS, type StatePayload } from './userStateRules';
 
 interface Row { namespace: string; key: string; payload: StatePayload; deleted?: boolean; updated_at?: string; }
 interface Change extends Row { replace?: boolean; }
@@ -47,7 +47,6 @@ export function activateUserState(uid: string | null) {
   if (timer) clearTimeout(timer);
   firstDirty = 0;
   emit();
-  if (uid) void loadUserState(uid).catch(() => {});
 }
 export async function loadUserState(uid: string, force = false): Promise<void> {
   if (activeUid !== uid) return;
@@ -57,6 +56,8 @@ export async function loadUserState(uid: string, force = false): Promise<void> {
   if (!navigator.onLine) return;
   const running = (async () => {
     try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (sessionData.session?.user.id !== uid || activeUid !== uid) return;
       const { data, error } = await supabase.rpc('read_user_state');
       if (error) throw error;
       if (activeUid !== uid) return;
@@ -90,7 +91,7 @@ export function queueUserState(uid: string, namespace: string, key: string, payl
   const at = cache.pending.findIndex(r => id(r) === id(change));
   if (at >= 0) {
     const old = cache.pending[at];
-    cache.pending[at] = { ...change, replace: replace || old.replace, payload: replace ? payload : mergeState(old.payload, patch) };
+    cache.pending[at] = { ...change, replace: replace || old.replace, payload: replace ? payload : composeChanges(old.payload, patch) };
   } else cache.pending.push(change);
   persist(uid); emit();
   if (timer) clearTimeout(timer);

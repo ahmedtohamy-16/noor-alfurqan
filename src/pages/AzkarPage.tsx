@@ -16,6 +16,7 @@ import { useDownloadManager } from "@/components/DownloadManager";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useSyncedState } from "@/hooks/useSyncedState";
 import { useUserSettings } from "@/hooks/useUserSettings";
+import { localDateAt, nextDate, zonedInstant } from "../../supabase/functions/_shared/prayerTimeRules";
 
 const AUDIO_BASE_URL = "https://raw.githubusercontent.com/rn0x/Adhkar-json/main";
 import mosqueBg from "@/assets/mosque-night-hero.jpg";
@@ -63,14 +64,11 @@ const AzkarPage = () => {
 
     const scheduleReminder = (hour: number, minute: number, title: string, body: string, tag: string) => {
       const now = new Date();
-      const reminderTime = new Date();
-      reminderTime.setHours(hour, minute, 0, 0);
-      
-      if (reminderTime <= now) {
-        reminderTime.setDate(reminderTime.getDate() + 1);
-      }
-
-      const delay = reminderTime.getTime() - now.getTime();
+      const zone = reminderSettings.timezone;
+      const day = localDateAt(now, zone);
+      const time = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+      const instant = zonedInstant(day, time, zone);
+      const delay = (instant > now.getTime() ? instant : zonedInstant(nextDate(day), time, zone)) - now.getTime();
       
       return setTimeout(() => {
         sendNotification(title, { body, tag });
@@ -81,18 +79,20 @@ const AzkarPage = () => {
 
     if (morningReminderEnabled) {
       // Morning reminder at 6:00 AM
-      timeouts.push(scheduleReminder(6, 0, "أذكار الصباح", "حان وقت أذكار الصباح", "morning-azkar"));
+      const [hour, minute] = reminderSettings.azkar_morning_time.split(':').map(Number);
+      timeouts.push(scheduleReminder(hour, minute, "أذكار الصباح", "حان وقت أذكار الصباح", "morning-azkar"));
     }
 
     if (eveningReminderEnabled) {
       // Evening reminder at 5:00 PM
-      timeouts.push(scheduleReminder(17, 0, "أذكار المساء", "حان وقت أذكار المساء", "evening-azkar"));
+      const [hour, minute] = reminderSettings.azkar_evening_time.split(':').map(Number);
+      timeouts.push(scheduleReminder(hour, minute, "أذكار المساء", "حان وقت أذكار المساء", "evening-azkar"));
     }
 
     return () => {
       timeouts.forEach(clearTimeout);
     };
-  }, [morningReminderEnabled, eveningReminderEnabled, notificationsEnabled, sendNotification]);
+  }, [morningReminderEnabled, eveningReminderEnabled, notificationsEnabled, sendNotification, reminderSettings.azkar_morning_time, reminderSettings.azkar_evening_time, reminderSettings.timezone]);
 
   // Search and filter categories
   const filteredCategories = useMemo(() => {

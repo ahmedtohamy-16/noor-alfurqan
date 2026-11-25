@@ -31,7 +31,8 @@ const ReadingSettingsContext = createContext<ReadingSettingsContextType | undefi
 
 export const ReadingSettingsProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();
-  const [settings, setSettings, status] = useSyncedState<ReadingSettings>("user_reading_settings", user?.uid || "guest", defaultSettings, "readingSettings");
+  const [stored, setSettings, status] = useSyncedState<ReadingSettings>("user_reading_settings", user?.uid || "guest", defaultSettings, "readingSettings");
+  const settings = { ...defaultSettings, ...stored };
   const isLoading = status.isLoading;
   const updateSettings = async (patch: Partial<ReadingSettings>, commit = true) => {
     setSettings(previous => ({ ...previous, ...patch }));

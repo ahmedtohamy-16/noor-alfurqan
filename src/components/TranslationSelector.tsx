@@ -1,4 +1,6 @@
 import { Languages } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -16,12 +18,14 @@ interface TranslationSelectorProps {
 }
 
 const TranslationSelector = ({ value, onChange }: TranslationSelectorProps) => {
+  const [draft, setDraft] = useState(value);
+  useEffect(() => { setDraft(value); }, [value]);
   const groupedTranslations = getTranslationsByLanguage();
 
   return (
     <div className="flex items-center gap-2">
       <Languages className="w-4 h-4 text-muted-foreground" />
-      <Select value={value || "none"} onValueChange={(v) => onChange(v === "none" ? null : v)}>
+      <Select value={draft || "none"} onValueChange={(v) => setDraft(v === "none" ? null : v)}>
         <SelectTrigger className="w-full">
           <SelectValue placeholder="اختر الترجمة" />
         </SelectTrigger>
@@ -41,6 +45,7 @@ const TranslationSelector = ({ value, onChange }: TranslationSelectorProps) => {
           ))}
         </SelectContent>
       </Select>
+      {draft !== value && <Button size="sm" onClick={() => onChange(draft)}>حفظ</Button>}
     </div>
   );
 };

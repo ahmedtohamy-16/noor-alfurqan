@@ -3,7 +3,7 @@ import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/untypedClient";
 import type { UserRole } from "@/lib/firebase";
 import { toast } from "sonner";
-import { activateUserState } from "@/lib/userStateStore";
+import { activateUserState, loadUserState } from "@/lib/userStateStore";
 import { resolveAvatar } from "@/lib/profileAvatar";
 
 /**
@@ -115,14 +115,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     // Listener first, then restore the persisted session.
     const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => {
-      activateUserState(s?.user?.id || null);
       setSession(s);
       setUser(s?.user ? toAppUser(s.user) : null);
       setIsLoading(false);
       if (s?.user) {
         // Defer DB calls out of the auth callback.
-        setTimeout(() => loadUserData(s.user), 0);
+        setTimeout(() => { activateUserState(s.user.id); void loadUserState(s.user.id); void loadUserData(s.user); }, 0);
       } else {
+        activateUserState(null);
         setRole(null);
         setUserProfile(null);
         setIsBanned(false);

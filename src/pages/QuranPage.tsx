@@ -1,8 +1,6 @@
 import { arabicDigits, westernDigits, ayahCountLabel } from "@/lib/displayFormat";
 import { parseQuranReference, validQuranReference } from "@/lib/quranReferenceRules";
 import { normalizeArabic } from "@/lib/arabicNormalize";
-import { useFavorites } from "@/hooks/useFavorites";
-import FavoriteAyahButton from "@/components/FavoriteAyahButton";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowRight, Book, Search, Hash, BookOpen } from "lucide-react";
@@ -31,7 +29,6 @@ interface AyahResult {
 
 const QuranPage = () => {
   const navigate = useNavigate();
-  const { isFavorite, toggleFavorite } = useFavorites();
   const [filter, setFilter] = useState<"all" | "meccan" | "medinan">("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [searchType, setSearchType] = useState<"surah" | "ayah">("surah");
@@ -192,7 +189,7 @@ const QuranPage = () => {
                         </p>
                       </div>
                     </Link>
-                    <div className="absolute left-1 top-1"><FavoriteAyahButton ayah={ayah.numberInSurah} active={isFavorite(ayah.surah.number, ayah.numberInSurah)} onToggle={() => toggleFavorite(ayah.surah.number, ayah.numberInSurah)} /></div>
+                    
                     </div>
                   ))}
                 </div>

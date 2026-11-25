@@ -16,8 +16,6 @@ import { useMemorization, type MemoStatus } from "@/hooks/useMemorization";
 import { usePro } from "@/hooks/usePro";
 import { toast } from "sonner";
 import { arabicDigits } from "@/lib/displayFormat";
-import { useFavorites } from "@/hooks/useFavorites";
-import FavoriteAyahButton from "@/components/FavoriteAyahButton";
 
 const PRO_COLOR = "#0074fc";
 
@@ -43,7 +41,6 @@ const hideWords = (text: string, n: number) => {
 
 const MemorizationPage = () => {
   const navigate = useNavigate();
-  const { isFavorite, toggleFavorite } = useFavorites();
   const { isPro, isLoading: proLoading } = usePro();
   const { records, grade, reset, dueToday, memorizedCount, getStatus } = useMemorization();
 
@@ -102,7 +99,7 @@ const MemorizationPage = () => {
           <Badge className={statusColor[status]}>{statusLabel[status]}</Badge>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <span>آية {arabicDigits(a.ayat_number_in_sura)}</span>
-            <FavoriteAyahButton ayah={a.ayat_number_in_sura} active={isFavorite(a.sura_id, a.ayat_number_in_sura)} onToggle={() => toggleFavorite(a.sura_id, a.ayat_number_in_sura)} />
+            
           </div>
         </div>
 

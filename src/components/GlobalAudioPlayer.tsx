@@ -28,6 +28,9 @@ import { reciters } from '@/data/reciters';
 import { cn } from '@/lib/utils';
 import { useGlobalAudio } from '@/hooks/useGlobalAudio';
 import { DownloadAudioDialog } from './DownloadAudioDialog';
+import { useAuth } from '@/hooks/useAuth';
+import { flushUserState } from '@/lib/userStateStore';
+import { toast } from 'sonner';
 
 type PlayMode = 'single' | 'surah' | 'juz' | 'quran';
 
@@ -70,6 +73,8 @@ const GlobalAudioPlayer = () => {
   } = useGlobalAudio();
 
   const [showDownloadDialog, setShowDownloadDialog] = useState(false);
+  const { user } = useAuth();
+  const [draftReciter, setDraftReciter] = useState<string | null>(null);
   const [downloadType, setDownloadType] = useState<'surah' | 'ayah'>('surah');
   const [downloadAyahNumber, setDownloadAyahNumber] = useState<number | null>(null);
 
@@ -88,8 +93,13 @@ const GlobalAudioPlayer = () => {
     num.toString().replace(/\d/g, (d) => '٠١٢٣٤٥٦٧٨٩'[+d]);
 
   const handleReciterChange = (reciterId: string) => {
-    const reciter = reciters.find((r) => r.id === reciterId);
-    if (reciter) setReciter(reciter);
+    setDraftReciter(reciterId);
+  };
+  const saveReciter = async () => {
+    const reciter = reciters.find(r => r.id === draftReciter);
+    if (!reciter) return;
+    try { setReciter(reciter); if (user) await flushUserState(user.uid); setDraftReciter(null); toast.success('تم حفظ القارئ'); }
+    catch { toast.error('تعذّر حفظ القارئ في حسابك؛ أعد المحاولة'); }
   };
 
   const progressPct = duration > 0 ? (progress / duration) * 100 : 0;
@@ -313,7 +323,7 @@ const GlobalAudioPlayer = () => {
                 <User className="w-4 h-4 text-muted-foreground shrink-0" />
                 <span className="text-xs text-muted-foreground shrink-0">القارئ</span>
                 <Select
-                  value={selectedReciter.id}
+                  value={draftReciter || selectedReciter.id}
                   onValueChange={handleReciterChange}
                 >
                   <SelectTrigger className="h-9 text-sm flex-1">
@@ -328,6 +338,7 @@ const GlobalAudioPlayer = () => {
                   </SelectContent>
                 </Select>
               </div>
+              {draftReciter && draftReciter !== selectedReciter.id && <div className="flex items-center gap-2"><Button size="sm" onClick={saveReciter}>حفظ القارئ</Button><Button size="sm" variant="ghost" onClick={() => setDraftReciter(null)}>إلغاء</Button></div>}
 
               {/* Playback speed */}
               <div className="flex items-center gap-2">

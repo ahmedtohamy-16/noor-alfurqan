@@ -33,6 +33,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { readingAyahIndex } from "@/lib/readingPositionRules";
+import { useSyncedState } from "@/hooks/useSyncedState";
 
 const PAGE_READ_DWELL_MS = 20_000;
 
@@ -195,8 +196,9 @@ const SurahPage = () => {
     return () => window.clearTimeout(id);
   }, [visiblePage, surahNumber, incrementPage]);
 
-  // Persist audio listening progress per surah (localStorage)
+  // Account-private listening progress, with an offline guest copy.
   const audioProgressKey = surah ? `noor:audioProgress:${surah.number}` : null;
+  const [audioPosition, saveAudioPosition] = useSyncedState<{ ayahIndex: number; updatedAt: number } | null>("audio_progress", surahNumber || "none", null, audioProgressKey || undefined);
 
   useEffect(() => {
     if (!audioProgressKey) return;
@@ -204,15 +206,7 @@ const SurahPage = () => {
       globalAudio.currentSurah?.number === surah?.number &&
       globalAudio.currentAyahIndex >= 0
     ) {
-      try {
-        localStorage.setItem(
-          audioProgressKey,
-          JSON.stringify({
-            ayahIndex: globalAudio.currentAyahIndex,
-            updatedAt: Date.now(),
-          }),
-        );
-      } catch {}
+      if (audioPosition?.ayahIndex !== globalAudio.currentAyahIndex) saveAudioPosition({ ayahIndex: globalAudio.currentAyahIndex, updatedAt: Date.now() });
     }
   }, [globalAudio.currentAyahIndex, globalAudio.currentSurah?.number, surah?.number, audioProgressKey]);
 
@@ -220,16 +214,8 @@ const SurahPage = () => {
   const [resumeIndex, setResumeIndex] = useState<number | null>(null);
   useEffect(() => {
     if (!audioProgressKey || !surah) return;
-    try {
-      const raw = localStorage.getItem(audioProgressKey);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (typeof parsed?.ayahIndex === "number" && parsed.ayahIndex > 0) {
-          setResumeIndex(parsed.ayahIndex);
-        }
-      }
-    } catch {}
-  }, [audioProgressKey, surah?.number]);
+    setResumeIndex(audioPosition && audioPosition.ayahIndex > 0 && audioPosition.ayahIndex < surah.ayahs.length ? audioPosition.ayahIndex : null);
+  }, [audioProgressKey, surah?.number, audioPosition?.ayahIndex]);
 
   // Scroll to highlighted ayah from favorites/verse-of-the-day
   useEffect(() => {
@@ -432,7 +418,7 @@ const SurahPage = () => {
                 size="sm"
                 variant="ghost"
                 onClick={() => {
-                  if (audioProgressKey) localStorage.removeItem(audioProgressKey);
+                  saveAudioPosition(null);
                   setResumeIndex(null);
                 }}
               >

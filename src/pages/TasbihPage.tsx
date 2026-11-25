@@ -25,6 +25,8 @@ const TasbihPage = () => {
   const { stats, currentDhikr, changeDhikr, count, increment, reset, saveSession, appearance, updateAppearance, dailyGoal, setDailyGoal, isLoading } = useTasbih();
   const greeting = greetingForTime();
   const [showSettings, setShowSettings] = useState(false);
+  const [appearanceDraft, setAppearanceDraft] = useState(appearance);
+  useEffect(() => { setAppearanceDraft(appearance); }, [appearance.beadSpeed, appearance.markerCount]);
   const [customDhikr, setCustomDhikr] = useState("");
   const [goalInput, setGoalInput] = useState("");
   const saveGoal = (n: number) => {
@@ -41,7 +43,7 @@ const TasbihPage = () => {
 
   const goalProgress = Math.min(100, Math.round((stats.todayCount / dailyGoal) * 100));
 
-  const speedLabel = appearance.beadSpeed <= 180 ? "سريع" : appearance.beadSpeed >= 500 ? "بطيء" : "متوسط";
+  const speedLabel = appearanceDraft.beadSpeed <= 180 ? "سريع" : appearanceDraft.beadSpeed >= 500 ? "بطيء" : "متوسط";
 
   return (
     <div className="min-h-screen bg-background pb-28">
@@ -131,8 +133,8 @@ const TasbihPage = () => {
                   </span>
                 </div>
                 <Slider
-                  value={[appearance.beadSpeed]}
-                  onValueChange={([v]) => updateAppearance({ beadSpeed: v })}
+                  value={[appearanceDraft.beadSpeed]}
+                  onValueChange={([v]) => setAppearanceDraft(previous => ({ ...previous, beadSpeed: v }))}
                   min={100}
                   max={800}
                   step={50}
@@ -152,12 +154,12 @@ const TasbihPage = () => {
                     <span>عدد العلامات</span>
                   </div>
                   <span className="text-xs font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full arabic-digits">
-                    {arabic(appearance.markerCount)}
+                    {arabic(appearanceDraft.markerCount)}
                   </span>
                 </div>
                 <Slider
-                  value={[appearance.markerCount]}
-                  onValueChange={([v]) => updateAppearance({ markerCount: v })}
+                  value={[appearanceDraft.markerCount]}
+                  onValueChange={([v]) => setAppearanceDraft(previous => ({ ...previous, markerCount: v }))}
                   min={0}
                   max={11}
                   step={1}
@@ -168,6 +170,7 @@ const TasbihPage = () => {
                   <span>١١ علامة</span>
                 </div>
               </div>
+              <Button className="w-full h-11" disabled={appearanceDraft.beadSpeed === appearance.beadSpeed && appearanceDraft.markerCount === appearance.markerCount} onClick={() => updateAppearance(appearanceDraft)}>حفظ تخصيص السبحة</Button>
             </div>
           )}
         </Card>

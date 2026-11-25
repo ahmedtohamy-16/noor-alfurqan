@@ -3,8 +3,6 @@ import { BookOpen, Share2, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { arabicDigits } from "@/lib/displayFormat";
-import { useFavorites } from "@/hooks/useFavorites";
-import FavoriteAyahButton from "./FavoriteAyahButton";
 
 // Curated daily verses with surah/ayah refs for navigation
 const VERSES = [
@@ -47,7 +45,6 @@ const VERSES = [
 
 const VerseOfTheDayCard = () => {
   const navigate = useNavigate();
-  const { isFavorite, toggleFavorite } = useFavorites();
   const dayIndex = Math.floor(
     (Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86_400_000
   );
@@ -83,7 +80,7 @@ const VerseOfTheDayCard = () => {
         </div>
         <div className="flex-1 min-w-0 text-right">
           <div className="flex items-center justify-between mb-2">
-            <FavoriteAyahButton ayah={verse.ayahNumber} active={isFavorite(verse.surahNumber, verse.ayahNumber)} onToggle={() => toggleFavorite(verse.surahNumber, verse.ayahNumber)} />
+            
             <Button
               variant="ghost"
               size="icon"
