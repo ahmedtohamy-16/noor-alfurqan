@@ -1,15 +1,16 @@
 # Roadmap
-- [ ] Clip rotating tasbih ring and verify nonzero/persisted counts at 360/390px
-- [ ] Remove always-visible ayah hearts; retain tap-menu favorites
-- [ ] Supabase user settings, reading/adhkar/tasbih state + private RLS and cached batched synchronization
-- [ ] Explicit settings confirmation, including reciter; no automatic draft application
-- [ ] Selectable offline Quran text/audio downloads and storage management
-- [ ] Real profile identity/avatar and account controls
-- [ ] First-name-only home greeting
-- [ ] Review prayer methods, coordinates/timezone and compare Abu Hammad with the official Egyptian survey timetable
-- [ ] Verify canonical export URL and improve resolution
+- [x] Clip rotating tasbih ring and verify nonzero/persisted counts at 360/390px
+- [x] Remove always-visible ayah hearts; retain tap-menu favorites
+- [x] Supabase user settings, reading/adhkar/tasbih state + private RLS and cached batched synchronization
+- [x] Explicit settings confirmation, including reciter; no automatic draft application
+- [x] Selectable offline Quran text/audio downloads and storage management
+- [x] Real profile identity/avatar and account controls
+- [x] First-name-only home greeting
+- [x] Review prayer methods, coordinates/timezone; no official Abu Hammad timetable row was found, so no official comparison is claimed
+- [x] Verify canonical export URL and improve resolution
 - [x] Present three 2160px verse-image design alternatives with exact corpus text
-- [ ] Prepare stronger modern verse-image alternatives; owner rejected first ornate-frame set; hold permanent layout until approval
+- [x] Prepare stronger modern verse-image alternatives; owner rejected first ornate-frame set
+- [ ] Apply one permanent verse-image layout with color-only user choice — blocked: waiting for owner selection
 - [x] Differentiate typography across new image alternatives and use clear hierarchy between verse, title, reference and branding
 - [x] Replace the displayed website in generated ayah/hadith/prayer/asma images with https://nooralfurqan.app
 - [x] Verify fresh branded ayah/hadith/prayer/asma image exports in the running app
