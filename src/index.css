@@ -9,6 +9,12 @@
 
 @layer base {
   :root {
+    --share-brass: 44 35% 65%;
+    --share-silver: 210 18% 78%;
+    --share-sage: 144 25% 70%;
+    --share-rose: 350 32% 76%;
+    --share-verse: 48 35% 95%;
+    --share-swatch-ink: 0 0% 12%;
     /* Islamic-inspired color palette */
     --background: 40 33% 96%; /* Warm off-white #F8F6F1 */
     --foreground: 0 0% 10%; /* Dark text #1A1A1A */
@@ -245,3 +251,9 @@
   .stagger-4 { animation-delay: 0.4s; }
   .stagger-5 { animation-delay: 0.5s; }
 }
+
+.share-swatch { color: hsl(var(--share-swatch-ink)); }
+.share-swatch-brass { background: hsl(var(--share-brass)); }
+.share-swatch-silver { background: hsl(var(--share-silver)); }
+.share-swatch-sage { background: hsl(var(--share-sage)); }
+.share-swatch-rose { background: hsl(var(--share-rose)); }

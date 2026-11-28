@@ -10,7 +10,7 @@
 - [x] Verify canonical export URL and improve resolution
 - [x] Present three 2160px verse-image design alternatives with exact corpus text
 - [x] Prepare stronger modern verse-image alternatives; owner rejected first ornate-frame set
-- [ ] Apply one permanent verse-image layout with color-only user choice — blocked: waiting for owner selection
+- [x] Apply approved dark-stone verse-image layout permanently; verified short/long Quran text, 2400px download and color-only choice on mobile/desktop
 - [x] Differentiate typography across new image alternatives and use clear hierarchy between verse, title, reference and branding
 - [x] Replace the displayed website in generated ayah/hadith/prayer/asma images with https://nooralfurqan.app
 - [x] Verify fresh branded ayah/hadith/prayer/asma image exports in the running app

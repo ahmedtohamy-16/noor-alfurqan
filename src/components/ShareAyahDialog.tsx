@@ -1,192 +1,42 @@
-import { useState, useRef } from "react";
-import { Share2, Download, Copy, Check, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { toast } from "sonner";
-import { arabicDigits } from "@/lib/displayFormat";
-import { IMAGE_WEBSITE_URL } from "@/lib/exportBranding";
-import { fullTextLines } from "@/lib/textLines";
-
-interface ShareAyahDialogProps {
-  isOpen: boolean;
-  onClose: () => void;
-  ayahText: string;
-  surahName: string;
-  ayahNumber: number;
+import { useEffect, useState } from 'react';
+import { Share2, Download, Copy, Check, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { toast } from 'sonner';
+import { arabicDigits } from '@/lib/displayFormat';
+import { IMAGE_WEBSITE_URL } from '@/lib/exportBranding';
+import { renderVerseShare, verseShareColors, type VerseShareColor } from '@/lib/verseShareImage';
+interface ShareAyahDialogProps { isOpen: boolean; onClose: () => void; ayahText: string; surahName: string; ayahNumber: number; }
+export default function ShareAyahDialog({ isOpen, onClose, ayahText, surahName, ayahNumber }: ShareAyahDialogProps) {
+  const [color, setColor] = useState<VerseShareColor>('brass');
+  const [preview, setPreview] = useState<{ url: string; blob: Blob } | null>(null);
+  const [busy, setBusy] = useState(false); const [error, setError] = useState(false); const [copied, setCopied] = useState(false);
+  useEffect(() => {
+    if (!isOpen) return;
+    let cancelled = false; let url: string | undefined; setBusy(true); setError(false);
+    renderVerseShare(ayahText, surahName, ayahNumber, color).then(blob => {
+      if (cancelled) return; url = URL.createObjectURL(blob); setPreview({ url, blob });
+    }).catch(() => { if (!cancelled) { setError(true); toast.error('تعذّر تجهيز صورة الآية'); } }).finally(() => { if (!cancelled) setBusy(false); });
+    return () => { cancelled = true; if (url) URL.revokeObjectURL(url); };
+  }, [isOpen, ayahText, surahName, ayahNumber, color]);
+  const copy = async () => {
+    try { await navigator.clipboard.writeText(`${ayahText}\n\n${surahName} - الآية ${arabicDigits(ayahNumber)}\n\nنور الفرقان\n${IMAGE_WEBSITE_URL}`); setCopied(true); toast.success('تم نسخ النص'); }
+    catch { toast.error('تعذّر نسخ النص'); }
+  };
+  const download = () => { if (!preview || busy || error) return; const a = document.createElement('a'); a.href = preview.url; a.download = `ayah-${surahName}-${ayahNumber}.png`; a.click(); };
+  const share = async () => {
+    if (!preview || busy || error) return;
+    const file = new File([preview.blob], `ayah-${ayahNumber}.png`, { type: 'image/png' });
+    if (!navigator.canShare?.({ files: [file] })) { download(); return; }
+    try { await navigator.share({ title: `${surahName} - الآية ${arabicDigits(ayahNumber)}`, files: [file] }); }
+    catch (e) { if (!(e instanceof DOMException && e.name === 'AbortError')) toast.error('تعذّرت المشاركة؛ يمكنك تحميل الصورة'); }
+  };
+  return <Dialog open={isOpen} onOpenChange={open => { if (!open) onClose(); }}><DialogContent dir="rtl" className="max-w-lg max-h-[92dvh] overflow-y-auto arabic-ui"><DialogHeader className="pr-8"><DialogTitle className="flex items-center gap-2"><Share2 className="h-5 w-5 text-primary" />مشاركة الآية</DialogTitle></DialogHeader>
+    <div className="relative min-h-40 bg-muted overflow-hidden rounded-lg" aria-busy={busy}>
+      {preview && !error ? <img src={preview.url} alt="معاينة صورة مشاركة الآية" className="w-full h-auto" /> : <div className="aspect-square grid place-items-center text-muted-foreground">{error ? 'تعذّر تجهيز الصورة' : <Loader2 className="w-6 h-6 animate-spin" />}</div>}
+      {busy && preview && <div className="absolute inset-0 bg-background/60 grid place-items-center"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>}
+    </div>
+    <div role="group" aria-label="لون الصورة" className="flex items-center justify-center gap-3">{verseShareColors.map(c => <Button key={c.id} size="icon" variant="outline" title={c.name} aria-label={`لون ${c.name}`} aria-pressed={color === c.id} onClick={() => setColor(c.id)} className="h-11 w-11 rounded-full"><span className={`share-swatch share-swatch-${c.id} h-6 w-6 rounded-full grid place-items-center`}>{color === c.id && <Check className="h-4 w-4" />}</span></Button>)}</div>
+    <div className="grid grid-cols-3 gap-3"><Button disabled={busy || !preview || error} onClick={share} className="gap-2"><Share2 className="w-4 h-4" />مشاركة</Button><Button disabled={busy || !preview || error} onClick={download} variant="outline" className="gap-2"><Download className="w-4 h-4" />تحميل</Button><Button onClick={copy} variant="outline" className="gap-2">{copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}نسخ</Button></div>
+  </DialogContent></Dialog>;
 }
-
-const ShareAyahDialog = ({
-  isOpen,
-  onClose,
-  ayahText,
-  surahName,
-  ayahNumber,
-}: ShareAyahDialogProps) => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [copied, setCopied] = useState(false);
-
-  const generateImage = async (): Promise<Blob | null> => {
-    const canvas = canvasRef.current;
-    if (!canvas) return null;
-
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return null;
-
-    await document.fonts.load("40px 'Noor Amiri'");
-    await document.fonts.ready;
-    ctx.font = "40px 'Noor Amiri', serif";
-    const lines = fullTextLines(ayahText, 920, line => ctx.measureText(line).width);
-    const width = 1080;
-    const height = Math.max(1080, 420 + lines.length * 70);
-    canvas.width = width * 3;
-    canvas.height = height * 3;
-    ctx.scale(3, 3);
-
-    // Background gradient
-    const gradient = ctx.createLinearGradient(0, 0, width, height);
-    gradient.addColorStop(0, "#1a2f1a");
-    gradient.addColorStop(1, "#0d1f0d");
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, width, height);
-
-    // Decorative border
-    ctx.strokeStyle = "#c9a961";
-    ctx.lineWidth = 4;
-    ctx.strokeRect(40, 40, width - 80, height - 80);
-
-    // Inner decorative frame
-    ctx.strokeStyle = "rgba(201, 169, 97, 0.3)";
-    ctx.lineWidth = 2;
-    ctx.strokeRect(60, 60, width - 120, height - 120);
-
-    // Load Arabic font
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-
-    // Surah name
-    ctx.fillStyle = "#c9a961";
-    ctx.font = "bold 36px 'Noor Amiri', serif";
-    ctx.fillText(surahName, width / 2, 120);
-
-    // Ayah number
-    ctx.fillStyle = "rgba(201, 169, 97, 0.7)";
-    ctx.font = "28px 'Noor Amiri', serif";
-    ctx.fillText(`الآية ${arabicDigits(ayahNumber)}`, width / 2, 170);
-
-    // Ayah text - word wrap
-    ctx.fillStyle = "#ffffff";
-    ctx.font = "40px 'Noor Amiri', serif";
-    const lineHeight = 70;
-    const startY = (height - (lines.length - 1) * lineHeight) / 2;
-    lines.forEach((line, index) => {
-      ctx.fillText(line, width / 2, startY + index * lineHeight);
-    });
-
-    // App branding
-    ctx.fillStyle = "#c9a961";
-    ctx.font = "bold 32px 'Cairo', sans-serif";
-    ctx.fillText("نور الفرقان", width / 2, height - 100);
-
-    ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
-    ctx.font = "20px 'Cairo', sans-serif";
-    ctx.fillText(IMAGE_WEBSITE_URL, width / 2, height - 60);
-
-    return new Promise((resolve) => {
-      canvas.toBlob((blob) => resolve(blob), "image/png");
-    });
-  };
-
-  const handleDownload = async () => {
-    const blob = await generateImage();
-    if (!blob) return;
-
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `ayah-${surahName}-${ayahNumber}.png`;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast.success("تم تحميل الصورة");
-  };
-
-  const handleShare = async () => {
-    if (navigator.share) {
-      const blob = await generateImage();
-      if (!blob) return;
-
-      const file = new File([blob], `ayah-${surahName}-${ayahNumber}.png`, {
-        type: "image/png",
-      });
-
-      try {
-        await navigator.share({
-          title: `${surahName} - الآية ${arabicDigits(ayahNumber)}`,
-          text: `${ayahText}\n\n${surahName} - الآية ${arabicDigits(ayahNumber)}\n\nنور الفرقان`,
-          files: [file],
-        });
-      } catch (error) {
-        // User cancelled or error
-        console.error("Share failed:", error);
-      }
-    } else {
-      handleCopyText();
-    }
-  };
-
-  const handleCopyText = () => {
-    const text = `${ayahText}\n\n${surahName} - الآية ${arabicDigits(ayahNumber)}\n\nنور الفرقان`;
-    navigator.clipboard.writeText(text);
-    setCopied(true);
-    toast.success("تم نسخ النص");
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md arabic-ui">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Share2 className="w-5 h-5 text-primary" />
-            مشاركة الآية
-          </DialogTitle>
-        </DialogHeader>
-
-        {/* Preview */}
-        <div className="bg-gradient-to-br from-[#1a2f1a] to-[#0d1f0d] rounded-xl p-6 text-center">
-          <p className="text-accent text-sm mb-2">{surahName} - الآية {arabicDigits(ayahNumber)}</p>
-          <p className="font-quran text-white text-lg leading-relaxed mb-4">
-            {ayahText.length > 100 ? ayahText.slice(0, 100) + "..." : ayahText}
-          </p>
-          <p className="text-accent text-xs">نور الفرقان</p>
-          <p className="mt-1 text-muted-foreground text-xs" dir="ltr">{IMAGE_WEBSITE_URL}</p>
-        </div>
-
-        {/* Hidden canvas for image generation */}
-        <canvas ref={canvasRef} className="hidden" />
-
-        {/* Actions */}
-        <div className="grid grid-cols-3 gap-3">
-          <Button onClick={handleShare} className="flex-col h-auto py-3 gap-1">
-            <Share2 className="w-5 h-5" />
-            <span className="text-xs">مشاركة</span>
-          </Button>
-          <Button onClick={handleDownload} variant="outline" className="flex-col h-auto py-3 gap-1">
-            <Download className="w-5 h-5" />
-            <span className="text-xs">تحميل</span>
-          </Button>
-          <Button onClick={handleCopyText} variant="outline" className="flex-col h-auto py-3 gap-1">
-            {copied ? <Check className="w-5 h-5 text-green-500" /> : <Copy className="w-5 h-5" />}
-            <span className="text-xs">نسخ</span>
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-};
-
-export default ShareAyahDialog;

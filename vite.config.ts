@@ -22,6 +22,9 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
+    proxy: {
+      '/__l5e/assets-v1/': { target: 'https://nooralfurqan.app', changeOrigin: true },
+    },
   },
   plugins: [react(), mode === "development" && componentTagger(), offlineShell(), VitePWA({
     strategies: "generateSW",

@@ -38,3 +38,5 @@
 - Prayer screens and notification jobs share _shared/prayerTimeRules with location-zone dates and absolute instants, so device timezones cannot change the prayer schedule.
 - Partial Quran text downloads are read explicitly from CacheStorage; only a verified complete corpus may back the generic loader, to prevent incomplete scripture views.
 - Profile avatars use private UID-scoped storage and signed URLs; identity/ban guards remain authoritative.
+
+- All verse exporters share verseShareImage and locally loaded Quran/UI fonts; render the same full-text canvas for preview and download to prevent truncation, shaping drift or layout divergence.
