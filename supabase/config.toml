@@ -17,3 +17,6 @@ verify_jwt = true
 
 [functions.hadith-api]
 verify_jwt = false
+
+[functions.username-sign-in]
+verify_jwt = false

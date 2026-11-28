@@ -257,16 +257,33 @@ service cloud.firestore {
         resource.data.created_by == request.auth.uid;
     }
     
+    // A member's participation doc id is "<khatmahId>_<uid>", so membership can
+    // be checked with exists(). Leaving deletes that doc and ends read access.
+    function isKhatmahMember(khatmahId) {
+      return isAuthenticated() &&
+        exists(/databases/$(database)/documents/khatmah_participants/$(khatmahId + '_' + request.auth.uid));
+    }
+
+    function isKhatmahCreator(khatmahId) {
+      return isAuthenticated() &&
+        get(/databases/$(database)/documents/khatmahs/$(khatmahId)).data.created_by == request.auth.uid;
+    }
+
     match /khatmah_participants/{participantId} {
-      // Participants can read
-      allow read: if isAuthenticated();
+      // Only current members and the creator can see a group's participants
+      allow read: if isOwner(resource.data.user_id)
+        || isKhatmahMember(resource.data.khatmah_id)
+        || isKhatmahCreator(resource.data.khatmah_id);
       
-      // Users can join (create participation)
-      allow create: if isAuthenticated() && 
-        request.resource.data.user_id == request.auth.uid;
+      // Users join with their own deterministic participation doc
+      allow create: if isAuthenticated() &&
+        request.resource.data.user_id == request.auth.uid &&
+        participantId == request.resource.data.khatmah_id + '_' + request.auth.uid;
       
       // Participants can update their own progress
-      allow update: if isOwner(resource.data.user_id);
+      allow update: if isOwner(resource.data.user_id) &&
+        request.resource.data.user_id == resource.data.user_id &&
+        request.resource.data.khatmah_id == resource.data.khatmah_id;
       
       // Participants can leave
       allow delete: if isOwner(resource.data.user_id);

@@ -149,12 +149,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signInWithIdentifier = async (identifier: string, password: string) => {
     const id = identifier.trim();
     if (EMAIL_REGEX.test(id)) return signIn(id, password);
-    // Username login: resolve the account email server-side. A lookup failure
-    // or unknown username surfaces as a generic invalid-credentials error so
+    // Username login runs server-side so the account email never reaches the
+    // browser. Any failure or unknown username surfaces as a generic invalid-credentials error so
     // the response never reveals whether a username exists.
-    const { data: resolvedEmail, error } = await supabase.rpc("get_email_by_username", { p_username: id });
-    if (error || !resolvedEmail) throw { code: "invalid_credentials", message: "Invalid login credentials" };
-    return signIn(resolvedEmail, password);
+    setIsBanned(false);
+    const { data, error } = await supabase.functions.invoke("username-sign-in", { body: { username: id, password } });
+    if (error || !data?.access_token || !data?.refresh_token) throw { code: "invalid_credentials", message: "Invalid login credentials" };
+    const { error: sessionError } = await supabase.auth.setSession({ access_token: data.access_token, refresh_token: data.refresh_token });
+    if (sessionError) throw { code: "invalid_credentials", message: "Invalid login credentials" };
   };
 
   const signUp = async (email: string, password: string, username?: string, displayName?: string) => {

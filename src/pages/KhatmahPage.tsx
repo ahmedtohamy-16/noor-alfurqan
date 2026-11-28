@@ -28,7 +28,8 @@ import {
   firestoreAdd, 
   firestoreSet,
   firestoreGet,
-  firestoreUpdate
+  firestoreUpdate,
+  firestoreDelete
 } from "@/lib/firebase";
 
 interface Khatmah {
@@ -122,12 +123,12 @@ const KhatmahPage = () => {
       });
 
       // Add creator as first participant with juz 1
-      await firestoreAdd(COLLECTIONS.KHATMAH_PARTICIPANTS, {
+      await firestoreSet(COLLECTIONS.KHATMAH_PARTICIPANTS, `${khatmahId}_${user.uid}`, {
         khatmah_id: khatmahId,
         user_id: user.uid,
         assigned_juz: 1,
         is_completed: false,
-      });
+      }, false);
 
       return { id: khatmahId, invite_code: inviteCode };
     },
@@ -160,25 +161,34 @@ const KhatmahPage = () => {
       
       const khatmah = khatmahs[0];
       
-      // Check if already a participant
+      // Membership uses a deterministic doc id so access rules can verify it.
+      const participationId = `${khatmah.id}_${user.uid}`;
       const existingParticipation = await firestoreQuery<Participant>(
         COLLECTIONS.KHATMAH_PARTICIPANTS,
-        [
-          { field: "khatmah_id", op: "==", value: khatmah.id },
-          { field: "user_id", op: "==", value: user.uid }
-        ]
+        [{ field: "user_id", op: "==", value: user.uid }]
       );
-      
-      if (existingParticipation.length > 0) {
+      if (existingParticipation.some((p) => p.khatmah_id === khatmah.id)) {
         throw new Error("أنت مشارك بالفعل في هذه الختمة");
       }
-      
-      // Get current participants to find next available juz
-      const participants = await firestoreQuery<Participant>(
+
+      // Join first (juz 0 = pending) so this member may read the group's participants.
+      await firestoreSet(COLLECTIONS.KHATMAH_PARTICIPANTS, participationId, {
+        khatmah_id: khatmah.id,
+        user_id: user.uid,
+        assigned_juz: 0,
+        is_completed: false,
+      }, false);
+
+      const participants = (await firestoreQuery<Participant>(
         COLLECTIONS.KHATMAH_PARTICIPANTS,
         [{ field: "khatmah_id", op: "==", value: khatmah.id }]
-      );
-      
+      )).filter((p) => p.user_id !== user.uid);
+
+      if (participants.length >= 30) {
+        await firestoreDelete(COLLECTIONS.KHATMAH_PARTICIPANTS, participationId);
+        throw new Error("الختمة مكتملة");
+      }
+
       const assignedJuzs = participants.map(p => p.assigned_juz);
       let availableJuz = 1;
       for (let i = 1; i <= 30; i++) {
@@ -187,17 +197,8 @@ const KhatmahPage = () => {
           break;
         }
       }
-      
-      if (participants.length >= 30) {
-        throw new Error("الختمة مكتملة");
-      }
-      
-      await firestoreAdd(COLLECTIONS.KHATMAH_PARTICIPANTS, {
-        khatmah_id: khatmah.id,
-        user_id: user.uid,
-        assigned_juz: availableJuz,
-        is_completed: false,
-      });
+
+      await firestoreUpdate(COLLECTIONS.KHATMAH_PARTICIPANTS, participationId, { assigned_juz: availableJuz });
 
       return { khatmah_id: khatmah.id, assigned_juz: availableJuz };
     },
